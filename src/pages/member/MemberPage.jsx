@@ -1,10 +1,13 @@
 import Header from "../../components/common/Header.jsx";
+import LocationPicker from "../../modules/location";
 
 const MemberPage = () => {
     return (
         <>
             <Header />
-            <h1>MEMBER PAGE</h1>
+            <main className="location-page">
+                <LocationPicker />
+            </main>
         </>
     );
 };

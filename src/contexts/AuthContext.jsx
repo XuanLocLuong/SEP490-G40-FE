@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { getAuth, setAuth, clearAuth } from '../utils/Auth.jsx';
-
-const AuthContext = createContext();
+import { AuthContext } from './authContext.js';
 
 export const AuthProvider = ({ children }) => {
     const [auth, setAuthState] = useState(getAuth());
@@ -24,5 +23,3 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
-
-export const useAuth = () => useContext(AuthContext);

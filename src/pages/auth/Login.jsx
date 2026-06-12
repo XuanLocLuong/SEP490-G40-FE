@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login as LoginApi } from '../../apis/AuthApi.jsx' ;
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/authContext.js';
 import {ROLE_ADMIN, ROLE_STAFF} from "../../utils/Constants.jsx";
 import {Button} from "react-bootstrap";
 
