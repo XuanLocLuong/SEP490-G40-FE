@@ -1,4 +1,4 @@
-import axiosClient from './axiosClient';
+import axiosClient from './AxiosClient.jsx';
 
 export const login = (data) => {
     return axiosClient.post('/auth/login', data);
