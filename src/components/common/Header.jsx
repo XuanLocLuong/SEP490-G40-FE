@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/authContext.js';
+import { ROUTES } from '../../routes/path.js';
 
 const Header = () => {
     const { auth, logout } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
+    const handleLogout = async () => {
+        await logout();
+        navigate(ROUTES.LOGIN);
     };
 
     return (
@@ -15,7 +16,8 @@ const Header = () => {
             {auth ? (
                 <>
                     <div>
-                        <strong>{auth.username}</strong> ({auth.role})
+                        {/* Backend chỉ trả fullName, không có username */}
+                        <strong>{auth.fullName}</strong> ({auth.role})
                     </div>
 
                     <button onClick={handleLogout}>Logout</button>
@@ -26,15 +28,13 @@ const Header = () => {
 
                     <div>
                         <button
-                            onClick={() => navigate('/login')}
+                            onClick={() => navigate(ROUTES.LOGIN)}
                             style={{ marginRight: '10px' }}
                         >
                             Login
                         </button>
 
-                        <button
-                            onClick={() => navigate('/register')}
-                        >
+                        <button onClick={() => navigate(ROUTES.REGISTER)}>
                             Register
                         </button>
                     </div>

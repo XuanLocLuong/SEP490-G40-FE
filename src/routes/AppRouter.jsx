@@ -1,77 +1,100 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext.js';
-import {ROLE_ADMIN, ROLE_MEMBER, ROLE_STAFF} from '../utils/Constants.jsx';
+import { USER_ROLES } from '../utils/Constants.jsx';
+import { ROUTES, getHomePathByRole } from './path.js';
 
-import Login from '../pages/auth/Login';
-import AdminPage from '../pages/admin/AdminPage';
-import StaffPage from '../pages/staff/StaffPage';
-import HomePage from '../pages/common/HomePage';
-import ProtectedRoute from './ProtectedRoute';
-import Register from "../pages/auth/Register.jsx";
-import MemberPage from "../pages/member/MemberPage.jsx";
+import ProtectedRoute from './ProtectedRoute.jsx';
 
+import GuestLayout from '../layouts/GuestLayout.jsx';
+import CandidateLayout from '../layouts/CandidateLayout.jsx';
+import RecruiterLayout from '../layouts/RecruiterLayout.jsx';
+import InternalLayout from '../layouts/InternalLayout.jsx';
+
+import LandingPage from '../pages/guest/LandingPage.jsx';
+import Login from '../pages/auth/Login.jsx';
+import Register from '../pages/auth/Register.jsx';
+import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
+import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
+import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
+import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
+import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
+
+// Cấu trúc route đi theo nhóm role (khớp bảng Screen Authorization trong SRS +
+// đúng 5 role thật của backend). Mỗi nhóm bọc 1 Layout dùng chung qua
+// <Route element={...}> lồng nhau, page con chỉ còn lo nội dung, không tự
+// import Header/layout riêng nữa như code cũ.
 const AppRouter = () => {
     const { auth } = useAuth();
 
-    const getRedirectPath = () => {
-        if (!auth) return '/';
-        if (auth.role === ROLE_ADMIN) return '/admin';
-        if (auth.role === ROLE_STAFF) return '/staff';
-        if (auth.role === ROLE_MEMBER) return '/member';
-        return '/home';
-    };
-
     return (
         <Routes>
-            <Route path="/" element={<HomePage />} />
+            {/* ---- Guest / public ---- */}
+            <Route element={<GuestLayout />}>
+                <Route path={ROUTES.LANDING} element={<LandingPage />} />
+                <Route path={ROUTES.LOGIN} element={<Login />} />
+                <Route path={ROUTES.REGISTER} element={<Register />} />
+            </Route>
 
-            <Route path="/login" element={<Login />} />
-
-            <Route path="/register" element={<Register />} />
-
+            {/* ---- Candidate ---- */}
             <Route
-                path="/admin"
                 element={
-                    <ProtectedRoute
-                        allowedRoles={[ROLE_ADMIN]}
-                    >
-                        <AdminPage />
+                    <ProtectedRoute allowedRoles={[USER_ROLES.CANDIDATE]}>
+                        <CandidateLayout />
                     </ProtectedRoute>
                 }
-            />
+            >
+                <Route path={ROUTES.CANDIDATE_HOME} element={<CandidateHomePage />} />
+            </Route>
 
+            {/* ---- Recruiter ---- */}
             <Route
-                path="/staff"
                 element={
-                    <ProtectedRoute
-                        allowedRoles={[ROLE_STAFF]}
-                    >
-                        <StaffPage />
+                    <ProtectedRoute allowedRoles={[USER_ROLES.RECRUITER]}>
+                        <RecruiterLayout />
                     </ProtectedRoute>
                 }
-            />
+            >
+                <Route path={ROUTES.RECRUITER_HOME} element={<RecruiterHomePage />} />
+            </Route>
 
+            {/* ---- Post Manager ---- */}
             <Route
-                path="/home"
                 element={
-                    <ProtectedRoute>
-                        <HomePage />
+                    <ProtectedRoute allowedRoles={[USER_ROLES.POST_MANAGER]}>
+                        <InternalLayout />
                     </ProtectedRoute>
                 }
-            />
+            >
+                <Route path={ROUTES.POST_MANAGER_HOME} element={<PostManagerDashboard />} />
+            </Route>
 
+            {/* ---- Manual Verification Team ---- */}
             <Route
-                path="/member"
                 element={
-                    <ProtectedRoute
-                        allowedRoles={[ROLE_MEMBER]}
-                    >
-                        <MemberPage />
+                    <ProtectedRoute allowedRoles={[USER_ROLES.MANUAL_CHECK_TEAM]}>
+                        <InternalLayout />
                     </ProtectedRoute>
                 }
-            />
+            >
+                <Route path={ROUTES.MANUAL_CHECK_HOME} element={<ManualCheckDashboard />} />
+            </Route>
 
-            <Route path="*" element={<Navigate to={getRedirectPath()} />} />
+            {/* ---- Admin ---- */}
+            <Route
+                element={
+                    <ProtectedRoute allowedRoles={[USER_ROLES.ADMIN]}>
+                        <InternalLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route path={ROUTES.ADMIN_HOME} element={<AdminDashboard />} />
+            </Route>
+
+            {/* Route không tồn tại -> về trang chủ đúng role (hoặc Landing nếu chưa login) */}
+            <Route
+                path="*"
+                element={<Navigate to={auth ? getHomePathByRole(auth.role) : ROUTES.LANDING} replace />}
+            />
         </Routes>
     );
 };

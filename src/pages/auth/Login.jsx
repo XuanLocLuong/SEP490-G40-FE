@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login as LoginApi, loginWithGoogle } from '../../apis/AuthApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
-import { ROLE_ADMIN, ROLE_STAFF } from '../../utils/Constants.jsx';
+import { getHomePathByRole, ROUTES } from '../../routes/path.js';
+import { USER_ROLES } from '../../utils/Constants.jsx';
 import { Button } from 'react-bootstrap';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
@@ -11,24 +12,19 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [googleRole, setGoogleRole] = useState('CANDIDATE');
+    const [googleRole, setGoogleRole] = useState(USER_ROLES.CANDIDATE);
     const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
-
-    const redirectByRole = (role) => {
-        if (role === ROLE_ADMIN || role === 'ADMIN') navigate('/admin');
-        else if (role === ROLE_STAFF || role === 'POST_MANAGER' || role === 'MANUAL_CHECK_TEAM') navigate('/staff');
-        else navigate('/member');
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         try {
             const res = await LoginApi({ email, password });
-            login(res.data.data);
-            redirectByRole(res.data.data.role);
+            const authData = res.data.data;
+            login(authData);
+            navigate(getHomePathByRole(authData.role));
         } catch (err) {
             setError('Đăng nhập thất bại. Vui lòng kiểm tra lại email/mật khẩu.');
         }
@@ -41,8 +37,9 @@ const Login = () => {
                 idToken: credentialResponse.credential,
                 role: googleRole,
             });
-            login(res.data.data);
-            redirectByRole(res.data.data.role);
+            const authData = res.data.data;
+            login(authData);
+            navigate(getHomePathByRole(authData.role));
         } catch (err) {
             setError('Đăng nhập bằng Google thất bại. Vui lòng thử lại.');
         }
@@ -55,7 +52,7 @@ const Login = () => {
     return (
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <div>
-                <Button onClick={() => navigate('/')}>Home</Button>
+                <Button onClick={() => navigate(ROUTES.LANDING)}>Home</Button>
                 <h2>Login</h2>
 
                 {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -79,14 +76,14 @@ const Login = () => {
 
                 <hr />
 
-                {/* Chọn role trước khi đăng nhập Google (chỉ dùng lần đầu tạo tài khoản) */}
+                {/* Role chỉ dùng khi tài khoản Google chưa từng tồn tại (BE tự tạo mới) */}
                 <div>
-                    <p>Đăng nhập bằng Google với vai trò:</p>
+                    <p>Đăng nhập bằng Google với vai trò (chỉ áp dụng lần đầu tạo tài khoản):</p>
                     <label>
                         <input
                             type="radio"
-                            value="CANDIDATE"
-                            checked={googleRole === 'CANDIDATE'}
+                            value={USER_ROLES.CANDIDATE}
+                            checked={googleRole === USER_ROLES.CANDIDATE}
                             onChange={(e) => setGoogleRole(e.target.value)}
                         />
                         {' '}Ứng viên (Candidate)
@@ -95,8 +92,8 @@ const Login = () => {
                     <label>
                         <input
                             type="radio"
-                            value="RECRUITER"
-                            checked={googleRole === 'RECRUITER'}
+                            value={USER_ROLES.RECRUITER}
+                            checked={googleRole === USER_ROLES.RECRUITER}
                             onChange={(e) => setGoogleRole(e.target.value)}
                         />
                         {' '}Nhà tuyển dụng (Recruiter)
@@ -110,7 +107,7 @@ const Login = () => {
 
                 <p>
                     Don't have an account?{' '}
-                    <button onClick={() => navigate('/register')}>Register</button>
+                    <button onClick={() => navigate(ROUTES.REGISTER)}>Register</button>
                 </p>
             </div>
         </GoogleOAuthProvider>
