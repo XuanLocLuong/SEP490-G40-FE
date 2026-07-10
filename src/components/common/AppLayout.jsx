@@ -1,39 +1,29 @@
 import { Outlet } from 'react-router-dom';
-import Header from './Header.jsx';
-import Sidebar from './Sidebar.jsx';
+import '../../assets/styles/AppLayoutStyle.css';
 
-// Layout gốc dùng chung cho toàn bộ app. Mọi Layout theo role
-// (GuestLayout, CandidateLayout, RecruiterLayout, InternalLayout...)
-// đều chỉ là lớp mỏng gọi AppLayout với navItems khác nhau — tránh
-// lặp lại Header/khung trang ở từng page như code cũ.
-const AppLayout = ({ navItems = [] }) => {
+// Shell dùng chung cho MỌI layout theo role — mỗi role chỉ khác nhau ở việc
+// có/không truyền header, sidebar, footer:
+//   - Guest:                  header + footer          (không sidebar)
+//   - Candidate/Recruiter:    sidebar + footer          (không header)
+//   - Internal (Admin/PM/MCT): header + sidebar          (không footer)
+//
+// Lưu ý cấu trúc: sidebar nằm NGOÀI header — sidebar cao full từ trên xuống,
+// header chỉ nằm phía trên phần content bên phải (không đè/tràn lên sidebar).
+const AppLayout = ({ header = null, sidebar = null, footer = null }) => {
     return (
-        <div style={styles.page}>
-            <Header />
-            <div style={styles.body}>
-                <Sidebar items={navItems} />
-                <main style={styles.content}>
-                    <Outlet />
-                </main>
+        <div className="app-shell">
+            <div className="app-shell__body">
+                {sidebar}
+                <div className="app-shell__main-col">
+                    {header}
+                    <main className="app-shell__content">
+                        <Outlet />
+                    </main>
+                </div>
             </div>
+            {footer}
         </div>
     );
-};
-
-const styles = {
-    page: {
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh'
-    },
-    body: {
-        display: 'flex',
-        flex: 1
-    },
-    content: {
-        flex: 1,
-        padding: 20
-    }
 };
 
 export default AppLayout;

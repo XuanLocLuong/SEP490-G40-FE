@@ -1,53 +1,36 @@
 import { NavLink } from 'react-router-dom';
+import '../../assets/styles/SidebarStyle.css';
 
-// Sidebar dùng chung cho mọi role — chỉ nhận danh sách item để render,
-// không tự biết role nào cả. Mỗi Layout (Candidate/Recruiter/Internal...)
-// tự quyết định truyền items gì vào.
-const Sidebar = ({ items = [] }) => {
+// Sidebar "sáng" dùng cho Candidate & Recruiter (ảnh 4, ảnh 5).
+// - items: [{ path, label, icon: Component, badge? }]
+// - footer: node tuỳ chọn render dưới cùng (vd: profile card của Candidate)
+const Sidebar = ({ logoText = 'JOBLINK', items = [], footer = null }) => {
     if (items.length === 0) return null;
 
     return (
-        <aside style={styles.sidebar}>
-            <nav style={styles.nav}>
-                {items.map((item) => (
+        <aside className="app-sidebar">
+            <div className="app-sidebar__logo">{logoText}</div>
+
+            <nav className="app-sidebar__nav">
+                {items.map(({ path, label, icon: Icon, badge }) => (
                     <NavLink
-                        key={item.path}
-                        to={item.path}
-                        style={({ isActive }) => ({
-                            ...styles.link,
-                            ...(isActive ? styles.linkActive : {})
-                        })}
+                        key={path}
+                        to={path}
+                        end
+                        className={({ isActive }) =>
+                            'app-sidebar__link' + (isActive ? ' app-sidebar__link--active' : '')
+                        }
                     >
-                        {item.label}
+                        {Icon && <Icon className="app-sidebar__icon" />}
+                        <span className="app-sidebar__label">{label}</span>
+                        {badge != null && <span className="app-sidebar__badge">{badge}</span>}
                     </NavLink>
                 ))}
             </nav>
+
+            {footer && <div className="app-sidebar__footer">{footer}</div>}
         </aside>
     );
-};
-
-const styles = {
-    sidebar: {
-        width: 220,
-        borderRight: '1px solid #ddd',
-        padding: '16px 12px',
-        background: '#fafafa'
-    },
-    nav: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 4
-    },
-    link: {
-        padding: '8px 10px',
-        borderRadius: 6,
-        textDecoration: 'none',
-        color: '#333'
-    },
-    linkActive: {
-        background: '#e3e3e3',
-        fontWeight: 'bold'
-    }
 };
 
 export default Sidebar;

@@ -1,0 +1,246 @@
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+    background: var(--color-bg);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 40px 36px;
+}
+
+.auth-card__logo {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--color-primary);
+    margin-bottom: 12px;
+}
+
+.auth-card__title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 6px;
+}
+
+.auth-card__subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: var(--color-text-muted);
+    margin: 0 0 24px;
+}
+
+/* ---- Form field dùng chung ---- */
+.form-field {
+    margin-bottom: 18px;
+}
+
+.form-field__label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 6px;
+}
+
+.form-field__link {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.form-field__input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.form-field__icon {
+    position: absolute;
+    left: 14px;
+    color: var(--color-text-soft);
+    pointer-events: none;
+}
+
+.form-field__input {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: var(--font-sans);
+    color: var(--color-text);
+}
+
+.form-field__input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.form-field__toggle {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--color-text-soft);
+    cursor: pointer;
+    display: flex;
+}
+
+/* ---- Google button + divider ---- */
+.btn--google {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.btn--google:hover {
+    background: var(--color-bg);
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: var(--color-text-soft);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+}
+
+/* ---- Submit / footer link ---- */
+.btn--block {
+    width: 100%;
+    padding: 13px;
+    border-radius: 999px;
+}
+
+.auth-card__error {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+}
+
+.auth-card__footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+.auth-card__footer-link {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: inherit;
+}
+
+/* ---- Checkbox dòng đồng ý điều khoản ---- */
+.form-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 20px;
+}
+
+.form-checkbox input {
+    margin-top: 3px;
+}
+
+.form-checkbox a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+/* ---- Role selector (Register) ---- */
+.role-select {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.role-card {
+    position: relative;
+    text-align: left;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    background: var(--color-surface);
+    cursor: pointer;
+    font-family: var(--font-sans);
+}
+
+.role-card:hover {
+    border-color: var(--color-primary);
+}
+
+.role-card--active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.role-card__icon {
+    color: var(--color-primary);
+    margin-bottom: 10px;
+}
+
+.role-card__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.role-card__desc {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+}
+
+.role-card__check {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: var(--color-primary);
+}

@@ -1,14 +1,4 @@
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    color: #202124;
-    background: #f5f7fb;
-    font-family: Arial, Helvetica, sans-serif;
-}
-
+/* box-sizing / body / màu nền đã chuyển sang styles/tokens.css để dùng chung 1 nguồn */
 button {
     font: inherit;
 }

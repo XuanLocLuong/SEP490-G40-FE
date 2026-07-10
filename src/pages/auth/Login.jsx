@@ -1,19 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { login as LoginApi, loginWithGoogle } from '../../apis/AuthApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { getHomePathByRole, ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
-import { Button } from 'react-bootstrap';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import AuthCard from '../../components/common/AuthCard.jsx';
+import { MailIcon, LockIcon, EyeIcon, EyeOffIcon } from '../../components/common/icons.jsx';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [googleRole, setGoogleRole] = useState(USER_ROLES.CANDIDATE);
     const [error, setError] = useState('');
+
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -45,71 +48,92 @@ const Login = () => {
         }
     };
 
-    const handleGoogleError = () => {
-        setError('Đăng nhập Google bị huỷ hoặc thất bại.');
-    };
-
     return (
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-            <div>
-                <Button onClick={() => navigate(ROUTES.LANDING)}>Home</Button>
-                <h2>Login</h2>
-
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-
-                <form onSubmit={handleSubmit}>
-                    <input
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <br />
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <br />
-                    <button type="submit">Login</button>
-                </form>
-
-                <hr />
-
-                {/* Role chỉ dùng khi tài khoản Google chưa từng tồn tại (BE tự tạo mới) */}
-                <div>
-                    <p>Đăng nhập bằng Google với vai trò (chỉ áp dụng lần đầu tạo tài khoản):</p>
-                    <label>
-                        <input
-                            type="radio"
-                            value={USER_ROLES.CANDIDATE}
-                            checked={googleRole === USER_ROLES.CANDIDATE}
-                            onChange={(e) => setGoogleRole(e.target.value)}
-                        />
-                        {' '}Ứng viên (Candidate)
-                    </label>
-                    {'  '}
-                    <label>
-                        <input
-                            type="radio"
-                            value={USER_ROLES.RECRUITER}
-                            checked={googleRole === USER_ROLES.RECRUITER}
-                            onChange={(e) => setGoogleRole(e.target.value)}
-                        />
-                        {' '}Nhà tuyển dụng (Recruiter)
-                    </label>
-                </div>
+            <AuthCard title="Chào mừng trở lại 👋">
+                {error && <div className="auth-card__error">{error}</div>}
 
                 <GoogleLogin
                     onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
+                    onError={() => setError('Đăng nhập Google bị huỷ hoặc thất bại.')}
                 />
 
-                <p>
-                    Don't have an account?{' '}
-                    <button onClick={() => navigate(ROUTES.REGISTER)}>Register</button>
-                </p>
-            </div>
+                {/* Role chỉ áp dụng nếu Google account đăng nhập lần đầu (BE tự tạo mới) */}
+                <div style={{ margin: '10px 0 4px', fontSize: 13 }}>
+                    <label style={{ marginRight: 16 }}>
+                        <input
+                            type="radio"
+                            checked={googleRole === USER_ROLES.CANDIDATE}
+                            onChange={() => setGoogleRole(USER_ROLES.CANDIDATE)}
+                        />{' '}
+                        Ứng viên
+                    </label>
+                    <label>
+                        <input
+                            type="radio"
+                            checked={googleRole === USER_ROLES.RECRUITER}
+                            onChange={() => setGoogleRole(USER_ROLES.RECRUITER)}
+                        />{' '}
+                        Nhà tuyển dụng
+                    </label>
+                </div>
+
+                <div className="auth-divider">HOẶC</div>
+
+                <form onSubmit={handleSubmit}>
+                    <div className="form-field">
+                        <label className="form-field__label">Email</label>
+                        <div className="form-field__input-wrap">
+                            <MailIcon className="form-field__icon" />
+                            <input
+                                className="form-field__input"
+                                type="email"
+                                placeholder="nhap@email.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-field">
+                        <label className="form-field__label">
+                            Mật khẩu
+                            <a href="#" className="form-field__link">Quên mật khẩu?</a>
+                        </label>
+                        <div className="form-field__input-wrap">
+                            <LockIcon className="form-field__icon" />
+                            <input
+                                className="form-field__input"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Nhập mật khẩu"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="form-field__toggle"
+                                onClick={() => setShowPassword((v) => !v)}
+                                aria-label="Hiện/ẩn mật khẩu"
+                            >
+                                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" className="btn btn--primary btn--block">
+                        Đăng nhập
+                    </button>
+                </form>
+
+                <div className="auth-card__footer">
+                    Chưa có tài khoản?{' '}
+                    <button className="auth-card__footer-link" onClick={() => navigate(ROUTES.REGISTER)}>
+                        Đăng ký ngay
+                    </button>
+                </div>
+            </AuthCard>
         </GoogleOAuthProvider>
     );
 };

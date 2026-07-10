@@ -28,12 +28,15 @@ const AppRouter = () => {
 
     return (
         <Routes>
-            {/* ---- Guest / public ---- */}
+            {/* ---- Guest / public (có Header + Footer) ---- */}
             <Route element={<GuestLayout />}>
                 <Route path={ROUTES.LANDING} element={<LandingPage />} />
-                <Route path={ROUTES.LOGIN} element={<Login />} />
-                <Route path={ROUTES.REGISTER} element={<Register />} />
             </Route>
+
+            {/* ---- Auth (Login/Register) — KHÔNG có Header/Footer,
+                 tự đứng độc lập full-page theo đúng ảnh thiết kế ---- */}
+            <Route path={ROUTES.LOGIN} element={<Login />} />
+            <Route path={ROUTES.REGISTER} element={<Register />} />
 
             {/* ---- Candidate ---- */}
             <Route
