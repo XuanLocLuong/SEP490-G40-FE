@@ -197,3 +197,36 @@ export const AlertIcon = (props) => (
         <path d="M12 10v4M12 17h.01" />
     </svg>
 );
+
+export const SearchIcon = (props) => (
+    <svg {...base} {...props}>
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="m16.5 16.5 4 4" />
+    </svg>
+);
+
+export const MapPinIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11Z" />
+        <circle cx="12" cy="10" r="2.5" />
+    </svg>
+);
+
+export const BookmarkIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-3.5L6 21V4.5Z" />
+    </svg>
+);
+
+export const ChevronDownIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="m6 9 6 6 6-6" />
+    </svg>
+);
+
+export const LayersIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="M12 3 3 8l9 5 9-5-9-5Z" />
+        <path d="m3 12 9 5 9-5M3 17l9 5 9-5" />
+    </svg>
+);
