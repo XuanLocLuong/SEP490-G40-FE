@@ -29,6 +29,47 @@
     line-height: 1.15;
 }
 
+.location-picker__title {
+    margin: 0 0 8px;
+    color: #1f2937;
+    font-size: 1.1rem;
+    line-height: 1.3;
+}
+
+.location-picker--store {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.location-picker--store .location-picker__header {
+    margin-bottom: 12px;
+}
+
+.location-picker--store .location-picker__title {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.location-picker__store-hint {
+    margin: 6px 0 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: var(--color-text-muted, #52616b);
+}
+
+.location-picker__query-preview {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    background: #f4f7fb;
+    border: 1px solid #d9e2ec;
+    border-radius: 8px;
+    color: #334155;
+}
+
 .location-picker__subtitle {
     margin: 10px 0 0;
     color: #52616b;

@@ -13,10 +13,17 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
+    const updateProfile = useCallback((profileData) => {
+        const currentAuth = getAuth();
+        if (!currentAuth) return;
+
+        const updated = { ...currentAuth, ...profileData };
+        setAuth(updated);
+        setAuthState(updated);
+    }, []);
+
     const logout = useCallback(async () => {
         try {
-            // Best-effort: báo cho backend revoke refresh token.
-            // Vẫn clear local dù API lỗi (token hết hạn, mất mạng...).
             await logoutApi();
         } catch (err) {
             console.warn('Logout API failed, clearing local session anyway.', err);
@@ -32,7 +39,7 @@ export const AuthProvider = ({ children }) => {
     );
 
     return (
-        <AuthContext.Provider value={{ auth, login, logout, hasRole }}>
+        <AuthContext.Provider value={{ auth, login, logout, hasRole, updateProfile }}>
             {children}
         </AuthContext.Provider>
     );

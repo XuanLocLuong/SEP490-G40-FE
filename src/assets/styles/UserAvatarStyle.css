@@ -1,0 +1,7 @@
+.user-avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+    background: #c4c4c4;
+}

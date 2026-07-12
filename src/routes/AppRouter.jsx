@@ -16,8 +16,10 @@ import JobDetailPage from '../pages/guest/JobDetailPage.jsx';
 import Login from '../pages/auth/Login.jsx';
 import Register from '../pages/auth/Register.jsx';
 import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
+import CandidateSettingsPage from '../pages/candidate/CandidateSettingsPage.jsx';
 import CandidateProfilePage from '../pages/candidate/CandidateProfile/CandidateProfilePage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
+import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
@@ -52,6 +54,7 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.CANDIDATE_HOME} element={<CandidateHomePage />} />
+                <Route path={ROUTES.CANDIDATE_SETTINGS} element={<CandidateSettingsPage />} />
                 <Route path={ROUTES.CANDIDATE_PROFILE} element={<CandidateProfilePage />} />
             </Route>
 
@@ -64,6 +67,8 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.RECRUITER_HOME} element={<RecruiterHomePage />} />
+                <Route path={ROUTES.RECRUITER_SETTINGS} element={<CandidateSettingsPage />} />
+                <Route path={ROUTES.RECRUITER_PROFILE} element={<RecruiterProfilePage />} />
             </Route>
 
             {/* ---- Post Manager ---- */}

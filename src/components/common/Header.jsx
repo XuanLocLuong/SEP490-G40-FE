@@ -35,7 +35,8 @@ const Header = () => {
                     {auth ? (
                         <>
                             <span className="site-header__user">
-                                {auth.fullName} <span className="site-header__role">({auth.role})</span>
+                                {auth.fullName}{' '}
+                                <span className="site-header__role">({auth.role})</span>
                             </span>
                             <button className="btn btn--ghost" onClick={handleLogout}>
                                 Đăng xuất

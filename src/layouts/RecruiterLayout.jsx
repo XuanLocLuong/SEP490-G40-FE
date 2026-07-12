@@ -15,11 +15,10 @@ import {
     ChatIcon,
     StarIcon,
     BuildingIcon,
+    SettingsIcon,
 } from '../components/common/icons.jsx';
 
 // Recruiter: Sidebar (sáng) + Footer, KHÔNG có Header (ảnh 5).
-// "badge" của "Ứng viên" chưa gắn số thật (chưa có API đếm ứng viên mới) —
-// để trống, khi có dữ liệu thật thì truyền badge: <số lượng> vào item này.
 const NAV_ITEMS = [
     { path: ROUTES.RECRUITER_HOME, label: 'Tổng quan', icon: GridIcon },
     { path: ROUTES.RECRUITER_CREATE_JOB, label: 'Đăng tin', icon: PlusSquareIcon },
@@ -30,11 +29,10 @@ const NAV_ITEMS = [
     { path: ROUTES.RECRUITER_MESSAGES, label: 'Tin nhắn', icon: ChatIcon },
     { path: ROUTES.RECRUITER_TRUST_SCORE, label: 'Điểm uy tín', icon: StarIcon },
     { path: ROUTES.RECRUITER_ALL_JOBS, label: 'Tất cả các tin tuyển dụng', icon: ListIcon },
+    { path: ROUTES.RECRUITER_SETTINGS, label: 'Cài đặt', icon: SettingsIcon },
     { path: ROUTES.RECRUITER_PROFILE, label: 'Hồ sơ nhà tuyển dụng', icon: BuildingIcon },
 ];
 
-// Trước đây Recruiter chưa có chỗ nào để logout — giờ thêm ProfileMenu
-// giống Candidate (bấm vào tên/avatar để mở dropdown Đăng xuất).
 const RecruiterSidebarFooter = () => {
     const { auth, logout } = useAuth();
     const navigate = useNavigate();

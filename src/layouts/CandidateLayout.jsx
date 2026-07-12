@@ -59,4 +59,3 @@ const CandidateLayout = () => (
 );
 
 export default CandidateLayout;
-
