@@ -11,6 +11,8 @@ import RecruiterLayout from '../layouts/RecruiterLayout.jsx';
 import InternalLayout from '../layouts/InternalLayout.jsx';
 
 import LandingPage from '../pages/guest/LandingPage.jsx';
+import JobListPage from '../pages/guest/JobListPage.jsx';
+import JobDetailPage from '../pages/guest/JobDetailPage.jsx';
 import Login from '../pages/auth/Login.jsx';
 import Register from '../pages/auth/Register.jsx';
 import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
@@ -32,6 +34,8 @@ const AppRouter = () => {
             {/* ---- Guest / public (có Header + Footer) ---- */}
             <Route element={<GuestLayout />}>
                 <Route path={ROUTES.LANDING} element={<LandingPage />} />
+                <Route path={ROUTES.JOB_LIST} element={<JobListPage />} />
+                <Route path={ROUTES.JOB_DETAIL} element={<JobDetailPage />} />
             </Route>
 
             {/* ---- Auth (Login/Register) — KHÔNG có Header/Footer,

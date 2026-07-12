@@ -1,4 +1,5 @@
 import './App.css'
+import 'react-toastify/dist/ReactToastify.css';
 import {AuthProvider} from "./contexts/AuthContext.jsx";
 import {BrowserRouter} from "react-router-dom";
 import {ToastContainer} from "react-toastify";
@@ -13,7 +14,7 @@ function App() {
                     <AppRouter />
                 </BrowserRouter>
             </AuthProvider>
-            <ToastContainer position="top-right" autoClose={3000} newestOnTop />
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop />
         </>
     )
 }

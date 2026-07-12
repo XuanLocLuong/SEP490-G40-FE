@@ -81,6 +81,10 @@
     background: var(--color-primary-dark);
 }
 
+.btn--primary:active:not(:disabled) {
+    background: #183a8f;
+}
+
 .btn--ghost {
     background: transparent;
     border-color: var(--color-border);
@@ -89,4 +93,28 @@
 
 .btn--ghost:hover {
     background: var(--color-bg);
+}
+
+.btn--ghost:active:not(:disabled) {
+    background: #e2e6ee;
+    border-color: #b8c0d0;
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.btn--ghost:disabled,
+.btn--ghost:disabled:hover,
+.btn--ghost:disabled:active {
+    background: transparent;
+    border-color: var(--color-border);
+    color: var(--color-text-soft);
+}
+
+.btn--primary:disabled,
+.btn--primary:disabled:hover,
+.btn--primary:disabled:active {
+    background: var(--color-primary);
 }

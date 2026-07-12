@@ -5,6 +5,8 @@ export const ROUTES = {
     LANDING: '/',
     LOGIN: '/login',
     REGISTER: '/register',
+    JOB_LIST: '/jobs',
+    JOB_DETAIL: '/jobs/:jobId',
 
     CANDIDATE_HOME: '/candidate',
     RECRUITER_HOME: '/recruiter',
@@ -48,6 +50,8 @@ export const ROUTES = {
     ADMIN_ESCALATIONS: '/admin/escalations',
     ADMIN_ANALYTICS: '/admin/analytics',
 };
+
+export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
 
 // Dùng sau khi login / khi vào route không tồn tại để biết đá user về đâu.
 export const getHomePathByRole = (role) => {

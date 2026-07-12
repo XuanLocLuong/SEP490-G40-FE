@@ -3,9 +3,7 @@ import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import '../../assets/styles/HeaderStyle.css';
 
-// Header dùng cho GuestLayout. Nội dung link "Việc làm / Công ty" chỉ là
-// placeholder điều hướng — trang đích (Landing Page) KHÔNG thuộc task này,
-// để nguyên link trỏ về "/" cho tới khi task Landing Page được code.
+// Header dùng cho GuestLayout.
 const Header = () => {
     const { auth, logout } = useAuth();
     const navigate = useNavigate();
@@ -24,7 +22,7 @@ const Header = () => {
                     </NavLink>
 
                     <nav className="site-header__nav">
-                        <NavLink to={ROUTES.LANDING} className="site-header__nav-link">
+                        <NavLink to={ROUTES.JOB_LIST} className="site-header__nav-link">
                             Việc làm
                         </NavLink>
                         <NavLink to={ROUTES.LANDING} className="site-header__nav-link">
