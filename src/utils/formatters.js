@@ -39,7 +39,7 @@ export const formatSalary = (salaryMin, salaryMax) => {
 
 export const formatLocation = (location) => {
     if (!location) return '—';
-    const parts = [location.district, location.city].filter(Boolean);
+    const parts = [location.ward || location.district, location.city].filter(Boolean);
     return parts.length > 0 ? parts.join(', ') : location.address || '—';
 };
 

@@ -1,0 +1,244 @@
+/* Shared job search filter — landing hero + job list */
+
+.job-search-form {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.job-search-form__panel {
+    overflow: visible;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow-card);
+}
+
+.job-search-form__keyword {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+}
+
+.job-search-form__keyword svg {
+    flex-shrink: 0;
+}
+
+.job-search-form__keyword input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    color: var(--color-text);
+    outline: none;
+}
+
+.job-search-form__filter-row {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+}
+
+.job-search-form__locations {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 12px;
+    overflow: visible;
+}
+
+.job-search-form__field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    position: relative;
+    overflow: visible;
+    cursor: text;
+}
+
+.job-search-form__field svg {
+    flex-shrink: 0;
+}
+
+/* Location combobox (guest search only) */
+.location-combobox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.location-combobox--grow {
+    flex: 1;
+}
+
+.location-combobox__input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    color: var(--color-text);
+    outline: none;
+    padding: 0;
+    padding-right: 22px;
+}
+
+.location-combobox__input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.location-combobox__input::placeholder {
+    color: var(--color-text-muted);
+}
+
+.location-combobox__clear {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.location-combobox__clear:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--color-text);
+}
+
+.location-combobox__list {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 200;
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.location-combobox__option {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: var(--radius-sm, 6px);
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    text-align: left;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.location-combobox__option:hover,
+.location-combobox__option--active {
+    background: #eef3ff;
+}
+
+.location-combobox__option--selected {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.job-search-form__submit {
+    flex-shrink: 0;
+    align-self: stretch;
+    min-width: 132px;
+    padding: 12px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.job-search-form__near-me {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-text);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.job-search-form__near-me:hover {
+    background: #eef3ff;
+}
+
+.job-search-form__near-me input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.job-search-form__near-me svg {
+    flex-shrink: 0;
+    color: var(--color-primary);
+}
+
+@media (max-width: 767px) {
+    .job-search-form__filter-row {
+        flex-direction: column;
+    }
+
+    .job-search-form__locations {
+        grid-template-columns: 1fr;
+    }
+
+    .job-search-form__submit {
+        width: 100%;
+        min-height: 48px;
+    }
+    .job-search-form__panel {
+        padding: 14px;
+    }
+
+    .job-search-form__near-me {
+        display: flex;
+        width: 100%;
+    }
+}
