@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { register as RegisterApi, loginWithGoogle } from '../../apis/AuthApi.jsx';
@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/authContext.js';
 import { getHomePathByRole, ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import AuthCard from '../../components/common/AuthCard.jsx';
+import { getAuthErrorMessage } from '../../utils/authErrorMessages.js';
 import {
     MailIcon,
     LockIcon,
@@ -17,6 +18,7 @@ import {
 } from '../../components/common/icons.jsx';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const AUTO_REDIRECT_SECONDS = 10;
 
 // Backend (RegisterRequestDTO) CHỈ nhận { email, password, role }.
 // role bắt buộc, chỉ nhận CANDIDATE/RECRUITER khi tự đăng ký công khai.
@@ -27,11 +29,26 @@ const Register = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [agreed, setAgreed] = useState(false);
     const [error, setError] = useState('');
+
+    const [result, setResult] = useState(null); // { homePath, isNewAccount }
+    const [secondsLeft, setSecondsLeft] = useState(AUTO_REDIRECT_SECONDS);
 
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    // Đếm ngược 10s rồi tự chuyển trang, chỉ chạy khi đã có homePath (tức đăng ký xong).
+    useEffect(() => {
+        if (!result) return;
+
+        if (secondsLeft <= 0) {
+            navigate(result.homePath);
+            return;
+        }
+
+        const timer = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [result, secondsLeft, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,18 +58,14 @@ const Register = () => {
             setError('Mật khẩu xác nhận không khớp.');
             return;
         }
-        if (!agreed) {
-            setError('Bạn cần đồng ý với Điều khoản sử dụng và Chính sách bảo mật.');
-            return;
-        }
 
         try {
             const res = await RegisterApi({ email, password, role });
             const authData = res.data.data;
             login(authData);
-            navigate(getHomePathByRole(authData.role));
+            setResult({ homePath: getHomePathByRole(authData.role), isNewAccount: authData.newAccount });
         } catch (err) {
-            setError(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+            setError(getAuthErrorMessage(err));
         }
     };
 
@@ -62,11 +75,36 @@ const Register = () => {
             const res = await loginWithGoogle({ idToken: credentialResponse.credential, role });
             const authData = res.data.data;
             login(authData);
-            navigate(getHomePathByRole(authData.role));
+            setResult({ homePath: getHomePathByRole(authData.role), isNewAccount: authData.newAccount });
         } catch (err) {
-            setError('Đăng ký bằng Google thất bại. Vui lòng thử lại.');
+            setError(getAuthErrorMessage(err));
         }
     };
+
+    if (result) {
+        const isNew = result.isNewAccount;
+
+        return (
+            <AuthCard
+                title={isNew ? 'Đăng ký thành công 🎉' : 'Tài khoản đã tồn tại'}
+                subtitle={
+                    isNew
+                        ? 'Chào mừng bạn đến với JobLink!'
+                        : 'Bạn đã từng đăng ký tài khoản này trước đó — mình đăng nhập luôn cho bạn.'
+                }
+            >
+                <button
+                    className="btn btn--primary btn--block"
+                    onClick={() => navigate(result.homePath)}
+                >
+                    Đến trang chủ
+                </button>
+                <div className="auth-card__footer">
+                    Tự động chuyển sau {secondsLeft}s...
+                </div>
+            </AuthCard>
+        );
+    }
 
     return (
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
@@ -140,6 +178,7 @@ const Register = () => {
                                 type={showPassword ? 'text' : 'password'}
                                 placeholder="Tạo mật khẩu"
                                 value={password}
+                                minLength={6}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
@@ -163,6 +202,7 @@ const Register = () => {
                                 type={showConfirmPassword ? 'text' : 'password'}
                                 placeholder="Nhập lại mật khẩu"
                                 value={confirmPassword}
+                                minLength={6}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
                             />
@@ -176,18 +216,6 @@ const Register = () => {
                             </button>
                         </div>
                     </div>
-
-                    <label className="form-checkbox">
-                        <input
-                            type="checkbox"
-                            checked={agreed}
-                            onChange={(e) => setAgreed(e.target.checked)}
-                        />
-                        <span>
-                            Tôi đồng ý với <a href="#">Điều khoản sử dụng</a> và{' '}
-                            <a href="#">Chính sách bảo mật</a> của JobLink.
-                        </span>
-                    </label>
 
                     <button type="submit" className="btn btn--primary btn--block">
                         Tạo tài khoản

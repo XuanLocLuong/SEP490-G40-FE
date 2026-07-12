@@ -1,0 +1,1124 @@
+/* ==========================================================================
+   Candidate Profile — chỉ style phần content, dùng token màu chung của project.
+   Prefix .cp- để tránh đụng class khác.
+   ========================================================================== */
+
+.cp-page {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ---- Card cơ bản ---- */
+.cp-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 22px 24px;
+}
+
+.cp-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.cp-card__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.cp-card__title-icon {
+    color: var(--color-primary);
+}
+
+/* ---- Header card (Section 1) ---- */
+.cp-header {
+    display: flex;
+    gap: 22px;
+    align-items: flex-start;
+}
+
+.cp-avatar {
+    flex-shrink: 0;
+}
+
+.cp-avatar__frame {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    border-radius: 20px;
+    overflow: visible;
+    background: var(--color-primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cp-avatar__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+}
+
+.cp-avatar__initials {
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.cp-avatar__edit {
+    position: absolute;
+    right: -6px;
+    bottom: -6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--color-surface);
+    background: var(--color-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.cp-avatar__edit:hover {
+    background: var(--color-primary-dark);
+}
+
+.cp-avatar__edit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.cp-avatar__error {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: var(--color-danger);
+    max-width: 110px;
+}
+
+.cp-header__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.cp-header__top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.cp-header__name {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--color-text);
+}
+
+.cp-trust-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-warning);
+}
+
+.cp-header__bio {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+}
+
+.cp-header__meta {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.cp-header__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.cp-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.cp-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-success);
+}
+
+.cp-completion {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.cp-completion__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+.cp-completion__bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-border);
+    overflow: hidden;
+}
+
+.cp-completion__fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-primary);
+    transition: width 0.3s ease;
+}
+
+/* ---- Grid 2 cột ---- */
+.cp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.cp-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+/* ---- Field trong card ---- */
+.cp-field {
+    margin-bottom: 16px;
+}
+
+.cp-field:last-child {
+    margin-bottom: 0;
+}
+
+.cp-field__label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--color-text-soft);
+    margin-bottom: 8px;
+}
+
+.cp-inline-value {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+.cp-inline-value__icon {
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+/* ---- Tags ---- */
+.cp-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.cp-tags--gap {
+    margin-bottom: 16px;
+}
+
+.cp-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.cp-tag--soft {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+.cp-tag--skill {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.cp-tag__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0.7;
+}
+
+.cp-tag__remove:hover {
+    opacity: 1;
+}
+
+/* ---- Info grid (Personal info) ---- */
+.cp-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.cp-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.cp-info-item__icon {
+    color: var(--color-primary);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.cp-info-item__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cp-info-item__label {
+    font-size: 12px;
+    color: var(--color-text-soft);
+}
+
+.cp-info-item__value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+/* ---- Icon button ---- */
+.cp-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: none;
+    color: var(--color-text-soft);
+    cursor: pointer;
+}
+
+.cp-icon-btn:hover {
+    background: var(--color-bg);
+    color: var(--color-primary);
+}
+
+.cp-icon-btn--sm {
+    width: 28px;
+    height: 28px;
+}
+
+.cp-icon-btn--danger:hover {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.cp-text-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.cp-text-btn:hover {
+    background: var(--color-primary-light);
+}
+
+/* ---- List (education, experience) ---- */
+.cp-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.cp-edu-item {
+    display: flex;
+    gap: 12px;
+}
+
+.cp-edu-item__logo {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: #e8462a;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cp-edu-item__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.cp-edu-item__row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.cp-edu-item__school {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--color-text);
+}
+
+.cp-edu-item__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.cp-edu-item__years {
+    font-size: 12px;
+    color: var(--color-text-soft);
+    white-space: nowrap;
+}
+
+.cp-edu-item__major {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.cp-edu-item__meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--color-text-soft);
+}
+
+/* ---- Experience ---- */
+.cp-exp-item {
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.cp-exp-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.cp-exp-item__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.cp-exp-item__company {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--color-text);
+}
+
+.cp-exp-item__meta {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.cp-exp-item__desc {
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+}
+
+/* ---- Portfolio card ---- */
+.cp-portfolio {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border: none;
+    color: #fff;
+}
+
+.cp-portfolio__title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 8px;
+}
+
+.cp-portfolio__desc {
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0 0 16px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---- Consent ---- */
+.cp-consent__label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.cp-consent__checkbox {
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.cp-consent__text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+}
+
+.cp-link {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.cp-link:hover {
+    text-decoration: underline;
+}
+
+/* ---- Section title (Hồ sơ công việc) ---- */
+.cp-section-title {
+    margin-top: 8px;
+}
+
+.cp-section-title h2 {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--color-text);
+}
+
+.cp-section-title p {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+/* ---- Skill autocomplete ---- */
+.cp-skill-input {
+    position: relative;
+}
+
+.cp-skill-input__wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 14px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.cp-skill-input__icon {
+    color: var(--color-text-soft);
+}
+
+.cp-skill-input__field {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background: transparent;
+}
+
+.cp-autocomplete {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.cp-autocomplete__item {
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    border: none;
+    background: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.cp-autocomplete__item:hover {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+}
+
+/* ---- Availability empty ---- */
+.cp-availability-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 24px 16px;
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+}
+
+.cp-availability-empty__icon {
+    color: var(--color-text-soft);
+}
+
+.cp-availability-empty__text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    max-width: 420px;
+    margin: 0;
+}
+
+/* ---- Empty text ---- */
+.cp-empty-text {
+    font-size: 13px;
+    color: var(--color-text-soft);
+    margin: 0;
+}
+
+/* ---- Buttons ---- */
+.cp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+}
+
+.cp-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.cp-btn--primary {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.cp-btn--primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+.cp-btn--ghost {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-muted);
+}
+
+.cp-btn--ghost:hover:not(:disabled) {
+    background: var(--color-bg);
+}
+
+.cp-btn--light {
+    background: #fff;
+    color: var(--color-primary);
+}
+
+.cp-btn--light:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* ---- Footer action ---- */
+.cp-footer-action {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 18px 24px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    position: sticky;
+    bottom: 16px;
+}
+
+/* ---- Error state ---- */
+.cp-error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+    padding: 40px;
+}
+
+/* ==========================================================================
+   Modal
+   ========================================================================== */
+.cp-modal__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 24, 40, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+}
+
+.cp-modal {
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(16, 24, 40, 0.25);
+}
+
+.cp-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    background: var(--color-surface);
+}
+
+.cp-modal__title {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.cp-modal__close {
+    display: inline-flex;
+    background: none;
+    border: none;
+    color: var(--color-text-soft);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+}
+
+.cp-modal__close:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.cp-modal__body {
+    padding: 22px 24px;
+}
+
+.cp-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--color-border);
+    position: sticky;
+    bottom: 0;
+    background: var(--color-surface);
+}
+
+/* ---- Form ---- */
+.cp-form-group {
+    margin-bottom: 16px;
+    flex: 1;
+    min-width: 0;
+}
+
+.cp-form-group--sm {
+    max-width: 140px;
+}
+
+.cp-form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.cp-form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 6px;
+}
+
+.cp-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background: var(--color-surface);
+}
+
+.cp-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.cp-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.cp-input-error {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--color-danger);
+}
+
+.cp-input-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--color-text-soft);
+}
+
+/* ---- Choice chips (job types) ---- */
+.cp-choice-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.cp-choice {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-surface);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-family: var(--font-sans);
+}
+
+.cp-choice:hover {
+    border-color: var(--color-primary);
+}
+
+.cp-choice--active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Skeleton
+   ========================================================================== */
+.cp-skeleton {
+    background: linear-gradient(90deg, #eef1f6 25%, #f7f9fc 50%, #eef1f6 75%);
+    background-size: 200% 100%;
+    animation: cp-shimmer 1.4s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+
+@keyframes cp-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.cp-skeleton__header {
+    display: flex;
+    gap: 22px;
+}
+
+.cp-skeleton--avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 20px;
+    flex-shrink: 0;
+}
+
+.cp-skeleton__lines {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 6px;
+}
+
+.cp-skeleton--line {
+    height: 14px;
+}
+
+.cp-skeleton--w40 {
+    width: 40%;
+}
+
+.cp-skeleton--w60 {
+    width: 60%;
+}
+
+.cp-skeleton--w80 {
+    width: 80%;
+}
+
+.cp-card .cp-skeleton--line + .cp-skeleton--line {
+    margin-top: 12px;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 860px) {
+    .cp-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cp-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .cp-header__top {
+        justify-content: center;
+    }
+
+    .cp-header__meta {
+        justify-content: center;
+    }
+
+    .cp-info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .cp-form-row {
+        flex-direction: column;
+    }
+
+    .cp-form-group--sm {
+        max-width: none;
+    }
+}
+
+.cp-map-toggle-group {
+    margin-top: 4px;
+}
+
+.cp-map-coords {
+    margin: 4px 0 8px;
+    font-size: 13px;
+    color: var(--color-success, #16a34a);
+    font-weight: 600;
+}
+
+.cp-btn--sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.cp-map-embed {
+    margin-top: 12px;
+    border: 1px solid var(--color-border, #e6e9f0);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Nút "Xác nhận vị trí" trong LocationPicker chỉ là TODO giả lập, không gọi API
+   thật — ẩn đi khi nhúng trong modal Nhu cầu tìm việc để tránh 2 nút xác nhận
+   gây hiểu lầm. Toạ độ đã tự cập nhật qua onLocationChange. */
+.cp-map-embed .location-picker__button--confirm {
+    display: none;
+}
+
+.cp-map-modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:9999;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.cp-map-modal{
+
+    width:min(1100px,92vw);
+
+    height:min(820px,92vh);
+
+    background:#fff;
+
+    border-radius:20px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    overflow:hidden;
+
+    box-shadow:0 20px 60px rgba(0,0,0,.25);
+
+}
+
+.cp-map-modal-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:20px 28px;
+
+    border-bottom:1px solid #ececec;
+
+}
+
+.cp-map-modal-header h3{
+
+    font-size:24px;
+
+    font-weight:700;
+
+}
+
+.cp-map-close{
+
+    width:42px;
+
+    height:42px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:#f5f5f5;
+
+    cursor:pointer;
+
+    font-size:22px;
+
+}
+
+.cp-map-close:hover{
+
+    background:#e9e9e9;
+
+}
+
+.cp-map-modal-body{
+
+    flex:1;
+
+    overflow:hidden;
+
+    padding:18px;
+
+}
+
+.cp-map-modal-footer{
+
+    padding:18px 28px;
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:14px;
+
+    border-top:1px solid #ececec;
+
+}

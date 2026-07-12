@@ -3,6 +3,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {AuthProvider} from "./contexts/AuthContext.jsx";
 import {BrowserRouter} from "react-router-dom";
+import {ToastContainer} from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import AppRouter from "./routes/AppRouter.jsx";
 
 function App() {
