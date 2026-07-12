@@ -261,12 +261,6 @@ export const BookmarkIcon = (props) => (
     </svg>
 );
 
-export const ChevronDownIcon = (props) => (
-    <svg {...base} {...props}>
-        <path d="m6 9 6 6 6-6" />
-    </svg>
-);
-
 export const LayersIcon = (props) => (
     <svg {...base} {...props}>
         <path d="M12 3 3 8l9 5 9-5-9-5Z" />
