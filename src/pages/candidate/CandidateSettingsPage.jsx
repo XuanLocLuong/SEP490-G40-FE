@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserAvatar from '../../components/common/UserAvatar.jsx';
-import AccountMenuSidebar from '../../components/common/account-menu/AccountMenuSidebar.jsx';
-import { getSettingsPathByRole } from '../../components/common/account-menu/accountMenuConfig.js';
 import EditFieldModal from '../../components/common/EditFieldModal.jsx';
 import { PencilIcon } from '../../components/common/icons.jsx';
 import userApi, { getApiErrorMessage } from '../../apis/UserApi.jsx';
@@ -265,23 +263,20 @@ const CandidateSettingsPage = () => {
     };
 
     return (
-        <div className="account-settings-layout">
-            <AccountMenuSidebar activePath={getSettingsPathByRole(auth?.role)} />
+        <div className="account-settings-page">
+            <header className="account-settings__header">
+                <h1>Quản lý tài khoản</h1>
+                <p>Cập nhật thông tin cá nhân của bạn.</p>
+            </header>
 
-            <div className="account-settings-main">
-                <header className="account-settings__header">
-                    <h1>Quản lý tài khoản</h1>
-                    <p>Cập nhật thông tin cá nhân của bạn.</p>
-                </header>
+            {message && <div className="account-settings__message">{message}</div>}
+            {error && <div className="account-settings__error">{error}</div>}
 
-                {message && <div className="account-settings__message">{message}</div>}
-                {error && <div className="account-settings__error">{error}</div>}
-
-                {loading ? (
-                    <div className="account-settings__loading">Đang tải thông tin tài khoản...</div>
-                ) : (
-                    <>
-                        <div className="account-settings__card">
+            {loading ? (
+                <div className="account-settings__loading">Đang tải thông tin tài khoản...</div>
+            ) : (
+                <>
+                    <div className="account-settings__card">
                             <div className="account-settings__avatar-block">
                                 <UserAvatar src={user.profilePicture} name={user.fullName} size={80} />
                                 <div>
@@ -442,8 +437,7 @@ const CandidateSettingsPage = () => {
                             </button>
                         </div>
                     </>
-                )}
-            </div>
+            )}
 
             <EditFieldModal
                 open={editModal === 'fullName'}

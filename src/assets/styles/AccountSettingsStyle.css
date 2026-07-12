@@ -1,14 +1,7 @@
-.account-settings-layout {
-    display: flex;
-    gap: 24px;
-    align-items: flex-start;
-    max-width: 1100px;
+.account-settings-page {
+    max-width: 900px;
     margin: 0 auto;
-}
-
-.account-settings-main {
-    flex: 1;
-    min-width: 0;
+    padding: 8px 0 24px;
 }
 
 .account-settings__header h1 {
@@ -387,10 +380,4 @@
 .edit-field-modal__btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
-}
-
-@media (max-width: 900px) {
-    .account-settings-layout {
-        flex-direction: column;
-    }
 }

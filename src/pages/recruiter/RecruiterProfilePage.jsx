@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import AccountMenuSidebar from '../../components/common/account-menu/AccountMenuSidebar.jsx';
 import EditFieldModal from '../../components/common/EditFieldModal.jsx';
 import { PencilIcon } from '../../components/common/icons.jsx';
 import recruiterProfileApi, { getApiErrorMessage } from '../../apis/RecruiterProfileApi.jsx';
@@ -12,7 +11,6 @@ import {
     findWardByName,
 } from '../../modules/location/index.js';
 import { useAuth } from '../../contexts/authContext.js';
-import { ROUTES } from '../../routes/path.js';
 import '../../assets/styles/AccountSettingsStyle.css';
 import '../../assets/styles/RecruiterProfileStyle.css';
 
@@ -449,19 +447,16 @@ const RecruiterProfilePage = () => {
     const canAddGallery = galleryCount < MAX_GALLERY;
 
     return (
-        <div className="account-settings-layout">
-            <AccountMenuSidebar activePath={ROUTES.RECRUITER_PROFILE} />
+        <div className="account-settings-page">
+            <header className="account-settings__header">
+                <h1>Hồ sơ nhà tuyển dụng</h1>
+                <p>Quản lý thông tin doanh nghiệp hiển thị với ứng viên.</p>
+            </header>
 
-            <div className="account-settings-main">
-                <header className="account-settings__header">
-                    <h1>Hồ sơ nhà tuyển dụng</h1>
-                    <p>Quản lý thông tin doanh nghiệp hiển thị với ứng viên.</p>
-                </header>
+            {message && <div className="account-settings__message">{message}</div>}
+            {error && <div className="account-settings__error">{error}</div>}
 
-                {message && <div className="account-settings__message">{message}</div>}
-                {error && <div className="account-settings__error">{error}</div>}
-
-                {loading ? (
+            {loading ? (
                     <div className="account-settings__loading">Đang tải hồ sơ...</div>
                 ) : noProfile ? (
                     <div className="account-settings__card">
@@ -811,8 +806,7 @@ const RecruiterProfilePage = () => {
                             )}
                         </div>
                     </>
-                )}
-            </div>
+            )}
 
             <EditFieldModal
                 open={editModal === 'businessName'}
