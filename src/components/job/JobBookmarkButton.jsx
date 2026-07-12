@@ -5,6 +5,7 @@ import { saveJob, unsaveJob } from '../../apis/JobApi.jsx';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { setBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
+import { notifyLoginRequired } from '../../utils/notifyLoginRequired.js';
 import { BookmarkIcon } from '../common/icons.jsx';
 
 const JobBookmarkButton = ({ jobId, className }) => {
@@ -22,6 +23,7 @@ const JobBookmarkButton = ({ jobId, className }) => {
         e.stopPropagation();
 
         if (!auth) {
+            notifyLoginRequired('save');
             setBookmarkReturnPath(`${location.pathname}${location.search}`);
             navigate(ROUTES.LOGIN);
             return;

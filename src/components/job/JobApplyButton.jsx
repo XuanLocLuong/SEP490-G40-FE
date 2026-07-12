@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { setBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
+import { notifyLoginRequired } from '../../utils/notifyLoginRequired.js';
 
 const JobApplyButton = ({ jobId, className, label = 'Ứng tuyển ngay' }) => {
     const { auth } = useAuth();
@@ -17,6 +18,7 @@ const JobApplyButton = ({ jobId, className, label = 'Ứng tuyển ngay' }) => {
         e.stopPropagation();
 
         if (!auth) {
+            notifyLoginRequired('apply');
             setBookmarkReturnPath(`${location.pathname}${location.search}`);
             navigate(ROUTES.LOGIN);
             return;
