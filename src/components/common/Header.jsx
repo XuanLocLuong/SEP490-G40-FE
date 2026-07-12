@@ -1,14 +1,16 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/authContext.js';
-import { ROUTES } from '../../routes/path.js';
+import { getAccountMenuByRole } from './account-menu/accountMenuConfig.js';
+import { ROUTES, getHomePathByRole } from '../../routes/path.js';
+import HeaderProfileDropdown from './account-menu/HeaderProfileDropdown.jsx';
 import '../../assets/styles/HeaderStyle.css';
 
-// Header dùng cho GuestLayout. Nội dung link "Việc làm / Công ty" chỉ là
-// placeholder điều hướng — trang đích (Landing Page) KHÔNG thuộc task này,
-// để nguyên link trỏ về "/" cho tới khi task Landing Page được code.
 const Header = () => {
     const { auth, logout } = useAuth();
     const navigate = useNavigate();
+
+    const homePath = auth ? getHomePathByRole(auth.role) : ROUTES.LANDING;
+    const menu = auth ? getAccountMenuByRole(auth.role) : null;
 
     const handleLogout = async () => {
         await logout();
@@ -19,7 +21,7 @@ const Header = () => {
         <header className="site-header">
             <div className="site-header__inner">
                 <div className="site-header__left">
-                    <NavLink to={ROUTES.LANDING} className="site-header__logo">
+                    <NavLink to={homePath} className="site-header__logo">
                         JOBLINK
                     </NavLink>
 
@@ -35,14 +37,12 @@ const Header = () => {
 
                 <div className="site-header__right">
                     {auth ? (
-                        <>
-                            <span className="site-header__user">
-                                {auth.fullName} <span className="site-header__role">({auth.role})</span>
-                            </span>
-                            <button className="btn btn--ghost" onClick={handleLogout}>
-                                Đăng xuất
-                            </button>
-                        </>
+                        <HeaderProfileDropdown
+                            name={auth.fullName}
+                            avatarUrl={auth.profilePicture}
+                            menu={menu}
+                            onLogout={handleLogout}
+                        />
                     ) : (
                         <>
                             <button

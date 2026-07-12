@@ -1,0 +1,128 @@
+.account-menu-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 20px 16px;
+    box-shadow: var(--shadow-card);
+}
+
+.account-menu-sidebar__profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px 16px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+    min-width: 0;
+}
+
+.account-menu-sidebar__profile-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.account-menu-sidebar__name {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-menu-sidebar__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.account-menu-sidebar__section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+}
+
+.account-menu-sidebar__section-head:hover {
+    background: var(--color-bg);
+}
+
+.account-menu-sidebar__chevron {
+    margin-left: auto;
+    width: 16px;
+    height: 16px;
+    color: var(--color-text-muted);
+    transition: transform 0.15s ease;
+}
+
+.account-menu-sidebar__chevron--open {
+    transform: rotate(180deg);
+}
+
+.account-menu-sidebar__sublist {
+    list-style: none;
+    margin: 0 0 4px;
+    padding: 0 0 0 20px;
+}
+
+.account-menu-sidebar__sublink {
+    display: block;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.account-menu-sidebar__sublink:hover,
+.account-menu-sidebar__sublink--active {
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.account-menu-sidebar__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.account-menu-sidebar__link:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+.account-menu-sidebar__link--active {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.account-menu-sidebar__icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    .account-menu-sidebar {
+        width: 100%;
+    }
+}

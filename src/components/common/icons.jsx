@@ -154,6 +154,49 @@ export const TrendingIcon = (props) => (
     </svg>
 );
 
+export const ChevronDownIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="m6 9 6 6 6-6" />
+    </svg>
+);
+
+export const PencilIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+);
+
+export const XIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+);
+
+export const UserCircleIcon = (props) => (
+    <svg {...base} {...props}>
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="10" r="3" />
+        <path d="M6.5 18.5c.9-2.2 2.9-3.5 5.5-3.5s4.6 1.3 5.5 3.5" />
+    </svg>
+);
+
+export const UserPlusIcon = (props) => (
+    <svg {...base} {...props}>
+        <circle cx="9" cy="8" r="3.5" />
+        <path d="M3 19c0-2.8 2.7-5 6-5" />
+        <path d="M16 11v6M13 14h6" />
+    </svg>
+);
+
+export const BriefcaseIcon = (props) => (
+    <svg {...base} {...props}>
+        <rect x="3" y="7" width="18" height="12" rx="2" />
+        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <path d="M3 12h18" />
+    </svg>
+);
+
 export const LogOutIcon = (props) => (
     <svg {...base} {...props}>
         <path d="M9 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h4" />

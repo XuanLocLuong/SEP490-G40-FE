@@ -14,6 +14,7 @@ import LandingPage from '../pages/guest/LandingPage.jsx';
 import Login from '../pages/auth/Login.jsx';
 import Register from '../pages/auth/Register.jsx';
 import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
+import CandidateSettingsPage from '../pages/candidate/CandidateSettingsPage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
@@ -47,6 +48,7 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.CANDIDATE_HOME} element={<CandidateHomePage />} />
+                <Route path={ROUTES.CANDIDATE_SETTINGS} element={<CandidateSettingsPage />} />
             </Route>
 
             {/* ---- Recruiter ---- */}
@@ -58,6 +60,7 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.RECRUITER_HOME} element={<RecruiterHomePage />} />
+                <Route path={ROUTES.RECRUITER_SETTINGS} element={<CandidateSettingsPage />} />
             </Route>
 
             {/* ---- Post Manager ---- */}

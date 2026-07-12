@@ -1,0 +1,396 @@
+.account-settings-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.account-settings-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.account-settings__header h1 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+}
+
+.account-settings__header p {
+    margin: 0 0 24px;
+    color: var(--color-text-muted);
+}
+
+.account-settings__loading {
+    padding: 24px 0;
+    color: var(--color-text-muted);
+}
+
+.account-settings__message,
+.account-settings__error {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+}
+
+.account-settings__message {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.account-settings__error {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.account-settings__card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.account-settings__card h2 {
+    margin: 0 0 20px;
+    font-size: 1.1rem;
+}
+
+.account-settings__avatar-block {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.account-settings__avatar-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.account-settings__file-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.account-settings__file-btn:has(input:disabled) {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.account-settings__info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.account-settings__info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.account-settings__info-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 4px;
+}
+
+.account-settings__info-value {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    word-break: break-word;
+}
+
+.account-settings__info-value--empty {
+    color: var(--color-text-soft);
+    font-style: italic;
+}
+
+.account-settings__edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fff;
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.account-settings__edit-btn:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+}
+
+.account-settings__initial-form {
+    margin-bottom: 8px;
+}
+
+.account-settings__initial-form .account-settings__first-field:last-of-type {
+    border-bottom: none;
+}
+
+.account-settings__initial-form .account-settings__btn {
+    margin-top: 4px;
+}
+
+.account-settings__first-field {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.account-settings__first-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.account-settings__first-field input {
+    width: 100%;
+    max-width: 360px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font: inherit;
+    margin-bottom: 12px;
+}
+
+.account-settings__first-field input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.account-settings__hint {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.account-settings__hint.account-settings__avatar-hint {
+    margin-top: 10px;
+}
+
+.account-settings__field {
+    margin-bottom: 16px;
+}
+
+.account-settings__field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.account-settings__field input {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font: inherit;
+    color: var(--color-text);
+    background: #fff;
+}
+
+.account-settings__field input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.account-settings__btn {
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.account-settings__btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.account-settings__btn--primary {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.account-settings__btn--primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+.account-settings__btn--ghost {
+    background: #fff;
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.account-settings__btn--ghost:hover:not(:disabled) {
+    background: var(--color-bg);
+}
+
+/* Modal */
+.edit-field-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.edit-field-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    border: none;
+    cursor: pointer;
+}
+
+.edit-field-modal__panel {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 50px rgba(16, 24, 40, 0.2);
+    overflow: hidden;
+}
+
+.edit-field-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.edit-field-modal__header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+.edit-field-modal__close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-bg);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+.edit-field-modal__body {
+    padding: 20px 24px;
+}
+
+.edit-field-modal__field {
+    display: block;
+    margin-bottom: 16px;
+}
+
+.edit-field-modal__field span {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.edit-field-modal__field input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font: inherit;
+}
+
+.edit-field-modal__field input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.edit-field-modal__field input:disabled {
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+}
+
+.edit-field-modal__textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font: inherit;
+    resize: vertical;
+    min-height: 120px;
+}
+
+.edit-field-modal__textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-soft);
+}
+
+.edit-field-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px 24px;
+}
+
+.edit-field-modal__btn {
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.edit-field-modal__btn--ghost {
+    background: #fff;
+    border-color: var(--color-border);
+}
+
+.edit-field-modal__btn--primary {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.edit-field-modal__btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+    .account-settings-layout {
+        flex-direction: column;
+    }
+}

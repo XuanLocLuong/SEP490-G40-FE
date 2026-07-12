@@ -49,15 +49,159 @@
     gap: 12px;
 }
 
-.site-header__user {
-    font-size: 14px;
-    color: var(--color-text);
-    margin-right: 4px;
+/* Avatar dropdown trên header — menu khác nhau theo role (xem accountMenuConfig.js) */
+.header-profile-menu {
+    position: relative;
 }
 
-.site-header__role {
+.header-profile-menu__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 12px 4px 4px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    font-family: var(--font-sans);
+}
+
+.header-profile-menu__trigger:hover,
+.header-profile-menu__trigger--open {
+    background: var(--color-bg);
+    border-color: var(--color-primary);
+}
+
+.header-profile-menu__name {
+    font-size: 14px;
+    font-weight: 600;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.header-profile-menu__chevron {
+    width: 16px;
+    height: 16px;
     color: var(--color-text-muted);
-    font-weight: 400;
+}
+
+.header-profile-menu__dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 300px;
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 40px rgba(16, 24, 40, 0.12);
+    padding: 8px;
+    z-index: 100;
+}
+
+.header-profile-menu__section {
+    margin-bottom: 2px;
+}
+
+.header-profile-menu__section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+}
+
+.header-profile-menu__section-head:hover {
+    background: var(--color-bg);
+}
+
+.header-profile-menu__section-chevron {
+    margin-left: auto;
+    width: 16px;
+    height: 16px;
+    color: var(--color-text-muted);
+    transition: transform 0.15s ease;
+}
+
+.header-profile-menu__section-chevron--open {
+    transform: rotate(180deg);
+}
+
+.header-profile-menu__sublist {
+    list-style: none;
+    margin: 0 0 4px;
+    padding: 0 0 0 28px;
+}
+
+.header-profile-menu__sublink {
+    display: block;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.header-profile-menu__sublink:hover,
+.header-profile-menu__sublink.active {
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+}
+
+.header-profile-menu__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.header-profile-menu__link:hover,
+.header-profile-menu__link.active {
+    background: var(--color-bg);
+    color: var(--color-primary);
+}
+
+.header-profile-menu__divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 6px 4px;
+}
+
+.header-profile-menu__logout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--color-danger);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.header-profile-menu__logout:hover {
+    background: var(--color-danger-bg);
 }
 
 /* Buttons dùng chung, tái sử dụng ở Login/Register/Footer... */
