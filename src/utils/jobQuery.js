@@ -2,6 +2,8 @@ import { fetchHomepageJobs, searchJobs, fetchNearbyJobs } from '../apis/JobApi.j
 
 export const LANDING_PREVIEW_SIZE = 8;
 export const JOB_LIST_PAGE_SIZE = 10;
+/** Jobs loaded per request in /jobs/:id sidebar (append via Load more). BE max size = 50. */
+export const JOB_DETAIL_SIDEBAR_PAGE_SIZE = 10;
 
 export const getCurrentPosition = () =>
     new Promise((resolve, reject) => {

@@ -16,3 +16,6 @@ export const saveJob = (jobId) =>
 
 export const unsaveJob = (jobId) =>
     axiosClient.delete(`${JOBS_BASE}/${jobId}/save`);
+
+export const fetchJobDetail = (jobId) =>
+    axiosClient.get(`${JOBS_BASE}/${jobId}`);

@@ -54,6 +54,12 @@ export const ROUTES = {
 
 export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
 
+export const getCandidateJobChatPath = (jobId) =>
+    `${ROUTES.CANDIDATE_MESSAGES}?jobId=${jobId}`;
+
+/** Placeholder — trang công ty công khai; cập nhật khi có route thật. */
+export const getBusinessProfilePath = (businessId) => `/business/${businessId}`;
+
 // Dùng sau khi login / khi vào route không tồn tại để biết đá user về đâu.
 export const getHomePathByRole = (role) => {
     switch (role) {
