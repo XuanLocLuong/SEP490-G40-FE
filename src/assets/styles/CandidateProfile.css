@@ -657,6 +657,89 @@
     margin: 0;
 }
 
+/* ---- Availability summary (đã có lịch) ---- */
+.cp-availability-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.cp-availability-summary--loading {
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.cp-availability-summary__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.cp-availability-summary__row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.cp-availability-summary__row:first-child {
+    padding-top: 4px;
+}
+
+.cp-availability-summary__days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.cp-availability-summary__day {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    background: #edf2f8;
+    color: #8fa3b8;
+}
+
+.cp-availability-summary__day--active {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.cp-availability-summary__time {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+.cp-availability-summary__time svg {
+    color: var(--color-text-soft);
+}
+
+@media (max-width: 720px) {
+    .cp-availability-summary__row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .cp-availability-summary__time {
+        padding-left: 4px;
+    }
+}
+
 /* ---- Empty text ---- */
 .cp-empty-text {
     font-size: 13px;

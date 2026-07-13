@@ -18,6 +18,7 @@ import Register from '../pages/auth/Register.jsx';
 import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
 import CandidateSettingsPage from '../pages/candidate/CandidateSettingsPage.jsx';
 import CandidateProfilePage from '../pages/candidate/CandidateProfile/CandidateProfilePage.jsx';
+import AvailabilityPage from '../pages/candidate/availability/AvailabilityPage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
@@ -56,6 +57,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.CANDIDATE_HOME} element={<CandidateHomePage />} />
                 <Route path={ROUTES.CANDIDATE_SETTINGS} element={<CandidateSettingsPage />} />
                 <Route path={ROUTES.CANDIDATE_PROFILE} element={<CandidateProfilePage />} />
+                <Route path={ROUTES.CANDIDATE_AVAILABILITY} element={<AvailabilityPage />} />
             </Route>
 
             {/* ---- Recruiter ---- */}

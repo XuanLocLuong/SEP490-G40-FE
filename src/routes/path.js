@@ -19,6 +19,7 @@ export const ROUTES = {
     // catch-all route đá về lại trang chủ cho tới khi task tương ứng được code.
     CANDIDATE_AI_SUGGESTIONS: '/candidate/ai-suggestions',
     CANDIDATE_PROFILE: '/candidate/profile',
+    CANDIDATE_AVAILABILITY: '/candidate/availability',
     CANDIDATE_INVITATIONS: '/candidate/invitations',
     CANDIDATE_MESSAGES: '/candidate/messages',
     CANDIDATE_NOTIFICATIONS: '/candidate/notifications',
