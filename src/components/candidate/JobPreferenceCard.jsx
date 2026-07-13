@@ -10,6 +10,7 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
     const [form, setForm] = useState(preference);
 
     const [showMap, setShowMap] = useState(false);
+    const [formError, setFormError] = useState('');
     const reverseGeocodeTimerRef = useRef(null);
 
     // Dọn timer khi component unmount, tránh setState sau khi đã unmount.
@@ -80,6 +81,15 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
     };
 
     const handleSubmit = async () => {
+
+        setFormError('');
+
+        const min = form.salaryMin === '' ? null : Number(form.salaryMin);
+        const max = form.salaryMax === '' ? null : Number(form.salaryMax);
+        if (min != null && max != null && min > max) {
+            setFormError('Lương tối thiểu phải nhỏ hơn hoặc bằng lương tối đa.');
+            return;
+        }
 
         let location = form.location || '';
 
@@ -186,6 +196,7 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                 }
             >
                 <div className="cp-form-group">
+                    {formError && <p className="cp-form-error">{formError}</p>}
                     <label className="cp-form-label">Hình thức mong muốn</label>
                     <div className="cp-choice-grid">
                         {JOB_TYPE_OPTIONS.map((opt) => {

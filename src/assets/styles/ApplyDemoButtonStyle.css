@@ -1,0 +1,42 @@
+.apply-demo {
+    display: inline-block;
+}
+
+.apply-demo__panel {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    max-width: 360px;
+}
+
+.apply-demo__job {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.apply-demo__ok {
+    color: var(--color-success, #16a34a);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.apply-demo__blocked {
+    color: var(--color-danger);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.apply-demo__reasons {
+    margin: 0 0 10px;
+    padding-left: 18px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.apply-demo__pending {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}

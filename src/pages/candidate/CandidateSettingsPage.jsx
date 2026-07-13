@@ -245,8 +245,8 @@ const CandidateSettingsPage = () => {
         try {
             await userApi.changePassword({ currentPassword, newPassword });
             setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-            await logout();
             navigate(ROUTES.LOGIN);
+            await logout();
         } catch (err) {
             const apiMessage = getApiErrorMessage(err, 'Không thể đổi mật khẩu.');
 

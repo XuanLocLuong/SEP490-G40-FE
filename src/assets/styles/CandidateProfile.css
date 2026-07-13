@@ -1122,3 +1122,12 @@
     border-top:1px solid #ececec;
 
 }
+
+.cp-form-error {
+    background: var(--color-danger-bg, #fdecec);
+    color: var(--color-danger, #dc2626);
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+}
