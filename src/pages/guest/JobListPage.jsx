@@ -77,14 +77,14 @@ const JobListPage = () => {
         };
     }, [searchParams]);
 
-    const handleSearch = ({ keyword, city, nearMe }) => {
+    const handleSearch = ({ keyword, city, ward, nearMe }) => {
         // Near-me: UI only — teammate sẽ implement sau.
         if (nearMe) {
             return;
         }
 
-        if (keyword || city) {
-            setSearchParams(buildJobListSearchParams({ keyword, city }));
+        if (keyword || city || ward) {
+            setSearchParams(buildJobListSearchParams({ keyword, city, ward }));
         } else {
             setSearchParams({});
         }
@@ -122,6 +122,7 @@ const JobListPage = () => {
             <JobListSearch
                 initialKeyword={urlQuery?.keyword || ''}
                 initialCity={urlQuery?.city || ''}
+                initialWard={urlQuery?.ward || ''}
                 onSearch={handleSearch}
                 loading={loading}
             />

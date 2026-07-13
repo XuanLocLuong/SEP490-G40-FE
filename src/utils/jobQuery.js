@@ -20,10 +20,10 @@ export const getCurrentPosition = () =>
         );
     });
 
-/** @typedef {{ keyword?: string, city?: string, nearMe?: boolean, latitude?: number, longitude?: number }} JobQuery */
+/** @typedef {{ keyword?: string, city?: string, ward?: string, nearMe?: boolean, latitude?: number, longitude?: number }} JobQuery */
 
 export const isSearchQuery = (query) =>
-    Boolean(query?.nearMe || query?.keyword || query?.city);
+    Boolean(query?.nearMe || query?.keyword || query?.city || query?.ward);
 
 export const fetchJobListPage = async (page, size, query) => {
     if (query?.nearMe) {
@@ -35,10 +35,11 @@ export const fetchJobListPage = async (page, size, query) => {
         });
         return res.data.data;
     }
-    if (query && (query.keyword || query.city)) {
+    if (query && (query.keyword || query.city || query.ward)) {
         const res = await searchJobs({
             keyword: query.keyword || undefined,
             city: query.city || undefined,
+            ward: query.ward || undefined,
             page,
             size,
         });
@@ -52,6 +53,7 @@ export const buildJobListSearchParams = (query) => {
     const params = new URLSearchParams();
     if (query?.keyword) params.set('keyword', query.keyword);
     if (query?.city) params.set('city', query.city);
+    if (query?.ward) params.set('ward', query.ward);
     if (query?.nearMe) params.set('nearMe', '1');
     return params;
 };
@@ -59,7 +61,8 @@ export const buildJobListSearchParams = (query) => {
 export const parseJobListSearchParams = (searchParams) => {
     const keyword = searchParams.get('keyword')?.trim() || '';
     const city = searchParams.get('city')?.trim() || '';
+    const ward = searchParams.get('ward')?.trim() || '';
     const nearMe = searchParams.get('nearMe') === '1';
-    if (!keyword && !city && !nearMe) return null;
-    return { keyword, city, nearMe };
+    if (!keyword && !city && !ward && !nearMe) return null;
+    return { keyword, city, ward, nearMe };
 };

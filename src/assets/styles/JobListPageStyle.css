@@ -1,7 +1,7 @@
 .job-list-page {
-    margin: -28px -32px;
-    max-width: none;
-    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 16px;
     background: var(--color-bg);
     min-height: 60vh;
 }
@@ -44,64 +44,7 @@
     gap: 16px;
 }
 
-/* Search bar */
-.job-list-search {
-    margin-bottom: 20px;
-}
-
-.job-list-search__fields {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: 12px;
-    box-shadow: var(--shadow-card);
-}
-
-.job-list-search__field {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1 1 180px;
-    min-width: 0;
-    padding: 8px 12px;
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-    color: var(--color-text-muted);
-}
-
-.job-list-search__field input,
-.job-list-search__field select {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    background: transparent;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    color: var(--color-text);
-    outline: none;
-}
-
-.job-list-search__field select:disabled {
-    opacity: 0.5;
-}
-
-.job-list-search__near-me {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--color-text-muted);
-    white-space: nowrap;
-    cursor: pointer;
-}
-
-.job-list-search__near-me input {
-    accent-color: var(--color-primary);
-}
+/* Search bar — styles in JobSearchForm.css */
 
 .job-list-page__filter-actions {
     display: flex;
@@ -141,24 +84,6 @@
 
 @media (max-width: 767px) {
     .job-list-page {
-        margin: -28px -16px;
-        padding: 24px 16px;
-    }
-
-    .job-list-search__fields {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .job-list-search__field {
-        width: 100%;
-    }
-
-    .job-list-search__near-me {
-        justify-content: center;
-    }
-
-    .job-list-search__fields .btn--primary {
-        width: 100%;
+        padding: 24px 0;
     }
 }
