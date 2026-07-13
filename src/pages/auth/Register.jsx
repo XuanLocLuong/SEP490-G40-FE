@@ -15,21 +15,29 @@ import {
     GraduationCapIcon,
     BuildingIcon,
     CheckCircleIcon,
+    UserCircleIcon,
+    PhoneIcon,
 } from '../../components/common/icons.jsx';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const AUTO_REDIRECT_SECONDS = 10;
 
-// Backend (RegisterRequestDTO) CHỈ nhận { email, password, role }.
+// Backend (RegisterRequestDTO) nhận { email, fullName, phone, password, role }.
 // role bắt buộc, chỉ nhận CANDIDATE/RECRUITER khi tự đăng ký công khai.
+// Giờ chỉ cần đúng 10 số: 0 + 9 số bất kỳ, hoặc +84 + 9 số bất kỳ.
+const PHONE_REGEX = /^(\+84|0)\d{9}$/;
+
 const Register = () => {
     const [role, setRole] = useState(USER_ROLES.CANDIDATE);
+    const [fullName, setFullName] = useState('');
+    const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [result, setResult] = useState(null); // { homePath, isNewAccount }
     const [secondsLeft, setSecondsLeft] = useState(AUTO_REDIRECT_SECONDS);
@@ -59,13 +67,27 @@ const Register = () => {
             return;
         }
 
+        if (!PHONE_REGEX.test(phone.trim())) {
+            setError('Số điện thoại không hợp lệ (VD: 0912345678 hoặc +84912345678).');
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
-            const res = await RegisterApi({ email, password, role });
+            const res = await RegisterApi({
+                email,
+                password,
+                role,
+                fullName: fullName.trim(),
+                phone: phone.trim(),
+            });
             const authData = res.data.data;
             login(authData);
             setResult({ homePath: getHomePathByRole(authData.role), isNewAccount: authData.newAccount });
         } catch (err) {
             setError(getAuthErrorMessage(err));
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -155,6 +177,36 @@ const Register = () => {
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-field">
+                        <label className="form-field__label">Họ và tên</label>
+                        <div className="form-field__input-wrap">
+                            <UserCircleIcon className="form-field__icon" />
+                            <input
+                                className="form-field__input"
+                                type="text"
+                                placeholder="Nhập họ và tên"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-field">
+                        <label className="form-field__label">Số điện thoại</label>
+                        <div className="form-field__input-wrap">
+                            <PhoneIcon className="form-field__icon" />
+                            <input
+                                className="form-field__input"
+                                type="tel"
+                                placeholder="VD: 0912345678"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-field">
                         <label className="form-field__label">Email</label>
                         <div className="form-field__input-wrap">
                             <MailIcon className="form-field__icon" />
@@ -217,8 +269,15 @@ const Register = () => {
                         </div>
                     </div>
 
-                    <button type="submit" className="btn btn--primary btn--block">
-                        Tạo tài khoản
+                    <button type="submit" className="btn btn--primary btn--block" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                            <>
+                                <span className="btn-spinner" aria-hidden="true" />
+                                Đang tạo tài khoản...
+                            </>
+                        ) : (
+                            'Tạo tài khoản'
+                        )}
                     </button>
                 </form>
 

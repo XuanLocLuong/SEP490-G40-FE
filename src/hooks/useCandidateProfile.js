@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import * as service from '../services/candidateProfileService.js';
-
+import { getProfileSaveErrorMessage, getAvatarErrorMessage } from '../utils/profileErrorMessages.js';
 // Hook trung tâm cho Candidate Profile.
 // Trả về: profile, skills catalog, loading/error/saving + các action.
 export const useCandidateProfile = () => {
@@ -55,7 +55,7 @@ export const useCandidateProfile = () => {
                 return true;
             } catch (err) {
                 setError(err);
-                toast.error('Lưu hồ sơ thất bại. Vui lòng thử lại.');
+                toast.error(getProfileSaveErrorMessage(err));
                 return false;
             } finally {
                 setSaving(false);
@@ -76,7 +76,7 @@ export const useCandidateProfile = () => {
             toast.success('Đã cập nhật ảnh đại diện.');
             return true;
         } catch {
-            toast.error('Tải ảnh đại diện thất bại.');
+            toast.error(getAvatarErrorMessage);
             return false;
         } finally {
             setSaving(false);

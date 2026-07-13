@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { applyToJob, previewJobApplication } from '../../apis/ApplicationApi.jsx';
+import { applyToJob, previewApply } from '../../apis/ApplicationApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
-import { getApplicationErrorMessage } from '../../utils/applicationErrorMessages.js';
+import { getApplyErrorMessage } from '../../utils/applicationErrorMessages.js';
 import { setBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
 import { notifyLoginRequired } from '../../utils/notifyLoginRequired.js';
 import JobApplyConfirmModal from './JobApplyConfirmModal.jsx';
@@ -48,11 +48,11 @@ const JobApplyButton = ({
         setPreview(null);
 
         try {
-            const res = await previewJobApplication(jobId);
+            const res = await previewApply(jobId);
             setPreview(res.data.data);
         } catch (err) {
             closeModal();
-            toast.error(getApplicationErrorMessage(err));
+            toast.error(getApplyErrorMessage(err));
         } finally {
             setPreviewLoading(false);
         }
@@ -83,7 +83,7 @@ const JobApplyButton = ({
             onApplied?.();
             closeModal();
         } catch (err) {
-            toast.error(getApplicationErrorMessage(err));
+            toast.error(getApplyErrorMessage(err));
         } finally {
             setApplying(false);
         }

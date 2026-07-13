@@ -1,4 +1,4 @@
-import { getBlockingReasonMessage } from '../../utils/applicationErrorMessages.js';
+import { getReasonMessage } from '../../utils/applicationErrorMessages.js';
 import '../../assets/styles/JobApplyModalStyle.css';
 
 const JobApplyConfirmModal = ({
@@ -13,7 +13,7 @@ const JobApplyConfirmModal = ({
 }) => {
     if (!open) return null;
 
-    const blockingMessages = (preview?.blockingReasons || []).map(getBlockingReasonMessage);
+    const blockingMessages = (preview?.blockingReasons || []).map(getReasonMessage);
     const canApply = preview?.eligible && !loading && !applying;
 
     return (

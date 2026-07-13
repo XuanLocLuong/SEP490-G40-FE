@@ -72,8 +72,8 @@ const InternalLayout = () => {
     const config = CONFIG_BY_ROLE[auth?.role];
 
     const handleLogout = async () => {
+        navigate(ROUTES.LANDING);
         await logout();
-        navigate(ROUTES.LOGIN);
     };
 
     if (!config) return null;

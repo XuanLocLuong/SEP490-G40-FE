@@ -38,8 +38,8 @@ const RecruiterSidebarFooter = () => {
     const navigate = useNavigate();
 
     const handleLogout = async () => {
+        navigate(ROUTES.LANDING);
         await logout();
-        navigate(ROUTES.LOGIN);
     };
 
     return (
