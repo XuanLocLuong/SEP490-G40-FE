@@ -4,10 +4,12 @@ import { getJobDetailPath } from '../../routes/path.js';
 const JobDetailLink = ({ jobId, className, children = 'Xem chi tiết' }) => {
     const location = useLocation();
 
+    const search = location.search || '';
+
     return (
         <Link
-            to={getJobDetailPath(jobId)}
-            state={{ from: `${location.pathname}${location.search}` }}
+            to={`${getJobDetailPath(jobId)}${search}`}
+            state={{ from: `${location.pathname}${search}` }}
             className={className}
             onClick={(e) => e.stopPropagation()}
         >
