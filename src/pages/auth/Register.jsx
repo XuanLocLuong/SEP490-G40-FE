@@ -45,9 +45,9 @@ const Register = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    // Đếm ngược 10s rồi tự chuyển trang, chỉ chạy khi đã có homePath (tức đăng ký xong).
+
     useEffect(() => {
-        if (!result) return;
+        if (!result || result.isNewAccount) return; // tài khoản mới: không auto-chuyển, chờ xác thực email
 
         if (secondsLeft <= 0) {
             navigate(result.homePath);
@@ -106,15 +106,32 @@ const Register = () => {
     if (result) {
         const isNew = result.isNewAccount;
 
+        // Tài khoản mới: BẮT BUỘC xác thực email trước, không cho chuyển trang
+        // chủ ngay — không có nút/đếm ngược tự chuyển ở màn này nữa.
+        if (isNew) {
+            return (
+                <AuthCard title="Kiểm tra email của bạn 📩" subtitle="Chỉ còn 1 bước nữa thôi!">
+                    <p className="auth-card__notice">
+                        Chúng tôi đã gửi email xác thực tới <strong>{email}</strong>.
+                        Vui lòng mở hộp thư (kể cả mục Spam) và bấm vào liên kết xác thực
+                        để hoàn tất đăng ký trước khi tiếp tục sử dụng JobLink.
+                    </p>
+
+                    <div className="auth-card__footer">
+                        Đã xác thực xong?{' '}
+                        <button className="auth-card__footer-link" onClick={() => navigate(ROUTES.LOGIN)}>
+                            Quay lại đăng nhập
+                        </button>
+                    </div>
+                </AuthCard>
+            );
+        }
+
+
+        // Tài khoản đã tồn tại từ trước (VD Google login trùng tài khoản) — email
+        // đã verified sẵn rồi nên cho chuyển trang chủ bình thường.
         return (
-            <AuthCard
-                title={isNew ? 'Đăng ký thành công 🎉' : 'Tài khoản đã tồn tại'}
-                subtitle={
-                    isNew
-                        ? 'Chào mừng bạn đến với JobLink!'
-                        : 'Bạn đã từng đăng ký tài khoản này trước đó — mình đăng nhập luôn cho bạn.'
-                }
-            >
+            <AuthCard title="Tài khoản đã tồn tại" subtitle="Bạn đã từng đăng ký tài khoản này trước đó — mình đăng nhập luôn cho bạn.">
                 <button
                     className="btn btn--primary btn--block"
                     onClick={() => navigate(result.homePath)}

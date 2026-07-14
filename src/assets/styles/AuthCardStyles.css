@@ -262,3 +262,13 @@
         transform: rotate(360deg);
     }
 }
+
+.auth-card__notice {
+    background: var(--color-primary-light, #eef3ff);
+    color: var(--color-text);
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+}

@@ -24,6 +24,7 @@ import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
+import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
 
 // Cấu trúc route đi theo nhóm role (khớp bảng Screen Authorization trong SRS +
 // đúng 5 role thật của backend). Mỗi nhóm bọc 1 Layout dùng chung qua
@@ -41,10 +42,11 @@ const AppRouter = () => {
                 <Route path={ROUTES.JOB_DETAIL} element={<JobDetailPage />} />
             </Route>
 
-            {/* ---- Auth (Login/Register) — KHÔNG có Header/Footer,
+            {/* ---- Auth (Login/Register/Verify) — KHÔNG có Header/Footer,
                  tự đứng độc lập full-page theo đúng ảnh thiết kế ---- */}
             <Route path={ROUTES.LOGIN} element={<Login />} />
             <Route path={ROUTES.REGISTER} element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
 
             {/* ---- Candidate ---- */}
             <Route

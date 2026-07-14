@@ -5,6 +5,7 @@ export const ROUTES = {
     LANDING: '/',
     LOGIN: '/login',
     REGISTER: '/register',
+    VERIFY_EMAIL: '/verify-email',
     JOB_LIST: '/jobs',
     JOB_DETAIL: '/jobs/:jobId',
 
