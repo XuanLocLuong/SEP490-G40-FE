@@ -48,10 +48,6 @@ export const normalizeProfile = (raw) => {
         identityLocked: Boolean(data.identityLocked),
         hasAvailability: Boolean(data.hasAvailability),
 
-        // Backend CHƯA có field/API cho 2 mục này — luôn rỗng, chỉ để UI tĩnh chạy được.
-        portfolioUrl: '',
-        consentShareInfo: false,
-
         jobPreference: {
             jobTypes: data.preferredJobType ? data.preferredJobType.split(JOB_TYPES_SEPARATOR) : [],
             salaryMin: data.expectedSalaryMin ?? null,

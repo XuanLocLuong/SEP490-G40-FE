@@ -33,7 +33,6 @@ export const mapPublicProfileFromApi = (data = {}) => ({
     skills: toArray(data.skills).map(normalizeSkill),
     experiences: toArray(data.experiences).map(normalizeExperience),
     educations: toArray(data.educations),
-    portfolio: data.portfolio ?? null,
     trustScore: data.trustScore != null ? Number(data.trustScore) : null,
 });
 
