@@ -266,6 +266,12 @@
     margin-bottom: 0;
 }
 
+.recruiter-profile__address-section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
 .recruiter-profile__gps-btn {
     display: inline-flex;
     align-items: center;
@@ -296,6 +302,38 @@
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-bottom: 10px;
+}
+
+.recruiter-profile__address-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.recruiter-profile__address-field label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.recruiter-profile__address-field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fff;
+    font: inherit;
+}
+
+.recruiter-profile__field--detail-address {
+    margin-top: 0;
+}
+
+.recruiter-profile__field--detail-address > label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
 }
 
 .recruiter-profile__input-icon {
@@ -487,4 +525,53 @@
     .recruiter-profile__tabs {
         overflow-x: auto;
     }
+}
+
+.recruiter-profile__create-job-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    border-radius: 12px;
+    color: #9a3412;
+}
+
+.recruiter-profile__create-job-banner--success {
+    background: var(--color-success-bg);
+    border-color: #86efac;
+    color: #166534;
+}
+
+.recruiter-profile__field--location {
+    scroll-margin-top: 96px;
+}
+
+#recruiter-profile-location {
+    scroll-margin-top: 96px;
+}
+
+.recruiter-profile__back-to-job-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: #ea580c;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.recruiter-profile__back-to-job-btn--success {
+    background: var(--color-success);
+}
+
+.recruiter-profile__back-to-job-btn--success:hover {
+    background: #15803d;
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     BuildingIcon,
@@ -23,6 +24,9 @@ import {
     getGeolocationErrorMessage,
 } from '../../modules/location/index.js';
 import { useAuth } from '../../contexts/authContext.js';
+import { ROUTES } from '../../routes/path.js';
+import { RECRUITER_PROFILE_CREATE_JOB_INTENT } from '../../utils/recruiterJobGuard.js';
+import RequiredMark from '../../components/common/RequiredMark.jsx';
 import '../../assets/styles/AccountSettingsStyle.css';
 import '../../assets/styles/RecruiterProfileStyle.css';
 
@@ -121,6 +125,9 @@ const isVerified = (status) =>
 
 const RecruiterProfilePage = () => {
     const { auth } = useAuth();
+    const [fromCreateJob, setFromCreateJob] = useState(
+        () => sessionStorage.getItem(RECRUITER_PROFILE_CREATE_JOB_INTENT) === '1'
+    );
     const logoInputRef = useRef(null);
     const galleryInputRef = useRef(null);
     const provinces = useMemo(() => getProvinces(), []);
@@ -132,24 +139,14 @@ const RecruiterProfilePage = () => {
     const [saving, setSaving] = useState(false);
     const [logoLoading, setLogoLoading] = useState(false);
     const [galleryLoading, setGalleryLoading] = useState(false);
-    const [creating, setCreating] = useState(false);
     const [gpsLoading, setGpsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('info');
-    const [createForm, setCreateForm] = useState({
-        businessName: '',
-        description: '',
-        websiteUrl: '',
-        businessType: '',
-        taxCode: '',
-        legalRepresentativeName: '',
-        phone: '',
-        email: '',
-    });
 
     const [savedLocation, setSavedLocation] = useState(null);
     const [coords, setCoords] = useState(null);
     const [locationLoading, setLocationLoading] = useState(false);
     const [addressFieldMessage, setAddressFieldMessage] = useState('');
+    const locationSectionRef = useRef(null);
 
     const wards = useMemo(
         () => getWardsByProvince(form.provinceId),
@@ -280,11 +277,12 @@ const RecruiterProfilePage = () => {
         } catch (err) {
             if (err.response?.status === 404) {
                 setNoProfile(true);
-                setCreateForm((prev) => ({
-                    ...prev,
-                    phone: prev.phone || accountContact.phone,
-                    email: prev.email || accountContact.email,
-                }));
+                setProfile(emptyProfile());
+                setForm({
+                    ...emptyForm(),
+                    phone: accountContact.phone,
+                    email: accountContact.email,
+                });
             } else {
                 toast.error(getApiErrorMessage(err, 'Không thể tải hồ sơ nhà tuyển dụng.'));
             }
@@ -425,20 +423,39 @@ const RecruiterProfilePage = () => {
             }
         }
 
-        if (!profile.businessId) {
-            toast.error('Chưa có hồ sơ doanh nghiệp.');
-            return;
-        }
-
         setSaving(true);
+        const isCreate = noProfile || !profile.businessId;
+        let businessId = profile.businessId;
 
         try {
-            const updated = await recruiterProfileApi.updateProfile(
-                buildUpdatePayload(form, profile.businessId)
-            );
-            setProfile(mapProfileFromApi(updated));
+            if (isCreate) {
+                const created = await recruiterProfileApi.createProfile({
+                    businessName: form.businessName.trim(),
+                    description: form.description?.trim() || null,
+                    websiteUrl: form.websiteUrl?.trim() || null,
+                    businessType: form.businessType?.trim() || null,
+                    email: form.email?.trim() || null,
+                    phone: form.phone?.trim() || null,
+                });
+                const mapped = mapProfileFromApi(created);
+                setProfile(mapped);
+                setNoProfile(false);
+                businessId = mapped.businessId;
+            } else {
+                const updated = await recruiterProfileApi.updateProfile(
+                    buildUpdatePayload(form, businessId)
+                );
+                setProfile(mapProfileFromApi(updated));
+            }
         } catch (err) {
-            toast.error(getApiErrorMessage(err, 'Không thể cập nhật hồ sơ doanh nghiệp.'));
+            toast.error(
+                getApiErrorMessage(
+                    err,
+                    isCreate
+                        ? 'Không thể tạo hồ sơ doanh nghiệp.'
+                        : 'Không thể cập nhật hồ sơ doanh nghiệp.'
+                )
+            );
             setSaving(false);
             return;
         }
@@ -454,75 +471,17 @@ const RecruiterProfilePage = () => {
             };
 
             if (savedLocation?.id) {
-                await locationApi.updateLocation(
-                    profile.businessId,
-                    savedLocation.id,
-                    locationPayload
-                );
+                await locationApi.updateLocation(businessId, savedLocation.id, locationPayload);
             } else {
-                const created = await locationApi.createLocation(
-                    profile.businessId,
-                    locationPayload
-                );
+                const created = await locationApi.createLocation(businessId, locationPayload);
                 setSavedLocation(created);
             }
 
-            toast.success('Đã lưu thay đổi.');
+            toast.success(isCreate ? 'Đã tạo hồ sơ doanh nghiệp.' : 'Đã lưu thay đổi.');
         } catch (err) {
             toast.error(getLocationApiErrorMessage(err, 'Không thể lưu địa chỉ cơ sở.'));
         } finally {
             setSaving(false);
-        }
-    };
-
-    const handleCreateProfile = async (e) => {
-        e.preventDefault();
-
-        const businessName = createForm.businessName.trim();
-        if (!businessName) {
-            toast.error('Tên doanh nghiệp không được để trống.');
-            return;
-        }
-
-        if (createForm.phone?.trim() && !PHONE_PATTERN.test(createForm.phone.trim())) {
-            toast.error('Số điện thoại không đúng định dạng Việt Nam.');
-            return;
-        }
-
-        if (createForm.websiteUrl?.trim()) {
-            try {
-                new URL(createForm.websiteUrl.trim());
-            } catch {
-                toast.error('Đường dẫn website không hợp lệ.');
-                return;
-            }
-        }
-
-        setCreating(true);
-
-        try {
-            const payload = {
-                businessName,
-                description: createForm.description?.trim() || null,
-                websiteUrl: createForm.websiteUrl?.trim() || null,
-                businessType: createForm.businessType?.trim() || null,
-                taxCode: createForm.taxCode?.trim() || null,
-                legalRepresentativeName: createForm.legalRepresentativeName?.trim() || null,
-                email: createForm.email?.trim() || null,
-                phone: createForm.phone?.trim() || null,
-            };
-
-            const data = await recruiterProfileApi.createProfile(payload);
-            const mapped = mapProfileFromApi(data);
-            setProfile(mapped);
-            setNoProfile(false);
-            syncFormFromProfile(mapped, false);
-            toast.success('Đã tạo hồ sơ doanh nghiệp.');
-            await loadLocation(mapped.businessId, mapped.businessName);
-        } catch (err) {
-            toast.error(getApiErrorMessage(err, 'Không thể tạo hồ sơ doanh nghiệp.'));
-        } finally {
-            setCreating(false);
         }
     };
 
@@ -639,122 +598,39 @@ const RecruiterProfilePage = () => {
 
     const galleryCount = profile.galleryImages?.length || 0;
     const canAddGallery = galleryCount < MAX_GALLERY;
+    const profileReadyForJob = !noProfile && Boolean(savedLocation);
 
     return (
         <div className="recruiter-profile-page">
+            {fromCreateJob && (
+                <div
+                    className={`recruiter-profile__create-job-banner${
+                        profileReadyForJob
+                            ? ' recruiter-profile__create-job-banner--success'
+                            : ''
+                    }`}
+                >
+                    <strong>
+                        {profileReadyForJob
+                            ? 'Hồ sơ doanh nghiệp đã hoàn thiện. Bạn có thể quay lại đăng tin tuyển dụng.'
+                            : 'Bạn cần hoàn thiện hồ sơ doanh nghiệp trước khi đăng tin tuyển dụng.'}
+                    </strong>
+                    {profileReadyForJob && (
+                        <Link
+                            to={ROUTES.RECRUITER_CREATE_JOB}
+                            className="recruiter-profile__back-to-job-btn recruiter-profile__back-to-job-btn--success"
+                            onClick={() => {
+                                sessionStorage.removeItem(RECRUITER_PROFILE_CREATE_JOB_INTENT);
+                                setFromCreateJob(false);
+                            }}
+                        >
+                            Quay lại đăng tin
+                        </Link>
+                    )}
+                </div>
+            )}
             {loading ? (
                 <div className="account-settings__loading">Đang tải hồ sơ...</div>
-            ) : noProfile ? (
-                <div className="account-settings__card recruiter-profile__create-card">
-                    <h2>Tạo hồ sơ doanh nghiệp</h2>
-                    <p className="account-settings__hint">
-                        Bạn chưa có hồ sơ doanh nghiệp. Thông tin liên hệ được điền sẵn từ tài
-                        khoản — có thể chỉnh trước khi tạo.
-                    </p>
-
-                    <form className="recruiter-profile__create-form" onSubmit={handleCreateProfile}>
-                        <div className="account-settings__field">
-                            <label htmlFor="create-business-name">Tên doanh nghiệp *</label>
-                            <input
-                                id="create-business-name"
-                                value={createForm.businessName}
-                                onChange={(e) =>
-                                    setCreateForm((prev) => ({
-                                        ...prev,
-                                        businessName: e.target.value,
-                                    }))
-                                }
-                                placeholder="Nhập tên công ty / doanh nghiệp"
-                            />
-                        </div>
-
-                        <div className="account-settings__field">
-                            <label htmlFor="create-business-type">Loại hình kinh doanh</label>
-                            <select
-                                id="create-business-type"
-                                value={createForm.businessType}
-                                onChange={(e) =>
-                                    setCreateForm((prev) => ({
-                                        ...prev,
-                                        businessType: e.target.value,
-                                    }))
-                                }
-                            >
-                                <option value="">— Chọn loại hình —</option>
-                                {BUSINESS_TYPE_OPTIONS.map((opt) => (
-                                    <option key={opt} value={opt}>
-                                        {opt}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="account-settings__field">
-                            <label htmlFor="create-phone">Số điện thoại liên hệ</label>
-                            <input
-                                id="create-phone"
-                                type="tel"
-                                value={createForm.phone}
-                                onChange={(e) =>
-                                    setCreateForm((prev) => ({ ...prev, phone: e.target.value }))
-                                }
-                                placeholder="0xxxxxxxxx"
-                            />
-                        </div>
-
-                        <div className="account-settings__field">
-                            <label htmlFor="create-email">Email tuyển dụng</label>
-                            <input
-                                id="create-email"
-                                type="email"
-                                value={createForm.email}
-                                onChange={(e) =>
-                                    setCreateForm((prev) => ({ ...prev, email: e.target.value }))
-                                }
-                            />
-                        </div>
-
-                        <div className="account-settings__field">
-                            <label htmlFor="create-description">Mô tả</label>
-                            <textarea
-                                id="create-description"
-                                rows={4}
-                                value={createForm.description}
-                                onChange={(e) =>
-                                    setCreateForm((prev) => ({
-                                        ...prev,
-                                        description: e.target.value,
-                                    }))
-                                }
-                                placeholder="Giới thiệu ngắn về doanh nghiệp"
-                            />
-                        </div>
-
-                        <div className="account-settings__field">
-                            <label htmlFor="create-website">Website</label>
-                            <input
-                                id="create-website"
-                                type="url"
-                                value={createForm.websiteUrl}
-                                onChange={(e) =>
-                                    setCreateForm((prev) => ({
-                                        ...prev,
-                                        websiteUrl: e.target.value,
-                                    }))
-                                }
-                                placeholder="https://example.com"
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="account-settings__btn account-settings__btn--primary"
-                            disabled={creating}
-                        >
-                            {creating ? 'Đang tạo...' : 'Tạo hồ sơ'}
-                        </button>
-                    </form>
-                </div>
             ) : (
                 <>
                     <section className="recruiter-profile__hero">
@@ -791,16 +667,22 @@ const RecruiterProfilePage = () => {
                             </div>
                             <label
                                 className={`recruiter-profile__logo-change${
-                                    logoLoading ? ' recruiter-profile__logo-change--disabled' : ''
+                                    logoLoading || noProfile
+                                        ? ' recruiter-profile__logo-change--disabled'
+                                        : ''
                                 }`}
                             >
-                                {logoLoading ? 'Đang xử lý...' : 'Thay đổi logo'}
+                                {logoLoading
+                                    ? 'Đang xử lý...'
+                                    : noProfile
+                                      ? 'Lưu hồ sơ để thêm logo'
+                                      : 'Thay đổi logo'}
                                 <input
                                     ref={logoInputRef}
                                     type="file"
                                     accept="image/*"
                                     hidden
-                                    disabled={logoLoading}
+                                    disabled={logoLoading || noProfile}
                                     onChange={handleLogoSelect}
                                 />
                             </label>
@@ -808,7 +690,7 @@ const RecruiterProfilePage = () => {
 
                         <div className="recruiter-profile__hero-main">
                             <div className="recruiter-profile__hero-title-row">
-                                <h1>{profile.businessName || 'Doanh nghiệp'}</h1>
+                                <h1>{form.businessName || profile.businessName || 'Doanh nghiệp của bạn'}</h1>
                                 {profile.businessType && (
                                     <span className="recruiter-profile__badge recruiter-profile__badge--muted">
                                         {profile.businessType}
@@ -896,7 +778,10 @@ const RecruiterProfilePage = () => {
                                     </h2>
 
                                     <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-business-name">Tên doanh nghiệp</label>
+                                        <label htmlFor="rp-business-name">
+                                            Tên doanh nghiệp
+                                            <RequiredMark />
+                                        </label>
                                         <input
                                             id="rp-business-name"
                                             value={form.businessName}
@@ -924,9 +809,16 @@ const RecruiterProfilePage = () => {
                                         </select>
                                     </div>
 
-                                    <div className="recruiter-profile__field">
+                                    <div
+                                        ref={locationSectionRef}
+                                        id="recruiter-profile-location"
+                                        className="recruiter-profile__field recruiter-profile__field--location"
+                                    >
                                         <div className="recruiter-profile__address-label-row">
-                                            <label htmlFor="rp-detail-address">Địa chỉ trụ sở</label>
+                                            <span className="recruiter-profile__address-section-title">
+                                                Địa chỉ trụ sở
+                                                <RequiredMark />
+                                            </span>
                                             <button
                                                 type="button"
                                                 className="recruiter-profile__gps-btn"
@@ -947,58 +839,81 @@ const RecruiterProfilePage = () => {
                                         ) : (
                                             <>
                                                 <div className="recruiter-profile__address-admin">
-                                                    <select
-                                                        value={form.provinceId}
-                                                        onChange={(e) =>
-                                                            updateFormField(
-                                                                'provinceId',
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                    >
-                                                        <option value="">
-                                                            — Tỉnh / Thành phố —
-                                                        </option>
-                                                        {provinces.map((province) => (
-                                                            <option
-                                                                key={province.id}
-                                                                value={province.id}
-                                                            >
-                                                                {province.ten}
+                                                    <div className="recruiter-profile__address-field">
+                                                        <label htmlFor="rp-province">
+                                                            Tỉnh / Thành phố
+                                                            <RequiredMark />
+                                                        </label>
+                                                        <select
+                                                            id="rp-province"
+                                                            value={form.provinceId}
+                                                            onChange={(e) =>
+                                                                updateFormField(
+                                                                    'provinceId',
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                        >
+                                                            <option value="">
+                                                                — Tỉnh / Thành phố —
                                                             </option>
-                                                        ))}
-                                                    </select>
+                                                            {provinces.map((province) => (
+                                                                <option
+                                                                    key={province.id}
+                                                                    value={province.id}
+                                                                >
+                                                                    {province.ten}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
 
-                                                    <select
-                                                        value={form.wardId}
-                                                        disabled={!form.provinceId}
-                                                        onChange={(e) =>
-                                                            updateFormField('wardId', e.target.value)
-                                                        }
-                                                    >
-                                                        <option value="">— Phường / Xã —</option>
-                                                        {wards.map((ward) => (
-                                                            <option key={ward.id} value={ward.id}>
-                                                                {ward.ten}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <div className="recruiter-profile__address-field">
+                                                        <label htmlFor="rp-ward">
+                                                            Phường / Xã
+                                                            <RequiredMark />
+                                                        </label>
+                                                        <select
+                                                            id="rp-ward"
+                                                            value={form.wardId}
+                                                            disabled={!form.provinceId}
+                                                            onChange={(e) =>
+                                                                updateFormField(
+                                                                    'wardId',
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                        >
+                                                            <option value="">— Phường / Xã —</option>
+                                                            {wards.map((ward) => (
+                                                                <option key={ward.id} value={ward.id}>
+                                                                    {ward.ten}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
                                                 </div>
 
-                                                <div className="recruiter-profile__input-icon">
-                                                    <MapPinIcon width={16} height={16} />
-                                                    <input
-                                                        id="rp-detail-address"
-                                                        type="text"
-                                                        placeholder="Số nhà, tên đường, tòa nhà..."
-                                                        value={form.detailAddress}
-                                                        onChange={(e) =>
-                                                            updateFormField(
-                                                                'detailAddress',
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                    />
+                                                <div className="recruiter-profile__field recruiter-profile__field--detail-address">
+                                                    <label htmlFor="rp-detail-address-input">
+                                                        Số nhà, tên đường
+                                                        <RequiredMark />
+                                                    </label>
+                                                    <div className="recruiter-profile__input-icon">
+                                                        <MapPinIcon width={16} height={16} />
+                                                        <input
+                                                            id="rp-detail-address-input"
+                                                            type="text"
+                                                            placeholder="Số nhà, tên đường, tòa nhà..."
+                                                            value={form.detailAddress}
+                                                            onChange={(e) =>
+                                                                updateFormField(
+                                                                    'detailAddress',
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
                                                 </div>
 
                                                 {addressFieldMessage && (
@@ -1087,11 +1002,16 @@ const RecruiterProfilePage = () => {
                                         disabled={saving || !canSave}
                                         onClick={handleSaveAll}
                                     >
-                                        {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                                        {saving
+                                            ? 'Đang lưu...'
+                                            : noProfile
+                                              ? 'Tạo hồ sơ'
+                                              : 'Lưu thay đổi'}
                                     </button>
                                 </section>
                             </div>
 
+                            {!noProfile && (
                             <section className="recruiter-profile__gallery-panel">
                                 <div className="recruiter-profile__gallery-header">
                                     <h2>
@@ -1146,6 +1066,7 @@ const RecruiterProfilePage = () => {
                                     )}
                                 </div>
                             </section>
+                            )}
                         </>
                     )}
                 </>
