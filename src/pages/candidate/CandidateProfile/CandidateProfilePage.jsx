@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCandidateProfile } from '../../../hooks/useCandidateProfile.js';
+import { useCandidateAvailability } from '../../../hooks/useCandidateAvailability.js';
 import ProfileHeader from '../../../components/candidate/ProfileHeader.jsx';
 import JobPreferenceCard from '../../../components/candidate/JobPreferenceCard.jsx';
 import PersonalInfoCard from '../../../components/candidate/PersonalInfoCard.jsx';
@@ -12,12 +14,15 @@ import AvailabilityCard from '../../../components/candidate/AvailabilityCard.jsx
 import PortfolioCard from '../../../components/candidate/PortfolioCard.jsx';
 import FooterAction from '../../../components/candidate/FooterAction.jsx';
 import ProfileSkeleton from '../../../components/candidate/ProfileSkeleton.jsx';
+import { ROUTES } from '../../../routes/path.js';
 import '../../../assets/styles/CandidateProfile.css';
 
 // CandidateProfilePage — CHỈ là content, render bên trong <CandidateLayout> đã có.
 const CandidateProfilePage = () => {
+    const navigate = useNavigate();
     const { profile, skills, loading, saving, error, loadProfile, updateProfile, uploadAvatar } =
         useCandidateProfile();
+    const { slots: availabilitySlots, loading: availabilityLoading } = useCandidateAvailability();
 
     // draft = bản làm việc của form. Đồng bộ lại mỗi khi profile (server truth) đổi
     // bằng pattern set-state-during-render của React (tránh dùng effect).
@@ -77,8 +82,7 @@ const CandidateProfilePage = () => {
     };
 
     const handleScheduleSetup = () => {
-        // Availability là module riêng (CandidateScheduleController) — điều hướng sẽ nối sau.
-        toast.info('Thiết lập lịch rảnh nằm ở module Lịch rảnh (sắp có).');
+        navigate(ROUTES.CANDIDATE_AVAILABILITY);
     };
 
     return (
@@ -140,7 +144,11 @@ const CandidateProfilePage = () => {
                 saving={saving}
             />
 
-            <AvailabilityCard hasSchedule={draft.hasAvailability} onSetup={handleScheduleSetup} />
+            <AvailabilityCard
+                slots={availabilitySlots}
+                loading={availabilityLoading}
+                onSetup={handleScheduleSetup}
+            />
 
             <FooterAction
                 onCancel={handleCancel}

@@ -13,8 +13,12 @@ const axiosClient = axios.create({
 });
 
 axiosClient.interceptors.request.use((config) => {
+    // Các endpoint /auth/* (login, register, refresh, verify-email...) không
+    // cần token — và nếu localStorage đang giữ token cũ/hỏng, gắn vào sẽ khiến
+    // TokenAuthenticationFilter bên BE chặn cứng cả request public (bug đã báo BE).
+    const isAuthEndpoint = config.url?.includes('/auth/');
     const auth = getAuth();
-    if (auth?.token) {
+    if (auth?.token && !isAuthEndpoint) {
         config.headers.Authorization = `Bearer ${auth.token}`;
     }
     return config;

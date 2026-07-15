@@ -5,6 +5,7 @@ export const ROUTES = {
     LANDING: '/',
     LOGIN: '/login',
     REGISTER: '/register',
+    VERIFY_EMAIL: '/verify-email',
     JOB_LIST: '/jobs',
     JOB_DETAIL: '/jobs/:jobId',
 
@@ -19,6 +20,7 @@ export const ROUTES = {
     // catch-all route đá về lại trang chủ cho tới khi task tương ứng được code.
     CANDIDATE_AI_SUGGESTIONS: '/candidate/ai-suggestions',
     CANDIDATE_PROFILE: '/candidate/profile',
+    CANDIDATE_AVAILABILITY: '/candidate/availability',
     CANDIDATE_INVITATIONS: '/candidate/invitations',
     CANDIDATE_MESSAGES: '/candidate/messages',
     CANDIDATE_NOTIFICATIONS: '/candidate/notifications',
@@ -56,6 +58,12 @@ export const ROUTES = {
 export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
 
 export const getRecruiterEditJobPath = (jobId) => `/recruiter/jobs/${jobId}/edit`;
+
+export const getCandidateJobChatPath = (jobId) =>
+    `${ROUTES.CANDIDATE_MESSAGES}?jobId=${jobId}`;
+
+/** Placeholder — trang công ty công khai; cập nhật khi có route thật. */
+export const getBusinessProfilePath = (businessId) => `/business/${businessId}`;
 
 // Dùng sau khi login / khi vào route không tồn tại để biết đá user về đâu.
 export const getHomePathByRole = (role) => {
