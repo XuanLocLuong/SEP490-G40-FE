@@ -13,6 +13,7 @@ import InternalLayout from '../layouts/InternalLayout.jsx';
 import LandingPage from '../pages/guest/LandingPage.jsx';
 import JobListPage from '../pages/guest/JobListPage.jsx';
 import JobDetailPage from '../pages/guest/JobDetailPage.jsx';
+import PublicBusinessProfilePage from '../pages/guest/PublicBusinessProfilePage.jsx';
 import Login from '../pages/auth/Login.jsx';
 import Register from '../pages/auth/Register.jsx';
 import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
@@ -42,6 +43,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.LANDING} element={<LandingPage />} />
                 <Route path={ROUTES.JOB_LIST} element={<JobListPage />} />
                 <Route path={ROUTES.JOB_DETAIL} element={<JobDetailPage />} />
+                <Route path={ROUTES.BUSINESS_PROFILE} element={<PublicBusinessProfilePage />} />
             </Route>
 
             {/* ---- Auth (Login/Register/Verify) — KHÔNG có Header/Footer,

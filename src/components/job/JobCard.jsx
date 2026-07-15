@@ -11,12 +11,13 @@ import JobApplyButton from './JobApplyButton.jsx';
 import JobDetailLink from './JobDetailLink.jsx';
 import '../../assets/styles/JobCardStyle.css';
 
-const JobCard = ({ job }) => {
+const JobCard = ({ job, variant = 'default' }) => {
+    const isPreview = variant === 'preview';
     const businessName = job.business?.name || 'Công ty';
     const tagLabel = formatJobType(job.jobType);
 
     return (
-        <article className="job-card">
+        <article className={`job-card${isPreview ? ' job-card--preview' : ''}`}>
             <div className="job-card__top">
                 <div className="job-card__brand">
                     <span className="job-card__logo" aria-hidden="true">
@@ -27,7 +28,9 @@ const JobCard = ({ job }) => {
                         <p className="job-card__company">{businessName}</p>
                     </div>
                 </div>
-                <JobBookmarkButton jobId={job.id} className="job-card__bookmark" />
+                {!isPreview && (
+                    <JobBookmarkButton jobId={job.id} className="job-card__bookmark" />
+                )}
             </div>
 
             <div className="job-card__meta">
@@ -49,15 +52,17 @@ const JobCard = ({ job }) => {
                     {tagLabel && <span className="job-card__tag">{tagLabel}</span>}
                     <span className="job-card__posted">
                         <ClockIcon width={14} height={14} />
-                        {formatRelativeTime(job.createdAt)}
+                        {isPreview ? 'Xem trước' : formatRelativeTime(job.createdAt)}
                     </span>
                 </div>
             </div>
 
-            <div className="job-card__actions">
-                <JobDetailLink jobId={job.id} className="job-card__detail-link" />
-                <JobApplyButton jobId={job.id} className="btn btn--primary job-card__apply" />
-            </div>
+            {!isPreview && (
+                <div className="job-card__actions">
+                    <JobDetailLink jobId={job.id} className="job-card__detail-link" />
+                    <JobApplyButton jobId={job.id} className="btn btn--primary job-card__apply" />
+                </div>
+            )}
         </article>
     );
 };

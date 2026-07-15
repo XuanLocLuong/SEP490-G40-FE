@@ -8,6 +8,7 @@ export const ROUTES = {
     VERIFY_EMAIL: '/verify-email',
     JOB_LIST: '/jobs',
     JOB_DETAIL: '/jobs/:jobId',
+    BUSINESS_PROFILE: '/business/:businessId',
 
     CANDIDATE_HOME: '/candidate',
     RECRUITER_HOME: '/recruiter',
@@ -62,7 +63,7 @@ export const getRecruiterEditJobPath = (jobId) => `/recruiter/jobs/${jobId}/edit
 export const getCandidateJobChatPath = (jobId) =>
     `${ROUTES.CANDIDATE_MESSAGES}?jobId=${jobId}`;
 
-/** Placeholder — trang công ty công khai; cập nhật khi có route thật. */
+/** Trang công ty công khai cho guest/candidate. */
 export const getBusinessProfilePath = (businessId) => `/business/${businessId}`;
 
 // Dùng sau khi login / khi vào route không tồn tại để biết đá user về đâu.

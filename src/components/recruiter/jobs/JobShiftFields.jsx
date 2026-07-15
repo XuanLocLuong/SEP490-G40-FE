@@ -1,6 +1,7 @@
 import { DAY_OF_WEEK_OPTIONS } from '../../../constants/jobPost.js';
 import { emptyShiftBlock } from '../../../services/jobPostService.js';
 import RequiredMark from '../../common/RequiredMark.jsx';
+import TimeInput24h from '../../common/TimeInput24h.jsx';
 
 /**
  * UI "Cách 2": mỗi block = nhiều ngày + 1 khung giờ.
@@ -66,19 +67,17 @@ const JobShiftFields = ({ shiftBlocks, onChange, error }) => {
                     <div className="job-shift-fields__times">
                         <div className="job-post-form__field">
                             <label>Bắt đầu</label>
-                            <input
-                                type="time"
+                            <TimeInput24h
                                 value={block.startTime || ''}
-                                onChange={(e) => updateBlock(index, { startTime: e.target.value })}
+                                onChange={(next) => updateBlock(index, { startTime: next })}
                             />
                         </div>
                         <span className="job-shift-fields__sep">—</span>
                         <div className="job-post-form__field">
                             <label>Kết thúc</label>
-                            <input
-                                type="time"
+                            <TimeInput24h
                                 value={block.endTime || ''}
-                                onChange={(e) => updateBlock(index, { endTime: e.target.value })}
+                                onChange={(next) => updateBlock(index, { endTime: next })}
                             />
                         </div>
                         <button

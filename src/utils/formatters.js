@@ -3,6 +3,7 @@ const JOB_TYPE_LABELS = {
     FULL_TIME: 'Full-time',
     INTERN: 'Thực tập',
     FREELANCE: 'Freelance',
+    SEASONAL: 'Thời vụ',
 };
 
 export const formatJobType = (jobType) => {
@@ -144,38 +145,24 @@ export const formatTimeLabel = (time) => {
     return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
 };
 
-const getShiftSlotLabel = (startTime) => {
-    const hour = Number.parseInt(String(startTime).split(':')[0], 10);
-    if (Number.isNaN(hour)) return 'Ca làm việc';
-    if (hour < 12) return 'Ca Sáng';
-    if (hour < 18) return 'Ca Chiều';
-    return 'Ca Tối';
-};
-
-/** Gom ca theo khung giờ (Sáng / Chiều / Tối) cho section detail. */
+/** Gom ca theo khung giờ (start–end) cho section detail. */
 export const groupShiftsForDisplay = (shifts = []) => {
     if (!shifts.length) return [];
 
     const groups = new Map();
 
     shifts.forEach((shift) => {
-        const label = getShiftSlotLabel(shift.startTime);
         const start = formatTimeLabel(shift.startTime);
         const end = formatTimeLabel(shift.endTime);
         const range = `${start} – ${end}`;
 
-        if (!groups.has(label)) {
-            groups.set(label, { label, range, days: new Set() });
+        if (!groups.has(range)) {
+            groups.set(range, { range, days: new Set() });
         }
-        const group = groups.get(label);
-        group.days.add(formatDayOfWeek(shift.dayOfWeek));
-        if (!group.range && range !== ' – ') {
-            group.range = range;
-        }
+        groups.get(range).days.add(formatDayOfWeek(shift.dayOfWeek));
     });
 
     return Array.from(groups.values()).map((group) => ({
-        label: group.label,
         range: group.range,
         days: Array.from(group.days).filter(Boolean),
     }));
@@ -185,8 +172,7 @@ export const formatShiftGroupLine = (group) => {
     if (!group) return '';
     const days = (group.days || []).filter(Boolean);
     const daysPart = days.length > 0 ? `${days.join(', ')} · ` : '';
-    const line = `${daysPart}${group.range || ''}`.trim();
-    return line || group.label || '';
+    return `${daysPart}${group.range || ''}`.trim();
 };
 
 export const formatScheduleSummary = (shiftGroups = []) => {

@@ -300,8 +300,6 @@ const MyJobsPage = () => {
 
                     <h1>Tin tuyển dụng của tôi</h1>
 
-                    <p>Quản lý các tin đã đăng, nháp và đang chờ duyệt.</p>
-
                 </div>
 
                 <Link to={ROUTES.RECRUITER_CREATE_JOB} className="my-jobs-page__create-btn">
@@ -358,7 +356,7 @@ const MyJobsPage = () => {
 
                     <p>Chưa có tin tuyển dụng nào.</p>
 
-                    <Link to={ROUTES.RECRUITER_CREATE_JOB}>Đăng tin đầu tiên</Link>
+                    <Link to={ROUTES.RECRUITER_CREATE_JOB}>Đăng tin</Link>
 
                 </div>
 
