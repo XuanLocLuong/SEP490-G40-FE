@@ -26,6 +26,7 @@ export const ROUTES = {
     CANDIDATE_APPLICATION_HISTORY: '/candidate/applications',
 
     RECRUITER_CREATE_JOB: '/recruiter/jobs/new',
+    RECRUITER_EDIT_JOB: '/recruiter/jobs/:jobId/edit',
     RECRUITER_MY_JOBS: '/recruiter/jobs',
     RECRUITER_APPLICANTS: '/recruiter/applicants',
     RECRUITER_AI_SUGGESTIONS: '/recruiter/ai-suggestions',
@@ -53,6 +54,8 @@ export const ROUTES = {
 };
 
 export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
+
+export const getRecruiterEditJobPath = (jobId) => `/recruiter/jobs/${jobId}/edit`;
 
 // Dùng sau khi login / khi vào route không tồn tại để biết đá user về đâu.
 export const getHomePathByRole = (role) => {

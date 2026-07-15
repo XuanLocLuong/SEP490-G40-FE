@@ -10,6 +10,7 @@ const EditFieldModal = ({
     inputType = 'text',
     multiline = false,
     saving = false,
+    error = '',
     onClose,
     onSave,
 }) => {
@@ -33,6 +34,12 @@ const EditFieldModal = ({
                 </div>
 
                 <div className="edit-field-modal__body">
+                    {error && (
+                        <div className="edit-field-modal__error" role="alert">
+                            {error}
+                        </div>
+                    )}
+
                     <label className="edit-field-modal__field">
                         <span>{currentLabel}</span>
                         <input type="text" value={currentValue || '—'} readOnly disabled />

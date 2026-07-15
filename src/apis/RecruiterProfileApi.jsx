@@ -8,8 +8,15 @@ export const getApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') =>
     error?.response?.data?.message || error?.message || fallback;
 
 const recruiterProfileApi = {
-    getProfile: async () => {
-        const res = await axiosClient.get(PROFILE_BASE);
+    getProfile: async (businessId) => {
+        const res = await axiosClient.get(PROFILE_BASE, {
+            params: businessId != null ? { businessId } : {},
+        });
+        return unwrapData(res);
+    },
+
+    getBusinesses: async () => {
+        const res = await axiosClient.get(`${PROFILE_BASE}/businesses`);
         return unwrapData(res);
     },
 
@@ -23,26 +30,30 @@ const recruiterProfileApi = {
         return unwrapData(res);
     },
 
-    uploadLogo: async (file) => {
+    uploadLogo: async (businessId, file) => {
         const formData = new FormData();
         formData.append('file', file);
 
         const res = await axiosClient.post(`${PROFILE_BASE}/logo`, formData, {
+            params: { businessId },
             headers: { 'Content-Type': 'multipart/form-data' },
         });
 
         return unwrapData(res);
     },
 
-    deleteLogo: async () => {
-        await axiosClient.delete(`${PROFILE_BASE}/logo`);
+    deleteLogo: async (businessId) => {
+        await axiosClient.delete(`${PROFILE_BASE}/logo`, {
+            params: { businessId },
+        });
     },
 
-    uploadGallery: async (files) => {
+    uploadGallery: async (businessId, files) => {
         const formData = new FormData();
         files.forEach((file) => formData.append('files', file));
 
         const res = await axiosClient.post(`${PROFILE_BASE}/gallery`, formData, {
+            params: { businessId },
             headers: { 'Content-Type': 'multipart/form-data' },
         });
 

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import UserAvatar from '../../components/common/UserAvatar.jsx';
 import EditFieldModal from '../../components/common/EditFieldModal.jsx';
-import { PencilIcon } from '../../components/common/icons.jsx';
+import { CheckCircleIcon, PencilIcon } from '../../components/common/icons.jsx';
 import userApi, { getApiErrorMessage } from '../../apis/UserApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
@@ -38,8 +39,7 @@ const CandidateSettingsPage = () => {
 
     const [user, setUser] = useState(() => buildInitialUser(auth));
     const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState('');
+    const [modalError, setModalError] = useState('');
     const [editModal, setEditModal] = useState(null);
     const [editValue, setEditValue] = useState('');
     const [saving, setSaving] = useState(false);
@@ -69,7 +69,6 @@ const CandidateSettingsPage = () => {
 
         const loadProfile = async () => {
             setLoading(true);
-            setError('');
 
             try {
                 const data = await userApi.getCurrentUser();
@@ -78,7 +77,7 @@ const CandidateSettingsPage = () => {
                 }
             } catch (err) {
                 if (!cancelled) {
-                    setError(getApiErrorMessage(err, 'Không thể tải thông tin tài khoản.'));
+                    toast.error(getApiErrorMessage(err, 'Không thể tải thông tin tài khoản.'));
                 }
             } finally {
                 if (!cancelled) {
@@ -95,8 +94,7 @@ const CandidateSettingsPage = () => {
     }, []);
 
     const openEditModal = (field) => {
-        setMessage('');
-        setError('');
+        setModalError('');
         setEditModal(field);
         setEditValue('');
     };
@@ -104,36 +102,41 @@ const CandidateSettingsPage = () => {
     const closeEditModal = () => {
         setEditModal(null);
         setEditValue('');
+        setModalError('');
+    };
+
+    const handleEditValueChange = (value) => {
+        setModalError('');
+        setEditValue(value);
     };
 
     const handleModalSave = async () => {
-        setMessage('');
-        setError('');
+        setModalError('');
 
         const normalized = editValue.trim();
 
         if (editModal === 'fullName') {
             if (!normalized) {
-                setError('Họ và tên không được để trống.');
+                setModalError('Họ và tên không được để trống.');
                 return;
             }
             if (normalized === user.fullName) {
-                setError('Họ và tên mới phải khác giá trị hiện tại.');
+                setModalError('Họ và tên mới phải khác giá trị hiện tại.');
                 return;
             }
         }
 
         if (editModal === 'phone') {
             if (!normalized) {
-                setError('Vui lòng nhập số điện thoại mới.');
+                setModalError('Vui lòng nhập số điện thoại mới.');
                 return;
             }
             if (!PHONE_PATTERN.test(normalized)) {
-                setError('Số điện thoại không đúng định dạng Việt Nam.');
+                setModalError('Số điện thoại không đúng định dạng Việt Nam.');
                 return;
             }
             if (normalized === user.phone) {
-                setError('Số điện thoại mới phải khác số hiện tại.');
+                setModalError('Số điện thoại mới phải khác số hiện tại.');
                 return;
             }
         }
@@ -149,13 +152,13 @@ const CandidateSettingsPage = () => {
             const data = await userApi.updateCurrentUser(payload);
             syncProfile(data);
             closeEditModal();
-            setMessage(
+            toast.success(
                 editModal === 'fullName'
                     ? 'Đã cập nhật họ và tên.'
                     : 'Đã cập nhật số điện thoại.'
             );
         } catch (err) {
-            setError(getApiErrorMessage(err, 'Không thể cập nhật thông tin.'));
+            setModalError(getApiErrorMessage(err, 'Không thể cập nhật thông tin.'));
         } finally {
             setSaving(false);
         }
@@ -168,32 +171,30 @@ const CandidateSettingsPage = () => {
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
-            setError('Vui lòng chọn file ảnh (JPEG, PNG, WebP...).');
+            toast.error('Vui lòng chọn file ảnh (JPEG, PNG, WebP...).');
             return;
         }
 
         if (file.size > MAX_AVATAR_SIZE) {
-            setError('Ảnh không được vượt quá 10MB.');
+            toast.error('Ảnh không được vượt quá 10MB.');
             return;
         }
 
-        setMessage('');
-        setError('');
         setAvatarLoading(true);
 
         try {
             const result = await userApi.uploadAvatar(file);
             const url = result?.url || null;
             syncProfile({ ...user, profilePicture: url });
-            setMessage('Đã cập nhật ảnh đại diện.');
+            toast.success('Đã cập nhật ảnh đại diện.');
         } catch (err) {
             const apiMessage = getApiErrorMessage(err, 'Không thể tải ảnh lên.');
             if (apiMessage.includes('Cloudinary is not configured')) {
-                setError(
+                toast.error(
                     'BE chưa cấu hình Cloudinary (CLOUDINARY_*). Hỏi dev BE set env — không cần sửa FE/BE code.'
                 );
             } else {
-                setError(apiMessage);
+                toast.error(apiMessage);
             }
         } finally {
             setAvatarLoading(false);
@@ -203,16 +204,14 @@ const CandidateSettingsPage = () => {
     const handleDeleteAvatar = async () => {
         if (!hasProfilePicture(user.profilePicture)) return;
 
-        setMessage('');
-        setError('');
         setAvatarLoading(true);
 
         try {
             await userApi.deleteAvatar();
             syncProfile({ ...user, profilePicture: null });
-            setMessage('Đã xóa ảnh đại diện.');
+            toast.success('Đã xóa ảnh đại diện.');
         } catch (err) {
-            setError(getApiErrorMessage(err, 'Không thể xóa ảnh đại diện.'));
+            toast.error(getApiErrorMessage(err, 'Không thể xóa ảnh đại diện.'));
         } finally {
             setAvatarLoading(false);
         }
@@ -220,23 +219,21 @@ const CandidateSettingsPage = () => {
 
     const handlePasswordChange = async (event) => {
         event.preventDefault();
-        setMessage('');
-        setError('');
 
         const { currentPassword, newPassword, confirmPassword } = passwordForm;
 
         if (!currentPassword || !newPassword || !confirmPassword) {
-            setError('Vui lòng điền đầy đủ các trường mật khẩu.');
+            toast.error('Vui lòng điền đầy đủ các trường mật khẩu.');
             return;
         }
 
         if (newPassword.length < 6) {
-            setError('Mật khẩu mới phải có ít nhất 6 ký tự.');
+            toast.error('Mật khẩu mới phải có ít nhất 6 ký tự.');
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            setError('Mật khẩu xác nhận không khớp.');
+            toast.error('Mật khẩu xác nhận không khớp.');
             return;
         }
 
@@ -251,11 +248,11 @@ const CandidateSettingsPage = () => {
             const apiMessage = getApiErrorMessage(err, 'Không thể đổi mật khẩu.');
 
             if (apiMessage === 'INCORRECT_CURRENT_PASSWORD') {
-                setError('Mật khẩu hiện tại không đúng.');
+                toast.error('Mật khẩu hiện tại không đúng.');
             } else if (apiMessage === 'NEW_PASSWORD_SAME_AS_CURRENT') {
-                setError('Mật khẩu mới phải khác mật khẩu hiện tại.');
+                toast.error('Mật khẩu mới phải khác mật khẩu hiện tại.');
             } else {
-                setError(apiMessage);
+                toast.error(apiMessage);
             }
         } finally {
             setChangingPassword(false);
@@ -264,104 +261,133 @@ const CandidateSettingsPage = () => {
 
     return (
         <div className="account-settings-page">
-            <header className="account-settings__header">
-                <h1>Quản lý tài khoản</h1>
-                <p>Cập nhật thông tin cá nhân của bạn.</p>
-            </header>
-
-            {message && <div className="account-settings__message">{message}</div>}
-            {error && <div className="account-settings__error">{error}</div>}
-
             {loading ? (
                 <div className="account-settings__loading">Đang tải thông tin tài khoản...</div>
             ) : (
                 <>
-                    <div className="account-settings__card">
-                            <div className="account-settings__avatar-block">
-                                <UserAvatar src={user.profilePicture} name={user.fullName} size={80} />
-                                <div>
-                                    <div className="account-settings__avatar-actions">
-                                        <label className="account-settings__file-btn">
-                                            {avatarLoading ? 'Đang xử lý...' : 'Chọn ảnh'}
-                                            <input
-                                                ref={fileInputRef}
-                                                type="file"
-                                                accept="image/*"
-                                                hidden
-                                                disabled={avatarLoading}
-                                                onChange={handleAvatarSelect}
-                                            />
-                                        </label>
-                                        {hasProfilePicture(user.profilePicture) && (
-                                            <button
-                                                type="button"
-                                                className="account-settings__btn account-settings__btn--ghost"
-                                                disabled={avatarLoading}
-                                                onClick={handleDeleteAvatar}
-                                            >
-                                                Xóa ảnh
-                                            </button>
-                                        )}
-                                    </div>
-                                    <p className="account-settings__hint account-settings__avatar-hint">
-                                        Tối đa 10MB.
-                                    </p>
-                                </div>
-                            </div>
+                    <div className="account-settings__card account-settings__personal-card">
+                        <h2>Thông tin cá nhân</h2>
 
-                            <div className="account-settings__info-row">
-                                <div>
-                                    <p className="account-settings__info-label">Họ và tên</p>
-                                    <p className="account-settings__info-value">
-                                        {user.fullName || '—'}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    className="account-settings__edit-btn"
-                                    onClick={() => openEditModal('fullName')}
-                                >
-                                    <PencilIcon width={16} height={16} />
-                                    Sửa
-                                </button>
-                            </div>
-
-                            <div className="account-settings__info-row">
-                                <div>
-                                    <p className="account-settings__info-label">Số điện thoại</p>
-                                    <p className="account-settings__info-value">
-                                        {user.phone || '—'}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    className="account-settings__edit-btn"
-                                    onClick={() => openEditModal('phone')}
-                                >
-                                    <PencilIcon width={16} height={16} />
-                                    Sửa
-                                </button>
-                            </div>
-
-                            <div className="account-settings__info-row">
-                                <div>
-                                    <p className="account-settings__info-label">Email</p>
-                                    <p className="account-settings__info-value">{user.email || '—'}</p>
-                                    <p className="account-settings__hint">
-                                        Email chỉ xem, không thể thay đổi tại đây.
-                                    </p>
-                                </div>
-                                <span
-                                    className={`account-settings__badge${
-                                        user.emailVerified
-                                            ? ' account-settings__badge--verified'
-                                            : ' account-settings__badge--pending'
+                        <div className="account-settings__personal-layout">
+                            <div className="account-settings__avatar-column">
+                                <div
+                                    className={`account-settings__avatar-picker${
+                                        hasProfilePicture(user.profilePicture)
+                                            ? ' account-settings__avatar-picker--deletable'
+                                            : ''
                                     }`}
                                 >
-                                    {user.emailVerified ? 'Đã xác thực' : 'Chưa xác thực'}
-                                </span>
+                                    <UserAvatar
+                                        src={user.profilePicture}
+                                        name={user.fullName}
+                                        size={120}
+                                        className="account-settings__avatar-image"
+                                    />
+                                    {hasProfilePicture(user.profilePicture) && (
+                                        <button
+                                            type="button"
+                                            className="account-settings__avatar-delete"
+                                            aria-label="Xóa ảnh đại diện"
+                                            onClick={handleDeleteAvatar}
+                                            disabled={avatarLoading}
+                                        >
+                                            ×
+                                        </button>
+                                    )}
+                                </div>
+
+                                <label
+                                    className={`account-settings__avatar-change-link${
+                                        avatarLoading ? ' account-settings__avatar-change-link--disabled' : ''
+                                    }`}
+                                >
+                                    {avatarLoading ? 'Đang xử lý...' : 'Thay đổi ảnh đại diện'}
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        hidden
+                                        disabled={avatarLoading}
+                                        onChange={handleAvatarSelect}
+                                    />
+                                </label>
+                            </div>
+
+                            <div className="account-settings__fields-grid">
+                                <div className="account-settings__form-field">
+                                    <label htmlFor="settings-full-name">Họ và tên</label>
+                                    <input
+                                        id="settings-full-name"
+                                        type="text"
+                                        readOnly
+                                        value={user.fullName || ''}
+                                        placeholder="—"
+                                        onClick={() => openEditModal('fullName')}
+                                    />
+                                </div>
+
+                                <div className="account-settings__form-field">
+                                    <label htmlFor="settings-phone">Số điện thoại</label>
+                                    <div className="account-settings__input-with-action">
+                                        <input
+                                            id="settings-phone"
+                                            type="tel"
+                                            readOnly
+                                            value={user.phone || ''}
+                                            placeholder="Chưa có số điện thoại"
+                                            onClick={() => !user.phone?.trim() && openEditModal('phone')}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="account-settings__input-action"
+                                            aria-label="Sửa số điện thoại"
+                                            onClick={() => openEditModal('phone')}
+                                        >
+                                            <PencilIcon width={18} height={18} />
+                                        </button>
+                                    </div>
+                                    {!user.phone?.trim() && (
+                                        <p className="account-settings__field-hint account-settings__field-hint--warning">
+                                            Bạn cần cập nhật số điện thoại.
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="account-settings__form-field account-settings__field-full">
+                                    <label htmlFor="settings-email">Email</label>
+                                    <div className="account-settings__email-row">
+                                        <input
+                                            id="settings-email"
+                                            type="email"
+                                            readOnly
+                                            value={user.email || ''}
+                                            placeholder="—"
+                                        />
+                                        <span
+                                            className={`account-settings__verify-badge${
+                                                user.emailVerified
+                                                    ? ' account-settings__verify-badge--verified'
+                                                    : ' account-settings__verify-badge--pending'
+                                            }`}
+                                        >
+                                            {user.emailVerified && (
+                                                <CheckCircleIcon width={16} height={16} />
+                                            )}
+                                            {user.emailVerified ? 'Đã xác minh' : 'Chưa xác minh'}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            className="account-settings__text-link"
+                                            disabled
+                                            title="Email chỉ xem, không thể thay đổi tại đây"
+                                        >
+                                            Thay đổi →
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
                         {!user.googleLinked && (
                             <div className="account-settings__card">
@@ -446,9 +472,10 @@ const CandidateSettingsPage = () => {
                 currentValue={user.fullName}
                 newLabel="Họ và tên mới"
                 newValue={editValue}
-                onNewValueChange={setEditValue}
+                onNewValueChange={handleEditValueChange}
                 placeholder="Nhập họ và tên mới"
                 saving={saving}
+                error={modalError}
                 onClose={closeEditModal}
                 onSave={handleModalSave}
             />
@@ -460,10 +487,11 @@ const CandidateSettingsPage = () => {
                 currentValue={user.phone}
                 newLabel="Số điện thoại mới"
                 newValue={editValue}
-                onNewValueChange={setEditValue}
+                onNewValueChange={handleEditValueChange}
                 placeholder="Nhập số điện thoại mới"
                 inputType="tel"
                 saving={saving}
+                error={modalError}
                 onClose={closeEditModal}
                 onSave={handleModalSave}
             />
