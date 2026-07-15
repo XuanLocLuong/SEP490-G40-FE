@@ -5,11 +5,13 @@ import {
     formatLocation,
     getBusinessInitial,
 } from '../../utils/formatters.js';
+import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
 import { MapPinIcon, BriefcaseIcon } from '../common/icons.jsx';
 import { getJobDetailPath } from '../../routes/path.js';
 
-const JobCompactCard = ({ job, active = false, searchSuffix = '' }) => {
+const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false }) => {
     const businessName = job.business?.name || 'Công ty';
+    const distance = getJobDistanceDisplay(job.distanceKm, nearMe);
 
     return (
         <Link
@@ -30,6 +32,17 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '' }) => {
                         <MapPinIcon width={14} height={14} />
                         {formatLocation(job.location)}
                     </span>
+                    {distance && (
+                        <span
+                            className={`job-compact-card__meta-item job-compact-card__distance${
+                                distance.variant === 'outside'
+                                    ? ' job-compact-card__distance--outside'
+                                    : ''
+                            }`}
+                        >
+                            {distance.label}
+                        </span>
+                    )}
                     <span className="job-compact-card__meta-item job-compact-card__salary">
                         {formatSalary(job.salaryMin, job.salaryMax)}
                     </span>

@@ -5,8 +5,9 @@ const JOBS_BASE = `${API_PREFIX}/jobs`;
 export const fetchHomepageJobs = (page = 0, size = 8) =>
     axiosClient.get(`${JOBS_BASE}/homepage`, { params: { page, size } });
 
-export const searchJobs = (params) =>
-    axiosClient.get(`${JOBS_BASE}/search`, { params });
+// POST /api/v1/jobs/search — body: JobSearchRequestDTO (keyword, city, ward, page, size, …)
+export const searchJobs = (body) =>
+    axiosClient.post(`${JOBS_BASE}/search`, body);
 
 export const fetchNearbyJobs = (body) =>
     axiosClient.post(`${JOBS_BASE}/near-me`, body);

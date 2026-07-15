@@ -98,6 +98,19 @@
     color: var(--color-danger);
 }
 
+.job-list-item__tag--distance {
+    background: #e8f3ff;
+    color: var(--color-primary);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+    font-weight: 700;
+}
+
+.job-list-item__tag--distance-outside {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
 .job-list-item__info {
     display: flex;
     flex-wrap: wrap;
