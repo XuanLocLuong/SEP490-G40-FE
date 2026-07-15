@@ -108,6 +108,21 @@
     font-weight: 600;
 }
 
+.job-card__meta-item--distance {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #e8f3ff;
+    color: var(--color-primary);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+    font-weight: 700;
+}
+
+.job-card__meta-item--distance-outside {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
 .job-card__salary {
     margin: 0;
     font-size: 15px;

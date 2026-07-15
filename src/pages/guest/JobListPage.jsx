@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import JobListSearch from '../../components/joblist/JobListSearch.jsx';
 import JobListItem from '../../components/job/JobListItem.jsx';
 import BookmarkLoginRedirect from '../../components/job/BookmarkLoginRedirect.jsx';
+import { useAuth } from '../../contexts/authContext.js';
+import { USER_ROLES } from '../../utils/Constants.jsx';
 import {
+    applyCandidateScheduleAccess,
     fetchJobListPage,
     isSearchQuery,
     JOB_LIST_PAGE_SIZE,
@@ -14,6 +17,8 @@ import {
 import '../../assets/styles/JobListPageStyle.css';
 
 const JobListPage = () => {
+    const { auth } = useAuth();
+    const isCandidate = auth?.role === USER_ROLES.CANDIDATE;
     const [searchParams, setSearchParams] = useSearchParams();
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -23,7 +28,10 @@ const JobListPage = () => {
     const [totalElements, setTotalElements] = useState(0);
     const [activeQuery, setActiveQuery] = useState(null);
 
-    const urlQuery = parseJobListSearchParams(searchParams);
+    const urlQuery = useMemo(() => {
+        const parsed = parseJobListSearchParams(searchParams);
+        return applyCandidateScheduleAccess(parsed, isCandidate);
+    }, [searchParams, isCandidate]);
 
     const loadPage = useCallback(async (pageNum, query) => {
         setLoading(true);
@@ -50,15 +58,17 @@ const JobListPage = () => {
             setLoading(true);
             setError('');
             try {
-                const parsedQuery = parseJobListSearchParams(searchParams);
-                const resolvedQuery = parsedQuery?.nearMe ? null : parsedQuery;
-                const pageData = await fetchJobListPage(0, JOB_LIST_PAGE_SIZE, resolvedQuery);
+                const parsedQuery = applyCandidateScheduleAccess(
+                    parseJobListSearchParams(searchParams),
+                    isCandidate
+                );
+                const pageData = await fetchJobListPage(0, JOB_LIST_PAGE_SIZE, parsedQuery);
                 if (!cancelled) {
                     setJobs(pageData.content);
                     setTotalPages(pageData.totalPages);
                     setTotalElements(pageData.totalElements);
                     setPage(pageData.currentPage);
-                    setActiveQuery(resolvedQuery);
+                    setActiveQuery(parsedQuery);
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -75,16 +85,12 @@ const JobListPage = () => {
         return () => {
             cancelled = true;
         };
-    }, [searchParams]);
+    }, [searchParams, isCandidate]);
 
-    const handleSearch = ({ keyword, city, ward, nearMe }) => {
-        // Near-me: UI only — teammate sẽ implement sau.
-        if (nearMe) {
-            return;
-        }
-
-        if (keyword || city || ward) {
-            setSearchParams(buildJobListSearchParams({ keyword, city, ward }));
+    const handleSearch = (payload) => {
+        const nextQuery = applyCandidateScheduleAccess(payload, isCandidate);
+        if (isSearchQuery(nextQuery)) {
+            setSearchParams(buildJobListSearchParams(nextQuery));
         } else {
             setSearchParams({});
         }
@@ -100,10 +106,7 @@ const JobListPage = () => {
         setSearchParams({});
     };
 
-    const pageTitle = isSearchQuery(activeQuery)
-        ? 'Kết quả tìm kiếm'
-        : 'Danh sách việc làm';
-
+    const searching = isSearchQuery(activeQuery);
     const isFirstPage = page <= 0;
     const isLastPage = totalPages > 0 && page >= totalPages - 1;
 
@@ -111,31 +114,46 @@ const JobListPage = () => {
         <div className="job-list-page">
             <BookmarkLoginRedirect />
             <header className="job-list-page__header">
-                <h1 className="job-list-page__title">{pageTitle}</h1>
-                <p className="job-list-page__subtitle">
-                    {totalElements > 0
-                        ? `${totalElements} việc làm đang tuyển`
-                        : 'Tìm việc part-time phù hợp với bạn'}
-                </p>
+                <h1 className="job-list-page__title">Danh sách việc làm</h1>
             </header>
 
             <JobListSearch
                 initialKeyword={urlQuery?.keyword || ''}
                 initialCity={urlQuery?.city || ''}
                 initialWard={urlQuery?.ward || ''}
+                initialJobType={urlQuery?.jobType || ''}
+                initialSalaryMin={urlQuery?.salaryMin ?? null}
+                initialSalaryMax={urlQuery?.salaryMax ?? null}
+                initialSkillIds={urlQuery?.skillIds || []}
+                initialSchedules={urlQuery?.schedules || []}
+                initialNearMe={Boolean(urlQuery?.nearMe)}
+                initialLatitude={urlQuery?.latitude ?? null}
+                initialLongitude={urlQuery?.longitude ?? null}
                 onSearch={handleSearch}
                 loading={loading}
             />
 
             {error && <p className="job-list-page__error">{error}</p>}
 
-            {isSearchQuery(activeQuery) && (
-                <div className="job-list-page__filter-actions">
+            <div className="job-list-page__results-meta">
+                <div className="job-list-page__results-text">
+                    {searching && (
+                        <p className="job-list-page__search-hint">Kết quả tìm kiếm</p>
+                    )}
+                    <p className="job-list-page__subtitle">
+                        {totalElements > 0
+                            ? `${totalElements} việc làm đang tuyển`
+                            : searching
+                              ? 'Không có việc làm phù hợp'
+                              : 'Tìm việc part-time phù hợp với bạn'}
+                    </p>
+                </div>
+                {searching && (
                     <button type="button" className="job-list-page__reset" onClick={handleReset}>
                         Xóa bộ lọc
                     </button>
-                </div>
-            )}
+                )}
+            </div>
 
             {loading && jobs.length === 0 && (
                 <div className="job-list-page__list">
@@ -153,7 +171,11 @@ const JobListPage = () => {
                 <>
                     <div className="job-list-page__list">
                         {jobs.map((job) => (
-                            <JobListItem key={job.id} job={job} />
+                            <JobListItem
+                                key={job.id}
+                                job={job}
+                                nearMe={Boolean(urlQuery?.nearMe)}
+                            />
                         ))}
                     </div>
 

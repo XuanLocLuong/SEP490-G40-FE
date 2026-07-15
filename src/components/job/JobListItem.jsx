@@ -5,15 +5,17 @@ import {
     formatRelativeTime,
     getBusinessInitial,
 } from '../../utils/formatters.js';
+import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
 import { MapPinIcon, ClockIcon } from '../common/icons.jsx';
 import JobBookmarkButton from './JobBookmarkButton.jsx';
 import JobApplyButton from './JobApplyButton.jsx';
 import JobDetailLink from './JobDetailLink.jsx';
 import '../../assets/styles/JobListItemStyle.css';
 
-const JobListItem = ({ job }) => {
+const JobListItem = ({ job, nearMe = false }) => {
     const businessName = job.business?.name || 'Công ty';
     const tagLabel = formatJobType(job.jobType);
+    const distance = getJobDistanceDisplay(job.distanceKm, nearMe);
 
     return (
         <article className="job-list-item">
@@ -30,7 +32,7 @@ const JobListItem = ({ job }) => {
                 <JobBookmarkButton jobId={job.id} className="job-list-item__bookmark" />
             </div>
 
-            {(tagLabel || job.urgent || job.distanceKm != null) && (
+            {(tagLabel || job.urgent || distance) && (
                 <div className="job-list-item__tags">
                     {tagLabel && <span className="job-list-item__tag">{tagLabel}</span>}
                     {job.urgent && (
@@ -38,9 +40,15 @@ const JobListItem = ({ job }) => {
                             Tuyển gấp
                         </span>
                     )}
-                    {job.distanceKm != null && (
-                        <span className="job-list-item__tag">
-                            Cách {job.distanceKm.toFixed(1)}km
+                    {distance && (
+                        <span
+                            className={`job-list-item__tag job-list-item__tag--distance${
+                                distance.variant === 'outside'
+                                    ? ' job-list-item__tag--distance-outside'
+                                    : ''
+                            }`}
+                        >
+                            {distance.label}
                         </span>
                     )}
                 </div>
