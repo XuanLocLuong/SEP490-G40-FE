@@ -6,7 +6,10 @@ import JobCompactCard from '../../components/jobdetail/JobCompactCard.jsx';
 import JobDetailPanel from '../../components/jobdetail/JobDetailPanel.jsx';
 import BookmarkLoginRedirect from '../../components/job/BookmarkLoginRedirect.jsx';
 import { ROUTES } from '../../routes/path.js';
+import { useAuth } from '../../contexts/authContext.js';
+import { USER_ROLES } from '../../utils/Constants.jsx';
 import {
+    applyCandidateScheduleAccess,
     fetchJobListPage,
     isSearchQuery,
     JOB_DETAIL_SIDEBAR_PAGE_SIZE,
@@ -30,6 +33,8 @@ const mergeJobPages = (existing, incoming) => {
 
 const JobDetailPage = () => {
     const { jobId } = useParams();
+    const { auth } = useAuth();
+    const isCandidate = auth?.role === USER_ROLES.CANDIDATE;
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [jobs, setJobs] = useState([]);
@@ -49,7 +54,10 @@ const JobDetailPage = () => {
     const detailColRef = useRef(null);
     const activeQueryRef = useRef(null);
 
-    const urlQuery = parseJobListSearchParams(searchParams);
+    const urlQuery = useMemo(() => {
+        const parsed = parseJobListSearchParams(searchParams);
+        return applyCandidateScheduleAccess(parsed, isCandidate);
+    }, [searchParams, isCandidate]);
     const searchSuffix = searchParams.toString() ? `?${searchParams.toString()}` : '';
     const selectedJobId = Number(jobId);
 
@@ -77,15 +85,17 @@ const JobDetailPage = () => {
             setListError('');
             setLoadingMore(false);
             try {
-                const parsedQuery = parseJobListSearchParams(searchParams);
-                const resolvedQuery = parsedQuery?.nearMe ? null : parsedQuery;
+                const parsedQuery = applyCandidateScheduleAccess(
+                    parseJobListSearchParams(searchParams),
+                    isCandidate
+                );
                 const pageData = await fetchJobListPage(
                     0,
                     JOB_DETAIL_SIDEBAR_PAGE_SIZE,
-                    resolvedQuery
+                    parsedQuery
                 );
                 if (!cancelled) {
-                    applyListPage(pageData, resolvedQuery, false);
+                    applyListPage(pageData, parsedQuery, false);
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -105,7 +115,7 @@ const JobDetailPage = () => {
         return () => {
             cancelled = true;
         };
-    }, [searchParams, applyListPage]);
+    }, [searchParams, applyListPage, isCandidate]);
 
     useEffect(() => {
         let cancelled = false;
@@ -193,13 +203,10 @@ const JobDetailPage = () => {
         }
     };
 
-    const handleSearch = ({ keyword, city, ward, nearMe }) => {
-        if (nearMe) {
-            return;
-        }
-
-        if (keyword || city || ward) {
-            setSearchParams(buildJobListSearchParams({ keyword, city, ward }));
+    const handleSearch = (payload) => {
+        const nextQuery = applyCandidateScheduleAccess(payload, isCandidate);
+        if (isSearchQuery(nextQuery)) {
+            setSearchParams(buildJobListSearchParams(nextQuery));
         } else {
             setSearchParams({});
         }
@@ -223,6 +230,14 @@ const JobDetailPage = () => {
                 initialKeyword={urlQuery?.keyword || ''}
                 initialCity={urlQuery?.city || ''}
                 initialWard={urlQuery?.ward || ''}
+                initialJobType={urlQuery?.jobType || ''}
+                initialSalaryMin={urlQuery?.salaryMin ?? null}
+                initialSalaryMax={urlQuery?.salaryMax ?? null}
+                initialSkillIds={urlQuery?.skillIds || []}
+                initialSchedules={urlQuery?.schedules || []}
+                initialNearMe={Boolean(urlQuery?.nearMe)}
+                initialLatitude={urlQuery?.latitude ?? null}
+                initialLongitude={urlQuery?.longitude ?? null}
                 onSearch={handleSearch}
                 loading={listLoading}
             />
@@ -262,6 +277,7 @@ const JobDetailPage = () => {
                                         job={item}
                                         active={item.id === selectedJobId}
                                         searchSuffix={searchSuffix}
+                                        nearMe={Boolean(urlQuery?.nearMe)}
                                     />
                                 ))}
                             </div>

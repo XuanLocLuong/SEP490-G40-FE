@@ -4,6 +4,14 @@ const JobListSearch = ({
     initialKeyword = '',
     initialCity = '',
     initialWard = '',
+    initialJobType = '',
+    initialSalaryMin = null,
+    initialSalaryMax = null,
+    initialSkillIds = [],
+    initialSchedules = [],
+    initialNearMe = false,
+    initialLatitude = null,
+    initialLongitude = null,
     onSearch,
     loading,
 }) => (
@@ -13,6 +21,14 @@ const JobListSearch = ({
         initialKeyword={initialKeyword}
         initialCity={initialCity}
         initialWard={initialWard}
+        initialJobType={initialJobType}
+        initialSalaryMin={initialSalaryMin}
+        initialSalaryMax={initialSalaryMax}
+        initialSkillIds={initialSkillIds}
+        initialSchedules={initialSchedules}
+        initialNearMe={initialNearMe}
+        initialLatitude={initialLatitude}
+        initialLongitude={initialLongitude}
         nearMeLabel="Tìm việc gần tôi"
     />
 );

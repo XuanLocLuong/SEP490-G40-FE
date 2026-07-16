@@ -34,43 +34,74 @@ export const findProvinceByName = (name) => {
     return getProvinces().find((item) => item.ten === name.trim()) ?? null;
 };
 
-/** Khớp tên phường/xã đã lưu BE (field ward) → id dropdown. */
+/** Khớp tên phường/xã đã lưu BE (field district) → id dropdown. */
 export const findWardByName = (provinceId, name) => {
     if (!provinceId || !name?.trim()) return null;
     return getWardsByProvince(provinceId).find((item) => item.ten === name.trim()) ?? null;
 };
 
-const normalizeAdminName = (name) =>
-    (name || '')
+const normalizeVnPlaceName = (value) =>
+    String(value || '')
+        .normalize('NFC')
         .trim()
-        .replace(/^(Thành phố|Tỉnh|TP\.?|Quận|Huyện|Thị xã|Thị trấn|Phường|Xã|P\.|Q\.)\s+/i, '')
-        .replace(/\s+/g, ' ')
-        .toLowerCase();
+        .toLowerCase()
+        .replace(/^(thành phố|tp\.?|tỉnh|quận|huyện|thị xã|thị trấn|phường|xã)\s+/i, '')
+        .trim();
 
-const namesLooselyMatch = (a, b) => {
-    const left = normalizeAdminName(a);
-    const right = normalizeAdminName(b);
+const namesMatch = (a, b) => {
+    const left = normalizeVnPlaceName(a);
+    const right = normalizeVnPlaceName(b);
     if (!left || !right) return false;
     return left === right || left.includes(right) || right.includes(left);
 };
 
-/** Khớp mềm tên tỉnh từ Nominatim → id dropdown. */
-export const findProvinceByNameFuzzy = (name) => {
-    const exact = findProvinceByName(name);
-    if (exact) return exact;
+/**
+ * Map kết quả Nominatim reverse → id Tỉnh/Phường trong dia-chinh-web.json.
+ * @param {object} address — object address từ Nominatim
+ * @param {string} displayName
+ */
+export const matchProvinceAndWardFromNominatim = (address = {}, displayName = '') => {
+    const provinceCandidates = [
+        address.city,
+        address.state,
+        address.province,
+        address.county,
+        address.town,
+        address.municipality,
+        address['ISO3166-2-lvl4'],
+    ].filter(Boolean);
 
-    return (
-        getProvinces().find((item) => namesLooselyMatch(item.ten, name)) ?? null
-    );
-};
+    const provinces = getProvinces();
+    let province =
+        provinces.find((item) => provinceCandidates.some((name) => namesMatch(item.ten, name))) ||
+        provinces.find((item) => displayName.includes(item.ten)) ||
+        null;
 
-/** Khớp mềm tên phường/xã từ Nominatim → id dropdown. */
-export const findWardByNameFuzzy = (provinceId, name) => {
-    const exact = findWardByName(provinceId, name);
-    if (exact) return exact;
+    if (!province) {
+        return { provinceId: '', wardId: '', cityName: '', wardName: '' };
+    }
 
-    return (
-        getWardsByProvince(provinceId).find((item) => namesLooselyMatch(item.ten, name)) ??
-        null
-    );
+    const wardCandidates = [
+        address.suburb,
+        address.neighbourhood,
+        address.quarter,
+        address.village,
+        address.city_district,
+        address.borough,
+        address.municipality,
+        address.town,
+    ].filter(Boolean);
+
+    const wards = getWardsByProvince(province.id);
+    const ward =
+        wards.find((item) => wardCandidates.some((name) => namesMatch(item.ten, name))) ||
+        wards.find((item) => displayName.includes(item.ten)) ||
+        null;
+
+    return {
+        provinceId: province.id,
+        wardId: ward?.id || '',
+        cityName: province.ten,
+        wardName: ward?.ten || '',
+    };
 };

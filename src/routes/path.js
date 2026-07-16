@@ -8,7 +8,7 @@ export const ROUTES = {
     VERIFY_EMAIL: '/verify-email',
     JOB_LIST: '/jobs',
     JOB_DETAIL: '/jobs/:jobId',
-    BUSINESS_PROFILE: '/business/:businessId',
+    CANDIDATE_PUBLIC_PROFILE: '/candidates/:candidateId',
 
     CANDIDATE_HOME: '/candidate',
     RECRUITER_HOME: '/recruiter',
@@ -29,7 +29,6 @@ export const ROUTES = {
     CANDIDATE_APPLICATION_HISTORY: '/candidate/applications',
 
     RECRUITER_CREATE_JOB: '/recruiter/jobs/new',
-    RECRUITER_EDIT_JOB: '/recruiter/jobs/:jobId/edit',
     RECRUITER_MY_JOBS: '/recruiter/jobs',
     RECRUITER_APPLICANTS: '/recruiter/applicants',
     RECRUITER_AI_SUGGESTIONS: '/recruiter/ai-suggestions',
@@ -58,15 +57,12 @@ export const ROUTES = {
 
 export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
 
-export const getRecruiterEditJobPath = (jobId) => `/recruiter/jobs/${jobId}/edit`;
-
-export const getRecruiterApplicantsPath = (jobId) =>
-    `${ROUTES.RECRUITER_APPLICANTS}?jobId=${jobId}`;
-
 export const getCandidateJobChatPath = (jobId) =>
     `${ROUTES.CANDIDATE_MESSAGES}?jobId=${jobId}`;
 
-/** Trang công ty công khai cho guest/candidate. */
+export const getCandidatePublicProfilePath = (candidateId) => `/candidates/${candidateId}`;
+
+/** Placeholder — trang công ty công khai; cập nhật khi có route thật. */
 export const getBusinessProfilePath = (businessId) => `/business/${businessId}`;
 
 // Dùng sau khi login / khi vào route không tồn tại để biết đá user về đâu.

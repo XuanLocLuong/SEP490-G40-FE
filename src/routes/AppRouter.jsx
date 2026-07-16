@@ -13,7 +13,6 @@ import InternalLayout from '../layouts/InternalLayout.jsx';
 import LandingPage from '../pages/guest/LandingPage.jsx';
 import JobListPage from '../pages/guest/JobListPage.jsx';
 import JobDetailPage from '../pages/guest/JobDetailPage.jsx';
-import PublicBusinessProfilePage from '../pages/guest/PublicBusinessProfilePage.jsx';
 import Login from '../pages/auth/Login.jsx';
 import Register from '../pages/auth/Register.jsx';
 import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
@@ -22,13 +21,11 @@ import CandidateProfilePage from '../pages/candidate/CandidateProfile/CandidateP
 import AvailabilityPage from '../pages/candidate/availability/AvailabilityPage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
-import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
-import MyJobsPage from '../pages/recruiter/jobs/MyJobsPage.jsx';
-import ApplicantsPage from '../pages/recruiter/applicants/ApplicantsPage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
+import CandidatePublicProfilePage from '../pages/shared/CandidatePublicProfilePage.jsx';
 
 // Cấu trúc route đi theo nhóm role (khớp bảng Screen Authorization trong SRS +
 // đúng 5 role thật của backend). Mỗi nhóm bọc 1 Layout dùng chung qua
@@ -44,7 +41,6 @@ const AppRouter = () => {
                 <Route path={ROUTES.LANDING} element={<LandingPage />} />
                 <Route path={ROUTES.JOB_LIST} element={<JobListPage />} />
                 <Route path={ROUTES.JOB_DETAIL} element={<JobDetailPage />} />
-                <Route path={ROUTES.BUSINESS_PROFILE} element={<PublicBusinessProfilePage />} />
             </Route>
 
             {/* ---- Auth (Login/Register/Verify) — KHÔNG có Header/Footer,
@@ -65,6 +61,10 @@ const AppRouter = () => {
                 <Route path={ROUTES.CANDIDATE_SETTINGS} element={<CandidateSettingsPage />} />
                 <Route path={ROUTES.CANDIDATE_PROFILE} element={<CandidateProfilePage />} />
                 <Route path={ROUTES.CANDIDATE_AVAILABILITY} element={<AvailabilityPage />} />
+                <Route
+                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
+                    element={<CandidatePublicProfilePage />}
+                />
             </Route>
 
             {/* ---- Recruiter ---- */}
@@ -78,10 +78,10 @@ const AppRouter = () => {
                 <Route path={ROUTES.RECRUITER_HOME} element={<RecruiterHomePage />} />
                 <Route path={ROUTES.RECRUITER_SETTINGS} element={<CandidateSettingsPage />} />
                 <Route path={ROUTES.RECRUITER_PROFILE} element={<RecruiterProfilePage />} />
-                <Route path={ROUTES.RECRUITER_CREATE_JOB} element={<CreateJobPage />} />
-                <Route path={ROUTES.RECRUITER_EDIT_JOB} element={<CreateJobPage />} />
-                <Route path={ROUTES.RECRUITER_MY_JOBS} element={<MyJobsPage />} />
-                <Route path={ROUTES.RECRUITER_APPLICANTS} element={<ApplicantsPage />} />
+                <Route
+                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
+                    element={<CandidatePublicProfilePage />}
+                />
             </Route>
 
             {/* ---- Post Manager ---- */}
@@ -93,6 +93,10 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.POST_MANAGER_HOME} element={<PostManagerDashboard />} />
+                <Route
+                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
+                    element={<CandidatePublicProfilePage />}
+                />
             </Route>
 
             {/* ---- Manual Verification Team ---- */}
@@ -104,6 +108,10 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.MANUAL_CHECK_HOME} element={<ManualCheckDashboard />} />
+                <Route
+                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
+                    element={<CandidatePublicProfilePage />}
+                />
             </Route>
 
             {/* ---- Admin ---- */}
@@ -115,6 +123,10 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.ADMIN_HOME} element={<AdminDashboard />} />
+                <Route
+                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
+                    element={<CandidatePublicProfilePage />}
+                />
             </Route>
 
             {/* Route không tồn tại -> về trang chủ đúng role (hoặc Landing nếu chưa login) */}

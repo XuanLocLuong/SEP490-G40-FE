@@ -48,7 +48,11 @@ const SearchResultsSection = ({ query, onClear }) => {
             <div className="landing-section__header">
                 <div>
                     <h2 className="landing-section__title">Kết quả tìm kiếm</h2>
-                    <p className="landing-section__desc">Từ toàn bộ việc đang tuyển trên JobLink</p>
+                    <p className="landing-section__desc">
+                        {query?.nearMe
+                            ? 'Việc gần bạn, kèm các bộ lọc đang chọn'
+                            : 'Từ toàn bộ việc đang tuyển trên JobLink'}
+                    </p>
                 </div>
                 <div className="landing-section__header-actions">
                     <button type="button" className="landing-section__link" onClick={onClear}>
@@ -77,7 +81,7 @@ const SearchResultsSection = ({ query, onClear }) => {
             {jobs.length > 0 && (
                 <div className="landing-jobs__grid">
                     {jobs.map((job) => (
-                        <JobCard key={job.id} job={job} />
+                        <JobCard key={job.id} job={job} nearMe={Boolean(query?.nearMe)} />
                     ))}
                 </div>
             )}

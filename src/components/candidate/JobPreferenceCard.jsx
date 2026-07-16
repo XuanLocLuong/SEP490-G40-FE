@@ -338,10 +338,17 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
 
                         <div className="cp-map-modal-body">
                             <LocationPicker
-                                title=""
-                                onLocationChange={(loc) => {
-                                    handleLocationChange(loc);
-                                }}
+                                variant="demo"
+                                title="Chọn vị trí tìm việc"
+                                initialLocation={
+                                    form.latitude != null && form.longitude != null
+                                        ? {
+                                              latitude: form.latitude,
+                                              longitude: form.longitude,
+                                          }
+                                        : null
+                                }
+                                onLocationChange={handleLocationChange}
                             />
                         </div>
 
