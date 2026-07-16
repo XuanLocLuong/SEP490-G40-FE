@@ -60,6 +60,9 @@ export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
 
 export const getRecruiterEditJobPath = (jobId) => `/recruiter/jobs/${jobId}/edit`;
 
+export const getRecruiterApplicantsPath = (jobId) =>
+    `${ROUTES.RECRUITER_APPLICANTS}?jobId=${jobId}`;
+
 export const getCandidateJobChatPath = (jobId) =>
     `${ROUTES.CANDIDATE_MESSAGES}?jobId=${jobId}`;
 

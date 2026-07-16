@@ -24,6 +24,7 @@ import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
 import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
 import MyJobsPage from '../pages/recruiter/jobs/MyJobsPage.jsx';
+import ApplicantsPage from '../pages/recruiter/applicants/ApplicantsPage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
@@ -80,6 +81,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.RECRUITER_CREATE_JOB} element={<CreateJobPage />} />
                 <Route path={ROUTES.RECRUITER_EDIT_JOB} element={<CreateJobPage />} />
                 <Route path={ROUTES.RECRUITER_MY_JOBS} element={<MyJobsPage />} />
+                <Route path={ROUTES.RECRUITER_APPLICANTS} element={<ApplicantsPage />} />
             </Route>
 
             {/* ---- Post Manager ---- */}
