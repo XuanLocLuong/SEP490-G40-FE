@@ -305,6 +305,17 @@
     color: var(--color-text-muted);
 }
 
+.public-business__jobs-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.public-business__jobs-error p {
+    margin: 0;
+}
+
 .public-business__load-more {
     display: flex;
     justify-content: center;

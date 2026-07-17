@@ -70,7 +70,21 @@ const PublicBusinessProfilePage = () => {
     const [jobsError, setJobsError] = useState('');
     const [jobsPage, setJobsPage] = useState(0);
     const [jobsTotalPages, setJobsTotalPages] = useState(0);
+    const [jobsTotalElements, setJobsTotalElements] = useState(0);
     const [jobsLoaded, setJobsLoaded] = useState(false);
+
+    useEffect(() => {
+        setProfile(null);
+        setProfileLoading(true);
+        setProfileError('');
+        setJobs([]);
+        setJobsLoaded(false);
+        setJobsPage(0);
+        setJobsTotalPages(0);
+        setJobsTotalElements(0);
+        setJobsError('');
+        setActiveTab(TABS.ABOUT);
+    }, [businessId]);
 
     useEffect(() => {
         let cancelled = false;
@@ -114,6 +128,7 @@ const PublicBusinessProfilePage = () => {
                 );
                 setJobsPage(pageData.currentPage);
                 setJobsTotalPages(pageData.totalPages);
+                setJobsTotalElements(pageData.totalElements ?? 0);
                 setJobsLoaded(true);
             } catch (err) {
                 setJobsError(getApiErrorMessage(err, 'Không tải được danh sách việc làm.'));
@@ -282,6 +297,11 @@ const PublicBusinessProfilePage = () => {
                             <h2 className="public-business__section-title">Mô tả chung</h2>
 
                             <div className="public-business__info-list">
+                                {profile.locations.length === 0 && (
+                                    <p className="public-business__jobs-empty">
+                                        Chưa cập nhật địa chỉ.
+                                    </p>
+                                )}
                                 {profile.locations.map((location) => {
                                     const mapsUrl = buildMapsUrl(location);
                                     const wardProvince = formatLocation(location);
@@ -331,17 +351,39 @@ const PublicBusinessProfilePage = () => {
 
                     {activeTab === TABS.JOBS && (
                         <section className="public-business__panel">
+                            <h2 className="public-business__section-title">
+                                Tin đang tuyển dụng
+                                {jobsLoaded && !jobsError && jobsTotalElements > 0
+                                    ? ` (${jobsTotalElements})`
+                                    : ''}
+                            </h2>
+
                             {jobsLoading && jobs.length === 0 && (
-                                <p className="public-business__jobs-empty">Đang tải tin tuyển dụng…</p>
-                            )}
-                            {jobsError && (
-                                <p className="public-business__jobs-empty">{jobsError}</p>
-                            )}
-                            {!jobsLoading && !jobsError && jobs.length === 0 && (
                                 <p className="public-business__jobs-empty">
-                                    Hiện chưa có tin tuyển dụng.
+                                    Đang tải tin tuyển dụng…
                                 </p>
                             )}
+
+                            {jobsError && (
+                                <div className="public-business__jobs-empty public-business__jobs-error">
+                                    <p>{jobsError}</p>
+                                    <button
+                                        type="button"
+                                        className="btn btn--secondary"
+                                        disabled={jobsLoading}
+                                        onClick={() => loadJobs(0, false)}
+                                    >
+                                        {jobsLoading ? 'Đang tải…' : 'Thử lại'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {!jobsLoading && !jobsError && jobs.length === 0 && (
+                                <p className="public-business__jobs-empty">
+                                    Doanh nghiệp hiện chưa có tin đang tuyển.
+                                </p>
+                            )}
+
                             {jobs.length > 0 && (
                                 <div className="public-business__jobs-grid">
                                     {jobs.map((job) => (
@@ -349,6 +391,7 @@ const PublicBusinessProfilePage = () => {
                                     ))}
                                 </div>
                             )}
+
                             {hasMoreJobs && (
                                 <div className="public-business__load-more">
                                     <button

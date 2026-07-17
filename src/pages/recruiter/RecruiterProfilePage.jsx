@@ -16,18 +16,18 @@ import recruiterProfileApi, { getApiErrorMessage } from '../../apis/RecruiterPro
 import locationApi, { getLocationApiErrorMessage } from '../../apis/LocationApi.jsx';
 import userApi from '../../apis/UserApi.jsx';
 import {
-    getProvinces,
-    getWardsByProvince,
+    buildFullAddress,
     findProvinceByName,
     findWardByName,
-    resolveAdminFromCoordinates,
-    getGeolocationErrorMessage,
 } from '../../modules/location/index.js';
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import { RECRUITER_PROFILE_CREATE_JOB_INTENT } from '../../utils/recruiterJobGuard.js';
 import RequiredMark from '../../components/common/RequiredMark.jsx';
 import RichTextEditor from '../../components/common/RichTextEditor.jsx';
+import RecruiterAddressModal from '../../components/recruiter/RecruiterAddressModal.jsx';
+import ReadonlyMapPreview from '../../components/recruiter/ReadonlyMapPreview.jsx';
+import HiringHistoryTab from '../../components/recruiter/HiringHistoryTab.jsx';
 import { clampPercent } from '../../utils/profileFormat.js';
 import { plainTextLength } from '../../utils/richTextUtils.js';
 import '../../assets/styles/AccountSettingsStyle.css';
@@ -51,6 +51,14 @@ const BUSINESS_TYPE_OPTIONS = [
     'F&B (Dịch vụ ăn uống)',
     'Khác',
 ];
+
+const emptyAddressInitial = () => ({
+    provinceId: '',
+    wardId: '',
+    detailAddress: '',
+    provinceName: '',
+    wardName: '',
+});
 
 const emptyProfile = () => ({
     businessName: '',
@@ -182,7 +190,6 @@ const RecruiterProfilePage = () => {
     );
     const logoInputRef = useRef(null);
     const galleryInputRef = useRef(null);
-    const provinces = useMemo(() => getProvinces(), []);
 
     const [profile, setProfile] = useState(emptyProfile);
     const [form, setForm] = useState(emptyForm);
@@ -194,25 +201,56 @@ const RecruiterProfilePage = () => {
     const [pendingLogoPreview, setPendingLogoPreview] = useState(null);
     const pendingLogoPreviewRef = useRef(null);
     const [galleryLoading, setGalleryLoading] = useState(false);
-    const [gpsLoading, setGpsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('info');
 
     const [savedLocation, setSavedLocation] = useState(null);
     const [coords, setCoords] = useState(null);
     const [locationLoading, setLocationLoading] = useState(false);
-    const [addressFieldMessage, setAddressFieldMessage] = useState('');
+    const [addressModalOpen, setAddressModalOpen] = useState(false);
     const [accountContact, setAccountContact] = useState({ phone: '', email: '' });
     const locationSectionRef = useRef(null);
     const descriptionInsertRef = useRef(null);
 
-    const wards = useMemo(
-        () => getWardsByProvince(form.provinceId),
-        [form.provinceId]
+    const committedAddress = useMemo(
+        () => ({
+            provinceId: form.provinceId || '',
+            wardId: form.wardId || '',
+            detailAddress: form.detailAddress || '',
+            provinceName: form.provinceName || '',
+            wardName: form.wardName || '',
+        }),
+        [
+            form.provinceId,
+            form.wardId,
+            form.detailAddress,
+            form.provinceName,
+            form.wardName,
+        ]
     );
 
-    const applyAddressFields = useCallback((addressFields) => {
-        setForm((prev) => ({ ...prev, ...addressFields }));
-    }, []);
+    const addressDisplay = useMemo(
+        () =>
+            buildFullAddress({
+                detailAddress: form.detailAddress,
+                wardName: form.wardName,
+                provinceName: form.provinceName,
+            }),
+        [form.detailAddress, form.wardName, form.provinceName]
+    );
+
+    const hasCommittedAddress =
+        Boolean(form.provinceId && form.wardId && form.detailAddress?.trim()) &&
+        coords?.latitude != null &&
+        coords?.longitude != null;
+
+    const handleAddressModalConfirm = (result) => {
+        setForm((prev) => ({
+            ...prev,
+            ...result.address,
+        }));
+        setCoords(result.coords);
+        setAddressModalOpen(false);
+    };
 
     const loadLocation = async (businessId, businessName) => {
         setLocationLoading(true);
@@ -220,13 +258,7 @@ const RecruiterProfilePage = () => {
         if (!businessId) {
             setSavedLocation(null);
             setCoords(null);
-            applyAddressFields({
-                provinceId: '',
-                wardId: '',
-                detailAddress: '',
-                provinceName: '',
-                wardName: '',
-            });
+            setForm((prev) => ({ ...prev, ...emptyAddressInitial() }));
             setLocationLoading(false);
             return;
         }
@@ -240,13 +272,15 @@ const RecruiterProfilePage = () => {
                 const province = findProvinceByName(loc.city);
                 const ward = province ? findWardByName(province.id, loc.ward) : null;
 
-                applyAddressFields({
+                const initial = {
                     provinceId: province?.id || '',
                     wardId: ward?.id || '',
                     detailAddress: loc.address || '',
                     provinceName: province?.ten || loc.city || '',
                     wardName: ward?.ten || loc.ward || '',
-                });
+                };
+
+                setForm((prev) => ({ ...prev, ...initial }));
 
                 if (loc.latitude != null && loc.longitude != null) {
                     setCoords({
@@ -259,13 +293,7 @@ const RecruiterProfilePage = () => {
             } else {
                 setSavedLocation(null);
                 setCoords(null);
-                applyAddressFields({
-                    provinceId: '',
-                    wardId: '',
-                    detailAddress: '',
-                    provinceName: '',
-                    wardName: '',
-                });
+                setForm((prev) => ({ ...prev, ...emptyAddressInitial() }));
             }
         } catch (err) {
             if (err.response?.status !== 404) {
@@ -334,6 +362,8 @@ const RecruiterProfilePage = () => {
                 setProfile(emptyProfile());
                 setAccountContact(accountContact);
                 setForm(emptyForm());
+                setCoords(null);
+                setSavedLocation(null);
             } else {
                 toast.error(getApiErrorMessage(err, 'Không thể tải hồ sơ nhà tuyển dụng.'));
             }
@@ -347,102 +377,16 @@ const RecruiterProfilePage = () => {
     }, []);
 
     const updateFormField = (field, value) => {
-        if (field === 'detailAddress' && value.trim()) {
-            setAddressFieldMessage('');
-        }
-
-        setForm((prev) => {
-            const next = { ...prev, [field]: value };
-
-            if (field === 'provinceId') {
-                const province = provinces.find((p) => p.id === value);
-                next.wardId = '';
-                next.wardName = '';
-                next.provinceName = province?.ten || '';
-            }
-
-            if (field === 'wardId') {
-                const ward = getWardsByProvince(prev.provinceId).find((w) => w.id === value);
-                next.wardName = ward?.ten || '';
-            }
-
-            return next;
-        });
-    };
-
-    const handleGetCurrentLocation = () => {
-        if (!window.isSecureContext) {
-            toast.error('Geolocation chỉ hoạt động trên HTTPS hoặc localhost.');
-            return;
-        }
-        if (!navigator.geolocation) {
-            toast.error('Trình duyệt không hỗ trợ Geolocation.');
-            return;
-        }
-
-        setGpsLoading(true);
-        setAddressFieldMessage('');
-
-        navigator.geolocation.getCurrentPosition(
-            async (result) => {
-                const latitude = result.coords.latitude;
-                const longitude = result.coords.longitude;
-                setCoords({ latitude, longitude });
-                applyAddressFields({
-                    provinceId: '',
-                    wardId: '',
-                    detailAddress: '',
-                    provinceName: '',
-                    wardName: '',
-                });
-
-                try {
-                    const { province, ward } = await resolveAdminFromCoordinates(
-                        latitude,
-                        longitude
-                    );
-
-                    if (province) {
-                        applyAddressFields({
-                            provinceId: province.id,
-                            provinceName: province.ten,
-                            wardId: ward?.id || '',
-                            wardName: ward?.ten || '',
-                        });
-
-                        if (ward) {
-                            setAddressFieldMessage(
-                                'Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường).'
-                            );
-                        } else {
-                            setAddressFieldMessage(
-                                'Vui lòng chọn Phường/Xã và nhập địa chỉ chi tiết.'
-                            );
-                        }
-                    } else {
-                        toast.warning(
-                            'Không khớp Tỉnh/Phường trong danh mục. Vui lòng chọn thủ công.'
-                        );
-                    }
-                } catch {
-                    toast.error('Không thể xác định địa chỉ từ vị trí hiện tại.');
-                } finally {
-                    setGpsLoading(false);
-                }
-            },
-            (geoError) => {
-                toast.error(getGeolocationErrorMessage(geoError.code));
-                setGpsLoading(false);
-            },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
+        setForm((prev) => ({ ...prev, [field]: value }));
     };
 
     const canSave =
         form.businessName.trim() &&
         form.provinceId &&
         form.wardId &&
-        form.detailAddress?.trim();
+        form.detailAddress?.trim() &&
+        coords?.latitude != null &&
+        coords?.longitude != null;
 
     const handleSaveAll = async () => {
         if (!form.businessName.trim()) {
@@ -450,13 +394,8 @@ const RecruiterProfilePage = () => {
             return;
         }
 
-        if (!form.provinceId || !form.wardId) {
-            toast.error('Vui lòng chọn Tỉnh/Thành phố và Phường/Xã.');
-            return;
-        }
-
-        if (!form.detailAddress?.trim()) {
-            toast.error('Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường).');
+        if (!hasCommittedAddress) {
+            toast.error('Vui lòng cập nhật địa chỉ trụ sở trước khi lưu.');
             return;
         }
 
@@ -547,7 +486,12 @@ const RecruiterProfilePage = () => {
             };
 
             if (savedLocation?.id) {
-                await locationApi.updateLocation(businessId, savedLocation.id, locationPayload);
+                const updated = await locationApi.updateLocation(
+                    businessId,
+                    savedLocation.id,
+                    locationPayload
+                );
+                if (updated) setSavedLocation(updated);
             } else {
                 const created = await locationApi.createLocation(businessId, locationPayload);
                 setSavedLocation(created);
@@ -926,9 +870,12 @@ const RecruiterProfilePage = () => {
                             <>
                                 <button
                                     type="button"
-                                    className="recruiter-profile__tab"
-                                    disabled
-                                    title="Sắp có"
+                                    className={`recruiter-profile__tab${
+                                        activeTab === 'history'
+                                            ? ' recruiter-profile__tab--active'
+                                            : ''
+                                    }`}
+                                    onClick={() => setActiveTab('history')}
                                 >
                                     Lịch sử tuyển dụng
                                 </button>
@@ -998,13 +945,13 @@ const RecruiterProfilePage = () => {
                                             <button
                                                 type="button"
                                                 className="recruiter-profile__gps-btn"
-                                                onClick={handleGetCurrentLocation}
-                                                disabled={gpsLoading || locationLoading}
+                                                onClick={() => setAddressModalOpen(true)}
+                                                disabled={locationLoading}
                                             >
                                                 <MapPinIcon width={14} height={14} />
-                                                {gpsLoading
-                                                    ? 'Đang lấy vị trí...'
-                                                    : 'Lấy vị trí hiện tại'}
+                                                {hasCommittedAddress
+                                                    ? 'Chỉnh sửa địa chỉ'
+                                                    : 'Cập nhật địa chỉ'}
                                             </button>
                                         </div>
 
@@ -1012,95 +959,22 @@ const RecruiterProfilePage = () => {
                                             <p className="account-settings__hint">
                                                 Đang tải địa chỉ...
                                             </p>
+                                        ) : hasCommittedAddress ? (
+                                            <div className="recruiter-profile__address-committed">
+                                                <div className="recruiter-profile__address-display">
+                                                    <MapPinIcon width={16} height={16} />
+                                                    <span>{addressDisplay}</span>
+                                                </div>
+                                                <ReadonlyMapPreview
+                                                    latitude={coords.latitude}
+                                                    longitude={coords.longitude}
+                                                    className="recruiter-profile__address-map"
+                                                />
+                                            </div>
                                         ) : (
-                                            <>
-                                                <div className="recruiter-profile__address-admin">
-                                                    <div className="recruiter-profile__address-field">
-                                                        <label htmlFor="rp-province">
-                                                            Tỉnh / Thành phố
-                                                            <RequiredMark />
-                                                        </label>
-                                                        <select
-                                                            id="rp-province"
-                                                            value={form.provinceId}
-                                                            onChange={(e) =>
-                                                                updateFormField(
-                                                                    'provinceId',
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        >
-                                                            <option value="">
-                                                                — Tỉnh / Thành phố —
-                                                            </option>
-                                                            {provinces.map((province) => (
-                                                                <option
-                                                                    key={province.id}
-                                                                    value={province.id}
-                                                                >
-                                                                    {province.ten}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    <div className="recruiter-profile__address-field">
-                                                        <label htmlFor="rp-ward">
-                                                            Phường / Xã
-                                                            <RequiredMark />
-                                                        </label>
-                                                        <select
-                                                            id="rp-ward"
-                                                            value={form.wardId}
-                                                            disabled={!form.provinceId}
-                                                            onChange={(e) =>
-                                                                updateFormField(
-                                                                    'wardId',
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        >
-                                                            <option value="">— Phường / Xã —</option>
-                                                            {wards.map((ward) => (
-                                                                <option key={ward.id} value={ward.id}>
-                                                                    {ward.ten}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div className="recruiter-profile__field recruiter-profile__field--detail-address">
-                                                    <label htmlFor="rp-detail-address-input">
-                                                        Số nhà, tên đường
-                                                        <RequiredMark />
-                                                    </label>
-                                                    <div className="recruiter-profile__input-icon">
-                                                        <MapPinIcon width={16} height={16} />
-                                                        <input
-                                                            id="rp-detail-address-input"
-                                                            type="text"
-                                                            placeholder="Số nhà, tên đường, tòa nhà..."
-                                                            value={form.detailAddress}
-                                                            onChange={(e) =>
-                                                                updateFormField(
-                                                                    'detailAddress',
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {addressFieldMessage && (
-                                                    <p
-                                                        className="recruiter-profile__address-field-message"
-                                                        role="status"
-                                                    >
-                                                        {addressFieldMessage}
-                                                    </p>
-                                                )}
-                                            </>
+                                            <div className="recruiter-profile__address-empty">
+                                                Bạn cần cập nhật địa chỉ trụ sở.
+                                            </div>
                                         )}
                                     </div>
 
@@ -1221,19 +1095,20 @@ const RecruiterProfilePage = () => {
                                         </div>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        className="account-settings__btn account-settings__btn--primary recruiter-profile__save-btn"
-                                        disabled={saving || !canSave}
-                                        onClick={handleSaveAll}
-                                    >
-                                        {saving
-                                            ? 'Đang lưu...'
-                                            : noProfile
-                                              ? 'Tạo hồ sơ'
-                                              : 'Lưu thay đổi'}
-                                    </button>
                                 </section>
+
+                                <button
+                                    type="button"
+                                    className="account-settings__btn account-settings__btn--primary recruiter-profile__save-btn"
+                                    disabled={saving || !canSave}
+                                    onClick={handleSaveAll}
+                                >
+                                    {saving
+                                        ? 'Đang lưu...'
+                                        : noProfile
+                                          ? 'Tạo hồ sơ'
+                                          : 'Lưu thay đổi'}
+                                </button>
                                 </div>
                             </div>
 
@@ -1295,8 +1170,18 @@ const RecruiterProfilePage = () => {
                             )}
                         </>
                     )}
+
+                    {activeTab === 'history' && !noProfile && <HiringHistoryTab />}
                 </>
             )}
+
+            <RecruiterAddressModal
+                open={addressModalOpen}
+                initialAddress={committedAddress}
+                initialCoords={coords}
+                onClose={() => setAddressModalOpen(false)}
+                onConfirm={handleAddressModalConfirm}
+            />
         </div>
     );
 };
