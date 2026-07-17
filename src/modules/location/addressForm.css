@@ -27,3 +27,20 @@
     line-height: 1.45;
     color: var(--color-text-muted);
 }
+
+.address-form__detail-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.address-form__detail-row input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+@media (max-width: 640px) {
+    .address-form__detail-row {
+        flex-direction: column;
+    }
+}

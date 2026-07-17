@@ -1,0 +1,202 @@
+.hiring-history {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.hiring-history__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.hiring-history__stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.hiring-history__stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: var(--color-primary, #2563eb);
+    flex-shrink: 0;
+}
+
+.hiring-history__stat-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.hiring-history__stat-value {
+    font-size: 1.35rem;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.hiring-history__stat-label {
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+.hiring-history__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.hiring-history__section-title {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #0f172a;
+}
+
+.hiring-history__year-select {
+    padding: 8px 12px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 8px;
+    font: inherit;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+}
+
+.hiring-history__empty {
+    padding: 32px;
+    text-align: center;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    color: #64748b;
+    background: #f8fafc;
+}
+
+.hiring-history__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.hiring-history__item {
+    padding: 16px 18px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.hiring-history__item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.hiring-history__item-title {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.hiring-history__badge {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.hiring-history__badge--ok {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.hiring-history__badge--muted {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.hiring-history__item-time {
+    margin-top: 6px;
+    font-size: 0.82rem;
+    color: #94a3b8;
+}
+
+.hiring-history__progress {
+    margin-top: 12px;
+}
+
+.hiring-history__progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+.hiring-history__progress-bar {
+    margin-top: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+.hiring-history__progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    transition: width 0.2s ease;
+}
+
+.hiring-history__counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.hiring-history__count strong {
+    color: #0f172a;
+    margin-right: 2px;
+}
+
+.hiring-history__count--accepted strong {
+    color: #1d4ed8;
+}
+
+.hiring-history__count--hired strong {
+    color: #166534;
+}
+
+.hiring-history__count--rejected strong {
+    color: #b91c1c;
+}
+
+@media (max-width: 768px) {
+    .hiring-history__stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .hiring-history__stats {
+        grid-template-columns: 1fr;
+    }
+}

@@ -345,6 +345,15 @@
     min-height: 180px;
 }
 
+.job-card--preview {
+    pointer-events: none;
+}
+
+.job-card--preview:hover {
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-card);
+}
+
 @media (max-width: 767px) {
     .job-card {
         padding: 16px 16px 0;

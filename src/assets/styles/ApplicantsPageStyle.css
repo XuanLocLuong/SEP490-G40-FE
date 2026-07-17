@@ -1,0 +1,309 @@
+.applicants-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+}
+
+.applicants-page__title {
+    margin: 0 0 20px;
+    font-size: 1.75rem;
+    color: var(--color-text, #0f172a);
+}
+
+.applicants-page__toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px 18px;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-lg, 12px);
+}
+
+.applicants-page__job-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.applicants-page__job-field {
+    flex: 1;
+    min-width: 240px;
+}
+
+.applicants-page__job-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-muted, #64748b);
+}
+
+.applicants-page__job-field select,
+.applicants-page__sort select {
+    width: 100%;
+    max-width: 420px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-md, 8px);
+    font: inherit;
+    background: var(--color-bg, #fff);
+}
+
+.applicants-page__count {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 999px;
+    background: #f8fafc;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.applicants-page__filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.applicants-page__filters {
+    flex: 1;
+    min-width: 280px;
+}
+
+.applicants-page__filters label,
+.applicants-page__sort label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-muted, #64748b);
+}
+
+.applicants-page__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.applicants-page__chip {
+    padding: 8px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    background: #f8fafc;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.applicants-page__chip:hover {
+    border-color: #93c5fd;
+    color: #3b82f6;
+    background: #f0f9ff;
+}
+
+.applicants-page__chip--active {
+    border-color: #93c5fd;
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.applicants-page__sort {
+    min-width: 140px;
+}
+
+.applicants-page__sort select {
+    width: 100%;
+    min-width: 140px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-md, 8px);
+    font: inherit;
+    background: var(--color-bg, #fff);
+}
+
+.applicants-page__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.applicants-page__empty,
+.applicants-page__loading,
+.applicants-page__error {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--color-text-muted, #64748b);
+    background: var(--color-surface, #fff);
+    border: 1px dashed var(--color-border, #e2e8f0);
+    border-radius: var(--radius-lg, 12px);
+}
+
+.applicants-page__empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.applicants-page__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* Application card */
+.application-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-lg, 12px);
+}
+
+.application-card__header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.application-card__avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border, #e2e8f0);
+}
+
+.application-card__avatar--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--color-primary, #2563eb);
+    background: color-mix(in srgb, var(--color-primary, #2563eb) 12%, #fff);
+}
+
+.application-card__heading {
+    min-width: 0;
+}
+
+.application-card__name {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.application-card__status {
+    display: inline-block;
+    margin-bottom: 6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.application-card__status--pending {
+    color: #92400e;
+    background: #fef9c3;
+}
+
+.application-card__status--accepted {
+    color: #1e40af;
+    background: #e0f2fe;
+}
+
+.application-card__status--rejected {
+    color: #9f1239;
+    background: #ffe4e6;
+}
+
+.application-card__status--hired {
+    color: #065f46;
+    background: #d1fae5;
+}
+
+.application-card__status--muted {
+    color: #64748b;
+    background: #f1f5f9;
+}
+
+.application-card__time {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted, #64748b);
+}
+
+.application-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border, #e2e8f0);
+}
+
+.application-card__btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.application-card__btn--view {
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.application-card__btn--view:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+.application-card__btn--accept {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+
+.application-card__btn--accept:hover:not(:disabled) {
+    background: #bfdbfe;
+    border-color: #93c5fd;
+    color: #1e40af;
+}
+
+.application-card__btn--reject {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+}
+
+.application-card__btn--reject:hover:not(:disabled) {
+    background: #ffe4e6;
+    border-color: #fda4af;
+    color: #9f1239;
+}
+
+.application-card__btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}

@@ -11,8 +11,9 @@ const emptyForm = () => ({
 
 /**
  * Form chọn địa chỉ hành chính VN (2 cấp: Tỉnh/TP → Phường/Xã) + địa chỉ chi tiết.
+ * detailAction (optional): nút/action ngang hàng với ô địa chỉ chi tiết (vd. Tìm trên bản đồ).
  */
-const AddressForm = ({ initialValues, onChange }) => {
+const AddressForm = ({ initialValues, onChange, detailAction = null }) => {
     const provinces = useMemo(() => getProvinces(), []);
 
     const [form, setForm] = useState(() => ({
@@ -38,8 +39,12 @@ const AddressForm = ({ initialValues, onChange }) => {
         setForm((prev) => {
             const next = { ...prev, [field]: value };
 
+            // Đổi Tỉnh hoặc Phường → xóa địa chỉ chi tiết cũ (tránh giữ số nhà/ngõ chỗ trước).
             if (field === 'provinceId') {
                 next.wardId = '';
+                next.detailAddress = '';
+            } else if (field === 'wardId') {
+                next.detailAddress = '';
             }
 
             onChange?.(buildPayload(next));
@@ -88,13 +93,16 @@ const AddressForm = ({ initialValues, onChange }) => {
 
             <div className="account-settings__field">
                 <label htmlFor="address-form-detail">Địa chỉ chi tiết</label>
-                <input
-                    id="address-form-detail"
-                    type="text"
-                    placeholder="Số nhà, tên đường, tòa nhà..."
-                    value={form.detailAddress}
-                    onChange={(e) => updateField('detailAddress', e.target.value)}
-                />
+                <div className="address-form__detail-row">
+                    <input
+                        id="address-form-detail"
+                        type="text"
+                        placeholder="Số nhà, tên đường, tòa nhà..."
+                        value={form.detailAddress}
+                        onChange={(e) => updateField('detailAddress', e.target.value)}
+                    />
+                    {detailAction}
+                </div>
             </div>
         </div>
     );
