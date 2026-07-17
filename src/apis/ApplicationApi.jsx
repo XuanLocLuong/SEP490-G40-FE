@@ -14,3 +14,11 @@ export const getMyApplications = (params) => axiosClient.get(`${BASE}/me`, { par
 // GET /applications/interactions — lịch sử VIEW/SAVE/APPLY, params: { actionType?, page, size }.
 export const getMyInteractions = (params) =>
     axiosClient.get(`${BASE}/interactions`, { params });
+
+// PUT /applications/{id}/confirm — xác nhận offer (application phải ở trạng thái ACCEPTED)
+export const confirmOffer = (applicationId) =>
+    axiosClient.put(`${BASE}/${applicationId}/confirm`);
+
+// PUT /applications/{id}/decline — từ chối offer (application phải ở trạng thái ACCEPTED)
+export const declineOffer = (applicationId) =>
+    axiosClient.put(`${BASE}/${applicationId}/decline`);

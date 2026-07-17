@@ -7,11 +7,9 @@ import ProfileHeader from '../../../components/candidate/ProfileHeader.jsx';
 import JobPreferenceCard from '../../../components/candidate/JobPreferenceCard.jsx';
 import PersonalInfoCard from '../../../components/candidate/PersonalInfoCard.jsx';
 import EducationCard from '../../../components/candidate/EducationCard.jsx';
-import ConsentCard from '../../../components/candidate/ConsentCard.jsx';
 import SkillCard from '../../../components/candidate/SkillCard.jsx';
 import ExperienceCard from '../../../components/candidate/ExperienceCard.jsx';
 import AvailabilityCard from '../../../components/candidate/AvailabilityCard.jsx';
-import PortfolioCard from '../../../components/candidate/PortfolioCard.jsx';
 import FooterAction from '../../../components/candidate/FooterAction.jsx';
 import ProfileSkeleton from '../../../components/candidate/ProfileSkeleton.jsx';
 import { ROUTES } from '../../../routes/path.js';
@@ -65,7 +63,7 @@ const CandidateProfilePage = () => {
         return updateProfile(next);
     };
 
-    // Chỉ đổi draft, chưa gọi API (dùng cho skill/consent inline) -> lưu ở FooterAction.
+    // Chỉ đổi draft, chưa gọi API (dùng cho skill inline) -> lưu ở FooterAction.
     const patchDraft = (patch) => setDraft((prev) => ({ ...prev, ...patch }));
 
     const handleSaveAll = () => updateProfile(draft);
@@ -76,10 +74,6 @@ const CandidateProfilePage = () => {
     };
 
     const handleAvatar = (file) => uploadAvatar(file);
-
-    const handlePortfolio = () => {
-        toast.info('Tính năng tải portfolio sẽ sớm khả dụng.');
-    };
 
     const handleScheduleSetup = () => {
         navigate(ROUTES.CANDIDATE_AVAILABILITY);
@@ -96,11 +90,6 @@ const CandidateProfilePage = () => {
                         onSave={(pref) => saveSection({ jobPreference: pref })}
                         saving={saving}
                     />
-                    <PortfolioCard
-                        portfolioUrl={draft.portfolioUrl}
-                        onUpload={handlePortfolio}
-                        disabled={saving}
-                    />
                 </div>
 
                 <div className="cp-col">
@@ -113,10 +102,6 @@ const CandidateProfilePage = () => {
                         education={draft.education}
                         onSave={(education) => saveSection({ education })}
                         saving={saving}
-                    />
-                    <ConsentCard
-                        checked={draft.consentShareInfo}
-                        onChange={(v) => patchDraft({ consentShareInfo: v })}
                     />
                 </div>
             </div>
