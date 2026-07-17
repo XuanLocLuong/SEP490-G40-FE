@@ -5,6 +5,12 @@
     flex-direction: column;
     padding: 24px 18px;
     color: var(--color-internal-sidebar-text);
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
 }
 
 .internal-sidebar--dark {

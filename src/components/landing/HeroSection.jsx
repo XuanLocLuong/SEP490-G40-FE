@@ -1,16 +1,21 @@
 import JobSearchForm from '../common/JobSearchForm.jsx';
 
-const HeroSection = ({ onSearch, loading, formResetKey = 0 }) => (
+const DEFAULT_TITLE = 'Tìm việc part-time dễ dàng cho ứng viên';
+const DEFAULT_SUBTITLE =
+    'Nền tảng kết nối sinh viên với cơ hội việc làm linh hoạt, uy tín và phù hợp với lịch học của bạn.';
+
+const HeroSection = ({
+    onSearch,
+    loading,
+    formResetKey = 0,
+    title = DEFAULT_TITLE,
+    subtitle = DEFAULT_SUBTITLE,
+}) => (
     <section className="landing-hero">
         <div className="landing-hero__inner">
             <div className="landing-hero__content">
-                <h1 className="landing-hero__title">
-                    Tìm việc part-time dễ dàng cho ứng viên
-                </h1>
-                <p className="landing-hero__subtitle">
-                    Nền tảng kết nối sinh viên với cơ hội việc làm linh hoạt, uy tín
-                    và phù hợp với lịch học của bạn.
-                </p>
+                <h1 className="landing-hero__title">{title}</h1>
+                {subtitle ? <p className="landing-hero__subtitle">{subtitle}</p> : null}
 
                 <JobSearchForm
                     onSearch={onSearch}

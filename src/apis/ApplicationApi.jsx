@@ -10,3 +10,7 @@ export const applyToJob = (jobId) => axiosClient.post(`${BASE}/jobs/${jobId}`);
 
 // GET /applications/me — lịch sử ứng tuyển, params: { page, size, status, fromDate, toDate }.
 export const getMyApplications = (params) => axiosClient.get(`${BASE}/me`, { params });
+
+// GET /applications/interactions — lịch sử VIEW/SAVE/APPLY, params: { actionType?, page, size }.
+export const getMyInteractions = (params) =>
+    axiosClient.get(`${BASE}/interactions`, { params });

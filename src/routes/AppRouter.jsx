@@ -6,6 +6,7 @@ import { ROUTES, getHomePathByRole } from './path.js';
 import ProtectedRoute from './ProtectedRoute.jsx';
 
 import GuestLayout from '../layouts/GuestLayout.jsx';
+import JobDiscoveryLayout from '../layouts/JobDiscoveryLayout.jsx';
 import CandidateLayout from '../layouts/CandidateLayout.jsx';
 import RecruiterLayout from '../layouts/RecruiterLayout.jsx';
 import InternalLayout from '../layouts/InternalLayout.jsx';
@@ -38,6 +39,10 @@ const AppRouter = () => {
             {/* ---- Guest / public (có Header + Footer) ---- */}
             <Route element={<GuestLayout />}>
                 <Route path={ROUTES.LANDING} element={<LandingPage />} />
+            </Route>
+
+            {/* Public job URLs; candidate login dùng Sidebar, guest dùng Header. */}
+            <Route element={<JobDiscoveryLayout />}>
                 <Route path={ROUTES.JOB_LIST} element={<JobListPage />} />
                 <Route path={ROUTES.JOB_DETAIL} element={<JobDetailPage />} />
             </Route>

@@ -1,11 +1,21 @@
-import ApplyDemoButton from "../../components/candidate/ApplyDemoButton.jsx";
+import { useAuth } from '../../contexts/authContext.js';
+import JobDiscoveryHome from '../../components/landing/JobDiscoveryHome.jsx';
+
 const CandidateHomePage = () => {
+    const { auth } = useAuth();
+    const displayName = auth?.fullName?.trim() || 'bạn';
+
     return (
-        <div>
-            <h1>Candidate Homepage</h1>
-            <p>Placeholder — nội dung thật (job recommendations, applications, invitations...) code ở task riêng.</p>
-            <ApplyDemoButton jobId={1} />
-        </div>
+        <JobDiscoveryHome
+            className="landing-page--candidate"
+            showWhySection={false}
+            showBookmarkRedirect={false}
+            heroTitle={`Xin chào, ${displayName}`}
+            heroSubtitle=""
+            featuredSize={4}
+            featuredCompact
+            showCandidateSections
+        />
     );
 };
 

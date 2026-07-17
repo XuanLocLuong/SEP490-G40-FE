@@ -82,6 +82,28 @@
     text-decoration: underline;
 }
 
+.ai-profile-hint {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+    color: var(--color-text-muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.ai-profile-hint__link {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.ai-profile-hint__link:hover {
+    text-decoration: underline;
+}
+
 /* Pagination */
 .job-list-pagination {
     display: flex;

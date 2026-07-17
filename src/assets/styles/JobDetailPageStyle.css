@@ -201,6 +201,15 @@
     border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
 }
 
+.job-compact-card__applied {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid color-mix(in srgb, #059669 30%, transparent);
+    font-weight: 700;
+}
+
 .job-compact-card--skeleton {
     min-height: 108px;
     background: linear-gradient(90deg, #eef1f6 25%, #f8f9fc 50%, #eef1f6 75%);
