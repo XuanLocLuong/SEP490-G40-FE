@@ -1,0 +1,29 @@
+.time-input-24h {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+.time-input-24h__part {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 8px;
+    font: inherit;
+    background: #fff;
+    color: var(--color-text, #0f172a);
+    cursor: pointer;
+}
+
+.time-input-24h__part:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.time-input-24h__sep {
+    flex-shrink: 0;
+    font-weight: 700;
+    color: #64748b;
+}

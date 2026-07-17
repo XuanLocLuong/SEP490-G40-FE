@@ -234,6 +234,35 @@ export const CheckCircleIcon = (props) => (
     </svg>
 );
 
+export const MapPinIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11Z" />
+        <circle cx="12" cy="10" r="2.5" />
+    </svg>
+);
+
+export const PhoneIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="M6.5 4h3l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5L17 13l4 1.5v3A2 2 0 0 1 19 20c-8 0-14-6-14-14a2 2 0 0 1 2-2Z" />
+    </svg>
+);
+
+export const GlobeIcon = (props) => (
+    <svg {...base} {...props}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+    </svg>
+);
+
+export const ImagePlusIcon = (props) => (
+    <svg {...base} {...props}>
+        <rect x="4" y="5" width="16" height="14" rx="2" />
+        <circle cx="9" cy="10" r="1.5" />
+        <path d="m20 16-4.5-4.5a1 1 0 0 0-1.4 0L8 18" />
+        <path d="M16 8h4M18 6v4" />
+    </svg>
+);
+
 export const AlertIcon = (props) => (
     <svg {...base} {...props}>
         <path d="M12 3 2 20h20Z" />
@@ -248,13 +277,6 @@ export const SearchIcon = (props) => (
     </svg>
 );
 
-export const MapPinIcon = (props) => (
-    <svg {...base} {...props}>
-        <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11Z" />
-        <circle cx="12" cy="10" r="2.5" />
-    </svg>
-);
-
 export const BookmarkIcon = (props) => (
     <svg {...base} {...props}>
         <path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-3.5L6 21V4.5Z" />
@@ -265,11 +287,5 @@ export const LayersIcon = (props) => (
     <svg {...base} {...props}>
         <path d="M12 3 3 8l9 5 9-5-9-5Z" />
         <path d="m3 12 9 5 9-5M3 17l9 5 9-5" />
-    </svg>
-);
-
-export const PhoneIcon = (props) => (
-    <svg {...base} {...props}>
-        <path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1v3.4c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1L6.6 10.8Z" />
     </svg>
 );

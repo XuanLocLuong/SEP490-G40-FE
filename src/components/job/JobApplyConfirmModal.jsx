@@ -1,4 +1,5 @@
 import { getReasonMessage } from '../../utils/applicationErrorMessages.js';
+import { formatShiftGroupLine } from '../../utils/formatters.js';
 import '../../assets/styles/JobApplyModalStyle.css';
 
 const JobApplyConfirmModal = ({
@@ -55,10 +56,8 @@ const JobApplyConfirmModal = ({
                             {shiftGroups.length > 1 && (
                                 <ul className="job-apply-modal__shifts">
                                     {shiftGroups.map((shift) => (
-                                        <li key={`${shift.label}-${shift.range}`}>
-                                            <strong>{shift.label}:</strong>{' '}
-                                            {shift.days?.length > 0 ? `${shift.days.join(', ')} · ` : ''}
-                                            {shift.range}
+                                        <li key={`${shift.range}-${shift.days?.join(',')}`}>
+                                            {formatShiftGroupLine(shift)}
                                         </li>
                                     ))}
                                 </ul>

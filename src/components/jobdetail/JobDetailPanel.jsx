@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import RichTextContent from '../common/RichTextContent.jsx';
 import {
     formatJobType,
     formatSalary,
@@ -22,7 +23,15 @@ import JobChatButton from '../job/JobChatButton.jsx';
 
 const APPLY_DISABLED_TITLE = 'Tin tuyển dụng đã hết vị trí.';
 
-const JobDetailPanel = ({ job, loading, error, onApplied }) => {
+const JobDetailPanel = ({
+    job,
+    loading,
+    error,
+    onApplied,
+    variant = 'default',
+    sectionsOnly = false,
+}) => {
+    const isPreview = variant === 'preview';
     if (loading) {
         return (
             <div className="job-detail-panel job-detail-panel--loading">
@@ -53,10 +62,10 @@ const JobDetailPanel = ({ job, loading, error, onApplied }) => {
     const showVerified = trustScore != null && Number(trustScore) >= 70;
     const shiftGroups = groupShiftsForDisplay(job.shifts);
     const scheduleSummary = formatScheduleSummary(shiftGroups);
-    const showShiftSection = shiftGroups.length > 1;
+    const showShiftSection = sectionsOnly ? shiftGroups.length > 0 : shiftGroups.length > 1;
     const locationSummary = formatLocation(job.location);
     const locationDetail = formatLocationAddressDetail(job.location);
-    const postedLabel = formatRelativeTime(job.createdAt);
+    const postedLabel = isPreview ? 'Xem trước' : formatRelativeTime(job.createdAt);
     const deadlineLabel = formatApplicationDeadline(job.applicationDeadline);
     const vacancyLabel = formatVacancyLabel(job);
     const engagementStats = getEngagementStats(
@@ -65,9 +74,23 @@ const JobDetailPanel = ({ job, loading, error, onApplied }) => {
         job.saveCount
     );
     const isVacancyFull = job.vacancyAvailable === false;
+    const hasSectionContent =
+        Boolean(job.description?.trim()) ||
+        (job.requiredSkills?.length ?? 0) > 0 ||
+        shiftGroups.length > 0;
+
+    const panelClassName = [
+        'job-detail-panel',
+        isPreview ? 'job-detail-panel--preview' : '',
+        sectionsOnly ? 'job-detail-panel--sections-only' : '',
+    ]
+        .filter(Boolean)
+        .join(' ');
 
     return (
-        <article className="job-detail-panel">
+        <article className={panelClassName}>
+            {!sectionsOnly && (
+                <>
             <header className="job-detail-panel__company">
                 <div className="job-detail-panel__company-main">
                     <span className="job-detail-panel__logo" aria-hidden="true">
@@ -75,7 +98,7 @@ const JobDetailPanel = ({ job, loading, error, onApplied }) => {
                     </span>
                     <div className="job-detail-panel__company-info">
                         <div className="job-detail-panel__company-row">
-                            {businessId ? (
+                            {!isPreview && businessId ? (
                                 <Link
                                     to={getBusinessProfilePath(businessId)}
                                     className="job-detail-panel__company-name job-detail-panel__company-name--link"
@@ -96,13 +119,15 @@ const JobDetailPanel = ({ job, loading, error, onApplied }) => {
                     </div>
                 </div>
 
-                <div className="job-detail-panel__header-actions">
-                    <JobBookmarkButton
-                        jobId={job.id}
-                        className="job-detail-panel__bookmark"
-                        initialSaved={job.saved}
-                    />
-                </div>
+                {!isPreview && (
+                    <div className="job-detail-panel__header-actions">
+                        <JobBookmarkButton
+                            jobId={job.id}
+                            className="job-detail-panel__bookmark"
+                            initialSaved={job.saved}
+                        />
+                    </div>
+                )}
             </header>
 
             <h1 className="job-detail-panel__title">{job.title}</h1>
@@ -162,42 +187,56 @@ const JobDetailPanel = ({ job, loading, error, onApplied }) => {
                 <p className="job-detail-panel__badge">Tuyển gấp</p>
             )}
 
-            <div className="job-detail-panel__actions">
-                <div className="job-detail-panel__chat-block">
-                    <p className="job-detail-panel__chat-note">
-                        Trao đổi ca làm với nhà tuyển dụng trước khi ứng tuyển.
-                    </p>
-                    <JobChatButton
-                        jobId={job.id}
-                        className="btn btn--ghost job-detail-panel__chat"
-                    />
+            {!isPreview && (
+                <div className="job-detail-panel__actions">
+                    <div className="job-detail-panel__chat-block">
+                        <p className="job-detail-panel__chat-note">
+                            Trao đổi ca làm với nhà tuyển dụng trước khi ứng tuyển.
+                        </p>
+                        <JobChatButton
+                            jobId={job.id}
+                            className="btn btn--ghost job-detail-panel__chat"
+                        />
+                    </div>
+                    {job.applied ? (
+                        <button
+                            type="button"
+                            className="btn btn--primary job-detail-panel__apply"
+                            disabled
+                        >
+                            Đã ứng tuyển
+                        </button>
+                    ) : (
+                        <JobApplyButton
+                            jobId={job.id}
+                            className="btn btn--primary job-detail-panel__apply"
+                            guestLabel="Đăng nhập để ứng tuyển"
+                            scheduleSummary={scheduleSummary}
+                            shiftGroups={shiftGroups}
+                            disabled={isVacancyFull}
+                            disabledTitle={APPLY_DISABLED_TITLE}
+                            onApplied={onApplied}
+                        />
+                    )}
                 </div>
-                {job.applied ? (
-                    <button
-                        type="button"
-                        className="btn btn--primary job-detail-panel__apply"
-                        disabled
-                    >
-                        Đã ứng tuyển
-                    </button>
-                ) : (
-                    <JobApplyButton
-                        jobId={job.id}
-                        className="btn btn--primary job-detail-panel__apply"
-                        guestLabel="Đăng nhập để ứng tuyển"
-                        scheduleSummary={scheduleSummary}
-                        shiftGroups={shiftGroups}
-                        disabled={isVacancyFull}
-                        disabledTitle={APPLY_DISABLED_TITLE}
-                        onApplied={onApplied}
-                    />
-                )}
-            </div>
+            )}
+
+                </>
+            )}
+
+            {sectionsOnly && !hasSectionContent && (
+                <p className="job-detail-panel__sections-empty">
+                    Chưa có mô tả, kỹ năng hoặc ca làm.
+                </p>
+            )}
 
             {job.description && (
                 <section className="job-detail-panel__section">
                     <h3 className="job-detail-panel__section-title">Mô tả công việc</h3>
-                    <p className="job-detail-panel__description">{job.description}</p>
+                    <RichTextContent
+                        content={job.description}
+                        className="job-detail-panel__description"
+                    />
                 </section>
             )}
 
@@ -226,12 +265,9 @@ const JobDetailPanel = ({ job, loading, error, onApplied }) => {
                     <h3 className="job-detail-panel__section-title">Thời gian làm việc (dự kiến)</h3>
                     <ul className="job-detail-panel__shifts">
                         {shiftGroups.map((shift) => (
-                            <li key={`${shift.label}-${shift.range}`}>
+                            <li key={`${shift.range}-${shift.days?.join(',')}`}>
                                 <CheckCircleIcon width={18} height={18} />
-                                <span>
-                                    <strong>{shift.label}:</strong>{' '}
-                                    {formatShiftGroupLine(shift)}
-                                </span>
+                                <span>{formatShiftGroupLine(shift)}</span>
                             </li>
                         ))}
                     </ul>

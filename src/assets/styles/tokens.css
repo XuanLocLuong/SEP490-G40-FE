@@ -52,3 +52,8 @@ body {
 a {
     color: inherit;
 }
+
+.required-mark {
+    color: var(--color-danger);
+    font-weight: 700;
+}

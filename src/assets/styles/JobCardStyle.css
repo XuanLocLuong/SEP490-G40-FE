@@ -205,6 +205,15 @@
     100% { background-position: -200% 0; }
 }
 
+.job-card--preview {
+    pointer-events: none;
+}
+
+.job-card--preview:hover {
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-card);
+}
+
 @media (max-width: 767px) {
     .job-card {
         padding: 16px;

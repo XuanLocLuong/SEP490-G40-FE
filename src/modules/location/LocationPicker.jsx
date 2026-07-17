@@ -215,7 +215,14 @@ const LocationPicker = ({
 
         mapRef.current = map;
 
+        const invalidate = () => map.invalidateSize({ pan: false });
+        const t1 = window.setTimeout(invalidate, 50);
+        const t2 = window.setTimeout(invalidate, 250);
+        requestAnimationFrame(invalidate);
+
         return () => {
+            window.clearTimeout(t1);
+            window.clearTimeout(t2);
             map.remove();
             mapRef.current = null;
             markerRef.current = null;
@@ -256,6 +263,7 @@ const LocationPicker = ({
     useEffect(() => {
         if (initialLocation?.latitude == null || initialLocation?.longitude == null) return;
 
+        setError('');
         selectLocation(
             createManualPosition({
                 latitude: Number(initialLocation.latitude),
@@ -432,7 +440,7 @@ const LocationPicker = ({
                             onClick={handleFindOnMap}
                             disabled={geocoding || !searchQuery.trim()}
                         >
-                            {geocoding ? 'Đang xác nhận...' : 'Xác nhận địa chỉ'}
+                            {geocoding ? 'Đang tìm...' : 'Tìm trên bản đồ'}
                         </button>
                     </div>
                 </>
