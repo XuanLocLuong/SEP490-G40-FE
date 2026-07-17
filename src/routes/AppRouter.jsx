@@ -28,6 +28,7 @@ import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
 import MyJobsPage from '../pages/recruiter/jobs/MyJobsPage.jsx';
 import ApplicantsPage from '../pages/recruiter/applicants/ApplicantsPage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
+import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
@@ -112,6 +113,7 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.POST_MANAGER_HOME} element={<PostManagerDashboard />} />
+                <Route path={ROUTES.POST_MANAGER_QUEUE} element={<PostManagerReviewQueuePage />} />
                 <Route
                     path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
                     element={<CandidatePublicProfilePage />}
