@@ -20,6 +20,7 @@ import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
 import CandidateSettingsPage from '../pages/candidate/CandidateSettingsPage.jsx';
 import CandidateProfilePage from '../pages/candidate/CandidateProfile/CandidateProfilePage.jsx';
 import AvailabilityPage from '../pages/candidate/availability/AvailabilityPage.jsx';
+import CandidateApplicationHistoryPage from '../pages/candidate/CandidateApplicationHistoryPage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
 import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
@@ -66,6 +67,10 @@ const AppRouter = () => {
                 <Route path={ROUTES.CANDIDATE_SETTINGS} element={<CandidateSettingsPage />} />
                 <Route path={ROUTES.CANDIDATE_PROFILE} element={<CandidateProfilePage />} />
                 <Route path={ROUTES.CANDIDATE_AVAILABILITY} element={<AvailabilityPage />} />
+                <Route
+                    path={ROUTES.CANDIDATE_APPLICATION_HISTORY}
+                    element={<CandidateApplicationHistoryPage />}
+                />
                 <Route
                     path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
                     element={<CandidatePublicProfilePage />}
