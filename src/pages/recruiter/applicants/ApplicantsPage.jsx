@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import ApplicationCard from '../../../components/recruiter/applicants/ApplicationCard.jsx';
@@ -10,7 +10,7 @@ import recruiterApplicationService, {
     APPLICATION_STATUS_FILTERS,
     getRecruiterApplicationApiErrorMessage,
 } from '../../../services/recruiterApplicationService.js';
-import { ROUTES } from '../../../routes/path.js';
+import { getCandidatePublicProfilePath, ROUTES } from '../../../routes/path.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 
 const PAGE_SIZE = 12;
@@ -18,6 +18,7 @@ const DEFAULT_STATUS = 'PENDING';
 const DEFAULT_SORT = 'appliedAt,desc';
 
 const ApplicantsPage = () => {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [openJobs, setOpenJobs] = useState([]);
@@ -180,8 +181,20 @@ const ApplicantsPage = () => {
         }
     };
 
-    const handleViewProfile = () => {
-        toast.info('Xem hồ sơ ứng viên sẽ được bổ sung sau.');
+    const handleViewProfile = (application) => {
+        const candidateId = application?.candidateId;
+        if (!candidateId) {
+            toast.error('Không tìm thấy hồ sơ ứng viên.');
+            return;
+        }
+        navigate(getCandidatePublicProfilePath(candidateId), {
+            state: {
+                backTo: {
+                    path: ROUTES.RECRUITER_APPLICANTS,
+                    label: 'Quay lại danh sách ứng viên',
+                },
+            },
+        });
     };
 
     const hasOpenJobs = openJobs.length > 0;

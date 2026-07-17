@@ -1,7 +1,7 @@
-import { useNavigate } from 'react-router-dom';
 import Sidebar from '../common/Sidebar.jsx';
 import ProfileMenu from '../common/ProfileMenu.jsx';
 import { useAuth } from '../../contexts/authContext.js';
+import { useLogoutToLanding } from '../../hooks/useLogoutToLanding.js';
 import { ROUTES } from '../../routes/path.js';
 import {
     HomeIcon,
@@ -26,13 +26,8 @@ const CANDIDATE_NAV_ITEMS = [
 ];
 
 const CandidateSidebar = () => {
-    const { auth, logout } = useAuth();
-    const navigate = useNavigate();
-
-    const handleLogout = async () => {
-        navigate(ROUTES.LANDING);
-        await logout();
-    };
+    const { auth } = useAuth();
+    const handleLogout = useLogoutToLanding();
 
     return (
         <Sidebar

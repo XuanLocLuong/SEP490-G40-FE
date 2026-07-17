@@ -1,10 +1,8 @@
 import UserAvatar from '../../common/UserAvatar.jsx';
 import { CheckCircleIcon } from '../../common/icons.jsx';
-import { getJobTypeLabel } from '../../../utils/profileFormat.js';
 
 const CandidateProfileHeader = ({ profile }) => {
     const trustValue = profile.trustScore != null ? Math.round(profile.trustScore) : '—';
-    const jobTypeLabel = getJobTypeLabel(profile.preferredJobType) || '—';
 
     return (
         <section className="cpp-hero">
@@ -50,10 +48,6 @@ const CandidateProfileHeader = ({ profile }) => {
                 <div className="cpp-hero__metric">
                     <strong>{profile.experiences.length}</strong>
                     <span>Kinh nghiệm</span>
-                </div>
-                <div className="cpp-hero__metric cpp-hero__metric--accent">
-                    <strong>{jobTypeLabel}</strong>
-                    <span>Loại việc</span>
                 </div>
             </div>
         </section>

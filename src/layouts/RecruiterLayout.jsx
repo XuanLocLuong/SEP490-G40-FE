@@ -3,7 +3,7 @@ import Sidebar from '../components/common/Sidebar.jsx';
 import Footer from '../components/common/Footer.jsx';
 import ProfileMenu from '../components/common/ProfileMenu.jsx';
 import { useAuth } from '../contexts/authContext.js';
-import { useNavigate } from 'react-router-dom';
+import { useLogoutToLanding } from '../hooks/useLogoutToLanding.js';
 import { ROUTES } from '../routes/path.js';
 import {
     GridIcon,
@@ -34,13 +34,8 @@ const NAV_ITEMS = [
 ];
 
 const RecruiterSidebarFooter = () => {
-    const { auth, logout } = useAuth();
-    const navigate = useNavigate();
-
-    const handleLogout = async () => {
-        navigate(ROUTES.LANDING);
-        await logout();
-    };
+    const { auth } = useAuth();
+    const handleLogout = useLogoutToLanding();
 
     return (
         <ProfileMenu

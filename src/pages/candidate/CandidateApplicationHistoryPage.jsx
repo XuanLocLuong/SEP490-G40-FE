@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getMyApplications, confirmOffer, declineOffer } from '../../apis/ApplicationApi.jsx';
+import JobDetailModal from '../../components/job/JobDetailModal.jsx';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useAuth } from '../../contexts/authContext.js';
-import { getBusinessProfilePath, getJobDetailPath } from '../../routes/path.js';
+import { getBusinessProfilePath } from '../../routes/path.js';
 import '../../assets/styles/CandidateApplicationHistoryPageStyle.css';
 
 const PAGE_SIZE = 10;
@@ -139,6 +140,7 @@ const CandidateApplicationHistoryPage = () => {
     };
 
     const [actionLoadingId, setActionLoadingId] = useState(null);
+    const [detailJobId, setDetailJobId] = useState(null);
 
     const handleConfirm = async (applicationId) => {
         if (actionLoadingId) return;
@@ -253,13 +255,14 @@ const CandidateApplicationHistoryPage = () => {
 
                             <div className="cah-item__actions">
                                 {item.jobId ? (
-                                    <Link
-                                        to={getJobDetailPath(item.jobId)}
+                                    <button
+                                        type="button"
                                         className="cah-btn cah-btn--link"
                                         title="Xem lại tin tuyển dụng"
+                                        onClick={() => setDetailJobId(item.jobId)}
                                     >
                                         Xem chi tiết job
-                                    </Link>
+                                    </button>
                                 ) : null}
                                 {isAccepted ? (
                                     <div className="cah-action-row">
@@ -298,6 +301,12 @@ const CandidateApplicationHistoryPage = () => {
                     </button>
                 </div>
             )}
+
+            <JobDetailModal
+                open={detailJobId != null}
+                jobId={detailJobId}
+                onClose={() => setDetailJobId(null)}
+            />
         </div>
     );
 };

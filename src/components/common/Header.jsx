@@ -1,17 +1,14 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/authContext.js';
+import { useLogoutToLanding } from '../../hooks/useLogoutToLanding.js';
 import { ROUTES } from '../../routes/path.js';
 import '../../assets/styles/HeaderStyle.css';
 
 // Header dùng cho GuestLayout.
 const Header = () => {
-    const { auth, logout } = useAuth();
+    const { auth } = useAuth();
     const navigate = useNavigate();
-
-    const handleLogout = async () => {
-        navigate(ROUTES.LANDING);
-        await logout();
-    };
+    const handleLogout = useLogoutToLanding();
 
     return (
         <header className="site-header">
