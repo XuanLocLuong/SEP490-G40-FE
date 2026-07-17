@@ -12,6 +12,10 @@ export const searchJobs = (body) =>
 export const fetchNearbyJobs = (body) =>
     axiosClient.post(`${JOBS_BASE}/near-me`, body);
 
+/** POST /api/v1/jobs/urgent — việc tuyển gấp (body = JobSearchRequestDTO, optional). */
+export const fetchUrgentJobs = (body = {}) =>
+    axiosClient.post(`${JOBS_BASE}/urgent`, body);
+
 export const saveJob = (jobId) =>
     axiosClient.post(`${JOBS_BASE}/${jobId}/save`);
 

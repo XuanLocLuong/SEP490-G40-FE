@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import JobListSearch from '../../components/joblist/JobListSearch.jsx';
 import JobListItem from '../../components/job/JobListItem.jsx';
 import BookmarkLoginRedirect from '../../components/job/BookmarkLoginRedirect.jsx';
+import AiRecommendationsEmptyState from '../../components/landing/AiRecommendationsEmptyState.jsx';
+import AiRecommendationsProfileHint from '../../components/landing/AiRecommendationsProfileHint.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import {
@@ -10,9 +12,12 @@ import {
     fetchJobListPage,
     isSearchQuery,
     JOB_LIST_PAGE_SIZE,
+    JOB_LIST_SECTIONS,
+    JOB_LIST_SECTION_META,
     LANDING_PREVIEW_SIZE,
     buildJobListSearchParams,
     parseJobListSearchParams,
+    parseJobListSection,
 } from '../../utils/jobQuery.js';
 import '../../assets/styles/JobListPageStyle.css';
 
@@ -28,28 +33,48 @@ const JobListPage = () => {
     const [totalElements, setTotalElements] = useState(0);
     const [activeQuery, setActiveQuery] = useState(null);
 
+    const section = useMemo(() => parseJobListSection(searchParams), [searchParams]);
+    const sectionMeta = section ? JOB_LIST_SECTION_META[section] : null;
+
     const urlQuery = useMemo(() => {
+        if (section) return null;
         const parsed = parseJobListSearchParams(searchParams);
         return applyCandidateScheduleAccess(parsed, isCandidate);
-    }, [searchParams, isCandidate]);
+    }, [searchParams, isCandidate, section]);
 
-    const loadPage = useCallback(async (pageNum, query) => {
-        setLoading(true);
-        setError('');
-        try {
-            const pageData = await fetchJobListPage(pageNum, JOB_LIST_PAGE_SIZE, query);
-            setJobs(pageData.content);
-            setTotalPages(pageData.totalPages);
-            setTotalElements(pageData.totalElements);
-            setPage(pageData.currentPage);
-            setActiveQuery(query);
-        } catch (err) {
-            setError(err.message || 'Không thể tải danh sách việc làm. Vui lòng thử lại sau.');
-            setJobs([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const applyPageData = (pageData, query) => {
+        setJobs(pageData.content || []);
+        setTotalPages(pageData.totalPages || 0);
+        setTotalElements(pageData.totalElements || 0);
+        setPage(pageData.currentPage ?? pageData.number ?? 0);
+        setActiveQuery(query);
+    };
+
+    const loadPage = useCallback(
+        async (pageNum, query, listSection) => {
+            setLoading(true);
+            setError('');
+            try {
+                const pageData = await fetchJobListPage(
+                    pageNum,
+                    JOB_LIST_PAGE_SIZE,
+                    query,
+                    listSection
+                );
+                applyPageData(pageData, query);
+            } catch (err) {
+                setError(
+                    err.message ||
+                        sectionMeta?.error ||
+                        'Không thể tải danh sách việc làm. Vui lòng thử lại sau.'
+                );
+                setJobs([]);
+            } finally {
+                setLoading(false);
+            }
+        },
+        [sectionMeta?.error]
+    );
 
     useEffect(() => {
         let cancelled = false;
@@ -58,21 +83,28 @@ const JobListPage = () => {
             setLoading(true);
             setError('');
             try {
-                const parsedQuery = applyCandidateScheduleAccess(
-                    parseJobListSearchParams(searchParams),
-                    isCandidate
+                const parsedQuery = section
+                    ? null
+                    : applyCandidateScheduleAccess(
+                          parseJobListSearchParams(searchParams),
+                          isCandidate
+                      );
+                const pageData = await fetchJobListPage(
+                    0,
+                    JOB_LIST_PAGE_SIZE,
+                    parsedQuery,
+                    section
                 );
-                const pageData = await fetchJobListPage(0, JOB_LIST_PAGE_SIZE, parsedQuery);
                 if (!cancelled) {
-                    setJobs(pageData.content);
-                    setTotalPages(pageData.totalPages);
-                    setTotalElements(pageData.totalElements);
-                    setPage(pageData.currentPage);
-                    setActiveQuery(parsedQuery);
+                    applyPageData(pageData, parsedQuery);
                 }
             } catch (err) {
                 if (!cancelled) {
-                    setError(err.message || 'Không thể tải danh sách việc làm. Vui lòng thử lại sau.');
+                    setError(
+                        err.message ||
+                            sectionMeta?.error ||
+                            'Không thể tải danh sách việc làm. Vui lòng thử lại sau.'
+                    );
                     setJobs([]);
                 }
             } finally {
@@ -85,7 +117,7 @@ const JobListPage = () => {
         return () => {
             cancelled = true;
         };
-    }, [searchParams, isCandidate]);
+    }, [searchParams, isCandidate, section, sectionMeta?.error]);
 
     const handleSearch = (payload) => {
         const nextQuery = applyCandidateScheduleAccess(payload, isCandidate);
@@ -98,7 +130,7 @@ const JobListPage = () => {
 
     const handlePageChange = (nextPage) => {
         if (nextPage < 0 || nextPage >= totalPages || nextPage === page) return;
-        loadPage(nextPage, activeQuery);
+        loadPage(nextPage, activeQuery, section);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -106,7 +138,7 @@ const JobListPage = () => {
         setSearchParams({});
     };
 
-    const searching = isSearchQuery(activeQuery);
+    const searching = !section && isSearchQuery(activeQuery);
     const isFirstPage = page <= 0;
     const isLastPage = totalPages > 0 && page >= totalPages - 1;
 
@@ -114,24 +146,28 @@ const JobListPage = () => {
         <div className="job-list-page">
             <BookmarkLoginRedirect />
             <header className="job-list-page__header">
-                <h1 className="job-list-page__title">Danh sách việc làm</h1>
+                <h1 className="job-list-page__title">
+                    {sectionMeta?.title || 'Danh sách việc làm'}
+                </h1>
             </header>
 
-            <JobListSearch
-                initialKeyword={urlQuery?.keyword || ''}
-                initialCity={urlQuery?.city || ''}
-                initialWard={urlQuery?.ward || ''}
-                initialJobType={urlQuery?.jobType || ''}
-                initialSalaryMin={urlQuery?.salaryMin ?? null}
-                initialSalaryMax={urlQuery?.salaryMax ?? null}
-                initialSkillIds={urlQuery?.skillIds || []}
-                initialSchedules={urlQuery?.schedules || []}
-                initialNearMe={Boolean(urlQuery?.nearMe)}
-                initialLatitude={urlQuery?.latitude ?? null}
-                initialLongitude={urlQuery?.longitude ?? null}
-                onSearch={handleSearch}
-                loading={loading}
-            />
+            {!section && (
+                <JobListSearch
+                    initialKeyword={urlQuery?.keyword || ''}
+                    initialCity={urlQuery?.city || ''}
+                    initialWard={urlQuery?.ward || ''}
+                    initialJobType={urlQuery?.jobType || ''}
+                    initialSalaryMin={urlQuery?.salaryMin ?? null}
+                    initialSalaryMax={urlQuery?.salaryMax ?? null}
+                    initialSkillIds={urlQuery?.skillIds || []}
+                    initialSchedules={urlQuery?.schedules || []}
+                    initialNearMe={Boolean(urlQuery?.nearMe)}
+                    initialLatitude={urlQuery?.latitude ?? null}
+                    initialLongitude={urlQuery?.longitude ?? null}
+                    onSearch={handleSearch}
+                    loading={loading}
+                />
+            )}
 
             {error && <p className="job-list-page__error">{error}</p>}
 
@@ -142,11 +178,16 @@ const JobListPage = () => {
                     )}
                     <p className="job-list-page__subtitle">
                         {totalElements > 0
-                            ? `${totalElements} việc làm đang tuyển`
-                            : searching
-                              ? 'Không có việc làm phù hợp'
-                              : 'Tìm việc part-time phù hợp với bạn'}
+                            ? `${totalElements} việc làm`
+                            : section
+                              ? sectionMeta?.empty
+                              : searching
+                                ? 'Không có việc làm phù hợp'
+                                : 'Tìm việc part-time phù hợp với bạn'}
                     </p>
+                    {section && sectionMeta?.subtitle && totalElements > 0 && (
+                        <p className="job-list-page__search-hint">{sectionMeta.subtitle}</p>
+                    )}
                 </div>
                 {searching && (
                     <button type="button" className="job-list-page__reset" onClick={handleReset}>
@@ -164,17 +205,24 @@ const JobListPage = () => {
             )}
 
             {!loading && !error && jobs.length === 0 && (
-                <p className="job-list-page__empty">Chưa có việc làm phù hợp. Hãy thử bộ lọc khác.</p>
+                section === JOB_LIST_SECTIONS.AI ? (
+                    <AiRecommendationsEmptyState />
+                ) : (
+                    <p className="job-list-page__empty">
+                        {sectionMeta?.empty || 'Chưa có việc làm phù hợp. Hãy thử bộ lọc khác.'}
+                    </p>
+                )
             )}
 
             {jobs.length > 0 && (
                 <>
+                    {section === JOB_LIST_SECTIONS.AI && <AiRecommendationsProfileHint />}
                     <div className="job-list-page__list">
-                        {jobs.map((job) => (
+                        {jobs.map((job, index) => (
                             <JobListItem
-                                key={job.id}
+                                key={`${job.id}-${job.interactionType || ''}-${index}`}
                                 job={job}
-                                nearMe={Boolean(urlQuery?.nearMe)}
+                                nearMe={Boolean(urlQuery?.nearMe) || section === 'ai'}
                             />
                         ))}
                     </div>

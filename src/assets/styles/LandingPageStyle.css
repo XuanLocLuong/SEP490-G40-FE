@@ -183,6 +183,17 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
+    align-items: stretch;
+}
+
+.landing-jobs__grid > * {
+    min-width: 0;
+    height: 100%;
+}
+
+.landing-jobs__grid--compact {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
 }
 
 .landing-jobs__more {
@@ -193,33 +204,63 @@
 
 /* ---- Employers ---- */
 .landing-employers {
-    background: var(--color-surface);
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-    max-width: none;
-}
-
-.landing-employers .landing-section__header,
-.landing-employers__grid {
+    /* Same page background as job sections — no alternate band. */
     max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .landing-employers__grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
+    align-items: stretch;
+}
+
+.landing-employers__grid--compact {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.landing-employers__grid > * {
+    min-width: 0;
+    height: 100%;
 }
 
 .employer-card {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     padding: 20px;
-    background: var(--color-bg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 100%;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.employer-card:hover {
+    border-color: #cdd5e5;
+    box-shadow: 0 4px 14px rgba(16, 24, 40, 0.1);
+}
+
+.employer-card--compact {
+    padding: 14px;
+    gap: 12px;
+}
+
+.employer-card--compact .employer-card__logo {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+}
+
+.employer-card--compact .employer-card__name {
+    font-size: 14px;
+}
+
+.employer-card--compact .employer-card__cta {
+    font-size: 13px;
+    padding: 8px 10px;
 }
 
 .employer-card__top {
@@ -373,6 +414,10 @@
     .landing-employers__grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .landing-jobs__grid--compact {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 767px) {
@@ -405,6 +450,10 @@
         grid-template-columns: 1fr;
     }
 
+    .landing-jobs__grid--compact {
+        grid-template-columns: 1fr;
+    }
+
     .landing-employers__grid,
     .landing-why__grid {
         grid-template-columns: 1fr;
@@ -415,4 +464,104 @@
     .landing-jobs__grid {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+
+/* Candidate home lives beside sidebar — tighter hero, skip marketing illustration. */
+.landing-page--candidate .landing-hero__title {
+    margin-bottom: 20px;
+    font-size: clamp(20px, 2.2vw, 26px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.landing-page--candidate .landing-hero__inner {
+    grid-template-columns: 1fr;
+}
+
+.landing-page--candidate .landing-hero__visual {
+    display: none;
+}
+
+/* Force one row of 4 compact cards on candidate homepage (override global 2-col rules). */
+.landing-page--candidate .landing-jobs__grid--compact,
+.landing-page--candidate .landing-employers__grid--compact {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 1100px) {
+    .landing-page--candidate .landing-jobs__grid--compact,
+    .landing-page--candidate .landing-employers__grid--compact {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .landing-page--candidate .landing-jobs__grid--compact > *,
+    .landing-page--candidate .landing-employers__grid--compact > * {
+        flex: 0 0 220px;
+        max-width: 220px;
+        height: auto;
+        align-self: stretch;
+    }
+}
+
+.ai-empty-state {
+    text-align: left;
+}
+
+.ai-empty-state__title {
+    margin: 0;
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.ai-empty-state__checklist {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    color: var(--color-text-muted);
+}
+
+.ai-empty-state__actions {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ai-profile-hint {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+    color: var(--color-text-muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.ai-profile-hint__link {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.ai-profile-hint__link:hover {
+    text-decoration: underline;
+}
+
+/* Candidate home live sections */
+.candidate-home-section__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.candidate-home-section__title svg {
+    color: var(--color-primary);
+    flex-shrink: 0;
 }

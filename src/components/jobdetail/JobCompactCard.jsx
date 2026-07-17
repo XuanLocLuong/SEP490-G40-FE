@@ -4,6 +4,7 @@ import {
     formatSalary,
     formatLocation,
     getBusinessInitial,
+    hasAppliedToJob,
 } from '../../utils/formatters.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
 import { MapPinIcon, BriefcaseIcon } from '../common/icons.jsx';
@@ -12,6 +13,7 @@ import { getJobDetailPath } from '../../routes/path.js';
 const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false }) => {
     const businessName = job.business?.name || 'Công ty';
     const distance = getJobDistanceDisplay(job.distanceKm, nearMe);
+    const applied = hasAppliedToJob(job);
 
     return (
         <Link
@@ -41,6 +43,11 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
                             }`}
                         >
                             {distance.label}
+                        </span>
+                    )}
+                    {applied && (
+                        <span className="job-compact-card__meta-item job-compact-card__applied">
+                            Đã ứng tuyển
                         </span>
                     )}
                     <span className="job-compact-card__meta-item job-compact-card__salary">

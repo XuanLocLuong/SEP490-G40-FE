@@ -4,10 +4,11 @@ import JobCard from '../job/JobCard.jsx';
 import { ROUTES } from '../../routes/path.js';
 import { fetchJobListPage, LANDING_PREVIEW_SIZE } from '../../utils/jobQuery.js';
 
-const FeaturedJobsSection = () => {
+const FeaturedJobsSection = ({ size = LANDING_PREVIEW_SIZE, compact = false }) => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const previewSize = Math.max(1, Number(size) || LANDING_PREVIEW_SIZE);
 
     useEffect(() => {
         let cancelled = false;
@@ -16,7 +17,7 @@ const FeaturedJobsSection = () => {
             setLoading(true);
             setError('');
             try {
-                const pageData = await fetchJobListPage(0, LANDING_PREVIEW_SIZE, null);
+                const pageData = await fetchJobListPage(0, previewSize, null);
                 if (!cancelled) {
                     setJobs(pageData.content);
                 }
@@ -35,25 +36,34 @@ const FeaturedJobsSection = () => {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [previewSize]);
+
+    const gridClass = [
+        'landing-jobs__grid',
+        compact ? 'landing-jobs__grid--compact' : '',
+        loading && jobs.length === 0 ? 'landing-jobs__grid--loading' : '',
+    ]
+        .filter(Boolean)
+        .join(' ');
 
     return (
         <section className="landing-section landing-jobs">
             <div className="landing-section__header">
                 <h2 className="landing-section__title">Việc làm nổi bật</h2>
                 <div className="landing-section__header-actions">
-                    {jobs.length > 0 && (
-                        <Link to={ROUTES.JOB_LIST} className="landing-section__link">
-                            Xem tất cả →
-                        </Link>
-                    )}
+                    <Link to={ROUTES.JOB_LIST} className="landing-section__link">
+                        Xem tất cả →
+                    </Link>
                 </div>
             </div>
 
             {loading && jobs.length === 0 && (
-                <div className="landing-jobs__grid landing-jobs__grid--loading">
-                    {Array.from({ length: LANDING_PREVIEW_SIZE }).map((_, i) => (
-                        <div key={i} className="job-card job-card--skeleton" />
+                <div className={gridClass}>
+                    {Array.from({ length: previewSize }).map((_, i) => (
+                        <div
+                            key={i}
+                            className={`job-card job-card--skeleton${compact ? ' job-card--compact' : ''}`}
+                        />
                     ))}
                 </div>
             )}
@@ -65,9 +75,9 @@ const FeaturedJobsSection = () => {
             )}
 
             {jobs.length > 0 && (
-                <div className="landing-jobs__grid">
+                <div className={gridClass}>
                     {jobs.map((job) => (
-                        <JobCard key={job.id} job={job} />
+                        <JobCard key={job.id} job={job} compact={compact} />
                     ))}
                 </div>
             )}
