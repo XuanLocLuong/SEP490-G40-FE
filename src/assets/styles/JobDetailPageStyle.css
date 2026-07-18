@@ -149,6 +149,12 @@
     justify-content: center;
 }
 
+.job-compact-card__logo--image {
+    object-fit: cover;
+    background: #f1f5f9;
+    border: 1px solid var(--color-border);
+}
+
 .job-compact-card__body {
     min-width: 0;
 }
@@ -280,6 +286,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.job-detail-panel__logo--image {
+    object-fit: cover;
+    background: #f1f5f9;
+    border: 1px solid var(--color-border);
 }
 
 .job-detail-panel__company-row {

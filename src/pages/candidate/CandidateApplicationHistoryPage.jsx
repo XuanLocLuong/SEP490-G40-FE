@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getMyApplications, confirmOffer, declineOffer } from '../../apis/ApplicationApi.jsx';
 import JobDetailModal from '../../components/job/JobDetailModal.jsx';
+import { CalendarIcon, ClockIcon } from '../../components/common/icons.jsx';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { getBusinessProfilePath } from '../../routes/path.js';
+import { formatJobShiftsLabel, getBusinessInitial } from '../../utils/formatters.js';
 import '../../assets/styles/CandidateApplicationHistoryPageStyle.css';
 
 const PAGE_SIZE = 10;
@@ -40,7 +42,33 @@ const formatAppliedAt = (value) => {
     if (!value) return '';
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return String(value);
-    return d.toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: '2-digit' });
+    return d.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
+};
+
+const BusinessLogo = ({ name, logoUrl }) => {
+    const [imgFailed, setImgFailed] = useState(false);
+    const showImage = Boolean(logoUrl) && !imgFailed;
+
+    if (showImage) {
+        return (
+            <img
+                src={logoUrl}
+                alt=""
+                className="cah-item__logo"
+                onError={() => setImgFailed(true)}
+            />
+        );
+    }
+
+    return (
+        <span className="cah-item__logo cah-item__logo--placeholder" aria-hidden="true">
+            {getBusinessInitial(name)}
+        </span>
+    );
 };
 
 const CandidateApplicationHistoryPage = () => {
@@ -226,13 +254,19 @@ const CandidateApplicationHistoryPage = () => {
                 {applications.map((item) => {
                     const ui = getStatusUi(item.status);
                     const isAccepted = item.status === 'ACCEPTED';
+                    const shiftsLabel = formatJobShiftsLabel(item.shifts);
+                    const appliedLabel = formatAppliedAt(item.appliedAt);
 
                     return (
-                        <section key={item.applicationId ?? `${item.jobId}-${item.appliedAt}`} className="cah-item">
+                        <section
+                            key={item.applicationId ?? `${item.jobId}-${item.appliedAt}`}
+                            className="cah-item"
+                        >
                             <div className="cah-item__main">
-                                <div className={`cah-badge cah-badge--${ui.tone}`}>
-                                    {ui.label}
-                                </div>
+                                <BusinessLogo
+                                    name={item.businessName}
+                                    logoUrl={item.businessLogoUrl}
+                                />
 
                                 <div className="cah-item__text">
                                     <h3 className="cah-item__job">{item.jobTitle || '—'}</h3>
@@ -247,9 +281,25 @@ const CandidateApplicationHistoryPage = () => {
                                     ) : (
                                         <p className="cah-item__company">{item.businessName || '—'}</p>
                                     )}
-                                    <p className="cah-item__applied">
-                                        Ứng tuyển: {formatAppliedAt(item.appliedAt) || '—'}
-                                    </p>
+
+                                    <div className="cah-item__meta-row">
+                                        <span className={`cah-badge cah-badge--${ui.tone}`}>
+                                            {ui.label}
+                                        </span>
+                                        {appliedLabel && (
+                                            <span className="cah-item__meta-chip">
+                                                <CalendarIcon width={14} height={14} />
+                                                {appliedLabel}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {shiftsLabel && (
+                                        <p className="cah-item__shifts" title={shiftsLabel}>
+                                            <ClockIcon width={14} height={14} />
+                                            <span>{shiftsLabel}</span>
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -280,14 +330,12 @@ const CandidateApplicationHistoryPage = () => {
                                             disabled={actionLoadingId === item.applicationId}
                                             onClick={() => handleConfirm(item.applicationId)}
                                         >
-                                            {actionLoadingId === item.applicationId ? 'Đang xử lý...' : 'Chấp nhận'}
+                                            {actionLoadingId === item.applicationId
+                                                ? 'Đang xử lý...'
+                                                : 'Chấp nhận'}
                                         </button>
                                     </div>
-                                ) : (
-                                    <button type="button" className="cah-btn cah-btn--disabled" disabled>
-                                        {ui.label}
-                                    </button>
-                                )}
+                                ) : null}
                             </div>
                         </section>
                     );
@@ -296,7 +344,12 @@ const CandidateApplicationHistoryPage = () => {
 
             {totalElements > 0 && canLoadMore && (
                 <div className="cah-load-more">
-                    <button type="button" className="cah-btn cah-btn--ghost" onClick={loadMore} disabled={loading}>
+                    <button
+                        type="button"
+                        className="cah-btn cah-btn--ghost"
+                        onClick={loadMore}
+                        disabled={loading}
+                    >
                         {loading ? 'Đang tải...' : 'Xem thêm'}
                     </button>
                 </div>
@@ -312,4 +365,3 @@ const CandidateApplicationHistoryPage = () => {
 };
 
 export default CandidateApplicationHistoryPage;
-

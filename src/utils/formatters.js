@@ -106,7 +106,11 @@ export const mapRecommendationToJob = (rec) => {
         urgent: rec.urgent,
         location: rec.location,
         distanceKm: rec.distanceKm,
-        business: { name: rec.businessName },
+        business: {
+            name: rec.businessName,
+            logoUrl: rec.businessLogoUrl || rec.logoUrl || rec.business?.logoUrl || null,
+            id: rec.businessId ?? rec.business?.id ?? null,
+        },
         matchPercentLabel: formatMatchPercent(rec.matchScore),
         // Cold start tái sử dụng scheduleScore cho jobType — không hiện tag “Khớp lịch rảnh”.
         scheduleMatchLabel: null,
@@ -125,7 +129,11 @@ export const mapInteractionToJob = (row) => {
         salaryMax: row.salaryMax,
         urgent: row.urgent,
         location: row.location,
-        business: { name: row.businessName },
+        business: {
+            name: row.businessName,
+            logoUrl: row.businessLogoUrl || null,
+            id: row.businessId ?? null,
+        },
         interactionLabel: INTERACTION_ACTION_LABELS[row.actionType] || row.actionType,
         interactionType: row.actionType,
         createdAt: row.createdAt,

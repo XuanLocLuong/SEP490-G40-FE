@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import RichTextContent from '../common/RichTextContent.jsx';
 import {
@@ -22,6 +23,28 @@ import JobBookmarkButton from '../job/JobBookmarkButton.jsx';
 import JobChatButton from '../job/JobChatButton.jsx';
 
 const APPLY_DISABLED_TITLE = 'Tin tuyển dụng đã hết vị trí.';
+
+const BusinessLogo = ({ name, logoUrl }) => {
+    const [imgFailed, setImgFailed] = useState(false);
+    const showImage = Boolean(logoUrl) && !imgFailed;
+
+    if (showImage) {
+        return (
+            <img
+                src={logoUrl}
+                alt=""
+                className="job-detail-panel__logo job-detail-panel__logo--image"
+                onError={() => setImgFailed(true)}
+            />
+        );
+    }
+
+    return (
+        <span className="job-detail-panel__logo" aria-hidden="true">
+            {getBusinessInitial(name)}
+        </span>
+    );
+};
 
 const JobDetailPanel = ({
     job,
@@ -58,6 +81,7 @@ const JobDetailPanel = ({
 
     const businessName = job.business?.name || 'Công ty';
     const businessId = job.business?.id;
+    const businessLogoUrl = job.business?.logoUrl || null;
     const trustScore = job.business?.trustScore;
     const showVerified = trustScore != null && Number(trustScore) >= 70;
     const shiftGroups = groupShiftsForDisplay(job.shifts);
@@ -93,9 +117,11 @@ const JobDetailPanel = ({
                 <>
             <header className="job-detail-panel__company">
                 <div className="job-detail-panel__company-main">
-                    <span className="job-detail-panel__logo" aria-hidden="true">
-                        {getBusinessInitial(businessName)}
-                    </span>
+                    <BusinessLogo
+                        key={`${businessId ?? businessName}-${businessLogoUrl || ''}`}
+                        name={businessName}
+                        logoUrl={businessLogoUrl}
+                    />
                     <div className="job-detail-panel__company-info">
                         <div className="job-detail-panel__company-row">
                             {!isPreview && businessId ? (

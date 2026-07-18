@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
     formatJobType,
     formatSalary,
@@ -20,8 +21,31 @@ import JobApplyButton from './JobApplyButton.jsx';
 import JobDetailLink from './JobDetailLink.jsx';
 import '../../assets/styles/JobCardStyle.css';
 
+const CardBusinessLogo = ({ name, logoUrl }) => {
+    const [imgFailed, setImgFailed] = useState(false);
+    const showImage = Boolean(logoUrl) && !imgFailed;
+
+    if (showImage) {
+        return (
+            <img
+                src={logoUrl}
+                alt=""
+                className="job-card__logo job-card__logo--image"
+                onError={() => setImgFailed(true)}
+            />
+        );
+    }
+
+    return (
+        <span className="job-card__logo" aria-hidden="true">
+            {getBusinessInitial(name)}
+        </span>
+    );
+};
+
 const JobCard = ({ job, nearMe = false, compact = false, showDistance = false }) => {
     const businessName = job.business?.name || 'Công ty';
+    const businessLogoUrl = job.business?.logoUrl || null;
     const tagLabel = formatJobType(job.jobType);
     const distance = getJobDistanceDisplay(job.distanceKm, nearMe || showDistance);
     const applied = hasAppliedToJob(job);
@@ -34,9 +58,11 @@ const JobCard = ({ job, nearMe = false, compact = false, showDistance = false })
         <article className={`job-card${compact ? ' job-card--compact' : ''}`}>
             <div className="job-card__top">
                 <div className="job-card__brand">
-                    <span className="job-card__logo" aria-hidden="true">
-                        {getBusinessInitial(businessName)}
-                    </span>
+                    <CardBusinessLogo
+                        key={`${job.id}-${businessLogoUrl || ''}`}
+                        name={businessName}
+                        logoUrl={businessLogoUrl}
+                    />
                     <div className="job-card__headings">
                         <h3 className="job-card__title">{job.title}</h3>
                         <p className="job-card__company">{businessName}</p>
@@ -48,7 +74,6 @@ const JobCard = ({ job, nearMe = false, compact = false, showDistance = false })
                     initialSaved={job.interactionType === 'SAVE'}
                 />
             </div>
-
             <div className="job-card__meta">
                 {(matchLabel || scheduleMatchLabel || interactionLabel || job.urgent || applied || distance) && (
                     <>

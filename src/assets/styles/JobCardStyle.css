@@ -45,6 +45,12 @@
     justify-content: center;
 }
 
+.job-card__logo--image {
+    object-fit: cover;
+    background: #f1f5f9;
+    border: 1px solid var(--color-border);
+}
+
 .job-card__headings {
     min-width: 0;
 }
