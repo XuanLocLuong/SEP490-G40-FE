@@ -4,7 +4,10 @@ import JobDetailPanel from '../jobdetail/JobDetailPanel.jsx';
 import '../../assets/styles/JobDetailPageStyle.css';
 import '../../assets/styles/JobDetailModalStyle.css';
 
-const JobDetailModal = ({ open, jobId, onClose }) => {
+const markJobApplied = (prev) =>
+    prev ? { ...prev, applied: true, isApply: true } : prev;
+
+const JobDetailModal = ({ open, jobId, onClose, onApplied }) => {
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -94,7 +97,10 @@ const JobDetailModal = ({ open, jobId, onClose }) => {
                         job={job}
                         loading={loading}
                         error={error}
-                        onApplied={() => setJob((prev) => (prev ? { ...prev, applied: true } : prev))}
+                        onApplied={() => {
+                            setJob(markJobApplied);
+                            onApplied?.(jobId);
+                        }}
                     />
                 </div>
             </div>

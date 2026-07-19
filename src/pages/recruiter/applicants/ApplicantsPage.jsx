@@ -9,6 +9,7 @@ import recruiterApplicationService, {
     APPLICATION_SORT_OPTIONS,
     APPLICATION_STATUS_FILTERS,
     getRecruiterApplicationApiErrorMessage,
+    isApplicationCancelledError,
 } from '../../../services/recruiterApplicationService.js';
 import { getCandidatePublicProfilePath, ROUTES } from '../../../routes/path.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
@@ -160,7 +161,15 @@ const ApplicantsPage = () => {
             setAcceptTarget(null);
             await loadApplications();
         } catch (err) {
-            toast.error(getRecruiterApplicationApiErrorMessage(err, 'Không thể chấp nhận ứng viên.'));
+            const message = getRecruiterApplicationApiErrorMessage(
+                err,
+                'Không thể chấp nhận ứng viên.'
+            );
+            toast.error(message);
+            if (isApplicationCancelledError(err)) {
+                setAcceptTarget(null);
+                await loadApplications();
+            }
         } finally {
             setActionLoadingId(null);
         }
@@ -175,7 +184,15 @@ const ApplicantsPage = () => {
             setRejectTarget(null);
             await loadApplications();
         } catch (err) {
-            toast.error(getRecruiterApplicationApiErrorMessage(err, 'Không thể từ chối ứng viên.'));
+            const message = getRecruiterApplicationApiErrorMessage(
+                err,
+                'Không thể từ chối ứng viên.'
+            );
+            toast.error(message);
+            if (isApplicationCancelledError(err)) {
+                setRejectTarget(null);
+                await loadApplications();
+            }
         } finally {
             setActionLoadingId(null);
         }

@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { getMyApplications, confirmOffer, declineOffer } from '../../apis/ApplicationApi.jsx';
+import {
+    getMyApplications,
+    confirmOffer,
+    declineOffer,
+    cancelApplication,
+} from '../../apis/ApplicationApi.jsx';
 import JobDetailModal from '../../components/job/JobDetailModal.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 import { CalendarIcon, ClockIcon } from '../../components/common/icons.jsx';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useAuth } from '../../contexts/authContext.js';
@@ -17,6 +23,7 @@ const STATUS_TABS = [
     { value: 'ACCEPTED', label: 'Đã chấp nhận' },
     { value: 'REJECTED', label: 'Đã từ chối' },
     { value: 'HIRED', label: 'Đã trúng tuyển' },
+    { value: 'CANCELLED', label: 'Đã hủy' },
 ];
 
 const getStatusUi = (status) => {
@@ -90,6 +97,7 @@ const CandidateApplicationHistoryPage = () => {
         ACCEPTED: 0,
         REJECTED: 0,
         HIRED: 0,
+        CANCELLED: 0,
     });
 
     const loadCounts = useCallback(async () => {
@@ -101,7 +109,7 @@ const CandidateApplicationHistoryPage = () => {
             })
         );
 
-        const next = { PENDING: 0, ACCEPTED: 0, REJECTED: 0, HIRED: 0 };
+        const next = { PENDING: 0, ACCEPTED: 0, REJECTED: 0, HIRED: 0, CANCELLED: 0 };
         results.forEach((r) => {
             next[r.status] = r.totalElements;
         });
@@ -169,6 +177,7 @@ const CandidateApplicationHistoryPage = () => {
 
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [detailJobId, setDetailJobId] = useState(null);
+    const [cancelTarget, setCancelTarget] = useState(null);
 
     const handleConfirm = async (applicationId) => {
         if (actionLoadingId) return;
@@ -198,6 +207,42 @@ const CandidateApplicationHistoryPage = () => {
         } finally {
             setActionLoadingId(null);
         }
+    };
+
+    const handleCancelConfirm = async () => {
+        if (!cancelTarget?.applicationId || actionLoadingId) return;
+        setActionLoadingId(cancelTarget.applicationId);
+        try {
+            await cancelApplication(cancelTarget.applicationId);
+            toast.success('Đã hủy đơn. Bạn có thể ứng tuyển lại tin này bất cứ lúc nào.');
+            setCancelTarget(null);
+            setActiveStatus('CANCELLED');
+            await loadCounts();
+        } catch (err) {
+            const message =
+                err?.response?.data?.message || err?.message || 'Không thể hủy đơn ứng tuyển.';
+            if (message === 'INVALID_STATUS') {
+                toast.error('Đơn không còn ở trạng thái chờ phản hồi.');
+                setCancelTarget(null);
+                await loadPage(0, activeStatus);
+                await loadCounts();
+            } else if (message === 'APPLICATION_NOT_FOUND') {
+                toast.error('Không tìm thấy đơn ứng tuyển.');
+            } else if (message === 'NOT_OWNER') {
+                toast.error('Bạn không có quyền hủy đơn này.');
+            } else {
+                toast.error(message);
+            }
+        } finally {
+            setActionLoadingId(null);
+        }
+    };
+
+    /** Soft CANCELLED → apply lại cùng job/API cũ; BE đổi lại PENDING (cùng applicationId). */
+    const handleReAppliedFromDetail = async () => {
+        setDetailJobId(null);
+        setActiveStatus('PENDING');
+        await loadCounts();
     };
 
     const title = useMemo(() => {
@@ -253,7 +298,9 @@ const CandidateApplicationHistoryPage = () => {
 
                 {applications.map((item) => {
                     const ui = getStatusUi(item.status);
+                    const isPending = item.status === 'PENDING';
                     const isAccepted = item.status === 'ACCEPTED';
+                    const isCancelled = item.status === 'CANCELLED';
                     const shiftsLabel = formatJobShiftsLabel(item.shifts);
                     const appliedLabel = formatAppliedAt(item.appliedAt);
 
@@ -314,6 +361,28 @@ const CandidateApplicationHistoryPage = () => {
                                         Xem chi tiết job
                                     </button>
                                 ) : null}
+                                {isCancelled && item.jobId ? (
+                                    <button
+                                        type="button"
+                                        className="cah-btn cah-btn--primary"
+                                        title="Ứng tuyển lại tin này"
+                                        onClick={() => setDetailJobId(item.jobId)}
+                                    >
+                                        Ứng tuyển lại
+                                    </button>
+                                ) : null}
+                                {isPending ? (
+                                    <button
+                                        type="button"
+                                        className="cah-btn cah-btn--danger"
+                                        disabled={actionLoadingId === item.applicationId}
+                                        onClick={() => setCancelTarget(item)}
+                                    >
+                                        {actionLoadingId === item.applicationId
+                                            ? 'Đang hủy...'
+                                            : 'Hủy đơn'}
+                                    </button>
+                                ) : null}
                                 {isAccepted ? (
                                     <div className="cah-action-row">
                                         <button
@@ -359,7 +428,28 @@ const CandidateApplicationHistoryPage = () => {
                 open={detailJobId != null}
                 jobId={detailJobId}
                 onClose={() => setDetailJobId(null)}
+                onApplied={handleReAppliedFromDetail}
             />
+
+            <ConfirmModal
+                open={Boolean(cancelTarget)}
+                title="Hủy đơn ứng tuyển"
+                confirmLabel="Hủy đơn"
+                cancelLabel="Giữ lại"
+                variant="danger"
+                loading={actionLoadingId === cancelTarget?.applicationId}
+                onConfirm={handleCancelConfirm}
+                onCancel={() => setCancelTarget(null)}
+            >
+                <p className="confirm-modal__message">
+                    Bạn có chắc muốn hủy đơn ứng tuyển{' '}
+                    <strong>{cancelTarget?.jobTitle || 'này'}</strong>?
+                </p>
+                <p className="confirm-modal__hint">
+                    Đơn sẽ chuyển sang Đã hủy (vẫn còn trong lịch sử). Nút Apply trên tin tuyển dụng
+                    hiện lại; khi nộp lại dùng cùng đơn, không tạo đơn mới.
+                </p>
+            </ConfirmModal>
         </div>
     );
 };

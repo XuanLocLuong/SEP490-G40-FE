@@ -22,3 +22,7 @@ export const confirmOffer = (applicationId) =>
 // PUT /applications/{id}/decline — từ chối offer (application phải ở trạng thái ACCEPTED)
 export const declineOffer = (applicationId) =>
     axiosClient.put(`${BASE}/${applicationId}/decline`);
+
+// PUT /applications/{id}/cancel — hủy đơn khi còn PENDING
+export const cancelApplication = (applicationId) =>
+    axiosClient.put(`${BASE}/${applicationId}/cancel`);

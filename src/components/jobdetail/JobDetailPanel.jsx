@@ -14,6 +14,7 @@ import {
     formatShiftGroupLine,
     groupShiftsForDisplay,
     getBusinessInitial,
+    hasAppliedToJob,
     isPrimarySkill,
 } from '../../utils/formatters.js';
 import { getBusinessProfilePath } from '../../routes/path.js';
@@ -224,7 +225,7 @@ const JobDetailPanel = ({
                             className="btn btn--ghost job-detail-panel__chat"
                         />
                     </div>
-                    {job.applied ? (
+                    {hasAppliedToJob(job) ? (
                         <button
                             type="button"
                             className="btn btn--primary job-detail-panel__apply"
