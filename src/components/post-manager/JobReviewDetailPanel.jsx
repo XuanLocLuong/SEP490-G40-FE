@@ -5,6 +5,7 @@ import { formatJobType, formatSalary } from '../../utils/formatters.js';
 import {
     getAutoScoreTone,
     getQueueTypeLabel,
+    getQueueTypeTone,
     getRiskDisplay,
     getRuleNameLabel,
     getRuleScoreTone,
@@ -45,6 +46,7 @@ const JobReviewDetailPanel = ({
     }
 
     const risk = getRiskDisplay(detail.aiAnalysis?.mucDoRuiRo || detail.aiRiskLevel);
+    const queueTone = getQueueTypeTone(detail.queueType);
     const ruleResult = parseRuleEngineResult(detail.ruleEngineResult);
     const ai = detail.aiAnalysis;
     const locationParts = [detail.locationAddress, detail.locationWard, detail.locationCity].filter(
@@ -79,9 +81,9 @@ const JobReviewDetailPanel = ({
                         )}
                     </p>
                     <p className="pm-review-detail__recruiter">
-                        Recruiter: {detail.recruiterName || '—'}
+                        Nhà tuyển dụng: {detail.recruiterName || '—'}
                         {detail.businessTrustScore != null && (
-                            <span> · Trust: {Math.round(detail.businessTrustScore)}</span>
+                            <span> · Độ tin cậy: {Math.round(detail.businessTrustScore)}</span>
                         )}
                     </p>
                 </div>
@@ -91,7 +93,13 @@ const JobReviewDetailPanel = ({
                         {risk.label}
                     </span>
                     {detail.queueType && (
-                        <span className="pm-review-detail__queue">{getQueueTypeLabel(detail.queueType)}</span>
+                        <span
+                            className={`pm-review-detail__queue${
+                                queueTone ? ` pm-review-detail__queue--${queueTone}` : ''
+                            }`}
+                        >
+                            {getQueueTypeLabel(detail.queueType)}
+                        </span>
                     )}
                 </div>
             </header>

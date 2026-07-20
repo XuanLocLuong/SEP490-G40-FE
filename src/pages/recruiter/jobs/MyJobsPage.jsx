@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     ROUTES,
@@ -110,12 +110,17 @@ const isOpenRecruitingCard = (job) => job.status === 'OPEN';
 
 const canReopenJob = (job) => job.status === 'CLOSED' && !isPastDeadline(job);
 
+const hasRevisionNote = (job) =>
+    job?.status === 'REVISION_REQUESTED' && Boolean(String(job.reviewNote || '').trim());
+
 const MyJobsPage = () => {
+    const navigate = useNavigate();
     const [allJobs, setAllJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('all');
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState(null);
+    const [reviewNoteJob, setReviewNoteJob] = useState(null);
 
     const loadJobs = useCallback(async () => {
         setLoading(true);
@@ -232,6 +237,15 @@ const MyJobsPage = () => {
                     >
                         Xem ứng viên
                     </Link>
+                )}
+                {hasRevisionNote(job) && (
+                    <button
+                        type="button"
+                        className="my-jobs-page__action my-jobs-page__action--note"
+                        onClick={() => setReviewNoteJob(job)}
+                    >
+                        Xem yêu cầu chỉnh sửa
+                    </button>
                 )}
                 {canEdit(job.status) && (
                     <Link
@@ -453,6 +467,30 @@ const MyJobsPage = () => {
                 onCancel={closeConfirm}
             >
                 {renderConfirmBody()}
+            </ConfirmModal>
+
+            <ConfirmModal
+                open={Boolean(reviewNoteJob)}
+                title="Yêu cầu chỉnh sửa"
+                confirmLabel="Chỉnh sửa & Gửi lại"
+                cancelLabel="Đóng"
+                variant="primary"
+                onConfirm={() => {
+                    const jobId = reviewNoteJob?.id;
+                    setReviewNoteJob(null);
+                    if (jobId != null) navigate(getRecruiterEditJobPath(jobId));
+                }}
+                onCancel={() => setReviewNoteJob(null)}
+            >
+                {reviewNoteJob && (
+                    <>
+                        <p className="confirm-modal__hint">
+                            Ghi chú từ Post Manager cho tin{' '}
+                            <strong>{reviewNoteJob.title}</strong>:
+                        </p>
+                        <p className="my-jobs-page__review-note">{reviewNoteJob.reviewNote}</p>
+                    </>
+                )}
             </ConfirmModal>
         </div>
     );

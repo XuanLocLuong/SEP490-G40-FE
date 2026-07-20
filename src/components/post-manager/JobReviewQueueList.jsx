@@ -2,6 +2,7 @@ import { getBusinessInitial } from '../../utils/formatters.js';
 import {
     formatQueueTime,
     getQueueTypeLabel,
+    getQueueTypeTone,
     getRiskDisplay,
     RISK_TABS,
 } from '../../utils/jobReviewDisplay.js';
@@ -64,6 +65,7 @@ const JobReviewQueueList = ({
                 const risk = getRiskDisplay(item.aiRiskLevel);
                 const isActive = item.reviewId === selectedReviewId;
                 const queueLabel = getQueueTypeLabel(item.queueType);
+                const queueTone = getQueueTypeTone(item.queueType);
 
                 return (
                     <button
@@ -77,7 +79,13 @@ const JobReviewQueueList = ({
                                 {risk.shortLabel}
                             </span>
                             {queueLabel && (
-                                <span className="pm-queue-card__queue-type">{queueLabel}</span>
+                                <span
+                                    className={`pm-queue-card__queue-type${
+                                        queueTone ? ` pm-queue-card__queue-type--${queueTone}` : ''
+                                    }`}
+                                >
+                                    {queueLabel}
+                                </span>
                             )}
                         </div>
 

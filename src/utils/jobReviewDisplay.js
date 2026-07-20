@@ -8,19 +8,26 @@ export const RISK_TABS = [
 export const getRiskDisplay = (aiRiskLevel) => {
     switch (aiRiskLevel) {
         case 'CAO':
-            return { label: 'Rủi ro cao', shortLabel: 'High risk', tone: 'high' };
+            return { label: 'Rủi ro cao', shortLabel: 'Rủi ro cao', tone: 'high' };
         case 'TRUNG_BINH':
-            return { label: 'Rủi ro trung bình', shortLabel: 'Medium', tone: 'medium' };
+            return { label: 'Rủi ro trung bình', shortLabel: 'Rủi ro TB', tone: 'medium' };
         case 'THAP':
-            return { label: 'Rủi ro thấp', shortLabel: 'Low risk', tone: 'low' };
+            return { label: 'Rủi ro thấp', shortLabel: 'Rủi ro thấp', tone: 'low' };
         default:
-            return { label: 'Chưa phân tích', shortLabel: 'N/A', tone: 'unknown' };
+            return { label: 'Chưa phân tích', shortLabel: 'Chưa có', tone: 'unknown' };
     }
 };
 
 export const getQueueTypeLabel = (queueType) => {
     if (queueType === 'RED_QUEUE') return 'Hàng đỏ';
     if (queueType === 'GREEN_QUEUE') return 'Hàng xanh';
+    return '';
+};
+
+/** Tone CSS cho pill queue: red | green | '' */
+export const getQueueTypeTone = (queueType) => {
+    if (queueType === 'RED_QUEUE') return 'red';
+    if (queueType === 'GREEN_QUEUE') return 'green';
     return '';
 };
 

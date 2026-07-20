@@ -219,8 +219,21 @@
 
 .pm-queue-card__queue-type {
     font-size: 11px;
-    font-weight: 650;
-    color: var(--color-text-muted);
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.pm-queue-card__queue-type--green {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+}
+
+.pm-queue-card__queue-type--red {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
 }
 
 .pm-queue-card__body {
@@ -412,6 +425,16 @@
 .pm-review-detail__queue {
     background: color-mix(in srgb, var(--color-border) 35%, transparent);
     color: var(--color-text-muted);
+}
+
+.pm-review-detail__queue--green {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+}
+
+.pm-review-detail__queue--red {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
 }
 
 .pm-review-detail__ai-alert {

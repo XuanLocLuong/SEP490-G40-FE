@@ -13,7 +13,7 @@ import {
     validateJobForm,
     validateJobFormField,
 } from '../../../services/jobPostService.js';
-import { EDITABLE_JOB_STATUSES, JOB_POST_ACTION } from '../../../constants/jobPost.js';
+import { EDITABLE_JOB_STATUSES, JOB_POST_ACTION, JOB_STATUS_LABELS } from '../../../constants/jobPost.js';
 import JobPostForm from '../../../components/recruiter/jobs/JobPostForm.jsx';
 import JobPreviewPanel from '../../../components/recruiter/jobs/JobPreviewPanel.jsx';
 import '../../../assets/styles/JobPostStyle.css';
@@ -168,7 +168,8 @@ const CreateJobPage = () => {
                     <h1>{isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng tin tuyển dụng'}</h1>
                     {isEdit && jobStatus && (
                         <p className="job-post-page__subtitle">
-                            Trạng thái hiện tại: <strong>{jobStatus}</strong>
+                            Trạng thái hiện tại:{' '}
+                            <strong>{JOB_STATUS_LABELS[jobStatus] || jobStatus}</strong>
                         </p>
                     )}
                 </div>
