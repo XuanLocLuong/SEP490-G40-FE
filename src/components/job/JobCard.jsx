@@ -43,7 +43,8 @@ const CardBusinessLogo = ({ name, logoUrl }) => {
     );
 };
 
-const JobCard = ({ job, nearMe = false, compact = false, showDistance = false }) => {
+const JobCard = ({ job, nearMe = false, compact = false, showDistance = false, variant }) => {
+    const isPreview = variant === 'preview';
     const businessName = job.business?.name || 'Công ty';
     const businessLogoUrl = job.business?.logoUrl || null;
     const tagLabel = formatJobType(job.jobType);
@@ -68,11 +69,13 @@ const JobCard = ({ job, nearMe = false, compact = false, showDistance = false })
                         <p className="job-card__company">{businessName}</p>
                     </div>
                 </div>
-                <JobBookmarkButton
-                    jobId={job.id}
-                    className="job-card__bookmark"
-                    initialSaved={job.interactionType === 'SAVE'}
-                />
+                {!isPreview && (
+                    <JobBookmarkButton
+                        jobId={job.id}
+                        className="job-card__bookmark"
+                        initialSaved={job.interactionType === 'SAVE'}
+                    />
+                )}
             </div>
             <div className="job-card__meta">
                 {(matchLabel || scheduleMatchLabel || interactionLabel || job.urgent || applied || distance) && (
@@ -150,16 +153,18 @@ const JobCard = ({ job, nearMe = false, compact = false, showDistance = false })
                 </div>
             </div>
 
-            <div className="job-card__actions">
-                <JobDetailLink jobId={job.id} className="job-card__detail-link" />
-                {applied ? (
-                    <button type="button" className="btn btn--primary job-card__apply" disabled>
-                        Đã ứng tuyển
-                    </button>
-                ) : (
-                    <JobApplyButton jobId={job.id} className="btn btn--primary job-card__apply" />
-                )}
-            </div>
+            {!isPreview && (
+                <div className="job-card__actions">
+                    <JobDetailLink jobId={job.id} className="job-card__detail-link" />
+                    {applied ? (
+                        <button type="button" className="btn btn--primary job-card__apply" disabled>
+                            Đã ứng tuyển
+                        </button>
+                    ) : (
+                        <JobApplyButton jobId={job.id} className="btn btn--primary job-card__apply" />
+                    )}
+                </div>
+            )}
         </article>
     );
 };

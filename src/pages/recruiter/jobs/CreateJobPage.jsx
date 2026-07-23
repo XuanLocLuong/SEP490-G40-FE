@@ -48,6 +48,7 @@ const CreateJobPage = () => {
             const businessLocationId = businessLocation?.id
                 ? String(businessLocation.id)
                 : '';
+            const businessId = guard.businessId ?? null;
 
             if (isEdit) {
                 const detail = await recruiterJobApi.getJobDetail(jobId);
@@ -63,11 +64,13 @@ const CreateJobPage = () => {
                 setForm({
                     ...mapJobDetailToForm(detail),
                     locationId: businessLocationId,
+                    businessId: businessId ?? detail.businessId ?? detail.business?.id ?? null,
                 });
             } else {
                 setForm({
                     ...emptyJobForm(),
                     locationId: businessLocationId,
+                    businessId,
                 });
             }
         } catch (err) {

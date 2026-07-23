@@ -11,6 +11,7 @@ import {
     SettingsIcon,
     ChatIcon,
     ClockIcon,
+    StarIcon,
 } from '../common/icons.jsx';
 import '../../assets/styles/HeaderStyle.css';
 
@@ -68,8 +69,9 @@ const CandidateHeader = () => {
                             navigate(ROUTES.LANDING);
                         }}
                         extra={
-                            <a href="#" className="sidebar-profile__trust">
-                                ★ Tổng điểm Trust Score
+                            <a href="#" className="profile-menu__item profile-menu__item--trust">
+                                <StarIcon className="profile-menu__item-icon" />
+                                Tổng điểm Trust Score
                             </a>
                         }
                     />

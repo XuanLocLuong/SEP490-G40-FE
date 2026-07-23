@@ -70,6 +70,7 @@ export const emptyJobForm = () => ({
     salaryMin: '',
     salaryMax: '',
     requiredCandidates: 1,
+    businessId: null,
     locationId: '',
     applicationDeadline: '',
     isUrgent: false,
@@ -150,6 +151,7 @@ export const mapJobDetailToForm = (detail) => {
         salaryMin: detail.salaryMin != null ? String(detail.salaryMin) : '',
         salaryMax: detail.salaryMax != null ? String(detail.salaryMax) : '',
         requiredCandidates: detail.requiredCandidates ?? 1,
+        businessId: detail.businessId ?? detail.business?.id ?? null,
         locationId: detail.location?.id ? String(detail.location.id) : '',
         applicationDeadline: deadline,
         isUrgent: Boolean(detail.urgent),
@@ -177,6 +179,7 @@ export const buildSavePayload = (form, action) => {
         salaryMin: parseNumber(form.salaryMin),
         salaryMax: parseNumber(form.salaryMax),
         requiredCandidates: parseNumber(form.requiredCandidates) ?? 1,
+        businessId: form.businessId != null ? Number(form.businessId) : null,
         locationId: Number(form.locationId),
         applicationDeadline: form.applicationDeadline
             ? new Date(form.applicationDeadline).toISOString()
