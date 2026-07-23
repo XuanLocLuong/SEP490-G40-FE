@@ -1,6 +1,16 @@
 .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
+    transition: transform 0.28s ease;
+    will-change: transform;
+}
+
+.site-header--hidden {
+    transform: translateY(-100%);
+    pointer-events: none;
 }
 
 .site-header__inner {
@@ -117,4 +127,23 @@
 .btn--primary:disabled:hover,
 .btn--primary:disabled:active {
     background: var(--color-primary);
+}
+/* Candidate/Recruiter có nhiều nav item hơn Guest (2 item) — cho phép cuộn
+   ngang nếu màn hình hẹp, không đổi font/màu/spacing của từng item. */
+.site-header__nav--role {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.site-header__nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.site-header__nav-icon {
+    width: 16px;
+    height: 16px;
 }

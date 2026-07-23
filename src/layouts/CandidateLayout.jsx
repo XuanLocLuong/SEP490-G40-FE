@@ -1,11 +1,11 @@
 import AppLayout from '../components/common/AppLayout.jsx';
 import Footer from '../components/common/Footer.jsx';
-import CandidateSidebar from '../components/candidate/CandidateSidebar.jsx';
+import CandidateHeader from '../components/candidate/CandidateHeader.jsx';
 
-// Candidate: Sidebar (sáng) + Footer, KHÔNG có Header (ảnh 4).
+// Candidate: Header (top, giống Guest) + Footer, KHÔNG còn Sidebar nữa.
 const CandidateLayout = () => (
     <AppLayout
-        sidebar={<CandidateSidebar />}
+        header={<CandidateHeader />}
         footer={<Footer />}
     />
 );

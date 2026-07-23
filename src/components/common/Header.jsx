@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/authContext.js';
 import { useLogoutToLanding } from '../../hooks/useLogoutToLanding.js';
+import { useAutoHideHeader } from '../../hooks/useAutoHideHeader.js';
 import { ROUTES } from '../../routes/path.js';
 import '../../assets/styles/HeaderStyle.css';
 
@@ -9,9 +10,10 @@ const Header = () => {
     const { auth } = useAuth();
     const navigate = useNavigate();
     const handleLogout = useLogoutToLanding();
+    const headerHidden = useAutoHideHeader();
 
     return (
-        <header className="site-header">
+        <header className={`site-header${headerHidden ? ' site-header--hidden' : ''}`}>
             <div className="site-header__inner">
                 <div className="site-header__left">
                     <NavLink to={ROUTES.LANDING} className="site-header__logo">

@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import { LogOutIcon } from './icons.jsx';
 import '../../assets/styles/ProfileMenuStyle.css';
 
-// Click vào avatar/tên -> mở dropdown chứa nút Đăng xuất.
-// Dùng làm "footer" của Sidebar (Candidate/Recruiter).
-const ProfileMenu = ({ name, roleLabel, onLogout, extra = null }) => {
+// items: [{ label, path?, href?, icon?: Component }]
+//   - path: route thật, render bằng NavLink
+//   - href: chưa có trang, render bằng thẻ <a> thường (mặc định "#")
+const ProfileMenu = ({ name, roleLabel, onLogout, items = [], extra = null, variant = 'sidebar' }) => {
     const [open, setOpen] = useState(false);
     const rootRef = useRef(null);
     const initial = name ? name.charAt(0).toUpperCase() : '?';
 
-    // Đóng dropdown khi bấm ra ngoài.
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (rootRef.current && !rootRef.current.contains(e.target)) {
@@ -21,7 +22,7 @@ const ProfileMenu = ({ name, roleLabel, onLogout, extra = null }) => {
     }, []);
 
     return (
-        <div className="profile-menu" ref={rootRef}>
+        <div className={`profile-menu profile-menu--${variant}`} ref={rootRef}>
             <button
                 type="button"
                 className="profile-menu__trigger"
@@ -37,14 +38,33 @@ const ProfileMenu = ({ name, roleLabel, onLogout, extra = null }) => {
 
             {open && (
                 <div className="profile-menu__dropdown">
+                    {items.map((item) => {
+                        const Icon = item.icon;
+                        const content = (
+                            <>
+                                {Icon && <Icon className="profile-menu__item-icon" />}
+                                {item.label}
+                            </>
+                        );
+                        return item.path ? (
+                            <NavLink key={item.label} to={item.path} className="profile-menu__item">
+                                {content}
+                            </NavLink>
+                        ) : (
+                            <a key={item.label} href={item.href || '#'} className="profile-menu__item">
+                                {content}
+                            </a>
+                        );
+                    })}
+
+                    {extra && <div className="profile-menu__extra">{extra}</div>}
+
                     <button className="profile-menu__logout" onClick={onLogout}>
                         <LogOutIcon />
                         Đăng xuất
                     </button>
                 </div>
             )}
-
-            {extra}
         </div>
     );
 };

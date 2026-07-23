@@ -56,3 +56,64 @@
 .profile-menu__logout:hover {
     background: var(--color-danger-bg);
 }
+/* Biến thể dùng trong top Header (Candidate/Recruiter) — khác với biến thể
+   mặc định "sidebar" (trigger full-width, dropdown mở lên trên). */
+.profile-menu--header .profile-menu__trigger {
+    width: auto;
+}
+
+.profile-menu--header .profile-menu__dropdown {
+    top: calc(100% + 6px);
+    bottom: auto;
+    left: auto;
+    right: 0;
+    width: 220px;
+}
+
+.profile-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.profile-menu__item:hover {
+    background: var(--color-bg);
+}
+
+.profile-menu__item-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.profile-menu__extra {
+    border-top: 1px solid var(--color-border);
+    margin: 6px 0;
+    padding-top: 6px;
+}
+
+.site-header__icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.site-header__icon-btn:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
