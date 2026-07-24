@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import ApplicationCard from '../../../components/recruiter/applicants/ApplicationCard.jsx';
@@ -9,8 +9,9 @@ import recruiterApplicationService, {
     APPLICATION_SORT_OPTIONS,
     APPLICATION_STATUS_FILTERS,
     getRecruiterApplicationApiErrorMessage,
+    isApplicationCancelledError,
 } from '../../../services/recruiterApplicationService.js';
-import { ROUTES } from '../../../routes/path.js';
+import { getCandidatePublicProfilePath, ROUTES } from '../../../routes/path.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 
 const PAGE_SIZE = 12;
@@ -18,6 +19,7 @@ const DEFAULT_STATUS = 'PENDING';
 const DEFAULT_SORT = 'appliedAt,desc';
 
 const ApplicantsPage = () => {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [openJobs, setOpenJobs] = useState([]);
@@ -159,7 +161,15 @@ const ApplicantsPage = () => {
             setAcceptTarget(null);
             await loadApplications();
         } catch (err) {
-            toast.error(getRecruiterApplicationApiErrorMessage(err, 'Không thể chấp nhận ứng viên.'));
+            const message = getRecruiterApplicationApiErrorMessage(
+                err,
+                'Không thể chấp nhận ứng viên.'
+            );
+            toast.error(message);
+            if (isApplicationCancelledError(err)) {
+                setAcceptTarget(null);
+                await loadApplications();
+            }
         } finally {
             setActionLoadingId(null);
         }
@@ -174,14 +184,34 @@ const ApplicantsPage = () => {
             setRejectTarget(null);
             await loadApplications();
         } catch (err) {
-            toast.error(getRecruiterApplicationApiErrorMessage(err, 'Không thể từ chối ứng viên.'));
+            const message = getRecruiterApplicationApiErrorMessage(
+                err,
+                'Không thể từ chối ứng viên.'
+            );
+            toast.error(message);
+            if (isApplicationCancelledError(err)) {
+                setRejectTarget(null);
+                await loadApplications();
+            }
         } finally {
             setActionLoadingId(null);
         }
     };
 
-    const handleViewProfile = () => {
-        toast.info('Xem hồ sơ ứng viên sẽ được bổ sung sau.');
+    const handleViewProfile = (application) => {
+        const candidateId = application?.candidateId;
+        if (!candidateId) {
+            toast.error('Không tìm thấy hồ sơ ứng viên.');
+            return;
+        }
+        navigate(getCandidatePublicProfilePath(candidateId), {
+            state: {
+                backTo: {
+                    path: ROUTES.RECRUITER_APPLICANTS,
+                    label: 'Quay lại danh sách ứng viên',
+                },
+            },
+        });
     };
 
     const hasOpenJobs = openJobs.length > 0;

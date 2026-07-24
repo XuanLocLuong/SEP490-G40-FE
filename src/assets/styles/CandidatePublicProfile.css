@@ -6,10 +6,28 @@
     padding: 8px 4px 32px;
 }
 
+.cpp-page--back-only {
+    padding-bottom: 0;
+}
+
+.cpp-back-link {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 14px;
+    font-size: 14px;
+    font-weight: 650;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.cpp-back-link:hover {
+    text-decoration: underline;
+}
+
 /* ---- Hero header ---- */
 .cpp-hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 220px 360px;
+    grid-template-columns: minmax(0, 1fr) 220px 240px;
     gap: 20px;
     align-items: stretch;
     background: var(--color-surface);
@@ -107,7 +125,7 @@
 
 .cpp-hero__metrics {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
 }
 
@@ -136,11 +154,6 @@
     font-size: 12px;
     color: var(--color-text-muted);
     white-space: nowrap;
-}
-
-.cpp-hero__metric--accent strong {
-    font-size: 0.95rem;
-    color: var(--color-primary);
 }
 
 /* ---- Tabs ---- */
@@ -213,6 +226,10 @@
     gap: 18px 28px;
 }
 
+.cpp-detail-field--wide {
+    grid-column: 1 / -1;
+}
+
 .cpp-detail-field__label {
     display: block;
     font-size: 12px;
@@ -235,6 +252,10 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.cpp-skill-tags--inline {
+    margin-top: 2px;
 }
 
 .cpp-skill-tag {
@@ -374,7 +395,7 @@
     }
 
     .cpp-hero__metrics {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 

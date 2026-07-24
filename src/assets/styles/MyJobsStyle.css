@@ -304,6 +304,29 @@
     color: #1e293b;
 }
 
+.my-jobs-page__action--note {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    color: #b45309;
+}
+
+.my-jobs-page__action--note:hover {
+    background: #fef3c7;
+}
+
+.my-jobs-page__review-note {
+    margin: 12px 0 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #78350f;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .my-jobs-page__action--delete {
     background: #fee2e2;
     color: #b91c1c;

@@ -23,9 +23,42 @@ const MOCK_EMPLOYERS = [
         trustScore: 92,
         initial: 'F',
     },
+    {
+        id: 4,
+        name: 'The Coffee House',
+        industry: 'F&B',
+        trustScore: 90,
+        initial: 'T',
+    },
+    {
+        id: 5,
+        name: 'Phở Hà Thành',
+        industry: 'F&B',
+        trustScore: 88,
+        initial: 'P',
+    },
+    {
+        id: 6,
+        name: 'Bún chả Hà Nội',
+        industry: 'F&B',
+        trustScore: 86,
+        initial: 'B',
+    },
 ];
 
-const TopEmployersSection = () => {
+const PREVIEW_SIZE = 3;
+const COMPACT_PREVIEW_SIZE = 4;
+
+const TopEmployersSection = ({ compact = false }) => {
+    const previewSize = compact ? COMPACT_PREVIEW_SIZE : PREVIEW_SIZE;
+    const employers = MOCK_EMPLOYERS.slice(0, previewSize);
+    const gridClass = [
+        'landing-employers__grid',
+        compact ? 'landing-employers__grid--compact' : '',
+    ]
+        .filter(Boolean)
+        .join(' ');
+
     return (
         <section className="landing-section landing-employers">
             <div className="landing-section__header">
@@ -40,9 +73,12 @@ const TopEmployersSection = () => {
                 </span>
             </div>
 
-            <div className="landing-employers__grid">
-                {MOCK_EMPLOYERS.map((employer) => (
-                    <article key={employer.id} className="employer-card">
+            <div className={gridClass}>
+                {employers.map((employer) => (
+                    <article
+                        key={employer.id}
+                        className={`employer-card${compact ? ' employer-card--compact' : ''}`}
+                    >
                         <div className="employer-card__top">
                             <span className="employer-card__logo">{employer.initial}</span>
                             <div>

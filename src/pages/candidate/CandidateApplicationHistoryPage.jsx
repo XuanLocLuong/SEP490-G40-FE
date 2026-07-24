@@ -1,10 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { getMyApplications, confirmOffer, declineOffer } from '../../apis/ApplicationApi.jsx';
+import {
+    getMyApplications,
+    confirmOffer,
+    declineOffer,
+    cancelApplication,
+} from '../../apis/ApplicationApi.jsx';
+import JobDetailModal from '../../components/job/JobDetailModal.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
+import { CalendarIcon, ClockIcon } from '../../components/common/icons.jsx';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useAuth } from '../../contexts/authContext.js';
-import { getBusinessProfilePath, getJobDetailPath } from '../../routes/path.js';
+import { getBusinessProfilePath } from '../../routes/path.js';
+import { formatJobShiftsLabel, getBusinessInitial } from '../../utils/formatters.js';
 import '../../assets/styles/CandidateApplicationHistoryPageStyle.css';
 
 const PAGE_SIZE = 10;
@@ -14,6 +23,7 @@ const STATUS_TABS = [
     { value: 'ACCEPTED', label: 'Đã chấp nhận' },
     { value: 'REJECTED', label: 'Đã từ chối' },
     { value: 'HIRED', label: 'Đã trúng tuyển' },
+    { value: 'CANCELLED', label: 'Đã hủy' },
 ];
 
 const getStatusUi = (status) => {
@@ -39,7 +49,33 @@ const formatAppliedAt = (value) => {
     if (!value) return '';
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return String(value);
-    return d.toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: '2-digit' });
+    return d.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
+};
+
+const BusinessLogo = ({ name, logoUrl }) => {
+    const [imgFailed, setImgFailed] = useState(false);
+    const showImage = Boolean(logoUrl) && !imgFailed;
+
+    if (showImage) {
+        return (
+            <img
+                src={logoUrl}
+                alt=""
+                className="cah-item__logo"
+                onError={() => setImgFailed(true)}
+            />
+        );
+    }
+
+    return (
+        <span className="cah-item__logo cah-item__logo--placeholder" aria-hidden="true">
+            {getBusinessInitial(name)}
+        </span>
+    );
 };
 
 const CandidateApplicationHistoryPage = () => {
@@ -61,6 +97,7 @@ const CandidateApplicationHistoryPage = () => {
         ACCEPTED: 0,
         REJECTED: 0,
         HIRED: 0,
+        CANCELLED: 0,
     });
 
     const loadCounts = useCallback(async () => {
@@ -72,7 +109,7 @@ const CandidateApplicationHistoryPage = () => {
             })
         );
 
-        const next = { PENDING: 0, ACCEPTED: 0, REJECTED: 0, HIRED: 0 };
+        const next = { PENDING: 0, ACCEPTED: 0, REJECTED: 0, HIRED: 0, CANCELLED: 0 };
         results.forEach((r) => {
             next[r.status] = r.totalElements;
         });
@@ -139,6 +176,8 @@ const CandidateApplicationHistoryPage = () => {
     };
 
     const [actionLoadingId, setActionLoadingId] = useState(null);
+    const [detailJobId, setDetailJobId] = useState(null);
+    const [cancelTarget, setCancelTarget] = useState(null);
 
     const handleConfirm = async (applicationId) => {
         if (actionLoadingId) return;
@@ -168,6 +207,42 @@ const CandidateApplicationHistoryPage = () => {
         } finally {
             setActionLoadingId(null);
         }
+    };
+
+    const handleCancelConfirm = async () => {
+        if (!cancelTarget?.applicationId || actionLoadingId) return;
+        setActionLoadingId(cancelTarget.applicationId);
+        try {
+            await cancelApplication(cancelTarget.applicationId);
+            toast.success('Đã hủy đơn. Bạn có thể ứng tuyển lại tin này bất cứ lúc nào.');
+            setCancelTarget(null);
+            setActiveStatus('CANCELLED');
+            await loadCounts();
+        } catch (err) {
+            const message =
+                err?.response?.data?.message || err?.message || 'Không thể hủy đơn ứng tuyển.';
+            if (message === 'INVALID_STATUS') {
+                toast.error('Đơn không còn ở trạng thái chờ phản hồi.');
+                setCancelTarget(null);
+                await loadPage(0, activeStatus);
+                await loadCounts();
+            } else if (message === 'APPLICATION_NOT_FOUND') {
+                toast.error('Không tìm thấy đơn ứng tuyển.');
+            } else if (message === 'NOT_OWNER') {
+                toast.error('Bạn không có quyền hủy đơn này.');
+            } else {
+                toast.error(message);
+            }
+        } finally {
+            setActionLoadingId(null);
+        }
+    };
+
+    /** Soft CANCELLED → apply lại cùng job/API cũ; BE đổi lại PENDING (cùng applicationId). */
+    const handleReAppliedFromDetail = async () => {
+        setDetailJobId(null);
+        setActiveStatus('PENDING');
+        await loadCounts();
     };
 
     const title = useMemo(() => {
@@ -223,14 +298,22 @@ const CandidateApplicationHistoryPage = () => {
 
                 {applications.map((item) => {
                     const ui = getStatusUi(item.status);
+                    const isPending = item.status === 'PENDING';
                     const isAccepted = item.status === 'ACCEPTED';
+                    const isCancelled = item.status === 'CANCELLED';
+                    const shiftsLabel = formatJobShiftsLabel(item.shifts);
+                    const appliedLabel = formatAppliedAt(item.appliedAt);
 
                     return (
-                        <section key={item.applicationId ?? `${item.jobId}-${item.appliedAt}`} className="cah-item">
+                        <section
+                            key={item.applicationId ?? `${item.jobId}-${item.appliedAt}`}
+                            className="cah-item"
+                        >
                             <div className="cah-item__main">
-                                <div className={`cah-badge cah-badge--${ui.tone}`}>
-                                    {ui.label}
-                                </div>
+                                <BusinessLogo
+                                    name={item.businessName}
+                                    logoUrl={item.businessLogoUrl}
+                                />
 
                                 <div className="cah-item__text">
                                     <h3 className="cah-item__job">{item.jobTitle || '—'}</h3>
@@ -245,21 +328,60 @@ const CandidateApplicationHistoryPage = () => {
                                     ) : (
                                         <p className="cah-item__company">{item.businessName || '—'}</p>
                                     )}
-                                    <p className="cah-item__applied">
-                                        Ứng tuyển: {formatAppliedAt(item.appliedAt) || '—'}
-                                    </p>
+
+                                    <div className="cah-item__meta-row">
+                                        <span className={`cah-badge cah-badge--${ui.tone}`}>
+                                            {ui.label}
+                                        </span>
+                                        {appliedLabel && (
+                                            <span className="cah-item__meta-chip">
+                                                <CalendarIcon width={14} height={14} />
+                                                {appliedLabel}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {shiftsLabel && (
+                                        <p className="cah-item__shifts" title={shiftsLabel}>
+                                            <ClockIcon width={14} height={14} />
+                                            <span>{shiftsLabel}</span>
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="cah-item__actions">
                                 {item.jobId ? (
-                                    <Link
-                                        to={getJobDetailPath(item.jobId)}
+                                    <button
+                                        type="button"
                                         className="cah-btn cah-btn--link"
                                         title="Xem lại tin tuyển dụng"
+                                        onClick={() => setDetailJobId(item.jobId)}
                                     >
                                         Xem chi tiết job
-                                    </Link>
+                                    </button>
+                                ) : null}
+                                {isCancelled && item.jobId ? (
+                                    <button
+                                        type="button"
+                                        className="cah-btn cah-btn--primary"
+                                        title="Ứng tuyển lại tin này"
+                                        onClick={() => setDetailJobId(item.jobId)}
+                                    >
+                                        Ứng tuyển lại
+                                    </button>
+                                ) : null}
+                                {isPending ? (
+                                    <button
+                                        type="button"
+                                        className="cah-btn cah-btn--danger"
+                                        disabled={actionLoadingId === item.applicationId}
+                                        onClick={() => setCancelTarget(item)}
+                                    >
+                                        {actionLoadingId === item.applicationId
+                                            ? 'Đang hủy...'
+                                            : 'Hủy đơn'}
+                                    </button>
                                 ) : null}
                                 {isAccepted ? (
                                     <div className="cah-action-row">
@@ -277,14 +399,12 @@ const CandidateApplicationHistoryPage = () => {
                                             disabled={actionLoadingId === item.applicationId}
                                             onClick={() => handleConfirm(item.applicationId)}
                                         >
-                                            {actionLoadingId === item.applicationId ? 'Đang xử lý...' : 'Chấp nhận'}
+                                            {actionLoadingId === item.applicationId
+                                                ? 'Đang xử lý...'
+                                                : 'Chấp nhận'}
                                         </button>
                                     </div>
-                                ) : (
-                                    <button type="button" className="cah-btn cah-btn--disabled" disabled>
-                                        {ui.label}
-                                    </button>
-                                )}
+                                ) : null}
                             </div>
                         </section>
                     );
@@ -293,14 +413,45 @@ const CandidateApplicationHistoryPage = () => {
 
             {totalElements > 0 && canLoadMore && (
                 <div className="cah-load-more">
-                    <button type="button" className="cah-btn cah-btn--ghost" onClick={loadMore} disabled={loading}>
+                    <button
+                        type="button"
+                        className="cah-btn cah-btn--ghost"
+                        onClick={loadMore}
+                        disabled={loading}
+                    >
                         {loading ? 'Đang tải...' : 'Xem thêm'}
                     </button>
                 </div>
             )}
+
+            <JobDetailModal
+                open={detailJobId != null}
+                jobId={detailJobId}
+                onClose={() => setDetailJobId(null)}
+                onApplied={handleReAppliedFromDetail}
+            />
+
+            <ConfirmModal
+                open={Boolean(cancelTarget)}
+                title="Hủy đơn ứng tuyển"
+                confirmLabel="Hủy đơn"
+                cancelLabel="Giữ lại"
+                variant="danger"
+                loading={actionLoadingId === cancelTarget?.applicationId}
+                onConfirm={handleCancelConfirm}
+                onCancel={() => setCancelTarget(null)}
+            >
+                <p className="confirm-modal__message">
+                    Bạn có chắc muốn hủy đơn ứng tuyển{' '}
+                    <strong>{cancelTarget?.jobTitle || 'này'}</strong>?
+                </p>
+                <p className="confirm-modal__hint">
+                    Đơn sẽ chuyển sang Đã hủy (vẫn còn trong lịch sử). Nút Apply trên tin tuyển dụng
+                    hiện lại; khi nộp lại dùng cùng đơn, không tạo đơn mới.
+                </p>
+            </ConfirmModal>
         </div>
     );
 };
 
 export default CandidateApplicationHistoryPage;
-

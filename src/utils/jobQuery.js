@@ -1,7 +1,44 @@
-import { fetchHomepageJobs, searchJobs, fetchNearbyJobs } from '../apis/JobApi.jsx';
+import { fetchHomepageJobs, searchJobs, fetchNearbyJobs, fetchUrgentJobs } from '../apis/JobApi.jsx';
+import { fetchRecommendedJobs } from '../apis/RecommendationApi.jsx';
+import { getMyInteractions } from '../apis/ApplicationApi.jsx';
+import { mapRecommendationToJob, mapInteractionsToJobs } from './formatters.js';
 
 export const LANDING_PREVIEW_SIZE = 8;
 export const JOB_LIST_PAGE_SIZE = 10;
+
+/** Query `?section=` trên /jobs — từng section homepage candidate. */
+export const JOB_LIST_SECTIONS = {
+    URGENT: 'urgent',
+    AI: 'ai',
+    INTERACTIONS: 'interactions',
+};
+
+export const JOB_LIST_SECTION_META = {
+    [JOB_LIST_SECTIONS.URGENT]: {
+        title: 'Việc làm tuyển gấp',
+        subtitle: 'Các tin đang cần tuyển gấp',
+        empty: 'Chưa có việc làm tuyển gấp.',
+        error: 'Không thể tải việc làm tuyển gấp.',
+    },
+    [JOB_LIST_SECTIONS.AI]: {
+        title: 'AI gợi ý cho bạn',
+        subtitle: 'Việc làm được gợi ý theo hồ sơ và lịch rảnh',
+        empty: 'Chưa có gợi ý phù hợp. Hãy cập nhật hồ sơ, kỹ năng và lịch rảnh.',
+        error: 'Không thể tải gợi ý việc làm.',
+    },
+    [JOB_LIST_SECTIONS.INTERACTIONS]: {
+        title: 'Lịch sử tương tác',
+        subtitle: 'Việc làm bạn đã xem, lưu hoặc ứng tuyển',
+        empty: 'Bạn chưa xem hoặc lưu việc làm nào.',
+        error: 'Không thể tải lịch sử tương tác.',
+    },
+};
+
+export const parseJobListSection = (searchParams) => {
+    const section = searchParams.get('section')?.trim() || '';
+    if (Object.values(JOB_LIST_SECTIONS).includes(section)) return section;
+    return null;
+};
 /** Jobs loaded per request in /jobs/:id sidebar (append via Load more). BE max size = 50. */
 export const JOB_DETAIL_SIDEBAR_PAGE_SIZE = 10;
 
@@ -227,7 +264,68 @@ const buildSearchBody = (page, size, query) => {
     return body;
 };
 
-export const fetchJobListPage = async (page, size, query) => {
+const unwrapPage = (res) => res.data?.data ?? res.data;
+
+/** BE max size = 50 — tải hết raw interactions rồi dedupe để totalElements khớp số job. */
+const INTERACTION_API_PAGE_SIZE = 50;
+
+const fetchAllInteractionRows = async () => {
+    const rows = [];
+    let page = 0;
+    let totalElements = null;
+
+    while (true) {
+        const data = unwrapPage(
+            await getMyInteractions({ page, size: INTERACTION_API_PAGE_SIZE })
+        );
+        const chunk = data?.content || [];
+        if (totalElements == null) {
+            totalElements = Number(data?.totalElements) || 0;
+        }
+        rows.push(...chunk);
+        if (chunk.length === 0 || rows.length >= totalElements) break;
+        page += 1;
+        if (page > 40) break;
+    }
+
+    return rows;
+};
+
+/** Mỗi job 1 dòng (APPLY > SAVE > VIEW), totalElements = số job sau gộp. */
+export const fetchDedupedInteractionPage = async (page = 0, size = JOB_LIST_PAGE_SIZE) => {
+    const allJobs = mapInteractionsToJobs(await fetchAllInteractionRows());
+    const totalElements = allJobs.length;
+    const pageSize = Math.max(1, Number(size) || JOB_LIST_PAGE_SIZE);
+    const totalPages = totalElements === 0 ? 0 : Math.ceil(totalElements / pageSize);
+    const safePage =
+        totalPages === 0 ? 0 : Math.min(Math.max(0, Number(page) || 0), totalPages - 1);
+    const start = safePage * pageSize;
+
+    return {
+        content: allJobs.slice(start, start + pageSize),
+        totalElements,
+        totalPages,
+        currentPage: safePage,
+        pageSize,
+    };
+};
+
+export const fetchJobListPage = async (page, size, query, section = null) => {
+    if (section === JOB_LIST_SECTIONS.URGENT) {
+        const data = unwrapPage(await fetchUrgentJobs({ page, size }));
+        return data;
+    }
+    if (section === JOB_LIST_SECTIONS.AI) {
+        const data = unwrapPage(await fetchRecommendedJobs(page, size));
+        return {
+            ...data,
+            content: (data?.content || []).map(mapRecommendationToJob).filter(Boolean),
+        };
+    }
+    if (section === JOB_LIST_SECTIONS.INTERACTIONS) {
+        return fetchDedupedInteractionPage(page, size);
+    }
+
     if (hasNearMeCoords(query)) {
         const skillIds = normalizeSkillIds(query.skillIds);
         const schedules = normalizeSchedules(query.schedules);

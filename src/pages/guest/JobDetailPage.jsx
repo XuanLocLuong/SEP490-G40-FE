@@ -308,7 +308,11 @@ const JobDetailPage = () => {
                         job={job}
                         loading={detailLoading}
                         error={detailError}
-                        onApplied={() => setJob((prev) => (prev ? { ...prev, applied: true } : prev))}
+                        onApplied={() =>
+                            setJob((prev) =>
+                                prev ? { ...prev, applied: true, isApply: true } : prev
+                            )
+                        }
                     />
                 </section>
             </div>

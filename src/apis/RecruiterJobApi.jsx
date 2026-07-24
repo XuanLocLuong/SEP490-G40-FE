@@ -4,8 +4,22 @@ const JOBS_BASE = `${API_PREFIX}/jobs`;
 
 const unwrapData = (response) => response.data.data;
 
-export const getRecruiterJobApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') =>
-    error?.response?.data?.message || error?.message || fallback;
+export const getRecruiterJobApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') => {
+    const message = error?.response?.data?.message || error?.message || fallback;
+    if (typeof message !== 'string') return fallback;
+
+    // Spring @Valid thường trả chuỗi dài — lấy message tiếng Việt cuối cùng nếu có.
+    if (message.startsWith('Validation failed')) {
+        const matches = [...message.matchAll(/default message \[([^\]]+)\]/g)];
+        const last = matches[matches.length - 1]?.[1];
+        if (last && !last.startsWith('jobSaveRequest') && last !== 'businessId') {
+            return last;
+        }
+        return 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại form.';
+    }
+
+    return message;
+};
 
 /**
  * Thin API layer — chỉ gọi HTTP, không transform dữ liệu.

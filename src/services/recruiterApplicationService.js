@@ -2,11 +2,12 @@ import {
     acceptApplication,
     fetchJobApplications,
     getRecruiterApplicationApiErrorMessage,
+    isApplicationCancelledError,
     rejectApplication,
 } from '../apis/RecruiterApplicationApi.jsx';
 import { formatRelativeTime } from '../utils/formatters.js';
 
-export { getRecruiterApplicationApiErrorMessage };
+export { getRecruiterApplicationApiErrorMessage, isApplicationCancelledError };
 
 export const APPLICATION_STATUS_FILTERS = [
     { value: 'PENDING', label: 'Chờ duyệt' },

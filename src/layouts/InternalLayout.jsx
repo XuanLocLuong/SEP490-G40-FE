@@ -1,8 +1,8 @@
-import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/common/AppLayout.jsx';
 import InternalSidebar from '../components/common/InternalSidebar.jsx';
 import InternalTopbar from '../components/common/InternalTopbar.jsx';
 import { useAuth } from '../contexts/authContext.js';
+import { useLogoutToLanding } from '../hooks/useLogoutToLanding.js';
 import { USER_ROLES } from '../utils/Constants.jsx';
 import { ROUTES } from '../routes/path.js';
 import {
@@ -67,14 +67,9 @@ const CONFIG_BY_ROLE = {
 };
 
 const InternalLayout = () => {
-    const { auth, logout } = useAuth();
-    const navigate = useNavigate();
+    const { auth } = useAuth();
+    const handleLogout = useLogoutToLanding();
     const config = CONFIG_BY_ROLE[auth?.role];
-
-    const handleLogout = async () => {
-        navigate(ROUTES.LANDING);
-        await logout();
-    };
 
     if (!config) return null;
 

@@ -39,12 +39,15 @@ const UploadTimetable = ({ file, previewUrl, uploading, onFileChange, onUpload }
                     <UploadCloudIcon width={34} height={34} />
                 </div>
                 <h2>Tải lên ảnh Thời khóa biểu của bạn (JPG, PNG)</h2>
-                <p>Hệ thống AI sẽ tự động quét và trích xuất lịch rảnh của bạn trong 3 giây.</p>
+                <p>Chỉ cần tải ảnh thời khóa biểu, AI sẽ đọc lịch bận và đề xuất các khung giờ rảnh - bạn vẫn có thể chỉnh sửa trước khi lưu.</p>
 
                 {previewUrl && (
                     <div className="upload-timetable__preview">
                         <img src={previewUrl} alt="Ảnh thời khóa biểu đã chọn" />
-                        <span>{file?.name}</span>
+                        <span className="upload-timetable__preview-name">{file?.name}</span>
+                        <span className="upload-timetable__preview-hint">
+                            Kiểm tra lại ảnh trước khi quét — tránh chọn nhầm.
+                        </span>
                     </div>
                 )}
 

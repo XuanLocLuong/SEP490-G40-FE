@@ -4,8 +4,10 @@ import { USER_ROLES } from '../utils/Constants.jsx';
 import { ROUTES, getHomePathByRole } from './path.js';
 
 import ProtectedRoute from './ProtectedRoute.jsx';
+import GuestOnlyRoute from './GuestOnlyRoute.jsx';
 
 import GuestLayout from '../layouts/GuestLayout.jsx';
+import JobDiscoveryLayout from '../layouts/JobDiscoveryLayout.jsx';
 import CandidateLayout from '../layouts/CandidateLayout.jsx';
 import RecruiterLayout from '../layouts/RecruiterLayout.jsx';
 import InternalLayout from '../layouts/InternalLayout.jsx';
@@ -27,10 +29,12 @@ import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
 import MyJobsPage from '../pages/recruiter/jobs/MyJobsPage.jsx';
 import ApplicantsPage from '../pages/recruiter/applicants/ApplicantsPage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
+import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
 import CandidatePublicProfilePage from '../pages/shared/CandidatePublicProfilePage.jsx';
+import RoleBasedShellLayout from '../layouts/RoleBasedShellLayout.jsx';
 
 // Cấu trúc route đi theo nhóm role (khớp bảng Screen Authorization trong SRS +
 // đúng 5 role thật của backend). Mỗi nhóm bọc 1 Layout dùng chung qua
@@ -42,8 +46,18 @@ const AppRouter = () => {
     return (
         <Routes>
             {/* ---- Guest / public (có Header + Footer) ---- */}
-            <Route element={<GuestLayout />}>
+            <Route
+                element={
+                    <GuestOnlyRoute>
+                        <GuestLayout />
+                    </GuestOnlyRoute>
+                }
+            >
                 <Route path={ROUTES.LANDING} element={<LandingPage />} />
+            </Route>
+
+            {/* Public job URLs; candidate login dùng Sidebar, guest dùng Header. */}
+            <Route element={<JobDiscoveryLayout />}>
                 <Route path={ROUTES.JOB_LIST} element={<JobListPage />} />
                 <Route path={ROUTES.JOB_DETAIL} element={<JobDetailPage />} />
                 <Route path={ROUTES.BUSINESS_PROFILE} element={<PublicBusinessProfilePage />} />
@@ -54,6 +68,29 @@ const AppRouter = () => {
             <Route path={ROUTES.LOGIN} element={<Login />} />
             <Route path={ROUTES.REGISTER} element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+
+            {/* Hồ sơ public candidate — 1 route dùng chung, layout theo role đang login.
+                Tránh đăng ký trùng path dưới nhiều ProtectedRoute (recruiter bị đá về home). */}
+            <Route
+                element={
+                    <ProtectedRoute
+                        allowedRoles={[
+                            USER_ROLES.CANDIDATE,
+                            USER_ROLES.RECRUITER,
+                            USER_ROLES.POST_MANAGER,
+                            USER_ROLES.MANUAL_CHECK_TEAM,
+                            USER_ROLES.ADMIN,
+                        ]}
+                    >
+                        <RoleBasedShellLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route
+                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
+                    element={<CandidatePublicProfilePage />}
+                />
+            </Route>
 
             {/* ---- Candidate ---- */}
             <Route
@@ -70,10 +107,6 @@ const AppRouter = () => {
                 <Route
                     path={ROUTES.CANDIDATE_APPLICATION_HISTORY}
                     element={<CandidateApplicationHistoryPage />}
-                />
-                <Route
-                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
-                    element={<CandidatePublicProfilePage />}
                 />
             </Route>
 
@@ -92,10 +125,6 @@ const AppRouter = () => {
                 <Route path={ROUTES.RECRUITER_EDIT_JOB} element={<CreateJobPage />} />
                 <Route path={ROUTES.RECRUITER_MY_JOBS} element={<MyJobsPage />} />
                 <Route path={ROUTES.RECRUITER_APPLICANTS} element={<ApplicantsPage />} />
-                <Route
-                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
-                    element={<CandidatePublicProfilePage />}
-                />
             </Route>
 
             {/* ---- Post Manager ---- */}
@@ -107,10 +136,7 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.POST_MANAGER_HOME} element={<PostManagerDashboard />} />
-                <Route
-                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
-                    element={<CandidatePublicProfilePage />}
-                />
+                <Route path={ROUTES.POST_MANAGER_QUEUE} element={<PostManagerReviewQueuePage />} />
             </Route>
 
             {/* ---- Manual Verification Team ---- */}
@@ -122,10 +148,6 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.MANUAL_CHECK_HOME} element={<ManualCheckDashboard />} />
-                <Route
-                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
-                    element={<CandidatePublicProfilePage />}
-                />
             </Route>
 
             {/* ---- Admin ---- */}
@@ -137,10 +159,6 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.ADMIN_HOME} element={<AdminDashboard />} />
-                <Route
-                    path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
-                    element={<CandidatePublicProfilePage />}
-                />
             </Route>
 
             {/* Route không tồn tại -> về trang chủ đúng role (hoặc Landing nếu chưa login) */}
