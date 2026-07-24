@@ -116,6 +116,8 @@
     border-bottom: 1px solid var(--color-border);
     margin-bottom: 18px;
     overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
 }
 
 .ci-tab {

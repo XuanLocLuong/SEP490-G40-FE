@@ -47,11 +47,21 @@ const ProfileMenu = ({ name, roleLabel, onLogout, items = [], extra = null, vari
                             </>
                         );
                         return item.path ? (
-                            <NavLink key={item.label} to={item.path} className="profile-menu__item">
+                            <NavLink
+                                key={item.label}
+                                to={item.path}
+                                className="profile-menu__item"
+                                onClick={() => setOpen(false)}
+                            >
                                 {content}
                             </NavLink>
                         ) : (
-                            <a key={item.label} href={item.href || '#'} className="profile-menu__item">
+                            <a
+                                key={item.label}
+                                href={item.href || '#'}
+                                className="profile-menu__item"
+                                onClick={() => setOpen(false)}
+                            >
                                 {content}
                             </a>
                         );
