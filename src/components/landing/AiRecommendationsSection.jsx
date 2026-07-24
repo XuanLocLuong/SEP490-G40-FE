@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import JobCard from '../job/JobCard.jsx';
 import { SparklesIcon } from '../common/icons.jsx';
 import { fetchRecommendedJobs } from '../../apis/RecommendationApi.jsx';
-import { mapRecommendationToJob } from '../../utils/formatters.js';
 import { ROUTES } from '../../routes/path.js';
+import { mapRecommendationToJob } from '../../utils/formatters.js';
+import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
 import AiRecommendationsEmptyState from './AiRecommendationsEmptyState.jsx';
 import AiRecommendationsProfileHint from './AiRecommendationsProfileHint.jsx';
 
@@ -43,11 +44,14 @@ const AiRecommendationsSection = () => {
     }, []);
 
     return (
-        <section className="landing-section landing-jobs candidate-home-section">
+        <section
+            id={HOME_SECTION_IDS.SUGGESTIONS}
+            className="landing-section landing-jobs candidate-home-section"
+        >
             <div className="landing-section__header">
                 <h2 className="landing-section__title candidate-home-section__title">
                     <SparklesIcon width={22} height={22} aria-hidden="true" />
-                    AI gợi ý cho bạn
+                    JobLink gợi ý cho bạn
                 </h2>
                 <div className="landing-section__header-actions">
                     <Link to={ROUTES.CANDIDATE_AI_SUGGESTIONS} className="landing-section__link">

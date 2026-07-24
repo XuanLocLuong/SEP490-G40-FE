@@ -36,8 +36,14 @@ const LocationCombobox = ({
     useEffect(() => {
         if (!open) {
             setInputValue(selected?.ten ?? '');
+            return;
         }
-    }, [selected, open]);
+        // Keep text in sync when parent clears value while the list is open
+        // (e.g. clear × then field wrapper re-focuses the input).
+        if (!value) {
+            setInputValue('');
+        }
+    }, [selected, open, value]);
 
     const suggestions = useMemo(() => {
         const query = inputValue.trim();
@@ -66,7 +72,7 @@ const LocationCombobox = ({
         clearTimeout(blurTimer.current);
         if (disabled) return;
         setOpen(true);
-        setInputValue(selected?.ten ?? '');
+        setInputValue(value ? selected?.ten ?? '' : '');
     };
 
     const handleChange = (e) => {
@@ -175,8 +181,15 @@ const LocationCombobox = ({
                     className="location-combobox__clear"
                     aria-label="Xóa lựa chọn"
                     tabIndex={-1}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => selectOption(null)}
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectOption(null);
+                    }}
                 >
                     ×
                 </button>

@@ -239,12 +239,18 @@ const JobSearchForm = ({
     const handleProvinceChange = (nextProvinceId) => {
         setProvinceId(nextProvinceId);
         setWardId('');
-        if (nearMe) setCoords(null);
+        if (nearMe) {
+            setNearMe(false);
+            setCoords(null);
+        }
     };
 
     const handleWardChange = (nextWardId) => {
         setWardId(nextWardId);
-        if (nearMe) setCoords(null);
+        if (nearMe) {
+            setNearMe(false);
+            setCoords(null);
+        }
     };
 
     const toggleSkill = (id) => {
@@ -326,15 +332,28 @@ const JobSearchForm = ({
     return (
         <form className={`job-search-form ${className}`.trim()} onSubmit={handleSubmit}>
             <div className="job-search-form__panel">
-                <label className="job-search-form__keyword">
-                    <SearchIcon width={20} height={20} />
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo tên công việc, công ty..."
-                        value={keyword}
-                        onChange={(e) => setKeyword(e.target.value)}
-                    />
-                </label>
+                <div className="job-search-form__keyword-row">
+                    <div className="job-search-form__keyword">
+                        <SearchIcon width={20} height={20} aria-hidden="true" />
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm theo tên công việc, công ty..."
+                            value={keyword}
+                            onChange={(e) => setKeyword(e.target.value)}
+                            aria-label="Từ khóa tìm kiếm"
+                        />
+                    </div>
+                    <label className="job-search-form__near-me">
+                        <input
+                            type="checkbox"
+                            checked={nearMe}
+                            onChange={(e) => handleNearMeToggle(e.target.checked)}
+                            disabled={locating}
+                        />
+                        <MapPinIcon width={18} height={18} aria-hidden="true" />
+                        <span>{nearMeLabel}</span>
+                    </label>
+                </div>
 
                 <div className="job-search-form__filter-row">
                     <div className="job-search-form__locations">
@@ -366,17 +385,6 @@ const JobSearchForm = ({
                     >
                         {advancedOpen ? 'Ẩn bộ lọc' : 'Thêm bộ lọc'}
                     </button>
-
-                    <label className="job-search-form__near-me">
-                        <input
-                            type="checkbox"
-                            checked={nearMe}
-                            onChange={(e) => handleNearMeToggle(e.target.checked)}
-                            disabled={locating}
-                        />
-                        <MapPinIcon width={18} height={18} />
-                        <span>{nearMeLabel}</span>
-                    </label>
                 </div>
 
                 {advancedOpen && (
