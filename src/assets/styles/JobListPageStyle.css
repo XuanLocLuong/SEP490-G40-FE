@@ -10,6 +10,19 @@
     margin-bottom: 24px;
 }
 
+.job-list-page__back {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.job-list-page__back:hover {
+    text-decoration: underline;
+}
+
 .job-list-page__title {
     margin: 0;
     font-size: clamp(24px, 3vw, 32px);

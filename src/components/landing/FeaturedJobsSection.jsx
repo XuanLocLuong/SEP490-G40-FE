@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import JobCard from '../job/JobCard.jsx';
+import { StarIcon } from '../common/icons.jsx';
 import { ROUTES } from '../../routes/path.js';
 import { fetchJobListPage, LANDING_PREVIEW_SIZE } from '../../utils/jobQuery.js';
+import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
 
 const FeaturedJobsSection = ({ size = LANDING_PREVIEW_SIZE, compact = false }) => {
     const [jobs, setJobs] = useState([]);
@@ -47,9 +49,12 @@ const FeaturedJobsSection = ({ size = LANDING_PREVIEW_SIZE, compact = false }) =
         .join(' ');
 
     return (
-        <section className="landing-section landing-jobs">
+        <section id={HOME_SECTION_IDS.FEATURED} className="landing-section landing-jobs">
             <div className="landing-section__header">
-                <h2 className="landing-section__title">Việc làm nổi bật</h2>
+                <h2 className="landing-section__title candidate-home-section__title">
+                    <StarIcon width={22} height={22} aria-hidden="true" />
+                    Việc làm nổi bật
+                </h2>
                 <div className="landing-section__header-actions">
                     <Link to={ROUTES.JOB_LIST} className="landing-section__link">
                         Xem tất cả →

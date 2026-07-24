@@ -109,6 +109,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 48px 32px;
+    scroll-margin-top: 96px;
 }
 
 .landing-section__header {

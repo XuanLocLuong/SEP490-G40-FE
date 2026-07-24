@@ -21,7 +21,7 @@ export const JOB_LIST_SECTION_META = {
         error: 'Không thể tải việc làm tuyển gấp.',
     },
     [JOB_LIST_SECTIONS.AI]: {
-        title: 'AI gợi ý cho bạn',
+        title: 'JobLink gợi ý cho bạn',
         subtitle: 'Việc làm được gợi ý theo hồ sơ và lịch rảnh',
         empty: 'Chưa có gợi ý phù hợp. Hãy cập nhật hồ sơ, kỹ năng và lịch rảnh.',
         error: 'Không thể tải gợi ý việc làm.',

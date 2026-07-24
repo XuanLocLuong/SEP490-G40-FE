@@ -29,6 +29,7 @@ const LocationSearchSelects = ({
                 <div
                     className={`${fieldClassName} ${fieldClassName}--province`}
                     onClick={(e) => {
+                        if (e.target.closest('.location-combobox__clear')) return;
                         e.currentTarget.querySelector('.location-combobox__input')?.focus();
                     }}
                 >
@@ -50,6 +51,7 @@ const LocationSearchSelects = ({
                 <div
                     className={`${fieldClassName} ${fieldClassName}--ward`}
                     onClick={(e) => {
+                        if (e.target.closest('.location-combobox__clear')) return;
                         e.currentTarget.querySelector('.location-combobox__input')?.focus();
                     }}
                 >

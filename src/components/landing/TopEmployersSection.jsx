@@ -1,4 +1,5 @@
-import { CheckCircleIcon } from '../common/icons.jsx';
+import { BuildingIcon, CheckCircleIcon } from '../common/icons.jsx';
+import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
 
 // TODO: wire API when backend ready
 const MOCK_EMPLOYERS = [
@@ -60,10 +61,13 @@ const TopEmployersSection = ({ compact = false }) => {
         .join(' ');
 
     return (
-        <section className="landing-section landing-employers">
+        <section id={HOME_SECTION_IDS.TOP_EMPLOYERS} className="landing-section landing-employers">
             <div className="landing-section__header">
                 <div>
-                    <h2 className="landing-section__title">Top 10 Nhà Tuyển Dụng Uy Tín</h2>
+                    <h2 className="landing-section__title candidate-home-section__title">
+                        <BuildingIcon width={22} height={22} aria-hidden="true" />
+                        Top 10 Nhà Tuyển Dụng Uy Tín
+                    </h2>
                     <p className="landing-section__desc">
                         Đánh giá dựa trên Trust Score — chỉ số uy tín từ phản hồi ứng viên và lịch sử tuyển dụng.
                     </p>
