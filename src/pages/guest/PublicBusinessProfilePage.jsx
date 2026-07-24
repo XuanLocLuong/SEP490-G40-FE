@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import JobCard from '../../components/job/JobCard.jsx';
 import RichTextContent from '../../components/common/RichTextContent.jsx';
+import ReadonlyMapPreview from '../../components/recruiter/ReadonlyMapPreview.jsx';
 import {
     CheckCircleIcon,
     GlobeIcon,
@@ -162,6 +163,10 @@ const PublicBusinessProfilePage = () => {
 
     const memberSinceLabel = formatMemberSince(profile?.memberSince);
     const hasMoreJobs = jobsPage + 1 < jobsTotalPages;
+    const primaryLocation = profile?.locations?.[0] ?? null;
+    const primaryMapsUrl = buildMapsUrl(primaryLocation);
+    const primaryLocationLabel = primaryLocation ? formatLocation(primaryLocation) : '';
+    const primaryAddressLine = primaryLocation?.address?.trim() || '';
 
     if (profileLoading) {
         return (
@@ -297,48 +302,6 @@ const PublicBusinessProfilePage = () => {
                             <h2 className="public-business__section-title">Mô tả chung</h2>
 
                             <div className="public-business__info-list">
-                                {profile.locations.length === 0 && (
-                                    <p className="public-business__jobs-empty">
-                                        Chưa cập nhật địa chỉ.
-                                    </p>
-                                )}
-                                {profile.locations.map((location) => {
-                                    const mapsUrl = buildMapsUrl(location);
-                                    const wardProvince = formatLocation(location);
-                                    const addressLine = location.address?.trim() || '';
-
-                                    return (
-                                        <div
-                                            key={location.id ?? `${location.address}-${location.city}`}
-                                            className="public-business__info-card"
-                                        >
-                                            {location.name && (
-                                                <strong className="public-business__info-card-label">
-                                                    {location.name}
-                                                </strong>
-                                            )}
-                                            <p className="public-business__info-card-primary">
-                                                {wardProvince}
-                                            </p>
-                                            {addressLine && addressLine !== wardProvince && (
-                                                <p className="public-business__info-card-secondary">
-                                                    {addressLine}
-                                                </p>
-                                            )}
-                                            {mapsUrl && (
-                                                <a
-                                                    href={mapsUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="public-business__location-link"
-                                                >
-                                                    Xem trên Google Maps
-                                                </a>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-
                                 <div className="public-business__info-card public-business__description">
                                     <RichTextContent
                                         content={profile.description}
@@ -409,45 +372,102 @@ const PublicBusinessProfilePage = () => {
                 </main>
 
                 <aside className="public-business__sidebar">
-                    <h2 className="public-business__section-title">Thông tin liên hệ</h2>
-                    <ul className="public-business__contact-list">
-                        {profile.businessType && (
-                            <li className="public-business__contact-item">
-                                <MapPinIcon width={18} height={18} />
-                                <span>{profile.businessType}</span>
-                            </li>
+                    <section className="public-business__sidebar-card">
+                        <h2 className="public-business__section-title">Thông tin liên hệ</h2>
+                        <ul className="public-business__contact-list">
+                            {profile.phone && (
+                                <li className="public-business__contact-item">
+                                    <PhoneIcon width={18} height={18} />
+                                    <a href={`tel:${profile.phone}`}>{profile.phone}</a>
+                                </li>
+                            )}
+                            {profile.email && (
+                                <li className="public-business__contact-item">
+                                    <MailIcon width={18} height={18} />
+                                    <a href={`mailto:${profile.email}`} title={profile.email}>
+                                        {profile.email}
+                                    </a>
+                                </li>
+                            )}
+                            {profile.websiteUrl && (
+                                <li className="public-business__contact-item">
+                                    <GlobeIcon width={18} height={18} />
+                                    <a
+                                        href={profile.websiteUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title={profile.websiteUrl}
+                                    >
+                                        {profile.websiteUrl.replace(/^https?:\/\//, '')}
+                                    </a>
+                                </li>
+                            )}
+                        </ul>
+                        {memberSinceLabel && (
+                            <p className="public-business__member-since">{memberSinceLabel}</p>
                         )}
-                        {profile.phone && (
-                            <li className="public-business__contact-item">
-                                <PhoneIcon width={18} height={18} />
-                                <a href={`tel:${profile.phone}`}>{profile.phone}</a>
-                            </li>
+                    </section>
+
+                    <section className="public-business__sidebar-card public-business__location-card">
+                        <h2 className="public-business__section-title">Địa chỉ</h2>
+                        {!primaryLocation ? (
+                            <p className="public-business__location-empty">
+                                Chưa cập nhật địa chỉ.
+                            </p>
+                        ) : (
+                            <>
+                                {primaryLocation.name && (
+                                    <strong className="public-business__info-card-label">
+                                        {primaryLocation.name}
+                                    </strong>
+                                )}
+                                {primaryAddressLine && (
+                                    <p className="public-business__info-card-primary">
+                                        {primaryAddressLine}
+                                    </p>
+                                )}
+                                {primaryLocationLabel &&
+                                    primaryLocationLabel !== primaryAddressLine && (
+                                        <p className="public-business__info-card-secondary">
+                                            {primaryLocationLabel}
+                                        </p>
+                                    )}
+
+                                {primaryMapsUrl &&
+                                    primaryLocation.latitude != null &&
+                                    primaryLocation.longitude != null && (
+                                        <div className="public-business__map-shell">
+                                            <ReadonlyMapPreview
+                                                latitude={primaryLocation.latitude}
+                                                longitude={primaryLocation.longitude}
+                                                className="public-business__map-preview"
+                                            />
+                                            <a
+                                                href={primaryMapsUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="public-business__map-hitbox"
+                                                aria-label="Mở vị trí doanh nghiệp trên Google Maps"
+                                            />
+                                        </div>
+                                    )}
+
+                                {primaryMapsUrl &&
+                                    (primaryLocation.latitude == null ||
+                                        primaryLocation.longitude == null) && (
+                                        <a
+                                            href={primaryMapsUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="public-business__map-placeholder"
+                                            aria-label="Mở vị trí doanh nghiệp trên Google Maps"
+                                        >
+                                            <MapPinIcon width={30} height={30} />
+                                        </a>
+                                    )}
+                            </>
                         )}
-                        {profile.email && (
-                            <li className="public-business__contact-item">
-                                <MailIcon width={18} height={18} />
-                                <a href={`mailto:${profile.email}`} title={profile.email}>
-                                    {profile.email}
-                                </a>
-                            </li>
-                        )}
-                        {profile.websiteUrl && (
-                            <li className="public-business__contact-item">
-                                <GlobeIcon width={18} height={18} />
-                                <a
-                                    href={profile.websiteUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    title={profile.websiteUrl}
-                                >
-                                    {profile.websiteUrl.replace(/^https?:\/\//, '')}
-                                </a>
-                            </li>
-                        )}
-                    </ul>
-                    {memberSinceLabel && (
-                        <p className="public-business__member-since">{memberSinceLabel}</p>
-                    )}
+                    </section>
                 </aside>
             </div>
         </div>

@@ -9,16 +9,10 @@ import {
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import { formatSalaryRange } from '../../../utils/formatters.js';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
+import RecruiterJobDetailModal from '../../../components/recruiter/jobs/RecruiterJobDetailModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
 import '../../../assets/styles/JobPostStyle.css';
 import '../../../assets/styles/MyJobsStyle.css';
-
-const MOCK_METRICS = {
-    viewCount: 245,
-    applicationCount: 12,
-    hiredCount: 3,
-    requiredCandidates: 5,
-};
 
 const STATUS_TABS = [
     { id: 'all', label: 'Tất cả', dotClass: '' },
@@ -61,15 +55,16 @@ const matchesTab = (job, tabId) => {
 };
 
 const getJobMetrics = (job) => {
-    const beReady = job.hiredCount != null || job.requiredCandidates != null;
-    if (job.status === 'OPEN' && !beReady) {
-        return { ...MOCK_METRICS };
-    }
+    const requiredCandidates = Number(job.requiredCandidates);
+
     return {
-        viewCount: Number(job.viewCount) || 0,
-        applicationCount: Number(job.applicationCount) || 0,
-        hiredCount: Number(job.hiredCount) || 0,
-        requiredCandidates: Number(job.requiredCandidates) || 1,
+        viewCount: Math.max(0, Number(job.viewCount) || 0),
+        applicationCount: Math.max(0, Number(job.applicationCount) || 0),
+        hiredCount: Math.max(0, Number(job.hiredCount) || 0),
+        requiredCandidates:
+            Number.isFinite(requiredCandidates) && requiredCandidates > 0
+                ? requiredCandidates
+                : 1,
     };
 };
 
@@ -121,6 +116,7 @@ const MyJobsPage = () => {
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [reviewNoteJob, setReviewNoteJob] = useState(null);
+    const [detailJobId, setDetailJobId] = useState(null);
 
     const loadJobs = useCallback(async () => {
         setLoading(true);
@@ -230,6 +226,13 @@ const MyJobsPage = () => {
         const isActionLoading = Boolean(actionLoadingId);
         return (
             <>
+                <button
+                    type="button"
+                    className="my-jobs-page__action my-jobs-page__action--edit"
+                    onClick={() => setDetailJobId(job.id)}
+                >
+                    Xem chi tiết
+                </button>
                 {job.status === 'OPEN' && (
                     <Link
                         to={getRecruiterApplicantsPath(job.id)}
@@ -365,18 +368,21 @@ const MyJobsPage = () => {
     };
 
     const renderDefaultCard = (job) => {
+        const reviewNote = String(job.reviewNote || '').trim();
         const noticeByStatus = {
             PENDING_REVIEW: {
                 className: 'my-jobs-page__notice--pending',
-                text: 'Post Manager đang xem xét tin — dự kiến phản hồi trong 24 giờ.',
+                text: 'Kiểm duyệt viên đang xem xét tin — dự kiến phản hồi trong 24 giờ.',
             },
             REJECTED: {
                 className: 'my-jobs-page__notice--rejected',
-                text: 'Tin bị từ chối. Vui lòng chỉnh sửa nội dung và gửi lại.',
+                text: reviewNote || 'Tin bị từ chối. Vui lòng chỉnh sửa nội dung và gửi lại.',
             },
             REVISION_REQUESTED: {
                 className: 'my-jobs-page__notice--rejected',
-                text: 'Post Manager yêu cầu chỉnh sửa nội dung trước khi duyệt.',
+                text:
+                    reviewNote ||
+                    'Kiểm duyệt viên yêu cầu chỉnh sửa nội dung trước khi duyệt.',
             },
         };
         const notice = noticeByStatus[job.status];
@@ -468,6 +474,13 @@ const MyJobsPage = () => {
             >
                 {renderConfirmBody()}
             </ConfirmModal>
+
+            <RecruiterJobDetailModal
+                key={detailJobId ?? 'closed'}
+                open={detailJobId != null}
+                jobId={detailJobId}
+                onClose={() => setDetailJobId(null)}
+            />
 
             <ConfirmModal
                 open={Boolean(reviewNoteJob)}

@@ -272,7 +272,7 @@ export const validateJobForm = (form, action) => {
 };
 
 /** Map form đăng tin → shape JobDetailDTO cho JobDetailPanel preview */
-export const toPreviewJobDetail = (form, businessName, businessLocation) => {
+export const toPreviewJobDetail = (form, businessName, businessLocation, logoUrl = null) => {
     const requiredCandidates = parseNumber(form.requiredCandidates) ?? 1;
     const applicationDeadline = form.applicationDeadline
         ? new Date(form.applicationDeadline).toISOString()
@@ -313,6 +313,7 @@ export const toPreviewJobDetail = (form, businessName, businessLocation) => {
             : null,
         business: {
             name: businessName?.trim() || 'Doanh nghiệp của bạn',
+            logoUrl: logoUrl || null,
         },
         shifts: expandShiftBlocks(form.shiftBlocks),
         requiredSkills,
@@ -320,8 +321,8 @@ export const toPreviewJobDetail = (form, businessName, businessLocation) => {
 };
 
 /** Map form → shape list card (Landing JobCard) */
-export const toPreviewJob = (form, businessName, businessLocation) => {
-    const detail = toPreviewJobDetail(form, businessName, businessLocation);
+export const toPreviewJob = (form, businessName, businessLocation, logoUrl = null) => {
+    const detail = toPreviewJobDetail(form, businessName, businessLocation, logoUrl);
     return {
         id: detail.id,
         title: detail.title,
@@ -332,6 +333,7 @@ export const toPreviewJob = (form, businessName, businessLocation) => {
         createdAt: detail.createdAt,
         location: detail.location,
         business: detail.business,
+        shifts: detail.shifts,
     };
 };
 

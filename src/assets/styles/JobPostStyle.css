@@ -375,10 +375,12 @@
     font-weight: 600;
 }
 
-/* Preview sidebar (đăng tin) */
+/* Preview sidebar (đăng tin) — sticky dưới site-header */
 .job-preview-panel {
     position: sticky;
-    top: 20px;
+    top: calc(72px + 16px);
+    max-height: calc(100vh - 72px - 32px);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -395,50 +397,10 @@
     min-width: 0;
 }
 
-.job-preview-panel__detail {
-    min-width: 0;
-}
-
-.job-preview-panel__detail .job-detail-panel--sections-only {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    box-shadow: var(--shadow-card);
-}
-
-.job-preview-panel__detail .job-detail-panel__section:first-child {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-}
-
-.job-preview-panel__detail .job-detail-panel__section-title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    line-height: 1.35;
-}
-
-.job-preview-panel__detail .job-detail-panel__description.rich-text-body {
-    font-size: 0.875rem;
-    line-height: 1.65;
-}
-
-.job-preview-panel__detail .job-detail-panel__description.rich-text-body h2 {
-    font-size: 1rem;
-    font-weight: 700;
-}
-
-.job-preview-panel__detail .job-detail-panel__description.rich-text-body h3 {
-    font-size: 0.9375rem;
-    font-weight: 600;
-}
-
-.job-preview-panel__detail .job-detail-panel__sections-empty {
-    margin: 0;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    color: var(--color-text-muted, #64748b);
+/* Hiện đủ JobCard list (kể cả action) nhưng không cho click */
+.job-preview-panel__block--readonly {
+    pointer-events: none;
+    user-select: none;
 }
 
 .job-status-badge {

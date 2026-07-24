@@ -193,6 +193,7 @@ const CreateJobPage = () => {
                     form={form}
                     businessLocation={businessLocation}
                     businessName={guardData.profile?.businessName}
+                    logoUrl={guardData.profile?.logoUrl}
                 />
             </div>
 

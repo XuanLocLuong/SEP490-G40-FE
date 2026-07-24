@@ -75,7 +75,11 @@ const JobCard = ({
                         <p className="job-card__company">{businessName}</p>
                     </div>
                 </div>
-                {!isPreview && (
+                {isPreview ? (
+                    <span className="job-card__bookmark" aria-hidden="true">
+                        <BookmarkIcon width={20} height={20} />
+                    </span>
+                ) : (
                     <JobBookmarkButton
                         jobId={job.id}
                         className="job-card__bookmark"
@@ -153,13 +157,20 @@ const JobCard = ({
                     {(isPreview || job.createdAt) && (
                         <span className="job-card__posted">
                             <ClockIcon width={14} height={14} />
-                            {isPreview ? 'Xem trước' : formatRelativeTime(job.createdAt)}
+                            {isPreview ? 'Vừa đăng' : formatRelativeTime(job.createdAt)}
                         </span>
                     )}
                 </div>
             </div>
 
-            {!isPreview && (
+            {isPreview ? (
+                <div className="job-card__actions">
+                    <span className="job-card__detail-link">Xem chi tiết</span>
+                    <button type="button" className="btn btn--primary job-card__apply" tabIndex={-1}>
+                        Ứng tuyển ngay
+                    </button>
+                </div>
+            ) : (
                 <div className="job-card__actions">
                     <JobDetailLink jobId={job.id} className="job-card__detail-link" />
                     {applied ? (
