@@ -13,9 +13,10 @@ import {
     validateJobForm,
     validateJobFormField,
 } from '../../../services/jobPostService.js';
-import { EDITABLE_JOB_STATUSES, JOB_POST_ACTION } from '../../../constants/jobPost.js';
+import { EDITABLE_JOB_STATUSES, JOB_POST_ACTION, JOB_STATUS_LABELS } from '../../../constants/jobPost.js';
 import JobPostForm from '../../../components/recruiter/jobs/JobPostForm.jsx';
 import JobPreviewPanel from '../../../components/recruiter/jobs/JobPreviewPanel.jsx';
+import AiJobDescModal from '../../../components/recruiter/jobs/AiJobDescModal.jsx';
 import '../../../assets/styles/JobPostStyle.css';
 
 /**
@@ -35,6 +36,7 @@ const CreateJobPage = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [jobStatus, setJobStatus] = useState(null);
+    const [aiDescOpen, setAiDescOpen] = useState(false);
 
     const loadPage = useCallback(async () => {
         setLoading(true);
@@ -103,9 +105,8 @@ const CreateJobPage = () => {
 
             const next = { ...prev };
             activeKeys.forEach((key) => {
-                const field = key === 'salaryMax' ? 'salaryMax' : key;
-                const message = validateJobFormField(field, nextForm);
-                const errorKey = getJobFormErrorKey(field);
+                const message = validateJobFormField(key, nextForm);
+                const errorKey = getJobFormErrorKey(key);
                 if (message) next[errorKey] = message;
                 else delete next[errorKey];
             });
@@ -122,7 +123,7 @@ const CreateJobPage = () => {
             return;
         }
 
-        const payload = buildSavePayload(form, action);
+        const payload = buildSavePayload(form, action, guardData?.businessId);
         setSaving(true);
 
         try {
@@ -168,7 +169,8 @@ const CreateJobPage = () => {
                     <h1>{isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng tin tuyển dụng'}</h1>
                     {isEdit && jobStatus && (
                         <p className="job-post-page__subtitle">
-                            Trạng thái hiện tại: <strong>{jobStatus}</strong>
+                            Trạng thái hiện tại:{' '}
+                            <strong>{JOB_STATUS_LABELS[jobStatus] || jobStatus}</strong>
                         </p>
                     )}
                 </div>
@@ -182,6 +184,7 @@ const CreateJobPage = () => {
                     disabled={saving}
                     onChange={handleFormChange}
                     onFieldBlur={handleFieldBlur}
+                    onOpenAiDesc={() => setAiDescOpen(true)}
                 />
                 <JobPreviewPanel
                     form={form}
@@ -189,6 +192,19 @@ const CreateJobPage = () => {
                     businessName={guardData.profile?.businessName}
                 />
             </div>
+
+            <AiJobDescModal
+                open={aiDescOpen}
+                jobTitle={form.title}
+                jobType={form.jobType}
+                businessName={guardData.profile?.businessName}
+                businessType={guardData.profile?.businessType}
+                onClose={() => setAiDescOpen(false)}
+                onApply={(html) => {
+                    setForm((prev) => ({ ...prev, description: html }));
+                    toast.success('Đã chèn mô tả do AI gợi ý.');
+                }}
+            />
 
             <footer className="job-post-page__footer">
                 <div className="job-post-page__actions">

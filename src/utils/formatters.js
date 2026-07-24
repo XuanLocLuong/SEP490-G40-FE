@@ -38,6 +38,34 @@ export const formatSalary = (salaryMin, salaryMax) => {
     return 'Thỏa thuận';
 };
 
+/** Định dạng tiền Việt — dưới 1tr: ₫/giờ, từ 1tr: triệu ₫/tháng */
+export const formatVndSalary = (value) => {
+    if (value == null || value === '') return null;
+    const n = Number(value);
+    if (!Number.isFinite(n)) return null;
+
+    if (n >= 1_000_000) {
+        const millions = n / 1_000_000;
+        const text =
+            millions % 1 === 0
+                ? millions.toLocaleString('vi-VN')
+                : millions.toLocaleString('vi-VN', { maximumFractionDigits: 1 });
+        return `${text} triệu ₫/tháng`;
+    }
+
+    return `${n.toLocaleString('vi-VN')} ₫/giờ`;
+};
+
+/** Khoảng lương đầy đủ (My Jobs, v.v.) */
+export const formatSalaryRange = (min, max) => {
+    const a = formatVndSalary(min);
+    const b = formatVndSalary(max);
+    if (a && b) return `${a} – ${b}`;
+    if (a) return `Từ ${a}`;
+    if (b) return `Đến ${b}`;
+    return 'Thỏa thuận';
+};
+
 export const formatLocation = (location) => {
     if (!location) return '—';
     const parts = [location.ward || location.district, location.city].filter(Boolean);

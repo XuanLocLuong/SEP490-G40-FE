@@ -167,10 +167,11 @@ const parseNumber = (value) => {
 };
 
 /** Form UI -> JobSaveRequest payload */
-export const buildSavePayload = (form, action) => {
+export const buildSavePayload = (form, action, businessId) => {
     const jobShifts = expandShiftBlocks(form.shiftBlocks);
 
     return {
+        businessId: Number(businessId ?? form.businessId),
         title: form.title.trim(),
         description: form.description?.trim() || null,
         jobType: form.jobType,
@@ -336,33 +337,4 @@ export const formatLocationDisplay = (loc) => {
     if (!loc) return '—';
     const parts = [loc.name, loc.address, loc.ward, loc.city].filter(Boolean);
     return parts.join(', ') || `Địa điểm #${loc.id}`;
-};
-
-export const formatSalaryRange = (min, max) => {
-    const fmt = (v) => formatVndSalary(v);
-
-    const a = fmt(min);
-    const b = fmt(max);
-    if (a && b) return `${a} – ${b}`;
-    if (a) return `Từ ${a}`;
-    if (b) return `Đến ${b}`;
-    return 'Thỏa thuận';
-};
-
-/** Định dạng tiền Việt — dưới 1tr: ₫/giờ, từ 1tr: triệu ₫/tháng */
-export const formatVndSalary = (value) => {
-    if (value == null || value === '') return null;
-    const n = Number(value);
-    if (!Number.isFinite(n)) return null;
-
-    if (n >= 1_000_000) {
-        const millions = n / 1_000_000;
-        const text =
-            millions % 1 === 0
-                ? millions.toLocaleString('vi-VN')
-                : millions.toLocaleString('vi-VN', { maximumFractionDigits: 1 });
-        return `${text} triệu ₫/tháng`;
-    }
-
-    return `${n.toLocaleString('vi-VN')} ₫/giờ`;
 };

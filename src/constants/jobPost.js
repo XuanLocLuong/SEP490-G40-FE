@@ -26,6 +26,27 @@ export const DAY_OF_WEEK_OPTIONS = [
     { value: '8', label: 'CN' },
 ];
 
+export const ALL_DAY_VALUES = DAY_OF_WEEK_OPTIONS.map((d) => d.value);
+
+/** Preset chọn nhanh ngày trong JobShiftFields */
+export const DAY_PRESETS = [
+    { id: 'weekday', label: 'T2–T6', days: ['2', '3', '4', '5', '6'] },
+    { id: 'weekend', label: 'T7–CN', days: ['7', '8'] },
+    { id: 'all', label: 'Cả tuần', days: ALL_DAY_VALUES },
+];
+
+/** Ngành nghề — gửi kèm AI generate-questions (optional) */
+export const INDUSTRY_OPTIONS = [
+    { value: '', label: '— Chọn ngành nghề —' },
+    { value: 'F&B / Nhà hàng', label: 'F&B / Nhà hàng' },
+    { value: 'Cà phê / Trà sữa', label: 'Cà phê / Trà sữa' },
+    { value: 'Bán lẻ', label: 'Bán lẻ' },
+    { value: 'Siêu thị / Cửa hàng tiện lợi', label: 'Siêu thị / Cửa hàng tiện lợi' },
+    { value: 'Kho / Giao nhận', label: 'Kho / Giao nhận' },
+    { value: 'Văn phòng / Hành chính', label: 'Văn phòng / Hành chính' },
+    { value: 'Khác', label: 'Khác' },
+];
+
 export const SKILLS_CATALOG = [
     { id: 1, name: 'Pha chế' },
     { id: 2, name: 'Thu ngân' },

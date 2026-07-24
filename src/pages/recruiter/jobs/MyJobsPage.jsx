@@ -7,7 +7,7 @@ import {
     getRecruiterEditJobPath,
 } from '../../../routes/path.js';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
-import { formatSalaryRange } from '../../../services/jobPostService.js';
+import { formatSalaryRange } from '../../../utils/formatters.js';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
 import '../../../assets/styles/JobPostStyle.css';
