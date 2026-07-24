@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { fetchJobDetail } from '../../apis/JobApi.jsx';
 import JobListSearch from '../../components/joblist/JobListSearch.jsx';
 import JobCompactCard from '../../components/jobdetail/JobCompactCard.jsx';
 import JobDetailPanel from '../../components/jobdetail/JobDetailPanel.jsx';
 import BookmarkLoginRedirect from '../../components/job/BookmarkLoginRedirect.jsx';
-import { ROUTES } from '../../routes/path.js';
 import { useAuth } from '../../contexts/authContext.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import {
@@ -17,6 +16,7 @@ import {
     buildJobListSearchParams,
     parseJobListSearchParams,
 } from '../../utils/jobQuery.js';
+import { resolveJobDetailBack } from '../../utils/jobNavReturn.js';
 import '../../assets/styles/JobDetailPageStyle.css';
 
 const mergeJobPages = (existing, incoming) => {
@@ -33,6 +33,7 @@ const mergeJobPages = (existing, incoming) => {
 
 const JobDetailPage = () => {
     const { jobId } = useParams();
+    const location = useLocation();
     const { auth } = useAuth();
     const isCandidate = auth?.role === USER_ROLES.CANDIDATE;
     const [searchParams, setSearchParams] = useSearchParams();
@@ -54,6 +55,13 @@ const JobDetailPage = () => {
     const detailColRef = useRef(null);
     const activeQueryRef = useRef(null);
 
+    const [detailBack] = useState(() =>
+        resolveJobDetailBack({
+            fromPath: location.state?.from,
+            role: auth?.role,
+        })
+    );
+
     const urlQuery = useMemo(() => {
         const parsed = parseJobListSearchParams(searchParams);
         return applyCandidateScheduleAccess(parsed, isCandidate);
@@ -62,11 +70,6 @@ const JobDetailPage = () => {
     const selectedJobId = Number(jobId);
 
     const hasMore = listPage + 1 < totalPages;
-
-    const listBackUrl = useMemo(
-        () => (searchSuffix ? `${ROUTES.JOB_LIST}${searchSuffix}` : ROUTES.JOB_LIST),
-        [searchSuffix]
-    );
 
     const applyListPage = useCallback((pageData, query, append) => {
         setJobs((prev) => (append ? mergeJobPages(prev, pageData.content) : pageData.content));
@@ -221,8 +224,8 @@ const JobDetailPage = () => {
             <BookmarkLoginRedirect />
 
             <div className="job-detail-page__toolbar">
-                <Link to={listBackUrl} className="job-detail-page__back">
-                    ← Danh sách việc làm
+                <Link to={detailBack.path} className="job-detail-page__back">
+                    ← {detailBack.label}
                 </Link>
             </div>
 

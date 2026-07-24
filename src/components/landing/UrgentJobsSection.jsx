@@ -4,6 +4,7 @@ import JobCard from '../job/JobCard.jsx';
 import { TrendingIcon } from '../common/icons.jsx';
 import { fetchUrgentJobs } from '../../apis/JobApi.jsx';
 import { ROUTES } from '../../routes/path.js';
+import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
 
 const PREVIEW_SIZE = 4;
 
@@ -39,7 +40,10 @@ const UrgentJobsSection = () => {
     }, []);
 
     return (
-        <section className="landing-section landing-jobs candidate-home-section">
+        <section
+            id={HOME_SECTION_IDS.URGENT}
+            className="landing-section landing-jobs candidate-home-section"
+        >
             <div className="landing-section__header">
                 <h2 className="landing-section__title candidate-home-section__title">
                     <TrendingIcon width={22} height={22} aria-hidden="true" />
