@@ -3,14 +3,16 @@ import { Link } from 'react-router-dom';
 import JobCard from '../job/JobCard.jsx';
 import { StarIcon } from '../common/icons.jsx';
 import { ROUTES } from '../../routes/path.js';
-import { fetchJobListPage, LANDING_PREVIEW_SIZE } from '../../utils/jobQuery.js';
+import { fetchJobListPage } from '../../utils/jobQuery.js';
 import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
 
-const FeaturedJobsSection = ({ size = LANDING_PREVIEW_SIZE, compact = false }) => {
+const PREVIEW_SIZE = 4;
+
+const FeaturedJobsSection = ({ size = PREVIEW_SIZE, compact = false }) => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const previewSize = Math.max(1, Number(size) || LANDING_PREVIEW_SIZE);
+    const previewSize = Math.max(1, Number(size) || PREVIEW_SIZE);
 
     useEffect(() => {
         let cancelled = false;

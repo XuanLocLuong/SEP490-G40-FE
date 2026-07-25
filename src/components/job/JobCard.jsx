@@ -5,6 +5,7 @@ import {
     formatLocation,
     formatRelativeTime,
     formatJobShiftsLabel,
+    formatVacancyLabel,
     getBusinessInitial,
     hasAppliedToJob,
 } from '../../utils/formatters.js';
@@ -15,6 +16,7 @@ import {
     BookmarkIcon,
     EyeIcon,
     CheckCircleIcon,
+    UsersIcon,
 } from '../common/icons.jsx';
 import JobBookmarkButton from './JobBookmarkButton.jsx';
 import JobApplyButton from './JobApplyButton.jsx';
@@ -61,6 +63,8 @@ const JobCard = ({
     const scheduleMatchLabel = job.scheduleMatchLabel;
     const interactionLabel = job.interactionLabel;
     const shiftsLabel = formatJobShiftsLabel(job.shifts);
+    const vacancyLabel = formatVacancyLabel(job);
+    const isVacancyFull = vacancyLabel === 'Đã hết vị trí';
 
     return (
         <article
@@ -100,7 +104,7 @@ const JobCard = ({
                     applied ||
                     distance ||
                     isClosed) && (
-                    <>
+                    <div className="job-card__meta-tags">
                         {isClosed && (
                             <span className="job-card__meta-item job-card__meta-item--closed">
                                 Ngưng nhận hồ sơ
@@ -151,18 +155,33 @@ const JobCard = ({
                                 {distance.label}
                             </span>
                         )}
-                    </>
+                    </div>
                 )}
-                <span className="job-card__meta-item">
-                    <MapPinIcon width={16} height={16} />
-                    {formatLocation(job.location)}
-                </span>
-                {shiftsLabel && (
-                    <span className="job-card__meta-item job-card__meta-item--shifts" title={shiftsLabel}>
-                        <ClockIcon width={16} height={16} />
-                        {shiftsLabel}
+                <div className="job-card__meta-rows">
+                    <span className="job-card__meta-item job-card__meta-item--location">
+                        <MapPinIcon width={16} height={16} />
+                        <span className="job-card__meta-text">{formatLocation(job.location)}</span>
                     </span>
-                )}
+                    {shiftsLabel && (
+                        <span
+                            className="job-card__meta-item job-card__meta-item--shifts"
+                            title={shiftsLabel}
+                        >
+                            <ClockIcon width={16} height={16} />
+                            <span className="job-card__meta-text">{shiftsLabel}</span>
+                        </span>
+                    )}
+                    {vacancyLabel && (
+                        <span
+                            className={`job-card__meta-item job-card__meta-item--vacancy${
+                                isVacancyFull ? ' job-card__meta-item--vacancy-full' : ''
+                            }`}
+                        >
+                            <UsersIcon width={16} height={16} />
+                            <span className="job-card__meta-text">{vacancyLabel}</span>
+                        </span>
+                    )}
+                </div>
             </div>
 
             <p className="job-card__salary">{formatSalary(job.salaryMin, job.salaryMax)}</p>

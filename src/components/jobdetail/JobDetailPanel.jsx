@@ -103,7 +103,9 @@ const JobDetailPanel = ({
         job.applicationCount,
         job.saveCount
     );
-    const isVacancyFull = job.vacancyAvailable === false;
+    const isVacancyFull =
+        job.vacancyAvailable === false ||
+        (job.remainingPositions != null && Number(job.remainingPositions) <= 0);
     const hasSectionContent =
         Boolean(job.description?.trim()) ||
         (job.requiredSkills?.length ?? 0) > 0 ||

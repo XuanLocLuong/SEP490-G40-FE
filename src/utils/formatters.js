@@ -250,11 +250,16 @@ export const formatVacancyLabel = ({ remainingPositions, vacancyAvailable }) => 
         return 'Đã hết vị trí';
     }
 
-    if (remainingPositions != null) {
-        return `Còn ${remainingPositions} vị trí`;
+    if (remainingPositions == null) {
+        return '';
     }
 
-    return '';
+    const remaining = Number(remainingPositions);
+    if (!Number.isFinite(remaining) || remaining <= 0) {
+        return 'Đã hết vị trí';
+    }
+
+    return `Còn ${remaining} vị trí`;
 };
 
 export const isPrimarySkill = (weight) => weight != null && Number(weight) >= 1;

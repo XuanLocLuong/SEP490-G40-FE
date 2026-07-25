@@ -184,6 +184,15 @@
     max-width: min(360px, 100%);
 }
 
+.job-list-item__info-item--vacancy {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.job-list-item__info-item--vacancy-full {
+    color: var(--color-danger, #b91c1c);
+}
+
 .job-list-item__salary {
     font-weight: 700;
     color: var(--color-primary);
