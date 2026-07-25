@@ -24,6 +24,7 @@ import CandidateProfilePage from '../pages/candidate/CandidateProfile/CandidateP
 import AvailabilityPage from '../pages/candidate/availability/AvailabilityPage.jsx';
 import CandidateApplicationHistoryPage from '../pages/candidate/CandidateApplicationHistoryPage.jsx';
 import CandidateInvitationsPage from '../pages/candidate/CandidateInvitationsPage.jsx';
+import CandidateNotificationsPage from '../pages/candidate/CandidateNotificationsPage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
 import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
@@ -113,6 +114,10 @@ const AppRouter = () => {
                     path={ROUTES.CANDIDATE_APPLICATION_HISTORY}
                     element={<CandidateApplicationHistoryPage />}
                 />
+                <Route
+                    path={ROUTES.CANDIDATE_NOTIFICATIONS}
+                    element={<CandidateNotificationsPage />}
+                />
             </Route>
 
             {/* ---- Recruiter ---- */}
@@ -130,6 +135,10 @@ const AppRouter = () => {
                 <Route path={ROUTES.RECRUITER_EDIT_JOB} element={<CreateJobPage />} />
                 <Route path={ROUTES.RECRUITER_MY_JOBS} element={<MyJobsPage />} />
                 <Route path={ROUTES.RECRUITER_APPLICANTS} element={<ApplicantsPage />} />
+                <Route
+                    path={ROUTES.RECRUITER_NOTIFICATIONS}
+                    element={<CandidateNotificationsPage />}
+                />
             </Route>
 
             {/* ---- Post Manager ---- */}
