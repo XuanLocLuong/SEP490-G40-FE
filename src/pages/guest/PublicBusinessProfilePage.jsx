@@ -27,6 +27,11 @@ const TABS = {
     REVIEWS: 'reviews',
 };
 
+const JOB_SUBTABS = {
+    OPEN: 'open',
+    CLOSED: 'closed',
+};
+
 const LOW_TRUST_THRESHOLD = 40;
 const VERIFIED_TRUST_THRESHOLD = 70;
 const JOBS_PAGE_SIZE = 12;
@@ -65,6 +70,7 @@ const PublicBusinessProfilePage = () => {
     const [profileError, setProfileError] = useState('');
 
     const [activeTab, setActiveTab] = useState(TABS.ABOUT);
+    const [jobsSubTab, setJobsSubTab] = useState(JOB_SUBTABS.OPEN);
 
     const [jobs, setJobs] = useState([]);
     const [jobsLoading, setJobsLoading] = useState(false);
@@ -73,6 +79,14 @@ const PublicBusinessProfilePage = () => {
     const [jobsTotalPages, setJobsTotalPages] = useState(0);
     const [jobsTotalElements, setJobsTotalElements] = useState(0);
     const [jobsLoaded, setJobsLoaded] = useState(false);
+
+    const [closedJobs, setClosedJobs] = useState([]);
+    const [closedJobsLoading, setClosedJobsLoading] = useState(false);
+    const [closedJobsError, setClosedJobsError] = useState('');
+    const [closedJobsPage, setClosedJobsPage] = useState(0);
+    const [closedJobsTotalPages, setClosedJobsTotalPages] = useState(0);
+    const [closedJobsTotalElements, setClosedJobsTotalElements] = useState(0);
+    const [closedJobsLoaded, setClosedJobsLoaded] = useState(false);
 
     useEffect(() => {
         setProfile(null);
@@ -84,6 +98,13 @@ const PublicBusinessProfilePage = () => {
         setJobsTotalPages(0);
         setJobsTotalElements(0);
         setJobsError('');
+        setClosedJobs([]);
+        setClosedJobsLoaded(false);
+        setClosedJobsPage(0);
+        setClosedJobsTotalPages(0);
+        setClosedJobsTotalElements(0);
+        setClosedJobsError('');
+        setJobsSubTab(JOB_SUBTABS.OPEN);
         setActiveTab(TABS.ABOUT);
     }, [businessId]);
 
@@ -140,12 +161,45 @@ const PublicBusinessProfilePage = () => {
         [businessId]
     );
 
+    const loadClosedJobs = useCallback(
+        async (page, append) => {
+            setClosedJobsLoading(true);
+            setClosedJobsError('');
+            try {
+                const pageData = await publicBusinessService.getClosedJobs(
+                    businessId,
+                    page,
+                    JOBS_PAGE_SIZE
+                );
+                setClosedJobs((prev) =>
+                    append ? [...prev, ...pageData.content] : pageData.content
+                );
+                setClosedJobsPage(pageData.currentPage);
+                setClosedJobsTotalPages(pageData.totalPages);
+                setClosedJobsTotalElements(pageData.totalElements ?? 0);
+                setClosedJobsLoaded(true);
+            } catch (err) {
+                setClosedJobsError(
+                    getApiErrorMessage(err, 'Không tải được tin đã kết thúc.')
+                );
+            } finally {
+                setClosedJobsLoading(false);
+            }
+        },
+        [businessId]
+    );
+
     useEffect(() => {
-        if (activeTab !== TABS.JOBS || jobsLoaded) {
+        if (activeTab !== TABS.JOBS) {
             return;
         }
-        loadJobs(0, false);
-    }, [activeTab, jobsLoaded, loadJobs]);
+        if (!jobsLoaded) {
+            loadJobs(0, false);
+        }
+        if (!closedJobsLoaded) {
+            loadClosedJobs(0, false);
+        }
+    }, [activeTab, jobsLoaded, closedJobsLoaded, loadJobs, loadClosedJobs]);
 
     const primaryCity = useMemo(() => {
         const first = profile?.locations?.[0];
@@ -163,6 +217,7 @@ const PublicBusinessProfilePage = () => {
 
     const memberSinceLabel = formatMemberSince(profile?.memberSince);
     const hasMoreJobs = jobsPage + 1 < jobsTotalPages;
+    const hasMoreClosedJobs = closedJobsPage + 1 < closedJobsTotalPages;
     const primaryLocation = profile?.locations?.[0] ?? null;
     const primaryMapsUrl = buildMapsUrl(primaryLocation);
     const primaryLocationLabel = primaryLocation ? formatLocation(primaryLocation) : '';
@@ -314,58 +369,151 @@ const PublicBusinessProfilePage = () => {
 
                     {activeTab === TABS.JOBS && (
                         <section className="public-business__panel">
-                            <h2 className="public-business__section-title">
-                                Tin đang tuyển dụng
-                                {jobsLoaded && !jobsError && jobsTotalElements > 0
-                                    ? ` (${jobsTotalElements})`
-                                    : ''}
-                            </h2>
+                            <div
+                                className="public-business__tabs public-business__jobs-subtabs"
+                                role="tablist"
+                                aria-label="Loại tin tuyển dụng"
+                            >
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    className={`public-business__tab${
+                                        jobsSubTab === JOB_SUBTABS.OPEN
+                                            ? ' public-business__tab--active'
+                                            : ''
+                                    }`}
+                                    aria-selected={jobsSubTab === JOB_SUBTABS.OPEN}
+                                    onClick={() => setJobsSubTab(JOB_SUBTABS.OPEN)}
+                                >
+                                    Tin đang tuyển dụng
+                                    {jobsLoaded && !jobsError && jobsTotalElements > 0
+                                        ? ` (${jobsTotalElements})`
+                                        : ''}
+                                </button>
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    className={`public-business__tab${
+                                        jobsSubTab === JOB_SUBTABS.CLOSED
+                                            ? ' public-business__tab--active'
+                                            : ''
+                                    }`}
+                                    aria-selected={jobsSubTab === JOB_SUBTABS.CLOSED}
+                                    onClick={() => setJobsSubTab(JOB_SUBTABS.CLOSED)}
+                                >
+                                    Tin đã kết thúc
+                                    {closedJobsLoaded &&
+                                    !closedJobsError &&
+                                    closedJobsTotalElements > 0
+                                        ? ` (${closedJobsTotalElements})`
+                                        : ''}
+                                </button>
+                            </div>
 
-                            {jobsLoading && jobs.length === 0 && (
-                                <p className="public-business__jobs-empty">
-                                    Đang tải tin tuyển dụng…
-                                </p>
+                            {jobsSubTab === JOB_SUBTABS.OPEN && (
+                                <>
+                                    {jobsLoading && jobs.length === 0 && (
+                                        <p className="public-business__jobs-empty">
+                                            Đang tải tin tuyển dụng…
+                                        </p>
+                                    )}
+
+                                    {jobsError && (
+                                        <div className="public-business__jobs-empty public-business__jobs-error">
+                                            <p>{jobsError}</p>
+                                            <button
+                                                type="button"
+                                                className="btn btn--secondary"
+                                                disabled={jobsLoading}
+                                                onClick={() => loadJobs(0, false)}
+                                            >
+                                                {jobsLoading ? 'Đang tải…' : 'Thử lại'}
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {!jobsLoading && !jobsError && jobs.length === 0 && (
+                                        <p className="public-business__jobs-empty">
+                                            Doanh nghiệp hiện chưa có tin đang tuyển.
+                                        </p>
+                                    )}
+
+                                    {jobs.length > 0 && (
+                                        <div className="public-business__jobs-grid">
+                                            {jobs.map((job) => (
+                                                <JobCard key={job.id} job={job} />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {hasMoreJobs && (
+                                        <div className="public-business__load-more">
+                                            <button
+                                                type="button"
+                                                className="btn btn--secondary"
+                                                disabled={jobsLoading}
+                                                onClick={() => loadJobs(jobsPage + 1, true)}
+                                            >
+                                                {jobsLoading ? 'Đang tải…' : 'Xem thêm'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
                             )}
 
-                            {jobsError && (
-                                <div className="public-business__jobs-empty public-business__jobs-error">
-                                    <p>{jobsError}</p>
-                                    <button
-                                        type="button"
-                                        className="btn btn--secondary"
-                                        disabled={jobsLoading}
-                                        onClick={() => loadJobs(0, false)}
-                                    >
-                                        {jobsLoading ? 'Đang tải…' : 'Thử lại'}
-                                    </button>
-                                </div>
-                            )}
+                            {jobsSubTab === JOB_SUBTABS.CLOSED && (
+                                <>
+                                    {closedJobsLoading && closedJobs.length === 0 && (
+                                        <p className="public-business__jobs-empty">
+                                            Đang tải tin đã kết thúc…
+                                        </p>
+                                    )}
 
-                            {!jobsLoading && !jobsError && jobs.length === 0 && (
-                                <p className="public-business__jobs-empty">
-                                    Doanh nghiệp hiện chưa có tin đang tuyển.
-                                </p>
-                            )}
+                                    {closedJobsError && (
+                                        <div className="public-business__jobs-empty public-business__jobs-error">
+                                            <p>{closedJobsError}</p>
+                                            <button
+                                                type="button"
+                                                className="btn btn--secondary"
+                                                disabled={closedJobsLoading}
+                                                onClick={() => loadClosedJobs(0, false)}
+                                            >
+                                                {closedJobsLoading ? 'Đang tải…' : 'Thử lại'}
+                                            </button>
+                                        </div>
+                                    )}
 
-                            {jobs.length > 0 && (
-                                <div className="public-business__jobs-grid">
-                                    {jobs.map((job) => (
-                                        <JobCard key={job.id} job={job} />
-                                    ))}
-                                </div>
-                            )}
+                                    {!closedJobsLoading &&
+                                        !closedJobsError &&
+                                        closedJobs.length === 0 && (
+                                            <p className="public-business__jobs-empty">
+                                                Chưa có tin tuyển dụng đã kết thúc.
+                                            </p>
+                                        )}
 
-                            {hasMoreJobs && (
-                                <div className="public-business__load-more">
-                                    <button
-                                        type="button"
-                                        className="btn btn--secondary"
-                                        disabled={jobsLoading}
-                                        onClick={() => loadJobs(jobsPage + 1, true)}
-                                    >
-                                        {jobsLoading ? 'Đang tải…' : 'Xem thêm'}
-                                    </button>
-                                </div>
+                                    {closedJobs.length > 0 && (
+                                        <div className="public-business__jobs-grid">
+                                            {closedJobs.map((job) => (
+                                                <JobCard key={job.id} job={job} />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {hasMoreClosedJobs && (
+                                        <div className="public-business__load-more">
+                                            <button
+                                                type="button"
+                                                className="btn btn--secondary"
+                                                disabled={closedJobsLoading}
+                                                onClick={() =>
+                                                    loadClosedJobs(closedJobsPage + 1, true)
+                                                }
+                                            >
+                                                {closedJobsLoading ? 'Đang tải…' : 'Xem thêm'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </section>
                     )}
