@@ -5,6 +5,7 @@ import {
     ROUTES,
     getRecruiterApplicantsPath,
     getRecruiterEditJobPath,
+    getRecruiterInvitationsPath,
 } from '../../../routes/path.js';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import { formatSalaryRange } from '../../../utils/formatters.js';
@@ -101,7 +102,9 @@ const CONFIRM_DIALOG = {
 
 const canEdit = (status) => status === 'DRAFT' || status === 'REVISION_REQUESTED';
 
-const isOpenRecruitingCard = (job) => job.status === 'OPEN';
+/** Card có metrics (lượt xem / ứng viên / đã tuyển) — OPEN đang tuyển + CLOSED/BLOCKED xem lại. */
+const hasRecruitingMetricsCard = (job) =>
+    job.status === 'OPEN' || job.status === 'CLOSED' || job.status === 'BLOCKED';
 
 const canReopenJob = (job) => job.status === 'CLOSED' && !isPastDeadline(job);
 
@@ -233,13 +236,23 @@ const MyJobsPage = () => {
                 >
                     Xem chi tiết
                 </button>
-                {job.status === 'OPEN' && (
-                    <Link
-                        to={getRecruiterApplicantsPath(job.id)}
-                        className="my-jobs-page__action my-jobs-page__action--primary"
-                    >
-                        Xem ứng viên
-                    </Link>
+                {(job.status === 'OPEN' ||
+                    job.status === 'CLOSED' ||
+                    job.status === 'BLOCKED') && (
+                    <>
+                        <Link
+                            to={getRecruiterApplicantsPath(job.id)}
+                            className="my-jobs-page__action my-jobs-page__action--primary"
+                        >
+                            Xem ứng viên
+                        </Link>
+                        <Link
+                            to={getRecruiterInvitationsPath(job.id, { fromMyJobs: true })}
+                            className="my-jobs-page__action my-jobs-page__action--edit"
+                        >
+                            Xem lời mời
+                        </Link>
+                    </>
                 )}
                 {hasRevisionNote(job) && (
                     <button
@@ -296,15 +309,22 @@ const MyJobsPage = () => {
         <div className="my-jobs-page__card-footer">{renderJobActions(job)}</div>
     );
 
-    const renderOpenCard = (job) => {
+    const renderMetricsCard = (job) => {
         const metrics = getJobMetrics(job);
         const progress = getProgressPercent(metrics.hiredCount, metrics.requiredCandidates);
-        const daysLeft = getDaysLeftLabel(job.applicationDeadline);
+        const daysLeft =
+            job.status === 'OPEN' ? getDaysLeftLabel(job.applicationDeadline) : null;
         const businessName = job.business?.name;
         const locationLabel = job.location?.name || job.location?.city;
+        const cardModifier =
+            job.status === 'CLOSED'
+                ? 'my-jobs-page__card--closed'
+                : job.status === 'BLOCKED'
+                  ? 'my-jobs-page__card--blocked'
+                  : 'my-jobs-page__card--open';
 
         return (
-            <article key={job.id} className="my-jobs-page__card my-jobs-page__card--open">
+            <article key={job.id} className={`my-jobs-page__card ${cardModifier}`}>
                 <div className="my-jobs-page__card-body">
                     <div className="my-jobs-page__card-top">
                         <h2>{job.title}</h2>
@@ -369,23 +389,21 @@ const MyJobsPage = () => {
 
     const renderDefaultCard = (job) => {
         const reviewNote = String(job.reviewNote || '').trim();
-        const noticeByStatus = {
-            PENDING_REVIEW: {
+        let notice = null;
+        if (job.status === 'PENDING_REVIEW') {
+            notice = {
                 className: 'my-jobs-page__notice--pending',
                 text: 'Kiểm duyệt viên đang xem xét tin — dự kiến phản hồi trong 24 giờ.',
-            },
-            REJECTED: {
+            };
+        } else if (
+            (job.status === 'REJECTED' || job.status === 'REVISION_REQUESTED') &&
+            reviewNote
+        ) {
+            notice = {
                 className: 'my-jobs-page__notice--rejected',
-                text: reviewNote || 'Tin bị từ chối. Vui lòng chỉnh sửa nội dung và gửi lại.',
-            },
-            REVISION_REQUESTED: {
-                className: 'my-jobs-page__notice--rejected',
-                text:
-                    reviewNote ||
-                    'Kiểm duyệt viên yêu cầu chỉnh sửa nội dung trước khi duyệt.',
-            },
-        };
-        const notice = noticeByStatus[job.status];
+                text: reviewNote,
+            };
+        }
 
         return (
             <article key={job.id} className="my-jobs-page__card">
@@ -458,7 +476,9 @@ const MyJobsPage = () => {
             ) : (
                 <div className="my-jobs-page__list">
                     {filteredJobs.map((job) =>
-                        isOpenRecruitingCard(job) ? renderOpenCard(job) : renderDefaultCard(job)
+                        hasRecruitingMetricsCard(job)
+                            ? renderMetricsCard(job)
+                            : renderDefaultCard(job)
                     )}
                 </div>
             )}

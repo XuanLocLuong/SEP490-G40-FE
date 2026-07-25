@@ -1,0 +1,10 @@
+.invitation-card__message {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 0.875rem;
+    color: #475569;
+    line-height: 1.45;
+}

@@ -40,7 +40,7 @@ const RecruiterHeader = () => {
 
                     <nav className="site-header__nav site-header__nav--role">
                         <NavLink to={ROUTES.RECRUITER_AI_SUGGESTIONS} className="site-header__nav-link">
-                            AI Gợi ý
+                            JobLink gợi ý
                         </NavLink>
                         <a href="#" className="site-header__nav-link">
                             Top Recruiter

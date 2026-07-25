@@ -38,6 +38,7 @@ export const ROUTES = {
     RECRUITER_EDIT_JOB: '/recruiter/jobs/:jobId/edit',
     RECRUITER_MY_JOBS: '/recruiter/jobs',
     RECRUITER_APPLICANTS: '/recruiter/applicants',
+    RECRUITER_INVITATIONS: '/recruiter/invitations',
     RECRUITER_AI_SUGGESTIONS: '/recruiter/ai-suggestions',
     RECRUITER_ANALYTICS: '/recruiter/analytics',
     RECRUITER_MESSAGES: '/recruiter/messages',
@@ -68,6 +69,12 @@ export const getRecruiterEditJobPath = (jobId) => `/recruiter/jobs/${jobId}/edit
 
 export const getRecruiterApplicantsPath = (jobId) =>
     `${ROUTES.RECRUITER_APPLICANTS}?jobId=${jobId}`;
+
+export const getRecruiterInvitationsPath = (jobId, { fromMyJobs = false } = {}) => {
+    const params = new URLSearchParams({ jobId: String(jobId) });
+    if (fromMyJobs) params.set('from', 'my-jobs');
+    return `${ROUTES.RECRUITER_INVITATIONS}?${params.toString()}`;
+};
 
 export const getCandidateJobChatPath = (jobId) =>
     `${ROUTES.CANDIDATE_MESSAGES}?jobId=${jobId}`;
