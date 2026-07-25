@@ -1,3 +1,9 @@
+.applicants-page__subtitle {
+    margin: -8px 0 18px;
+    font-size: 0.95rem;
+    color: var(--color-text-muted, #64748b);
+}
+
 .invitation-card__message {
     margin: 0 0 12px;
     padding: 10px 12px;

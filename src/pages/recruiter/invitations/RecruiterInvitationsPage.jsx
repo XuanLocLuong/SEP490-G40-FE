@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
@@ -23,12 +23,14 @@ const RecruiterInvitationsPage = () => {
     const jobIdParam = searchParams.get('jobId');
     const statusFilter = searchParams.get('status') || DEFAULT_STATUS;
     const page = Math.max(0, Number(searchParams.get('page') || 0) || 0);
-    /** Chỉ hiện back khi vào từ My Jobs (?from=my-jobs), không hiện khi deep-link URL tay. */
+    /** Chỉ hiện back khi vào từ My Jobs (?from=my-jobs). */
     const showBackToMyJobs = searchParams.get('from') === 'my-jobs';
 
-    const [job, setJob] = useState(null);
-    const [jobLoading, setJobLoading] = useState(Boolean(jobIdParam));
-    const [jobError, setJobError] = useState(false);
+    const [myJobs, setMyJobs] = useState([]);
+    const [jobsLoading, setJobsLoading] = useState(true);
+    const [focusJob, setFocusJob] = useState(null);
+    const [focusJobLoading, setFocusJobLoading] = useState(false);
+    const [focusJobError, setFocusJobError] = useState(false);
 
     const [invitations, setInvitations] = useState([]);
     const [listLoading, setListLoading] = useState(false);
@@ -36,7 +38,27 @@ const RecruiterInvitationsPage = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
 
-    const selectedJobId = jobIdParam && Number.isFinite(Number(jobIdParam)) ? Number(jobIdParam) : null;
+    const selectedJobId = useMemo(() => {
+        if (jobIdParam) {
+            const parsed = Number(jobIdParam);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+        return myJobs[0]?.id ?? null;
+    }, [jobIdParam, myJobs]);
+
+    const selectedJob = useMemo(() => {
+        if (selectedJobId == null) return null;
+        const fromList = myJobs.find((job) => String(job.id) === String(selectedJobId));
+        if (fromList) return fromList;
+        if (focusJob && String(focusJob.id) === String(selectedJobId)) return focusJob;
+        return null;
+    }, [selectedJobId, myJobs, focusJob]);
+
+    const jobOptions = useMemo(() => {
+        if (!selectedJob) return myJobs;
+        const exists = myJobs.some((job) => String(job.id) === String(selectedJob.id));
+        return exists ? myJobs : [selectedJob, ...myJobs];
+    }, [myJobs, selectedJob]);
 
     const updateParams = useCallback(
         (updates) => {
@@ -58,33 +80,23 @@ const RecruiterInvitationsPage = () => {
     useEffect(() => {
         let cancelled = false;
 
-        if (!selectedJobId) {
-            setJob(null);
-            setJobLoading(false);
-            setJobError(false);
-            return undefined;
-        }
-
         (async () => {
-            setJobLoading(true);
-            setJobError(false);
+            setJobsLoading(true);
             try {
-                const detail = await recruiterJobApi.getJobDetail(selectedJobId);
+                const pageData = await recruiterJobApi.getMyJobs({ page: 0, size: 100 });
                 if (!cancelled) {
-                    setJob(detail || null);
-                    setJobError(!detail);
+                    setMyJobs(pageData?.content || []);
                 }
             } catch (err) {
                 if (!cancelled) {
-                    setJob(null);
-                    setJobError(true);
                     toast.error(
-                        getRecruiterJobApiErrorMessage(err, 'Không tải được tin tuyển dụng.')
+                        getRecruiterJobApiErrorMessage(err, 'Không tải được danh sách tin.')
                     );
+                    setMyJobs([]);
                 }
             } finally {
                 if (!cancelled) {
-                    setJobLoading(false);
+                    setJobsLoading(false);
                 }
             }
         })();
@@ -92,10 +104,71 @@ const RecruiterInvitationsPage = () => {
         return () => {
             cancelled = true;
         };
-    }, [selectedJobId]);
+    }, []);
+
+    // Resolve tin từ URL khi không nằm trong list my-jobs.
+    useEffect(() => {
+        let cancelled = false;
+
+        if (!jobIdParam) {
+            setFocusJob(null);
+            setFocusJobLoading(false);
+            setFocusJobError(false);
+            return undefined;
+        }
+
+        const inList = myJobs.some((job) => String(job.id) === jobIdParam);
+        if (inList) {
+            setFocusJob(null);
+            setFocusJobLoading(false);
+            setFocusJobError(false);
+            return undefined;
+        }
+
+        if (jobsLoading) return undefined;
+
+        (async () => {
+            setFocusJobLoading(true);
+            setFocusJobError(false);
+            try {
+                const detail = await recruiterJobApi.getJobDetail(jobIdParam);
+                if (!cancelled) {
+                    setFocusJob(detail || null);
+                    setFocusJobError(!detail);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setFocusJob(null);
+                    setFocusJobError(true);
+                    toast.error(
+                        getRecruiterJobApiErrorMessage(err, 'Không tải được tin tuyển dụng.')
+                    );
+                }
+            } finally {
+                if (!cancelled) {
+                    setFocusJobLoading(false);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [jobIdParam, myJobs, jobsLoading]);
+
+    // Vào trang không có ?jobId= → chọn tin đầu và ghi URL.
+    useEffect(() => {
+        if (jobIdParam || jobsLoading) return;
+        if (selectedJobId != null) {
+            updateParams({ jobId: selectedJobId, page: 0 });
+        }
+    }, [jobIdParam, jobsLoading, selectedJobId, updateParams]);
 
     const loadInvitations = useCallback(async () => {
-        if (!selectedJobId || jobLoading || jobError) {
+        if (selectedJobId == null || focusJobLoading || jobsLoading) {
+            return;
+        }
+        if (jobIdParam && !selectedJob) {
             setInvitations([]);
             setTotalPages(0);
             setTotalElements(0);
@@ -123,14 +196,33 @@ const RecruiterInvitationsPage = () => {
         } finally {
             setListLoading(false);
         }
-    }, [selectedJobId, statusFilter, page, jobLoading, jobError]);
+    }, [
+        selectedJobId,
+        selectedJob,
+        statusFilter,
+        page,
+        focusJobLoading,
+        jobsLoading,
+        jobIdParam,
+    ]);
 
     useEffect(() => {
         loadInvitations();
     }, [loadInvitations]);
 
+    const handleJobChange = (event) => {
+        updateParams({
+            jobId: event.target.value,
+            page: 0,
+            status: statusFilter === DEFAULT_STATUS ? null : statusFilter,
+        });
+    };
+
     const handleStatusChange = (value) => {
-        updateParams({ status: value === DEFAULT_STATUS ? null : value, page: 0 });
+        updateParams({
+            status: value === DEFAULT_STATUS ? null : value,
+            page: 0,
+        });
     };
 
     const handleViewProfile = (invitation) => {
@@ -141,6 +233,9 @@ const RecruiterInvitationsPage = () => {
         }
         const returnParams = new URLSearchParams();
         if (selectedJobId != null) returnParams.set('jobId', String(selectedJobId));
+        if (statusFilter && statusFilter !== DEFAULT_STATUS) {
+            returnParams.set('status', statusFilter);
+        }
         if (showBackToMyJobs) returnParams.set('from', 'my-jobs');
         const backQuery = returnParams.toString() ? `?${returnParams.toString()}` : '';
         navigate(getCandidatePublicProfilePath(candidateId), {
@@ -153,7 +248,17 @@ const RecruiterInvitationsPage = () => {
         });
     };
 
+    const pageLoading = jobsLoading || focusJobLoading;
+    const hasJobs = myJobs.length > 0;
+    const hasSelectedJob = Boolean(selectedJob);
+    const jobNotFound =
+        Boolean(jobIdParam) &&
+        !pageLoading &&
+        !hasSelectedJob &&
+        (focusJobError || !focusJobLoading);
+    const emptyNoJobs = !pageLoading && !jobIdParam && !hasJobs;
     const hasMorePages = page + 1 < totalPages;
+    const showJobSelect = hasSelectedJob && jobOptions.length > 0;
 
     return (
         <div className="applicants-page">
@@ -164,13 +269,21 @@ const RecruiterInvitationsPage = () => {
             )}
 
             <h1 className="applicants-page__title">Lời mời đã gửi</h1>
+            <p className="applicants-page__subtitle">
+                Chọn tin tuyển dụng để xem và theo dõi lời mời đã gửi.
+            </p>
 
-            {!selectedJobId && (
+            {pageLoading && (
+                <div className="applicants-page__loading">Đang tải danh sách tin tuyển dụng…</div>
+            )}
+
+            {!pageLoading && emptyNoJobs && (
                 <div className="applicants-page__empty">
-                    <p>
-                        Thêm <code>?jobId=</code> vào URL để xem lời mời của một tin tuyển dụng.
-                    </p>
+                    <p>Chưa có tin tuyển dụng để xem lời mời.</p>
                     <div className="applicants-page__empty-actions">
+                        <Link to={ROUTES.RECRUITER_CREATE_JOB} className="btn btn--primary">
+                            Đăng tin mới
+                        </Link>
                         <Link to={ROUTES.RECRUITER_MY_JOBS} className="btn btn--secondary">
                             Xem tin của tôi
                         </Link>
@@ -178,11 +291,7 @@ const RecruiterInvitationsPage = () => {
                 </div>
             )}
 
-            {selectedJobId != null && jobLoading && (
-                <div className="applicants-page__loading">Đang tải tin tuyển dụng…</div>
-            )}
-
-            {selectedJobId != null && !jobLoading && jobError && (
+            {!pageLoading && jobNotFound && (
                 <div className="applicants-page__empty">
                     <p>Không tìm thấy tin tuyển dụng này.</p>
                     <div className="applicants-page__empty-actions">
@@ -193,18 +302,43 @@ const RecruiterInvitationsPage = () => {
                 </div>
             )}
 
-            {selectedJobId != null && !jobLoading && job && (
+            {!pageLoading && hasSelectedJob && (
                 <>
                     <div className="applicants-page__toolbar">
                         <div className="applicants-page__job-row">
-                            <div className="applicants-page__job-locked">
-                                <span className="applicants-page__job-locked-label">
-                                    Tin tuyển dụng
-                                </span>
-                                <h2 className="applicants-page__job-locked-title">{job.title}</h2>
-                            </div>
-                            {job.status && <JobStatusBadge status={job.status} />}
-                            <span className="applicants-page__count">{totalElements} lời mời</span>
+                            {showJobSelect ? (
+                                <div className="applicants-page__job-field">
+                                    <label htmlFor="invitations-job-select">
+                                        Xem lời mời cho
+                                    </label>
+                                    <select
+                                        id="invitations-job-select"
+                                        value={selectedJobId ?? ''}
+                                        onChange={handleJobChange}
+                                    >
+                                        {jobOptions.map((job) => (
+                                            <option key={job.id} value={job.id}>
+                                                {job.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ) : (
+                                <div className="applicants-page__job-locked">
+                                    <span className="applicants-page__job-locked-label">
+                                        Tin tuyển dụng
+                                    </span>
+                                    <h2 className="applicants-page__job-locked-title">
+                                        {selectedJob.title}
+                                    </h2>
+                                </div>
+                            )}
+                            {selectedJob.status && (
+                                <JobStatusBadge status={selectedJob.status} />
+                            )}
+                            <span className="applicants-page__count">
+                                {totalElements} lời mời
+                            </span>
                         </div>
 
                         <div className="applicants-page__filters-row">
@@ -231,7 +365,9 @@ const RecruiterInvitationsPage = () => {
                     </div>
 
                     {listLoading && (
-                        <div className="applicants-page__loading">Đang tải danh sách lời mời…</div>
+                        <div className="applicants-page__loading">
+                            Đang tải danh sách lời mời…
+                        </div>
                     )}
 
                     {!listLoading && listError && (

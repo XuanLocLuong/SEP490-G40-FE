@@ -395,10 +395,7 @@ const MyJobsPage = () => {
                 className: 'my-jobs-page__notice--pending',
                 text: 'Kiểm duyệt viên đang xem xét tin — dự kiến phản hồi trong 24 giờ.',
             };
-        } else if (
-            (job.status === 'REJECTED' || job.status === 'REVISION_REQUESTED') &&
-            reviewNote
-        ) {
+        } else if (job.status === 'REJECTED' && reviewNote) {
             notice = {
                 className: 'my-jobs-page__notice--rejected',
                 text: reviewNote,
