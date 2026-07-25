@@ -45,6 +45,7 @@ export const ROUTES = {
     RECRUITER_ALL_JOBS: '/recruiter/all-jobs',
     RECRUITER_PROFILE: '/recruiter/profile',
     RECRUITER_SETTINGS: '/recruiter/settings',
+    RECRUITER_NOTIFICATIONS: '/recruiter/notifications',
 
     POST_MANAGER_QUEUE: '/post-manager/queue',
     POST_MANAGER_URGENT_JOBS: '/post-manager/urgent-jobs',

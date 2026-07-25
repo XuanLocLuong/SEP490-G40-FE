@@ -5,10 +5,10 @@ import { useLogoutToLanding } from '../../hooks/useLogoutToLanding.js';
 import { useAutoHideHeader } from '../../hooks/useAutoHideHeader.js';
 import { ROUTES } from '../../routes/path.js';
 import ProfileMenu from '../common/ProfileMenu.jsx';
+import NotificationBell from '../notifications/NotificationBell.jsx';
 import {
     FileTextIcon,
     MailIcon,
-    BellIcon,
     SettingsIcon,
     ChatIcon,
     ClockIcon,
@@ -115,9 +115,7 @@ const CandidateHeader = () => {
                     <a href="#" className="site-header__icon-btn" aria-label="Tin nhắn">
                         <ChatIcon />
                     </a>
-                    <a href="#" className="site-header__icon-btn" aria-label="Thông báo">
-                        <BellIcon />
-                    </a>
+                    <NotificationBell />
 
                     <ProfileMenu
                         variant="header"
