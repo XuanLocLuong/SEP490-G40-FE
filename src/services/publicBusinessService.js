@@ -1,4 +1,5 @@
 import {
+    fetchPublicBusinessClosedJobs,
     fetchPublicBusinessJobs,
     fetchPublicBusinessProfile,
 } from '../apis/PublicBusinessApi.jsx';
@@ -43,6 +44,11 @@ export const publicBusinessService = {
 
     getOpenJobs: async (businessId, page = 0, size = 12) => {
         const res = await fetchPublicBusinessJobs(businessId, page, size);
+        return mapPublicBusinessJobsPage(unwrapData(res));
+    },
+
+    getClosedJobs: async (businessId, page = 0, size = 12) => {
+        const res = await fetchPublicBusinessClosedJobs(businessId, page, size);
         return mapPublicBusinessJobsPage(unwrapData(res));
     },
 };

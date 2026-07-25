@@ -30,6 +30,8 @@ import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
 import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
 import MyJobsPage from '../pages/recruiter/jobs/MyJobsPage.jsx';
 import ApplicantsPage from '../pages/recruiter/applicants/ApplicantsPage.jsx';
+import RecruiterInvitationsPage from '../pages/recruiter/invitations/RecruiterInvitationsPage.jsx';
+import RecruiterRecommendationsPage from '../pages/recruiter/recommendations/RecruiterRecommendationsPage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
@@ -135,6 +137,11 @@ const AppRouter = () => {
                 <Route path={ROUTES.RECRUITER_EDIT_JOB} element={<CreateJobPage />} />
                 <Route path={ROUTES.RECRUITER_MY_JOBS} element={<MyJobsPage />} />
                 <Route path={ROUTES.RECRUITER_APPLICANTS} element={<ApplicantsPage />} />
+                <Route path={ROUTES.RECRUITER_INVITATIONS} element={<RecruiterInvitationsPage />} />
+                <Route
+                    path={ROUTES.RECRUITER_AI_SUGGESTIONS}
+                    element={<RecruiterRecommendationsPage />}
+                />
                 <Route
                     path={ROUTES.RECRUITER_NOTIFICATIONS}
                     element={<CandidateNotificationsPage />}

@@ -1,7 +1,13 @@
-import { DAY_OF_WEEK_OPTIONS } from '../../../constants/jobPost.js';
+import { DAY_OF_WEEK_OPTIONS, DAY_PRESETS } from '../../../constants/jobPost.js';
 import { emptyShiftBlock } from '../../../services/jobPostService.js';
 import RequiredMark from '../../common/RequiredMark.jsx';
 import TimeInput24h from '../../common/TimeInput24h.jsx';
+
+const daysMatchPreset = (selected, presetDays) => {
+    if (selected.length !== presetDays.length) return false;
+    const set = new Set(selected);
+    return presetDays.every((d) => set.has(d));
+};
 
 /**
  * UI "Cách 2": mỗi block = nhiều ngày + 1 khung giờ.
@@ -21,6 +27,14 @@ const JobShiftFields = ({ shiftBlocks, onChange, error }) => {
             ? block.days.filter((d) => d !== dayValue)
             : [...block.days, dayValue];
         updateBlock(index, { days });
+    };
+
+    const applyPreset = (index, days) => {
+        updateBlock(index, { days: [...days] });
+    };
+
+    const clearDays = (index) => {
+        updateBlock(index, { days: [] });
     };
 
     const addBlock = () => {
@@ -62,6 +76,32 @@ const JobShiftFields = ({ shiftBlocks, onChange, error }) => {
                                 </button>
                             );
                         })}
+                    </div>
+
+                    <div className="job-shift-fields__presets" role="group" aria-label="Chọn nhanh ngày">
+                        {DAY_PRESETS.map((preset) => {
+                            const active = daysMatchPreset(block.days, preset.days);
+                            return (
+                                <button
+                                    key={preset.id}
+                                    type="button"
+                                    className={`job-shift-fields__preset${
+                                        active ? ' job-shift-fields__preset--active' : ''
+                                    }`}
+                                    onClick={() => applyPreset(index, preset.days)}
+                                >
+                                    {preset.label}
+                                </button>
+                            );
+                        })}
+                        <button
+                            type="button"
+                            className="job-shift-fields__preset job-shift-fields__preset--clear"
+                            onClick={() => clearDays(index)}
+                            disabled={!block.days.length}
+                        >
+                            Bỏ chọn
+                        </button>
                     </div>
 
                     <div className="job-shift-fields__times">

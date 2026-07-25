@@ -56,6 +56,18 @@ const recruiterJobApi = {
         const res = await axiosClient.patch(`${API_PREFIX}/${jobId}/status`, { status });
         return unwrapData(res);
     },
+
+    /** AI: sinh bộ câu hỏi gợi ý mô tả */
+    generateJobDescQuestions: async (payload) => {
+        const res = await axiosClient.post(`${JOBS_BASE}/ai/generate-questions`, payload);
+        return unwrapData(res);
+    },
+
+    /** AI: sinh description HTML từ câu trả lời */
+    generateJobDescription: async (payload) => {
+        const res = await axiosClient.post(`${JOBS_BASE}/ai/generate-description`, payload);
+        return unwrapData(res);
+    },
 };
 
 export default recruiterJobApi;

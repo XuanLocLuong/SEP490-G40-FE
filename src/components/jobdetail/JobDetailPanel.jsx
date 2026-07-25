@@ -54,6 +54,7 @@ const JobDetailPanel = ({
     onApplied,
     variant = 'default',
     sectionsOnly = false,
+    showPostedLabel = true,
 }) => {
     const isPreview = variant === 'preview';
     if (loading) {
@@ -90,7 +91,11 @@ const JobDetailPanel = ({
     const showShiftSection = sectionsOnly ? shiftGroups.length > 0 : shiftGroups.length > 1;
     const locationSummary = formatLocation(job.location);
     const locationDetail = formatLocationAddressDetail(job.location);
-    const postedLabel = isPreview ? 'Xem trước' : formatRelativeTime(job.createdAt);
+    const postedLabel = showPostedLabel
+        ? isPreview
+            ? 'Xem trước'
+            : formatRelativeTime(job.createdAt)
+        : '';
     const deadlineLabel = formatApplicationDeadline(job.applicationDeadline);
     const vacancyLabel = formatVacancyLabel(job);
     const engagementStats = getEngagementStats(

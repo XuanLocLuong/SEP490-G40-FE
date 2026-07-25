@@ -23,6 +23,12 @@ import {
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import { RECRUITER_PROFILE_CREATE_JOB_INTENT } from '../../utils/recruiterJobGuard.js';
+import {
+    clearRecruiterProfileDraft,
+    getRecruiterProfileDraftKey,
+    loadRecruiterProfileDraft,
+    saveRecruiterProfileDraft,
+} from '../../utils/recruiterProfileDraftStorage.js';
 import RequiredMark from '../../components/common/RequiredMark.jsx';
 import RichTextEditor from '../../components/common/RichTextEditor.jsx';
 import RecruiterAddressModal from '../../components/recruiter/RecruiterAddressModal.jsx';
@@ -183,8 +189,19 @@ const getCompletionHint = (noProfile, profile, savedLocation, completionPercent)
     return `Bổ sung: ${missing.join(', ')}`;
 };
 
+const applyStoredRecruiterDraft = (draftKey, setForm, setCoords) => {
+    if (!draftKey) return;
+    const stored = loadRecruiterProfileDraft(draftKey);
+    if (!stored?.form) return;
+    setForm(stored.form);
+    if (stored.coords?.latitude != null && stored.coords?.longitude != null) {
+        setCoords(stored.coords);
+    }
+};
+
 const RecruiterProfilePage = () => {
     const { auth } = useAuth();
+    const draftKey = useMemo(() => getRecruiterProfileDraftKey(auth), [auth]);
     const [fromCreateJob, setFromCreateJob] = useState(
         () => sessionStorage.getItem(RECRUITER_PROFILE_CREATE_JOB_INTENT) === '1'
     );
@@ -368,6 +385,7 @@ const RecruiterProfilePage = () => {
                 toast.error(getApiErrorMessage(err, 'Không thể tải hồ sơ nhà tuyển dụng.'));
             }
         } finally {
+            applyStoredRecruiterDraft(getRecruiterProfileDraftKey(auth), setForm, setCoords);
             setLoading(false);
         }
     };
@@ -375,6 +393,11 @@ const RecruiterProfilePage = () => {
     useEffect(() => {
         loadProfile();
     }, []);
+
+    useEffect(() => {
+        if (loading || !draftKey) return;
+        saveRecruiterProfileDraft(draftKey, { form, coords });
+    }, [form, coords, loading, draftKey]);
 
     const updateFormField = (field, value) => {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -498,6 +521,7 @@ const RecruiterProfilePage = () => {
             }
 
             toast.success(isCreate ? 'Đã tạo hồ sơ doanh nghiệp.' : 'Đã lưu thay đổi.');
+            clearRecruiterProfileDraft(draftKey);
         } catch (err) {
             toast.error(getLocationApiErrorMessage(err, 'Không thể lưu địa chỉ cơ sở.'));
         } finally {
@@ -1171,7 +1195,9 @@ const RecruiterProfilePage = () => {
                         </>
                     )}
 
-                    {activeTab === 'history' && !noProfile && <HiringHistoryTab />}
+                    {activeTab === 'history' && !noProfile && (
+                        <HiringHistoryTab businessId={profile?.businessId} />
+                    )}
                 </>
             )}
 

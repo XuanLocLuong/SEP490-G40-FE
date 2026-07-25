@@ -5,20 +5,15 @@ import {
     ROUTES,
     getRecruiterApplicantsPath,
     getRecruiterEditJobPath,
+    getRecruiterInvitationsPath,
 } from '../../../routes/path.js';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
-import { formatSalaryRange } from '../../../services/jobPostService.js';
+import { formatSalaryRange } from '../../../utils/formatters.js';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
+import RecruiterJobDetailModal from '../../../components/recruiter/jobs/RecruiterJobDetailModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
 import '../../../assets/styles/JobPostStyle.css';
 import '../../../assets/styles/MyJobsStyle.css';
-
-const MOCK_METRICS = {
-    viewCount: 245,
-    applicationCount: 12,
-    hiredCount: 3,
-    requiredCandidates: 5,
-};
 
 const STATUS_TABS = [
     { id: 'all', label: 'Tất cả', dotClass: '' },
@@ -61,15 +56,16 @@ const matchesTab = (job, tabId) => {
 };
 
 const getJobMetrics = (job) => {
-    const beReady = job.hiredCount != null || job.requiredCandidates != null;
-    if (job.status === 'OPEN' && !beReady) {
-        return { ...MOCK_METRICS };
-    }
+    const requiredCandidates = Number(job.requiredCandidates);
+
     return {
-        viewCount: Number(job.viewCount) || 0,
-        applicationCount: Number(job.applicationCount) || 0,
-        hiredCount: Number(job.hiredCount) || 0,
-        requiredCandidates: Number(job.requiredCandidates) || 1,
+        viewCount: Math.max(0, Number(job.viewCount) || 0),
+        applicationCount: Math.max(0, Number(job.applicationCount) || 0),
+        hiredCount: Math.max(0, Number(job.hiredCount) || 0),
+        requiredCandidates:
+            Number.isFinite(requiredCandidates) && requiredCandidates > 0
+                ? requiredCandidates
+                : 1,
     };
 };
 
@@ -106,7 +102,9 @@ const CONFIRM_DIALOG = {
 
 const canEdit = (status) => status === 'DRAFT' || status === 'REVISION_REQUESTED';
 
-const isOpenRecruitingCard = (job) => job.status === 'OPEN';
+/** Card có metrics (lượt xem / ứng viên / đã tuyển) — OPEN đang tuyển + CLOSED/BLOCKED xem lại. */
+const hasRecruitingMetricsCard = (job) =>
+    job.status === 'OPEN' || job.status === 'CLOSED' || job.status === 'BLOCKED';
 
 const canReopenJob = (job) => job.status === 'CLOSED' && !isPastDeadline(job);
 
@@ -121,6 +119,7 @@ const MyJobsPage = () => {
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [reviewNoteJob, setReviewNoteJob] = useState(null);
+    const [detailJobId, setDetailJobId] = useState(null);
 
     const loadJobs = useCallback(async () => {
         setLoading(true);
@@ -230,13 +229,30 @@ const MyJobsPage = () => {
         const isActionLoading = Boolean(actionLoadingId);
         return (
             <>
-                {job.status === 'OPEN' && (
-                    <Link
-                        to={getRecruiterApplicantsPath(job.id)}
-                        className="my-jobs-page__action my-jobs-page__action--primary"
-                    >
-                        Xem ứng viên
-                    </Link>
+                <button
+                    type="button"
+                    className="my-jobs-page__action my-jobs-page__action--edit"
+                    onClick={() => setDetailJobId(job.id)}
+                >
+                    Xem chi tiết
+                </button>
+                {(job.status === 'OPEN' ||
+                    job.status === 'CLOSED' ||
+                    job.status === 'BLOCKED') && (
+                    <>
+                        <Link
+                            to={getRecruiterApplicantsPath(job.id)}
+                            className="my-jobs-page__action my-jobs-page__action--primary"
+                        >
+                            Xem ứng viên
+                        </Link>
+                        <Link
+                            to={getRecruiterInvitationsPath(job.id, { fromMyJobs: true })}
+                            className="my-jobs-page__action my-jobs-page__action--edit"
+                        >
+                            Xem lời mời
+                        </Link>
+                    </>
                 )}
                 {hasRevisionNote(job) && (
                     <button
@@ -293,15 +309,22 @@ const MyJobsPage = () => {
         <div className="my-jobs-page__card-footer">{renderJobActions(job)}</div>
     );
 
-    const renderOpenCard = (job) => {
+    const renderMetricsCard = (job) => {
         const metrics = getJobMetrics(job);
         const progress = getProgressPercent(metrics.hiredCount, metrics.requiredCandidates);
-        const daysLeft = getDaysLeftLabel(job.applicationDeadline);
+        const daysLeft =
+            job.status === 'OPEN' ? getDaysLeftLabel(job.applicationDeadline) : null;
         const businessName = job.business?.name;
         const locationLabel = job.location?.name || job.location?.city;
+        const cardModifier =
+            job.status === 'CLOSED'
+                ? 'my-jobs-page__card--closed'
+                : job.status === 'BLOCKED'
+                  ? 'my-jobs-page__card--blocked'
+                  : 'my-jobs-page__card--open';
 
         return (
-            <article key={job.id} className="my-jobs-page__card my-jobs-page__card--open">
+            <article key={job.id} className={`my-jobs-page__card ${cardModifier}`}>
                 <div className="my-jobs-page__card-body">
                     <div className="my-jobs-page__card-top">
                         <h2>{job.title}</h2>
@@ -365,21 +388,19 @@ const MyJobsPage = () => {
     };
 
     const renderDefaultCard = (job) => {
-        const noticeByStatus = {
-            PENDING_REVIEW: {
+        const reviewNote = String(job.reviewNote || '').trim();
+        let notice = null;
+        if (job.status === 'PENDING_REVIEW') {
+            notice = {
                 className: 'my-jobs-page__notice--pending',
-                text: 'Post Manager đang xem xét tin — dự kiến phản hồi trong 24 giờ.',
-            },
-            REJECTED: {
+                text: 'Kiểm duyệt viên đang xem xét tin — dự kiến phản hồi trong 24 giờ.',
+            };
+        } else if (job.status === 'REJECTED' && reviewNote) {
+            notice = {
                 className: 'my-jobs-page__notice--rejected',
-                text: 'Tin bị từ chối. Vui lòng chỉnh sửa nội dung và gửi lại.',
-            },
-            REVISION_REQUESTED: {
-                className: 'my-jobs-page__notice--rejected',
-                text: 'Post Manager yêu cầu chỉnh sửa nội dung trước khi duyệt.',
-            },
-        };
-        const notice = noticeByStatus[job.status];
+                text: reviewNote,
+            };
+        }
 
         return (
             <article key={job.id} className="my-jobs-page__card">
@@ -452,7 +473,9 @@ const MyJobsPage = () => {
             ) : (
                 <div className="my-jobs-page__list">
                     {filteredJobs.map((job) =>
-                        isOpenRecruitingCard(job) ? renderOpenCard(job) : renderDefaultCard(job)
+                        hasRecruitingMetricsCard(job)
+                            ? renderMetricsCard(job)
+                            : renderDefaultCard(job)
                     )}
                 </div>
             )}
@@ -468,6 +491,13 @@ const MyJobsPage = () => {
             >
                 {renderConfirmBody()}
             </ConfirmModal>
+
+            <RecruiterJobDetailModal
+                key={detailJobId ?? 'closed'}
+                open={detailJobId != null}
+                jobId={detailJobId}
+                onClose={() => setDetailJobId(null)}
+            />
 
             <ConfirmModal
                 open={Boolean(reviewNoteJob)}

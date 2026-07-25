@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { JOB_TYPES, SKILLS_CATALOG } from '../../../constants/jobPost.js';
 import {
     formatLocationDisplay,
@@ -11,8 +10,6 @@ import RichTextEditor from '../../common/RichTextEditor.jsx';
 import DateTimeInput24h from '../../common/DateTimeInput24h.jsx';
 import JobShiftFields from './JobShiftFields.jsx';
 
-const JOB_DESCRIPTION_TEMPLATE = `<h2>Mô tả công việc</h2><ul><li>Nhiệm vụ chính hàng ngày</li><li>Ca làm việc, địa điểm</li></ul><h2>Yêu cầu</h2><ul><li>Độ tuổi, kinh nghiệm, kỹ năng mềm</li></ul><h2>Quyền lợi</h2><ul><li>Mức lương, thưởng, hỗ trợ</li></ul><h2>Lưu ý khi ứng tuyển</h2><ul><li>Hồ sơ cần chuẩn bị, thời gian phản hồi</li></ul>`;
-
 const JobPostForm = ({
     form,
     onChange,
@@ -20,8 +17,8 @@ const JobPostForm = ({
     businessLocation,
     errors = {},
     disabled = false,
+    onOpenAiDesc,
 }) => {
-    const descriptionInsertRef = useRef(null);
     const minApplicationDeadline = getMinApplicationDeadline();
 
     const setField = (field, value) => {
@@ -193,11 +190,11 @@ const JobPostForm = ({
                     </h2>
                     <button
                         type="button"
-                        className="job-post-form__insert-template-btn"
+                        className="job-post-form__ai-btn"
                         disabled={disabled}
-                        onClick={() => descriptionInsertRef.current?.()}
+                        onClick={onOpenAiDesc}
                     >
-                        Chèn mẫu gợi ý
+                        Gợi ý bằng AI
                     </button>
                 </div>
                 <div className="job-post-form__field">
@@ -206,9 +203,6 @@ const JobPostForm = ({
                         value={form.description}
                         disabled={disabled}
                         placeholder="Mô tả chi tiết công việc..."
-                        template={JOB_DESCRIPTION_TEMPLATE}
-                        autoInsertTemplate={false}
-                        insertTemplateRef={descriptionInsertRef}
                         onChange={(value) => setField('description', value)}
                     />
                 </div>

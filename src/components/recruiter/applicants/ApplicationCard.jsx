@@ -1,4 +1,5 @@
 import { getBusinessInitial } from '../../../utils/formatters.js';
+import { ChatIcon } from '../../common/icons.jsx';
 import {
     formatAppliedRelativeTime,
     getApplicationStatusLabel,
@@ -8,11 +9,12 @@ import {
 const ApplicationCard = ({
     application,
     actionLoading,
+    readOnly = false,
     onAccept,
     onReject,
     onViewProfile,
 }) => {
-    const isPending = application.status === 'PENDING';
+    const canDecide = !readOnly && application.status === 'PENDING';
     const tone = getApplicationStatusTone(application.status);
 
     return (
@@ -41,7 +43,7 @@ const ApplicationCard = ({
             </div>
 
             <div className="application-card__actions">
-                {isPending ? (
+                {canDecide ? (
                     <>
                         <button
                             type="button"
@@ -59,23 +61,23 @@ const ApplicationCard = ({
                         >
                             Chấp nhận
                         </button>
-                        <button
-                            type="button"
-                            className="btn application-card__btn application-card__btn--view"
-                            onClick={() => onViewProfile?.(application)}
-                        >
-                            Xem hồ sơ
-                        </button>
                     </>
-                ) : (
-                    <button
-                        type="button"
-                        className="btn application-card__btn application-card__btn--view"
-                        onClick={() => onViewProfile?.(application)}
-                    >
-                        Xem hồ sơ
-                    </button>
-                )}
+                ) : null}
+                <button
+                    type="button"
+                    className="btn application-card__btn application-card__btn--view"
+                    onClick={() => onViewProfile?.(application)}
+                >
+                    Xem hồ sơ
+                </button>
+                <button
+                    type="button"
+                    className="btn application-card__btn application-card__btn--chat"
+                    title="Nhắn tin"
+                    aria-label="Nhắn tin"
+                >
+                    <ChatIcon width={18} height={18} />
+                </button>
             </div>
         </article>
     );

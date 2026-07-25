@@ -139,6 +139,20 @@
     font-weight: 700;
 }
 
+.job-card__meta-item--closed {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid color-mix(in srgb, #b91c1c 32%, transparent);
+    font-weight: 700;
+}
+
+.job-card--closed .job-card__bookmark {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
 .job-card__meta-item--applied {
     padding: 3px 10px;
     border-radius: 999px;
