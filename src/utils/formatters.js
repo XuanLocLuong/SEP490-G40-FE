@@ -145,11 +145,24 @@ export const mapInteractionToJob = (row) => {
 export const mapInteractionsToJobs = (rows) =>
     dedupeInteractionsByPriority(rows).map(mapInteractionToJob).filter(Boolean);
 
+/**
+ * Format salary range for job cards / detail.
+ * Null or ≤ 0 counts as missing. Examples:
+ * - both: `22K - 30K/giờ`
+ * - max only: `Lên đến 30K/giờ`
+ * - min only: `Từ 22K/giờ`
+ * - neither: `Thỏa thuận`
+ */
 export const formatSalary = (salaryMin, salaryMax) => {
-    const format = (value) => {
-        if (value == null) return null;
+    const toPositiveNumber = (value) => {
+        if (value == null || value === '') return null;
         const num = Number(value);
-        if (Number.isNaN(num)) return null;
+        if (!Number.isFinite(num) || num <= 0) return null;
+        return num;
+    };
+
+    const format = (num) => {
+        if (num == null) return null;
         if (num >= 1_000_000) {
             return `${(num / 1_000_000).toFixed(num % 1_000_000 === 0 ? 0 : 1)}tr`;
         }
@@ -159,17 +172,20 @@ export const formatSalary = (salaryMin, salaryMax) => {
         return `${num}`;
     };
 
-    const min = format(salaryMin);
-    const max = format(salaryMax);
+    const minNum = toPositiveNumber(salaryMin);
+    const maxNum = toPositiveNumber(salaryMax);
+    const min = format(minNum);
+    const max = format(maxNum);
 
-    if (min && max) {
-        const isMonthly = Number(salaryMin) >= 1_000_000 || Number(salaryMax) >= 1_000_000;
-        const suffix = isMonthly ? '/tháng' : '/giờ';
-        return `${min} - ${max}${suffix}`;
-    }
-    if (min) return `Từ ${min}`;
-    if (max) return `Đến ${max}`;
-    return 'Thỏa thuận';
+    if (!min && !max) return 'Thỏa thuận';
+
+    const isMonthly =
+        (minNum != null && minNum >= 1_000_000) || (maxNum != null && maxNum >= 1_000_000);
+    const suffix = isMonthly ? '/tháng' : '/giờ';
+
+    if (min && max) return `${min} - ${max}${suffix}`;
+    if (min) return `Từ ${min}${suffix}`;
+    return `Lên đến ${max}${suffix}`;
 };
 
 /** Định dạng tiền Việt — dưới 1tr: ₫/giờ, từ 1tr: triệu ₫/tháng */
@@ -338,7 +354,7 @@ export const formatShiftGroupLine = (group) => {
 };
 
 export const formatScheduleSummary = (shiftGroups = []) => {
-    if (!shiftGroups.length) return 'Chưa có lịch ca';
+    if (!shiftGroups.length) return 'Thỏa thuận';
     if (shiftGroups.length === 1) return formatShiftGroupLine(shiftGroups[0]);
     return 'Linh hoạt theo ca';
 };
