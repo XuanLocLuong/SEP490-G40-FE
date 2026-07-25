@@ -326,7 +326,7 @@ export const formatShiftGroupLine = (group) => {
 };
 
 export const formatScheduleSummary = (shiftGroups = []) => {
-    if (!shiftGroups.length) return 'Chưa có lịch ca';
+    if (!shiftGroups.length) return 'Thỏa thuận';
     if (shiftGroups.length === 1) return formatShiftGroupLine(shiftGroups[0]);
     return 'Linh hoạt theo ca';
 };
