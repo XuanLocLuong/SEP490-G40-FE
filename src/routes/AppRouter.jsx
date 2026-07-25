@@ -24,7 +24,7 @@ import CandidateProfilePage from '../pages/candidate/CandidateProfile/CandidateP
 import AvailabilityPage from '../pages/candidate/availability/AvailabilityPage.jsx';
 import CandidateApplicationHistoryPage from '../pages/candidate/CandidateApplicationHistoryPage.jsx';
 import CandidateInvitationsPage from '../pages/candidate/CandidateInvitationsPage.jsx';
-import CandidateNotificationsPage from '../pages/candidate/CandidateNotificationsPage.jsx=';
+import CandidateNotificationsPage from '../pages/candidate/CandidateNotificationsPage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
 import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
