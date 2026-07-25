@@ -6,10 +6,24 @@ import '../../assets/styles/ProfileMenuStyle.css';
 // items: [{ label, path?, href?, icon?: Component }]
 //   - path: route thật, render bằng NavLink
 //   - href: chưa có trang, render bằng thẻ <a> thường (mặc định "#")
-const ProfileMenu = ({ name, roleLabel, onLogout, items = [], extra = null, variant = 'sidebar' }) => {
+const ProfileMenu = ({
+    name,
+    roleLabel,
+    avatarUrl = null,
+    onLogout,
+    items = [],
+    extra = null,
+    variant = 'sidebar',
+}) => {
     const [open, setOpen] = useState(false);
+    const [imgFailed, setImgFailed] = useState(false);
     const rootRef = useRef(null);
     const initial = name ? name.charAt(0).toUpperCase() : '?';
+    const showAvatarImage = Boolean(avatarUrl) && !imgFailed;
+
+    useEffect(() => {
+        setImgFailed(false);
+    }, [avatarUrl]);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -29,10 +43,21 @@ const ProfileMenu = ({ name, roleLabel, onLogout, items = [], extra = null, vari
                 onClick={() => setOpen((v) => !v)}
                 aria-expanded={open}
             >
-                <span className="sidebar-profile__avatar">{initial}</span>
+                {showAvatarImage ? (
+                    <img
+                        src={avatarUrl}
+                        alt=""
+                        className="profile-menu__avatar profile-menu__avatar--image"
+                        onError={() => setImgFailed(true)}
+                    />
+                ) : (
+                    <span className="profile-menu__avatar" aria-hidden="true">
+                        {initial}
+                    </span>
+                )}
                 <span className="profile-menu__text">
-                    <span className="sidebar-profile__name">{name}</span>
-                    <span className="sidebar-profile__role">{roleLabel}</span>
+                    <span className="profile-menu__name">{name}</span>
+                    <span className="profile-menu__role">{roleLabel}</span>
                 </span>
             </button>
 

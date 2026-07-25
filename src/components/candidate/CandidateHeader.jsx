@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { getProfile } from '../../apis/CandidateProfileApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useLogoutToLanding } from '../../hooks/useLogoutToLanding.js';
 import { useAutoHideHeader } from '../../hooks/useAutoHideHeader.js';
@@ -13,6 +14,7 @@ import {
     ChatIcon,
     ClockIcon,
     StarIcon,
+    EyeIcon,
 } from '../common/icons.jsx';
 import {
     CANDIDATE_HOME_NAV_ITEMS,
@@ -23,8 +25,10 @@ import '../../assets/styles/HeaderStyle.css';
 
 const DROPDOWN_ITEMS = [
     { label: 'Hồ sơ của tôi', path: ROUTES.CANDIDATE_PROFILE, icon: FileTextIcon },
+    { label: 'Tài khoản và bảo mật', path: ROUTES.CANDIDATE_SETTINGS, icon: SettingsIcon },
     { label: 'Lời mời', path: ROUTES.CANDIDATE_INVITATIONS, icon: MailIcon },
     { label: 'Lịch sử ứng tuyển', path: ROUTES.CANDIDATE_APPLICATION_HISTORY, icon: ClockIcon },
+    { label: 'Lịch sử tương tác', path: ROUTES.CANDIDATE_INTERACTIONS, icon: EyeIcon },
 ];
 
 const isListPathActive = (listPath, pathname, search) => {
@@ -45,13 +49,33 @@ const isListPathActive = (listPath, pathname, search) => {
 };
 
 const CandidateHeader = () => {
-    const { auth } = useAuth();
+    const { auth, updateProfile } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const handleLogout = useLogoutToLanding();
     const headerHidden = useAutoHideHeader();
     const isOnHome = location.pathname === ROUTES.CANDIDATE_HOME;
     const [activeHomeSection, setActiveHomeSection] = useState(null);
+
+    // Sync avatar từ /candidate/profile vào auth (login thường không có profilePicture).
+    useEffect(() => {
+        let cancelled = false;
+
+        (async () => {
+            try {
+                const res = await getProfile();
+                const picture = res?.data?.data?.profilePicture || null;
+                if (cancelled || !picture) return;
+                updateProfile?.({ profilePicture: picture });
+            } catch {
+                // Giữ chữ cái nếu không tải được profile.
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [updateProfile]);
 
     const handleHomeNavClick = (event, item) => {
         event.preventDefault();
@@ -109,9 +133,6 @@ const CandidateHeader = () => {
                 </div>
 
                 <div className="site-header__right">
-                    <NavLink to={ROUTES.CANDIDATE_SETTINGS} className="site-header__icon-btn" aria-label="Cài đặt">
-                        <SettingsIcon />
-                    </NavLink>
                     <a href="#" className="site-header__icon-btn" aria-label="Tin nhắn">
                         <ChatIcon />
                     </a>
@@ -122,7 +143,8 @@ const CandidateHeader = () => {
                     <ProfileMenu
                         variant="header"
                         name={auth?.fullName}
-                        roleLabel="Sinh viên"
+                        roleLabel="Ứng viên"
+                        avatarUrl={auth?.profilePicture || null}
                         items={DROPDOWN_ITEMS}
                         onLogout={() => {
                             handleLogout();
