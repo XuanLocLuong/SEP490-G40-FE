@@ -23,6 +23,7 @@ const DROPDOWN_ITEMS = [
     { label: 'Thống kê', path: ROUTES.RECRUITER_ANALYTICS, icon: ChartIcon },
     { label: 'Tất cả tin tuyển dụng', path: ROUTES.RECRUITER_ALL_JOBS, icon: ListIcon },
     { label: 'Hồ sơ nhà tuyển dụng', path: ROUTES.RECRUITER_PROFILE, icon: BuildingIcon },
+    { label: 'Tài khoản và bảo mật', path: ROUTES.RECRUITER_SETTINGS, icon: SettingsIcon },
 ];
 
 const RecruiterHeader = () => {
@@ -49,9 +50,6 @@ const RecruiterHeader = () => {
                 </div>
 
                 <div className="site-header__right">
-                    <NavLink to={ROUTES.RECRUITER_SETTINGS} className="site-header__icon-btn" aria-label="Cài đặt">
-                        <SettingsIcon />
-                    </NavLink>
                     <a href="#" className="site-header__icon-btn" aria-label="Tin nhắn">
                         <ChatIcon />
                     </a>
@@ -61,6 +59,7 @@ const RecruiterHeader = () => {
                         variant="header"
                         name={auth?.fullName}
                         roleLabel="Nhà tuyển dụng"
+                        avatarUrl={auth?.profilePicture || null}
                         items={DROPDOWN_ITEMS}
                         onLogout={handleLogout}
                     />
