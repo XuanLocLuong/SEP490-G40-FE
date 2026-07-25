@@ -221,6 +221,11 @@
     border-bottom-color: var(--color-primary);
 }
 
+.public-business__jobs-subtabs {
+    grid-area: unset;
+    margin: 0 0 16px;
+}
+
 .public-business__panel {
     padding: 20px;
     background: var(--color-surface);

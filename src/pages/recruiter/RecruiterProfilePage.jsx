@@ -1195,7 +1195,9 @@ const RecruiterProfilePage = () => {
                         </>
                     )}
 
-                    {activeTab === 'history' && !noProfile && <HiringHistoryTab />}
+                    {activeTab === 'history' && !noProfile && (
+                        <HiringHistoryTab businessId={profile?.businessId} />
+                    )}
                 </>
             )}
 

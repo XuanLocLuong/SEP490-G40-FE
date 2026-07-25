@@ -51,6 +51,7 @@ const JobCard = ({
     variant = 'default',
 }) => {
     const isPreview = variant === 'preview';
+    const isClosed = job?.status === 'CLOSED';
     const businessName = job.business?.name || 'Công ty';
     const businessLogoUrl = job.business?.logoUrl || null;
     const tagLabel = formatJobType(job.jobType);
@@ -62,7 +63,11 @@ const JobCard = ({
     const shiftsLabel = formatJobShiftsLabel(job.shifts);
 
     return (
-        <article className={`job-card${compact ? ' job-card--compact' : ''}`}>
+        <article
+            className={`job-card${compact ? ' job-card--compact' : ''}${
+                isClosed ? ' job-card--closed' : ''
+            }`}
+        >
             <div className="job-card__top">
                 <div className="job-card__brand">
                     <CardBusinessLogo
@@ -75,7 +80,7 @@ const JobCard = ({
                         <p className="job-card__company">{businessName}</p>
                     </div>
                 </div>
-                {isPreview ? (
+                {isPreview || isClosed ? (
                     <span className="job-card__bookmark" aria-hidden="true">
                         <BookmarkIcon width={20} height={20} />
                     </span>
@@ -88,8 +93,19 @@ const JobCard = ({
                 )}
             </div>
             <div className="job-card__meta">
-                {(matchLabel || scheduleMatchLabel || interactionLabel || job.urgent || applied || distance) && (
+                {(matchLabel ||
+                    scheduleMatchLabel ||
+                    interactionLabel ||
+                    job.urgent ||
+                    applied ||
+                    distance ||
+                    isClosed) && (
                     <>
+                        {isClosed && (
+                            <span className="job-card__meta-item job-card__meta-item--closed">
+                                Ngưng nhận hồ sơ
+                            </span>
+                        )}
                         {matchLabel && (
                             <span className="job-card__meta-item job-card__meta-item--match">
                                 {matchLabel}
@@ -114,7 +130,7 @@ const JobCard = ({
                                 {interactionLabel}
                             </span>
                         )}
-                        {job.urgent && (
+                        {job.urgent && !isClosed && (
                             <span className="job-card__meta-item job-card__meta-item--urgent">
                                 Tuyển gấp
                             </span>
@@ -169,6 +185,10 @@ const JobCard = ({
                     <button type="button" className="btn btn--primary job-card__apply" tabIndex={-1}>
                         Ứng tuyển ngay
                     </button>
+                </div>
+            ) : isClosed ? (
+                <div className="job-card__actions">
+                    <JobDetailLink jobId={job.id} className="job-card__detail-link" />
                 </div>
             ) : (
                 <div className="job-card__actions">
