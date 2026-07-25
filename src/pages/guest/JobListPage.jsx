@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import JobListSearch from '../../components/joblist/JobListSearch.jsx';
 import JobListItem from '../../components/job/JobListItem.jsx';
 import BookmarkLoginRedirect from '../../components/job/BookmarkLoginRedirect.jsx';
@@ -19,6 +19,7 @@ import {
     parseJobListSearchParams,
     parseJobListSection,
 } from '../../utils/jobQuery.js';
+import { resolveJobListBack } from '../../utils/jobNavReturn.js';
 import '../../assets/styles/JobListPageStyle.css';
 
 const JobListPage = () => {
@@ -35,6 +36,7 @@ const JobListPage = () => {
 
     const section = useMemo(() => parseJobListSection(searchParams), [searchParams]);
     const sectionMeta = section ? JOB_LIST_SECTION_META[section] : null;
+    const listBack = useMemo(() => resolveJobListBack(auth?.role), [auth?.role]);
 
     const urlQuery = useMemo(() => {
         if (section) return null;
@@ -146,8 +148,11 @@ const JobListPage = () => {
         <div className="job-list-page">
             <BookmarkLoginRedirect />
             <header className="job-list-page__header">
+                <Link to={listBack.path} className="job-list-page__back">
+                    ← {listBack.label}
+                </Link>
                 <h1 className="job-list-page__title">
-                    {sectionMeta?.title || 'Danh sách việc làm'}
+                    {sectionMeta?.title || 'Việc làm nổi bật'}
                 </h1>
             </header>
 

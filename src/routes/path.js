@@ -20,7 +20,7 @@ export const ROUTES = {
     // ⚠️ Các path dưới đây CHƯA có Page/Route đăng ký trong AppRouter —
     // chỉ dùng làm target cho Sidebar nav theo đúng thiết kế. Bấm vào sẽ bị
     // catch-all route đá về lại trang chủ cho tới khi task tương ứng được code.
-    /** List AI gợi ý — tái dùng JobListPage với ?section=ai */
+    /** List JobLink gợi ý — tái dùng JobListPage với ?section=ai */
     CANDIDATE_AI_SUGGESTIONS: '/jobs?section=ai',
     /** List lịch sử tương tác VIEW/SAVE/APPLY */
     CANDIDATE_INTERACTIONS: '/jobs?section=interactions',

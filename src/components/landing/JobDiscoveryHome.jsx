@@ -4,7 +4,6 @@ import SearchResultsSection from './SearchResultsSection.jsx';
 import UrgentJobsSection from './UrgentJobsSection.jsx';
 import AiRecommendationsSection from './AiRecommendationsSection.jsx';
 import FeaturedJobsSection from './FeaturedJobsSection.jsx';
-import InteractionHistorySection from './InteractionHistorySection.jsx';
 import TopEmployersSection from './TopEmployersSection.jsx';
 import WhyJobLinkSection from './WhyJobLinkSection.jsx';
 import BookmarkLoginRedirect from '../job/BookmarkLoginRedirect.jsx';
@@ -81,8 +80,6 @@ const JobDiscoveryHome = ({
             )}
 
             <FeaturedJobsSection size={featuredSize} compact={featuredCompact} />
-
-            {showCandidateSections && <InteractionHistorySection />}
 
             <TopEmployersSection compact={featuredCompact} />
             {showWhySection && <WhyJobLinkSection />}
