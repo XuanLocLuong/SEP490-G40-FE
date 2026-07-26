@@ -19,15 +19,6 @@ const Header = () => {
                     <NavLink to={ROUTES.LANDING} className="site-header__logo">
                         JOBLINK
                     </NavLink>
-
-                    <nav className="site-header__nav">
-                        <NavLink to={ROUTES.JOB_LIST} className="site-header__nav-link">
-                            Việc làm
-                        </NavLink>
-                        <NavLink to={ROUTES.LANDING} className="site-header__nav-link">
-                            Công ty
-                        </NavLink>
-                    </nav>
                 </div>
 
                 <div className="site-header__right">
