@@ -107,8 +107,24 @@
 
 .job-card__meta {
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    min-width: 0;
+}
+
+.job-card__meta-tags {
+    display: flex;
     flex-wrap: wrap;
     gap: 8px 12px;
+    min-width: 0;
+}
+
+.job-card__meta-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
 }
 
 .job-card__meta-item {
@@ -117,13 +133,33 @@
     gap: 6px;
     font-size: 13px;
     color: var(--color-text-muted);
+    min-width: 0;
+    max-width: 100%;
+}
+
+.job-card__meta-item svg {
+    flex-shrink: 0;
+}
+
+.job-card__meta-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .job-card__meta-item--shifts {
-    min-width: 0;
-    max-width: 100%;
-    align-items: flex-start;
+    align-items: center;
     line-height: 1.35;
+}
+
+.job-card__meta-item--vacancy {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.job-card__meta-item--vacancy-full {
+    color: var(--color-danger, #b91c1c);
 }
 
 .job-card--compact .job-card__meta-item--shifts {
@@ -352,8 +388,32 @@
     font-size: 13px;
 }
 
-.job-card--compact .job-card__meta {
+.job-card--compact .job-card__meta,
+.landing-page .job-card__meta {
     gap: 6px;
+}
+
+.job-card--compact .job-card__meta-tags,
+.landing-page .job-card__meta-tags {
+    gap: 6px;
+}
+
+.job-card--compact .job-card__meta-item--urgent,
+.job-card--compact .job-card__meta-item--closed,
+.job-card--compact .job-card__meta-item--applied,
+.job-card--compact .job-card__meta-item--match,
+.job-card--compact .job-card__meta-item--schedule-match,
+.job-card--compact .job-card__meta-item--interaction,
+.job-card--compact .job-card__meta-item--distance,
+.landing-page .job-card__meta-item--urgent,
+.landing-page .job-card__meta-item--closed,
+.landing-page .job-card__meta-item--applied,
+.landing-page .job-card__meta-item--match,
+.landing-page .job-card__meta-item--schedule-match,
+.landing-page .job-card__meta-item--interaction,
+.landing-page .job-card__meta-item--distance {
+    width: auto;
+    max-width: 100%;
 }
 
 .job-card--compact .job-card__meta-item--applied {

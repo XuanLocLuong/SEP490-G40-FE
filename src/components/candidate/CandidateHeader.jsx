@@ -7,11 +7,11 @@ import { useAutoHideHeader } from '../../hooks/useAutoHideHeader.js';
 import { ROUTES } from '../../routes/path.js';
 import ProfileMenu from '../common/ProfileMenu.jsx';
 import NotificationBell from '../notifications/NotificationBell.jsx';
+import ChatBell from '../chat/ChatBell.jsx';
 import {
     FileTextIcon,
     MailIcon,
     SettingsIcon,
-    ChatIcon,
     ClockIcon,
     StarIcon,
     EyeIcon,
@@ -133,9 +133,7 @@ const CandidateHeader = () => {
                 </div>
 
                 <div className="site-header__right">
-                    <a href="#" className="site-header__icon-btn" aria-label="Tin nhắn">
-                        <ChatIcon />
-                    </a>
+                    <ChatBell />
                     <NotificationBell />
 
                     <ProfileMenu

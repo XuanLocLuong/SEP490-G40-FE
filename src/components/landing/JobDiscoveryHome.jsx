@@ -72,12 +72,9 @@ const JobDiscoveryHome = ({
                 </div>
             )}
 
-            {showCandidateSections && (
-                <>
-                    <UrgentJobsSection />
-                    <AiRecommendationsSection />
-                </>
-            )}
+            <UrgentJobsSection />
+
+            {showCandidateSections && <AiRecommendationsSection />}
 
             <FeaturedJobsSection size={featuredSize} compact={featuredCompact} />
 

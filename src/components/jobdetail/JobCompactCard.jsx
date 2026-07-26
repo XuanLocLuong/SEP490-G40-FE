@@ -4,11 +4,12 @@ import {
     formatJobType,
     formatSalary,
     formatLocation,
+    formatVacancyLabel,
     getBusinessInitial,
     hasAppliedToJob,
 } from '../../utils/formatters.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
-import { MapPinIcon, BriefcaseIcon } from '../common/icons.jsx';
+import { MapPinIcon, BriefcaseIcon, UsersIcon } from '../common/icons.jsx';
 import { getJobDetailPath } from '../../routes/path.js';
 
 const CompactBusinessLogo = ({ name, logoUrl }) => {
@@ -38,6 +39,8 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
     const businessLogoUrl = job.business?.logoUrl || null;
     const distance = getJobDistanceDisplay(job.distanceKm, nearMe);
     const applied = hasAppliedToJob(job);
+    const vacancyLabel = formatVacancyLabel(job);
+    const isVacancyFull = vacancyLabel === 'Đã hết vị trí';
 
     return (
         <Link
@@ -58,7 +61,9 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
                 <div className="job-compact-card__meta">
                     <span className="job-compact-card__meta-item">
                         <MapPinIcon width={14} height={14} />
-                        {formatLocation(job.location)}
+                        <span className="job-compact-card__meta-text">
+                            {formatLocation(job.location)}
+                        </span>
                     </span>
                     {distance && (
                         <span
@@ -83,6 +88,16 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
                         <span className="job-compact-card__meta-item">
                             <BriefcaseIcon width={14} height={14} />
                             {formatJobType(job.jobType)}
+                        </span>
+                    )}
+                    {vacancyLabel && (
+                        <span
+                            className={`job-compact-card__meta-item job-compact-card__vacancy${
+                                isVacancyFull ? ' job-compact-card__vacancy--full' : ''
+                            }`}
+                        >
+                            <UsersIcon width={14} height={14} />
+                            <span className="job-compact-card__meta-text">{vacancyLabel}</span>
                         </span>
                     )}
                 </div>

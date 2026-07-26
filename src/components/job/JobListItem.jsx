@@ -4,6 +4,7 @@ import {
     formatLocation,
     formatRelativeTime,
     formatJobShiftsLabel,
+    formatVacancyLabel,
     getBusinessInitial,
     hasAppliedToJob,
 } from '../../utils/formatters.js';
@@ -14,6 +15,7 @@ import {
     BookmarkIcon,
     EyeIcon,
     CheckCircleIcon,
+    UsersIcon,
 } from '../common/icons.jsx';
 import JobBookmarkButton from './JobBookmarkButton.jsx';
 import JobApplyButton from './JobApplyButton.jsx';
@@ -29,6 +31,8 @@ const JobListItem = ({ job, nearMe = false }) => {
     const scheduleMatchLabel = job.scheduleMatchLabel;
     const interactionLabel = job.interactionLabel;
     const shiftsLabel = formatJobShiftsLabel(job.shifts);
+    const vacancyLabel = formatVacancyLabel(job);
+    const isVacancyFull = vacancyLabel === 'Đã hết vị trí';
     const hasTags =
         tagLabel ||
         matchLabel ||
@@ -120,6 +124,16 @@ const JobListItem = ({ job, nearMe = false }) => {
                     <span className="job-list-item__info-item job-list-item__info-item--shifts" title={shiftsLabel}>
                         <ClockIcon width={16} height={16} />
                         {shiftsLabel}
+                    </span>
+                )}
+                {vacancyLabel && (
+                    <span
+                        className={`job-list-item__info-item job-list-item__info-item--vacancy${
+                            isVacancyFull ? ' job-list-item__info-item--vacancy-full' : ''
+                        }`}
+                    >
+                        <UsersIcon width={16} height={16} />
+                        {vacancyLabel}
                     </span>
                 )}
                 {job.createdAt && (

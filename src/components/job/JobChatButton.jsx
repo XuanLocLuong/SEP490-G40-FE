@@ -1,13 +1,11 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { setBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
 import { notifyLoginRequired } from '../../utils/notifyLoginRequired.js';
+import { openChatPanel } from '../../utils/chatEvents.js';
 import { ChatIcon } from '../common/icons.jsx';
-
-const CHAT_COMING_SOON_MESSAGE = 'Tính năng chat đang được phát triển.';
 
 const JobChatButton = ({
     jobId,
@@ -34,9 +32,9 @@ const JobChatButton = ({
             return;
         }
 
-        // Placeholder: sau này navigate(getCandidateJobChatPath(jobId))
+        // Phase 1: open header chat box (conversation list). Deep-link by job later.
         void jobId;
-        toast.info(CHAT_COMING_SOON_MESSAGE);
+        openChatPanel({ jobId });
     };
 
     return (
