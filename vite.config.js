@@ -4,6 +4,10 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // sockjs-client expects Node-style `global`
+    global: 'globalThis',
+  },
   server: {
     allowedHosts: ['.trycloudflare.com'],
   },

@@ -4,7 +4,14 @@ import '../../assets/styles/ChatPanelStyle.css';
 
 /** Header trigger only — dock lives in ChatProvider so it survives layout switches. */
 const ChatBell = () => {
-    const { chatEnabled, dockOpen, totalUnread, openPicker, closeAll } = useChat();
+    const {
+        chatEnabled,
+        dockOpen,
+        pickerOpen,
+        totalUnread,
+        openPicker,
+        setPickerOpen,
+    } = useChat();
 
     if (!chatEnabled) return null;
 
@@ -19,8 +26,9 @@ const ChatBell = () => {
                 aria-label="Tin nhắn"
                 aria-expanded={dockOpen}
                 onClick={() => {
-                    if (dockOpen) {
-                        closeAll();
+                    // Toggle inbox only — do not close open chat floats (desktop).
+                    if (pickerOpen) {
+                        setPickerOpen(false);
                         return;
                     }
                     openPicker();

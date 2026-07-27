@@ -8,7 +8,9 @@ import {
 } from '../../../apis/InvitationApi.jsx';
 import ConfirmModal from '../../common/ConfirmModal.jsx';
 import RichTextContent from '../../common/RichTextContent.jsx';
+import { ChatIcon } from '../../common/icons.jsx';
 import { formatJobType, formatSalary, getBusinessInitial } from '../../../utils/formatters.js';
+import { openChatPanel } from '../../../utils/chatEvents.js';
 import {
     formatInvitationSentAt,
     formatMatchScore,
@@ -247,24 +249,46 @@ const InvitationDetailModal = ({
                         )}
                     </div>
 
-                    {!loading && detail && isSent && (
+                    {!loading &&
+                        detail &&
+                        ((detail.jobId && detail.recruiterId) || isSent) && (
                         <div className="ci-detail-modal__footer">
-                            <button
-                                type="button"
-                                className="ci-btn ci-btn--ghost"
-                                disabled={actionLoading}
-                                onClick={() => setConfirmReject(true)}
-                            >
-                                Từ chối
-                            </button>
-                            <button
-                                type="button"
-                                className="ci-btn ci-btn--primary"
-                                disabled={actionLoading}
-                                onClick={handleAccept}
-                            >
-                                {actionLoading ? 'Đang xử lý...' : 'Chấp nhận'}
-                            </button>
+                            {detail.jobId && detail.recruiterId ? (
+                                <button
+                                    type="button"
+                                    className="ci-btn ci-btn--ghost"
+                                    disabled={actionLoading}
+                                    onClick={() =>
+                                        openChatPanel({
+                                            jobId: detail.jobId,
+                                            otherUserId: detail.recruiterId,
+                                        })
+                                    }
+                                >
+                                    <ChatIcon width={16} height={16} />
+                                    Chat
+                                </button>
+                            ) : null}
+                            {isSent ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="ci-btn ci-btn--ghost"
+                                        disabled={actionLoading}
+                                        onClick={() => setConfirmReject(true)}
+                                    >
+                                        Từ chối
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="ci-btn ci-btn--primary"
+                                        disabled={actionLoading}
+                                        onClick={handleAccept}
+                                    >
+                                        {actionLoading ? 'Đang xử lý...' : 'Chấp nhận'}
+                                    </button>
+                                </>
+                            ) : null}
                         </div>
                     )}
                 </div>

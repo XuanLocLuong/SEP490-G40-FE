@@ -1,27 +1,57 @@
 import { useAuth } from '../../contexts/authContext.js';
-import { formatMessageTime } from '../../utils/chatDisplay.js';
-import { CHAT_UI_ACTIONS } from '../../utils/chatDisplay.js';
+import {
+    formatMessageTime,
+    INVITE_GROUP_ACTIONS,
+    isNotifyAction,
+} from '../../utils/chatDisplay.js';
 import ChatActionCard from './ChatActionCard.jsx';
 
-const ChatMessageBubble = ({ message, onAction, actionBusy }) => {
+const ChatMessageBubble = ({ message }) => {
     const { auth } = useAuth();
-    const mine = message.senderId != null && Number(message.senderId) === Number(auth?.userId ?? auth?.id);
+    const mine =
+        message.senderId != null &&
+        Number(message.senderId) === Number(auth?.userId ?? auth?.id);
     const deleted = Boolean(message.deleted);
     const isAction = message.messageType === 'ACTION' && message.actionName;
+    const actionName = message.actionName;
 
-    if (isAction && !CHAT_UI_ACTIONS.has(message.actionName)) {
-        // Hidden in UI per product scope (INVITE / ACCEPT_APPLICATION stay out of chat)
-        return null;
+    // Notify group: centered system banner (distinct from chat bubbles)
+    if (isAction && isNotifyAction(actionName)) {
+        return (
+            <div className="chat-msg chat-msg--system">
+                <div className="chat-msg__system" role="status">
+                    <span className="chat-msg__system-label">Thông báo</span>
+                    <p className="chat-msg__system-body">
+                        {message.content || 'Thông báo hệ thống'}
+                    </p>
+                </div>
+                <span className="chat-msg__meta">{formatMessageTime(message.createdAt)}</span>
+            </div>
+        );
     }
 
-    if (isAction && CHAT_UI_ACTIONS.has(message.actionName)) {
+    // Invite-group: info card in history; buttons live in bottom sticky dock
+    if (isAction && INVITE_GROUP_ACTIONS.has(actionName)) {
         return (
             <div className={`chat-msg chat-msg--action${mine ? ' chat-msg--mine' : ''}`}>
                 <ChatActionCard
-                    actionName={message.actionName}
-                    busy={actionBusy}
-                    onAction={onAction}
+                    actionName={actionName}
+                    body={message.content || ''}
+                    hideActions
+                    disabled={Boolean(message.actionDisabled)}
                 />
+                <span className="chat-msg__meta">{formatMessageTime(message.createdAt)}</span>
+            </div>
+        );
+    }
+
+    // Other ACTION types (decision messages if ever stored): show content as text
+    if (isAction) {
+        return (
+            <div className={`chat-msg${mine ? ' chat-msg--mine' : ''}`}>
+                <div className="chat-msg__bubble">
+                    {message.content || actionName}
+                </div>
                 <span className="chat-msg__meta">{formatMessageTime(message.createdAt)}</span>
             </div>
         );

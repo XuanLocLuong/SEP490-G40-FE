@@ -9,10 +9,11 @@ import {
 } from '../../apis/ApplicationApi.jsx';
 import JobDetailModal from '../../components/job/JobDetailModal.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
-import { CalendarIcon, ClockIcon } from '../../components/common/icons.jsx';
+import { CalendarIcon, ChatIcon, ClockIcon } from '../../components/common/icons.jsx';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { getBusinessProfilePath } from '../../routes/path.js';
+import { openChatPanel } from '../../utils/chatEvents.js';
 import { formatJobShiftsLabel, getBusinessInitial } from '../../utils/formatters.js';
 import '../../assets/styles/CandidateApplicationHistoryPageStyle.css';
 
@@ -351,6 +352,22 @@ const CandidateApplicationHistoryPage = () => {
                             </div>
 
                             <div className="cah-item__actions">
+                                {item.jobId && item.recruiterId ? (
+                                    <button
+                                        type="button"
+                                        className="cah-btn cah-btn--ghost"
+                                        title="Nhắn tin với nhà tuyển dụng"
+                                        onClick={() =>
+                                            openChatPanel({
+                                                jobId: item.jobId,
+                                                otherUserId: item.recruiterId,
+                                            })
+                                        }
+                                    >
+                                        <ChatIcon width={16} height={16} />
+                                        Chat
+                                    </button>
+                                ) : null}
                                 {item.jobId ? (
                                     <button
                                         type="button"

@@ -62,6 +62,7 @@ export const formatAppliedRelativeTime = (isoString) => {
 export const mapApplicationItem = (item) => ({
     id: item?.id ?? null,
     candidateId: item?.candidateId ?? null,
+    candidateUserId: item?.candidateUserId ?? item?.candidate?.userId ?? null,
     candidateName: item?.candidateName || 'Ứng viên',
     candidateAvatar: item?.candidateAvatar || null,
     status: item?.status || null,

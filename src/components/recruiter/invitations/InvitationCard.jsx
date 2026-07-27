@@ -6,12 +6,13 @@ import {
     getInvitationStatusTone,
 } from '../../../services/recruiterInvitationService.js';
 
-const InvitationCard = ({ invitation, onViewProfile }) => {
+const InvitationCard = ({ invitation, onViewProfile, onChat, chatLoading = false }) => {
     const tone = getInvitationStatusTone(invitation.status);
     const score =
         invitation.matchScore != null && !Number.isNaN(Number(invitation.matchScore))
             ? `${Number(invitation.matchScore).toFixed(0)}%`
             : null;
+    const canChat = invitation.candidateUserId != null;
 
     return (
         <article className="application-card">
@@ -57,8 +58,10 @@ const InvitationCard = ({ invitation, onViewProfile }) => {
                 <button
                     type="button"
                     className="btn application-card__btn application-card__btn--chat"
-                    title="Nhắn tin"
+                    title={canChat ? 'Nhắn tin' : 'Thiếu candidateUserId từ API'}
                     aria-label="Nhắn tin"
+                    disabled={chatLoading || !canChat}
+                    onClick={() => onChat?.(invitation)}
                 >
                     <ChatIcon width={18} height={18} />
                 </button>

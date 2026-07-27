@@ -229,6 +229,7 @@ const JobDetailPanel = ({
                         </p>
                         <JobChatButton
                             jobId={job.id}
+                            otherUserId={job.business?.ownerId ?? job.business?.owner?.id}
                             className="btn btn--ghost job-detail-panel__chat"
                         />
                     </div>

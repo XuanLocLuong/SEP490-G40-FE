@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchConversations } from '../apis/ChatApi.jsx';
-import { unwrapPageContent } from '../utils/chatDisplay.js';
+import {
+    conversationHasMessages,
+    unwrapPageContent,
+} from '../utils/chatDisplay.js';
 
 export const useChatInbox = ({ enabled = false } = {}) => {
     const [conversations, setConversations] = useState([]);
@@ -13,7 +16,10 @@ export const useChatInbox = ({ enabled = false } = {}) => {
         setError('');
         try {
             const res = await fetchConversations({ page: 0, size: 50 });
-            setConversations(unwrapPageContent(res));
+            // Hide empty threads in inbox; open via Chat buttons still works.
+            setConversations(
+                unwrapPageContent(res).filter(conversationHasMessages)
+            );
         } catch {
             setError('Không thể tải danh sách tin nhắn.');
             setConversations([]);

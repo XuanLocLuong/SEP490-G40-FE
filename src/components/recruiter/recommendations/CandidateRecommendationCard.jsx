@@ -93,6 +93,7 @@ const CandidateRecommendationCard = ({
     sending = false,
     sent = false,
     onInvite,
+    onChat,
 }) => {
     const matchScore = toScore(candidate.matchScore);
     const salary = formatSalary(candidate.expectedSalaryMin, candidate.expectedSalaryMax);
@@ -185,6 +186,21 @@ const CandidateRecommendationCard = ({
                 >
                     Xem hồ sơ
                 </Link>
+                {typeof onChat === 'function' ? (
+                    <button
+                        type="button"
+                        className="candidate-recommendation-card__profile-btn"
+                        disabled={!candidate.userId}
+                        title={
+                            candidate.userId
+                                ? 'Nhắn tin'
+                                : 'Thiếu userId để mở chat'
+                        }
+                        onClick={() => onChat(candidate)}
+                    >
+                        Chat
+                    </button>
+                ) : null}
                 <button
                     type="button"
                     className={`candidate-recommendation-card__invite-btn${

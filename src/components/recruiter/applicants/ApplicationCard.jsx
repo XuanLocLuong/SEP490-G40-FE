@@ -9,13 +9,16 @@ import {
 const ApplicationCard = ({
     application,
     actionLoading,
+    chatLoading = false,
     readOnly = false,
     onAccept,
     onReject,
     onViewProfile,
+    onChat,
 }) => {
     const canDecide = !readOnly && application.status === 'PENDING';
     const tone = getApplicationStatusTone(application.status);
+    const canChat = application.candidateUserId != null;
 
     return (
         <article className="application-card">
@@ -73,8 +76,14 @@ const ApplicationCard = ({
                 <button
                     type="button"
                     className="btn application-card__btn application-card__btn--chat"
-                    title="Nhắn tin"
+                    title={
+                        canChat
+                            ? 'Nhắn tin'
+                            : 'Thiếu candidateUserId từ API'
+                    }
                     aria-label="Nhắn tin"
+                    disabled={chatLoading || !canChat}
+                    onClick={() => onChat?.(application)}
                 >
                     <ChatIcon width={18} height={18} />
                 </button>
