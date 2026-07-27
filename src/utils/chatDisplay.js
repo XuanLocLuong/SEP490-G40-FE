@@ -1,5 +1,9 @@
-/** Actions rendered as cards in chat UI (phase 1). Ignore INVITE / ACCEPT_APPLICATION. */
-export const CHAT_UI_ACTIONS = new Set(['CONFIRM_HIRED', 'REQUEST_REVIEW']);
+/** Actions rendered as sticky cards in chat UI. */
+export const CHAT_UI_ACTIONS = new Set([
+    'CONFIRM_HIRED',
+    'REQUEST_REVIEW',
+    'REJECT_INVITATION',
+]);
 
 export const filterChatUiActions = (actions = []) =>
     (Array.isArray(actions) ? actions : []).filter((name) => CHAT_UI_ACTIONS.has(name));
@@ -14,9 +18,15 @@ export const getActionCardCopy = (actionName) => {
             };
         case 'REQUEST_REVIEW':
             return {
-                title: 'Yêu cầu đánh giá',
-                body: 'Công việc đã đủ điều kiện đánh giá. Mời bạn viết review cho đối phương.',
+                title: 'Viết đánh giá',
+                body: 'Công việc đã đủ điều kiện đánh giá. Gửi review cho đối phương ngay tại đây.',
                 cta: 'Viết đánh giá',
+            };
+        case 'REJECT_INVITATION':
+            return {
+                title: 'Từ chối lời mời',
+                body: 'Bạn có lời mời ứng tuyển đang chờ phản hồi. Từ chối sẽ cập nhật trạng thái lời mời.',
+                cta: 'Từ chối lời mời',
             };
         default:
             return {
