@@ -133,6 +133,7 @@ const JobApplyButton = ({
 
             <JobApplyConfirmModal
                 open={modalOpen}
+                jobId={jobId}
                 preview={preview}
                 scheduleSummary={scheduleSummary}
                 shiftGroups={shiftGroups}

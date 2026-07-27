@@ -616,6 +616,13 @@
 }
 
 /* ---- Availability summary (đã có lịch) ---- */
+.cp-availability-summary__range {
+    margin: 0 0 12px;
+    color: var(--color-text-muted, #64748b);
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .cp-availability-summary {
     display: flex;
     flex-direction: column;

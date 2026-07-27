@@ -19,8 +19,8 @@ export const getRiskDisplay = (aiRiskLevel) => {
 };
 
 export const getQueueTypeLabel = (queueType) => {
-    if (queueType === 'RED_QUEUE') return 'Hàng đỏ';
-    if (queueType === 'GREEN_QUEUE') return 'Hàng xanh';
+    if (queueType === 'RED_QUEUE') return 'Ưu tiên cao';
+    if (queueType === 'GREEN_QUEUE') return 'Ưu tiên thấp';
     return '';
 };
 

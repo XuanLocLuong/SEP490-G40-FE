@@ -9,6 +9,11 @@ const normalizeTime = (value) => {
     return String(value).slice(0, 5);
 };
 
+const normalizeDate = (value) => {
+    if (!value) return '';
+    return String(value).slice(0, 10);
+};
+
 export const normalizeDays = (value) => {
     if (Array.isArray(value)) {
         return value.map((day) => toDayKey(day)).filter(Boolean);
@@ -30,20 +35,50 @@ export const normalizeSlot = (slot = {}, index = 0) => ({
     end: normalizeTime(slot.end ?? slot.endTime ?? slot.toTime),
 });
 
-// PUT body: days phải là số nguyên (DayOfWeek), không gửi "MONDAY".
-export const toAvailabilityPayload = (slots) =>
-    slots.map((slot) => ({
-        ...(slot.id != null ? { id: slot.id } : {}),
+/** GET /availability → { startDate, endDate, slots }. */
+export const normalizeAvailabilityResponse = (data) => {
+    const root = data && !Array.isArray(data) ? data : { slots: data };
+    const slots = normalizeSlotsContainer(root).map(normalizeSlot);
+    return {
+        startDate: normalizeDate(root.startDate),
+        endDate: normalizeDate(root.endDate),
+        slots,
+        isAutoSaved: Boolean(root.isAutoSaved),
+    };
+};
+
+/** PUT/POST body: { startDate, endDate, slots }. */
+export const toAvailabilityPayload = (slots, { startDate, endDate } = {}) => ({
+    startDate: normalizeDate(startDate) || null,
+    endDate: normalizeDate(endDate) || null,
+    slots: toArray(slots).map((slot) => ({
         days: toArray(slot.days)
             .map((day) => toApiDayValue(day))
             .filter((day) => day != null),
         start: slot.start,
         end: slot.end,
-    }));
+    })),
+});
 
-export const fetchAvailabilitySlots = async (getAvailability) => {
+export const fetchAvailability = async (getAvailability) => {
     const data = unwrap(await getAvailability());
-    return normalizeSlotsContainer(data).map(normalizeSlot);
+    return normalizeAvailabilityResponse(data);
+};
+
+/** @deprecated dùng fetchAvailability — giữ alias cho chỗ chỉ cần slots. */
+export const fetchAvailabilitySlots = async (getAvailability) => {
+    const result = await fetchAvailability(getAvailability);
+    return result.slots;
+};
+
+export const validateAvailabilityRange = ({ startDate, endDate }) => {
+    if (!startDate || !endDate) {
+        return 'Vui lòng chọn ngày bắt đầu và ngày kết thúc.';
+    }
+    if (endDate < startDate) {
+        return 'Ngày kết thúc phải từ ngày bắt đầu trở đi.';
+    }
+    return null;
 };
 
 export const validateAvailabilitySlots = (slots) => {

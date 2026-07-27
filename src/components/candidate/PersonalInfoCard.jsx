@@ -1,17 +1,22 @@
 import { useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
 import { PencilIcon, UserBadgeIcon, CalendarIcon, GenderIcon, HomeAddressIcon } from './profileIcons.jsx';
+import { PhoneIcon } from '../common/icons.jsx';
 import { GENDER_OPTIONS, formatDate, getGenderLabel, toDateInputValue } from '../../utils/profileFormat.js';
 
-// SECTION 3 — Personal Information: birthday, gender, address. Edit qua modal -> PUT Profile.
+// SECTION 3 — Personal Information: birthday, gender, address, phone.
+// phone lưu qua PUT /users/me (khác API profile).
 const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(personalInfo);
     const [errors, setErrors] = useState({});
 
-    // Nạp giá trị hiện tại vào form ngay khi mở modal (không dùng effect).
     const handleOpen = () => {
-        setForm({ ...personalInfo, birthday: toDateInputValue(personalInfo.birthday) });
+        setForm({
+            ...personalInfo,
+            birthday: toDateInputValue(personalInfo.birthday),
+            phone: personalInfo.phone || '',
+        });
         setErrors({});
         setOpen(true);
     };
@@ -23,6 +28,10 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
             if (Number.isNaN(d.getTime())) next.birthday = 'Ngày sinh không hợp lệ.';
             else if (d > new Date()) next.birthday = 'Ngày sinh không thể ở tương lai.';
         }
+        const phone = (form.phone || '').trim();
+        if (phone && !/^(\+84|0)[35789][0-9]{8}$/.test(phone)) {
+            next.phone = 'Số điện thoại không đúng định dạng Việt Nam.';
+        }
         setErrors(next);
         return Object.keys(next).length === 0;
     };
@@ -33,6 +42,7 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
             birthday: form.birthday || null,
             gender: form.gender || '',
             address: form.address || '',
+            phone: (form.phone || '').trim(),
         });
         if (ok) setOpen(false);
     };
@@ -40,6 +50,7 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
     const rows = [
         { icon: CalendarIcon, label: 'Ngày sinh', value: formatDate(personalInfo.birthday) },
         { icon: GenderIcon, label: 'Giới tính', value: getGenderLabel(personalInfo.gender) },
+        { icon: PhoneIcon, label: 'Số điện thoại', value: personalInfo.phone },
         { icon: HomeAddressIcon, label: 'Địa chỉ', value: personalInfo.address },
     ];
 
@@ -108,6 +119,18 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
                             </option>
                         ))}
                     </select>
+                </div>
+
+                <div className="cp-form-group">
+                    <label className="cp-form-label">Số điện thoại</label>
+                    <input
+                        type="tel"
+                        className="cp-input"
+                        placeholder="VD: 0912345678"
+                        value={form.phone || ''}
+                        onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                    />
+                    {errors.phone && <span className="cp-input-error">{errors.phone}</span>}
                 </div>
 
                 <div className="cp-form-group">

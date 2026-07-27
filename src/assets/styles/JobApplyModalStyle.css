@@ -115,6 +115,17 @@
     line-height: 1.5;
 }
 
+.job-apply-modal__profile-link {
+    color: var(--color-primary, #2563eb);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.job-apply-modal__profile-link:hover {
+    color: var(--color-primary-dark, #1d4ed8);
+}
+
 .job-apply-modal__footer {
     display: flex;
     justify-content: flex-end;

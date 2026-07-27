@@ -12,6 +12,22 @@ const formatTimeDisplay = (time) => {
     return `${String(hour12).padStart(2, '0')}:${minute} ${period}`;
 };
 
+const formatDateDisplay = (value) => {
+    if (!value) return '';
+    const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+    return date.toLocaleDateString('vi-VN');
+};
+
+const formatDateRange = (startDate, endDate) => {
+    const start = formatDateDisplay(startDate);
+    const end = formatDateDisplay(endDate);
+    if (start && end) return `${start} – ${end}`;
+    if (start) return `Từ ${start}`;
+    if (end) return `Đến ${end}`;
+    return '';
+};
+
 const AvailabilitySummaryRow = ({ slot }) => {
     const selected = new Set(slot.days || []);
 
@@ -42,8 +58,15 @@ const AvailabilitySummaryRow = ({ slot }) => {
 
 // SECTION 8 — Availability entry point trên Candidate Profile.
 // Khi đã có lịch: hiển thị summary (ảnh thiết kế). Khi chưa có: empty state.
-const AvailabilityCard = ({ slots = [], loading = false, onSetup }) => {
+const AvailabilityCard = ({
+    slots = [],
+    startDate = '',
+    endDate = '',
+    loading = false,
+    onSetup,
+}) => {
     const hasSchedule = slots.length > 0;
+    const dateRangeLabel = formatDateRange(startDate, endDate);
 
     return (
         <section className="cp-card cp-availability-card">
@@ -64,6 +87,11 @@ const AvailabilityCard = ({ slots = [], loading = false, onSetup }) => {
                 </div>
             ) : hasSchedule ? (
                 <div className="cp-availability-summary">
+                    {dateRangeLabel ? (
+                        <p className="cp-availability-summary__range">
+                            Áp dụng: {dateRangeLabel}
+                        </p>
+                    ) : null}
                     {slots.map((slot, index) => (
                         <AvailabilitySummaryRow key={slot.clientId || slot.id || index} slot={slot} />
                     ))}

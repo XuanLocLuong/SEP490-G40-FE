@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
+    createAvailability,
     getAvailability,
     updateAvailability,
     uploadTimetable,
@@ -11,10 +12,11 @@ import AvailabilityEditor from '../../../components/candidate/AvailabilityEditor
 import OCRPreview from '../../../components/candidate/OCRPreview.jsx';
 import { createEmptyAvailabilitySlot } from '../../../components/candidate/availabilityConstants.js';
 import {
-    fetchAvailabilitySlots,
+    fetchAvailability,
+    normalizeAvailabilityResponse,
     normalizeSlot,
-    normalizeSlotsContainer,
     toAvailabilityPayload,
+    validateAvailabilityRange,
     validateAvailabilitySlots,
 } from '../../../services/availabilityService.js';
 import { ROUTES } from '../../../routes/path.js';
@@ -30,9 +32,16 @@ const getApiMessage = (error, fallback) => (
 const AvailabilityPage = () => {
     const navigate = useNavigate();
     const [slots, setSlots] = useState([]);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [hasActiveSchedule, setHasActiveSchedule] = useState(false);
     const [ocrSlots, setOcrSlots] = useState(null);
+    const [ocrStartDate, setOcrStartDate] = useState('');
+    const [ocrEndDate, setOcrEndDate] = useState('');
     const [slotErrors, setSlotErrors] = useState({});
     const [ocrErrors, setOcrErrors] = useState({});
+    const [rangeError, setRangeError] = useState('');
+    const [ocrRangeError, setOcrRangeError] = useState('');
     const [file, setFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
     const [loading, setLoading] = useState(true);
@@ -48,8 +57,11 @@ const AvailabilityPage = () => {
     const loadAvailability = useCallback(async () => {
         setLoading(true);
         try {
-            const nextSlots = await fetchAvailabilitySlots(getAvailability);
-            setSlots(nextSlots);
+            const data = await fetchAvailability(getAvailability);
+            setSlots(data.slots);
+            setStartDate(data.startDate || '');
+            setEndDate(data.endDate || '');
+            setHasActiveSchedule(data.slots.length > 0);
         } catch (error) {
             toast.error(getApiMessage(error, 'Không tải được lịch rảnh.'));
         } finally {
@@ -78,19 +90,29 @@ const AvailabilityPage = () => {
         setPreviewUrl(URL.createObjectURL(nextFile));
     };
 
-    const saveSlots = async (nextSlots) => {
-        const errors = validateAvailabilitySlots(nextSlots);
-        if (Object.keys(errors).length > 0) {
-            return errors;
+    const persistAvailability = async (nextSlots, range) => {
+        const slotValidation = validateAvailabilitySlots(nextSlots);
+        if (Object.keys(slotValidation).length > 0) {
+            return { slotErrors: slotValidation, rangeError: '' };
+        }
+
+        const nextRangeError = validateAvailabilityRange(range);
+        if (nextRangeError) {
+            return { slotErrors: {}, rangeError: nextRangeError };
         }
 
         setSaving(true);
         try {
-            await updateAvailability(toAvailabilityPayload(nextSlots));
+            const payload = toAvailabilityPayload(nextSlots, range);
+            if (hasActiveSchedule) {
+                await updateAvailability(payload);
+            } else {
+                await createAvailability(payload);
+            }
             toast.success('Đã lưu lịch rảnh thành công.');
             await loadAvailability();
             navigate(ROUTES.CANDIDATE_PROFILE);
-            return {};
+            return { slotErrors: {}, rangeError: '' };
         } catch (error) {
             toast.error(getApiMessage(error, 'Lưu lịch rảnh thất bại.'));
             return null;
@@ -101,8 +123,11 @@ const AvailabilityPage = () => {
 
     const handleSave = async () => {
         const source = hasSlots ? slots : renderedSlots;
-        const errors = await saveSlots(source);
-        if (errors) setSlotErrors(errors);
+        const result = await persistAvailability(source, { startDate, endDate });
+        if (result) {
+            setSlotErrors(result.slotErrors);
+            setRangeError(result.rangeError);
+        }
     };
 
     const handleUpload = async () => {
@@ -111,17 +136,30 @@ const AvailabilityPage = () => {
         setUploading(true);
         setOcrSlots(null);
         setOcrErrors({});
+        setOcrRangeError('');
+        setOcrStartDate('');
+        setOcrEndDate('');
 
         try {
             const res = await uploadTimetable(file);
             const data = res?.data?.data ?? res?.data ?? null;
-            const generated = normalizeSlotsContainer(data).map(normalizeSlot);
-            if (generated.length === 0) {
+            const parsed = normalizeAvailabilityResponse(data);
+
+            if (parsed.isAutoSaved) {
+                toast.success('Đã quét và lưu lịch rảnh thành công.');
+                await loadAvailability();
+                return;
+            }
+
+            if (parsed.slots.length === 0) {
                 toast.info('Backend không trích xuất được khung giờ nào từ ảnh.');
                 return;
             }
-            setOcrSlots(generated);
-            toast.success('Đã quét thời khóa biểu. Vui lòng kiểm tra trước khi lưu.');
+
+            setOcrSlots(parsed.slots.map(normalizeSlot));
+            setOcrStartDate(parsed.startDate || startDate || '');
+            setOcrEndDate(parsed.endDate || endDate || '');
+            toast.info('AI đã gợi ý khung giờ. Kiểm tra ngày áp dụng rồi lưu chính thức.');
         } catch (error) {
             toast.error(getApiMessage(error, 'Quét thời khóa biểu thất bại.'));
         } finally {
@@ -130,8 +168,14 @@ const AvailabilityPage = () => {
     };
 
     const handleApplyOcr = async () => {
-        const errors = await saveSlots(ocrSlots || []);
-        if (errors) setOcrErrors(errors);
+        const result = await persistAvailability(ocrSlots || [], {
+            startDate: ocrStartDate,
+            endDate: ocrEndDate,
+        });
+        if (result) {
+            setOcrErrors(result.slotErrors);
+            setOcrRangeError(result.rangeError);
+        }
     };
 
     return (
@@ -152,13 +196,24 @@ const AvailabilityPage = () => {
             {ocrSlots && (
                 <OCRPreview
                     slots={ocrSlots}
+                    startDate={ocrStartDate}
+                    endDate={ocrEndDate}
+                    rangeError={ocrRangeError}
                     errors={ocrErrors}
                     onChange={(nextSlots) => {
                         setOcrSlots(nextSlots);
                         setOcrErrors({});
                     }}
+                    onRangeChange={({ startDate: nextStart, endDate: nextEnd }) => {
+                        setOcrStartDate(nextStart);
+                        setOcrEndDate(nextEnd);
+                        setOcrRangeError('');
+                    }}
                     onApply={handleApplyOcr}
-                    onCancel={() => setOcrSlots(null)}
+                    onCancel={() => {
+                        setOcrSlots(null);
+                        setOcrRangeError('');
+                    }}
                     saving={saving}
                 />
             )}
@@ -170,11 +225,50 @@ const AvailabilityPage = () => {
                     <div className="availability-skeleton availability-skeleton--line" />
                 </section>
             ) : (
-                <AvailabilityEditor
-                    slots={renderedSlots}
-                    onChange={handleSlotsChange}
-                    errors={slotErrors}
-                />
+                <>
+                    <section className="availability-card availability-range">
+                        <div className="availability-card__header">
+                            <div>
+                                <h2>Khoảng áp dụng lịch</h2>
+                                <p>Bắt buộc khi lưu. Lịch hết hạn sẽ được hệ thống nhắc cập nhật.</p>
+                            </div>
+                        </div>
+                        <div className="availability-range__fields">
+                            <label className="availability-range__field">
+                                <span>Ngày bắt đầu</span>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => {
+                                        setStartDate(e.target.value);
+                                        setRangeError('');
+                                    }}
+                                />
+                            </label>
+                            <label className="availability-range__field">
+                                <span>Ngày kết thúc</span>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    min={startDate || undefined}
+                                    onChange={(e) => {
+                                        setEndDate(e.target.value);
+                                        setRangeError('');
+                                    }}
+                                />
+                            </label>
+                        </div>
+                        {rangeError ? (
+                            <p className="availability-range__error">{rangeError}</p>
+                        ) : null}
+                    </section>
+
+                    <AvailabilityEditor
+                        slots={renderedSlots}
+                        onChange={handleSlotsChange}
+                        errors={slotErrors}
+                    />
+                </>
             )}
 
             <div className="availability-page__footer">
@@ -192,7 +286,7 @@ const AvailabilityPage = () => {
                     onClick={handleSave}
                     disabled={saving || loading}
                 >
-                    {saving ? 'Đang lưu...' : 'Lưu lịch rảnh'}
+                    {saving ? 'Đang lưu...' : hasActiveSchedule ? 'Cập nhật lịch rảnh' : 'Tạo lịch rảnh'}
                 </button>
             </div>
         </div>

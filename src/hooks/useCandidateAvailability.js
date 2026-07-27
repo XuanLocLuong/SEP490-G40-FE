@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getAvailability } from '../apis/AvailabilityApi.jsx';
-import { fetchAvailabilitySlots } from '../services/availabilityService.js';
+import { fetchAvailability } from '../services/availabilityService.js';
 
 // Hook load lịch rảnh cho Candidate Profile (AvailabilityCard summary).
 export const useCandidateAvailability = () => {
     const [slots, setSlots] = useState([]);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -12,12 +14,16 @@ export const useCandidateAvailability = () => {
         setLoading(true);
         setError(null);
         try {
-            const data = await fetchAvailabilitySlots(getAvailability);
-            setSlots(data);
-            return data;
+            const data = await fetchAvailability(getAvailability);
+            setSlots(data.slots);
+            setStartDate(data.startDate || '');
+            setEndDate(data.endDate || '');
+            return data.slots;
         } catch (err) {
             setError(err);
             setSlots([]);
+            setStartDate('');
+            setEndDate('');
             return [];
         } finally {
             setLoading(false);
@@ -31,6 +37,8 @@ export const useCandidateAvailability = () => {
 
     return {
         slots,
+        startDate,
+        endDate,
         loading,
         error,
         hasSchedule: slots.length > 0,

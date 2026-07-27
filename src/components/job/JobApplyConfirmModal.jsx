@@ -1,9 +1,13 @@
+import { Link } from 'react-router-dom';
 import { getReasonMessage } from '../../utils/applicationErrorMessages.js';
+import { setPendingApplyReturn } from '../../utils/applyReturnStorage.js';
+import { ROUTES } from '../../routes/path.js';
 import { formatShiftGroupLine } from '../../utils/formatters.js';
 import '../../assets/styles/JobApplyModalStyle.css';
 
 const JobApplyConfirmModal = ({
     open,
+    jobId,
     preview,
     scheduleSummary,
     shiftGroups = [],
@@ -14,8 +18,16 @@ const JobApplyConfirmModal = ({
 }) => {
     if (!open) return null;
 
-    const blockingMessages = (preview?.blockingReasons || []).map(getReasonMessage);
+    const blockingReasons = preview?.blockingReasons || [];
     const canApply = preview?.eligible && !loading && !applying;
+
+    const handleUpdateProfileClick = () => {
+        setPendingApplyReturn({
+            jobId,
+            jobTitle: preview?.jobTitle || '',
+        });
+        onClose?.();
+    };
 
     return (
         <div className="job-apply-modal" role="dialog" aria-modal="true" aria-labelledby="job-apply-modal-title">
@@ -74,10 +86,24 @@ const JobApplyConfirmModal = ({
                                 cụ thể.
                             </p>
 
-                            {blockingMessages.length > 0 && (
+                            {blockingReasons.length > 0 && (
                                 <ul className="job-apply-modal__errors">
-                                    {blockingMessages.map((message) => (
-                                        <li key={message}>{message}</li>
+                                    {blockingReasons.map((reason) => (
+                                        <li key={reason}>
+                                            <span>{getReasonMessage(reason)}</span>
+                                            {reason === 'PROFILE_INCOMPLETE' && (
+                                                <>
+                                                    {' '}
+                                                    <Link
+                                                        to={ROUTES.CANDIDATE_PROFILE}
+                                                        className="job-apply-modal__profile-link"
+                                                        onClick={handleUpdateProfileClick}
+                                                    >
+                                                        Cập nhật hồ sơ
+                                                    </Link>
+                                                </>
+                                            )}
+                                        </li>
                                     ))}
                                 </ul>
                             )}
