@@ -279,6 +279,7 @@
 }
 
 .chat-panel__thread {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -504,6 +505,83 @@
 .chat-panel__send:disabled {
     opacity: 0.45;
     cursor: default;
+}
+
+.chat-review-modal {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(15, 23, 42, 0.35);
+}
+
+.chat-review-modal__panel {
+    width: 100%;
+    background: var(--color-surface, #fff);
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+    padding: 14px;
+}
+
+.chat-review-modal__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.chat-review-modal__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.chat-review-modal__close {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+.chat-review-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chat-review-modal__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.chat-review-modal__select,
+.chat-review-modal__textarea {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+}
+
+.chat-review-modal__textarea {
+    resize: vertical;
+    min-height: 72px;
+}
+
+.chat-review-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
 }
 
 @media (max-width: 767px) {
