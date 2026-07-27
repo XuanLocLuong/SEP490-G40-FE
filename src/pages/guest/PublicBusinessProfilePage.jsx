@@ -37,14 +37,13 @@ const VERIFIED_TRUST_THRESHOLD = 70;
 const JOBS_PAGE_SIZE = 12;
 
 const isVerificationPassed = (status) =>
-    status === 'BUSSINESS_PASSED' ||
+    status === 'BUSINESS_PASSED' ||
     status === 'CCCD_PASSED' ||
     status === 'FACE_PASSED' ||
-    status === 'BUSSINESS_MANUALLY' ||
+    status === 'BUSINESS_MANUALLY' ||
     status === 'CCCD_MANUALLY';
 
-const isTrustedBadge = (badge) =>
-    badge === 'BUSSINESS_VERIFYED' || badge === 'IDENTITY_VERIFYED';
+const isTrustedBadge = (badge) => badge === 'BUSINESS_VERIFIED';
 
 const formatMemberSince = (value) => {
     if (!value) return null;

@@ -138,10 +138,10 @@ const formatMemberSince = (value) => {
 };
 
 const isVerified = (status) =>
-    status === 'BUSSINESS_PASSED' ||
+    status === 'BUSINESS_PASSED' ||
     status === 'CCCD_PASSED' ||
     status === 'FACE_PASSED' ||
-    status === 'BUSSINESS_MANUALLY' ||
+    status === 'BUSINESS_MANUALLY' ||
     status === 'CCCD_MANUALLY';
 
 const getHeroTitle = (noProfile, form, profile) => {
@@ -171,7 +171,7 @@ const getBusinessCompletionMissing = (profile, savedLocation) => {
     if (!hasLogo(profile.logoUrl)) missing.push('logo');
     if (!(profile.galleryImages?.length > 0)) missing.push('ảnh');
     if (!savedLocation) missing.push('địa chỉ');
-    if (profile.badge !== 'BUSSINESS_VERIFYED') missing.push('xác minh DN');
+    if (profile.badge !== 'BUSINESS_VERIFIED') missing.push('xác minh DN');
     if (!(profile.totalActiveJobs > 0)) missing.push('tin tuyển');
 
     return missing;
@@ -687,8 +687,7 @@ const RecruiterProfilePage = () => {
     const showHeroMeta =
         !noProfile ||
         (profile.badge &&
-            (profile.badge === 'BUSSINESS_VERIFYED' ||
-                profile.badge === 'IDENTITY_VERIFYED'));
+            profile.badge === 'BUSINESS_VERIFIED');
 
     return (
         <div className="recruiter-profile-page">
@@ -810,8 +809,7 @@ const RecruiterProfilePage = () => {
                                     )}
 
                                     {profile.badge &&
-                                        (profile.badge === 'BUSSINESS_VERIFYED' ||
-                                            profile.badge === 'IDENTITY_VERIFYED') && (
+                                        profile.badge === 'BUSINESS_VERIFIED' && (
                                         <span className="recruiter-profile__trust-badge">
                                             <MapPinIcon width={14} height={14} />
                                             Nhà tuyển dụng uy tín
