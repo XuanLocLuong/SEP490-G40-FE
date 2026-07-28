@@ -6,6 +6,7 @@ import recruiterJobApi, {
 } from '../../../apis/RecruiterJobApi.jsx';
 import {
     fetchRecommendedCandidates,
+    getInvitationSkipReasonMessage,
     getRecruiterRecommendationErrorMessage,
     sendCandidateInvitation,
 } from '../../../apis/RecruiterRecommendationApi.jsx';
@@ -16,14 +17,6 @@ import { openChatPanel } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/RecruiterRecommendationsStyle.css';
 
 const PAGE_SIZE = 10;
-
-const SKIP_REASON_MESSAGES = {
-    ALREADY_APPLIED: 'Ứng viên đã nộp hồ sơ vào tin tuyển dụng này.',
-    ALREADY_INVITED: 'Ứng viên đã được gửi lời mời trước đó.',
-    SCHEDULE_CONFLICT: 'Ứng viên đang có lịch làm việc bị trùng.',
-    CANDIDATE_NOT_FOUND: 'Không tìm thấy hồ sơ ứng viên.',
-    CANDIDATE_NOT_AVAILABLE: 'Ứng viên hiện không sẵn sàng nhận việc.',
-};
 
 const RecruiterRecommendationsPage = () => {
     const [jobs, setJobs] = useState([]);
@@ -153,9 +146,9 @@ const RecruiterRecommendationsPage = () => {
                 toast.success(`Đã gửi lời mời đến ${inviteTarget.fullName || 'ứng viên'}.`);
             } else {
                 toast.info(
-                    SKIP_REASON_MESSAGES[result?.reason] ||
-                        result?.message ||
-                        'Không thể gửi lời mời cho ứng viên này.'
+                    getInvitationSkipReasonMessage(
+                        result?.reason || result?.message
+                    )
                 );
             }
             setInviteTarget(null);
