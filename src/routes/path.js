@@ -16,10 +16,11 @@ export const ROUTES = {
     POST_MANAGER_HOME: '/post-manager',
     MANUAL_CHECK_HOME: '/manual-check',
     ADMIN_HOME: '/admin',
-
-    // ⚠️ Các path dưới đây CHƯA có Page/Route đăng ký trong AppRouter —
-    // chỉ dùng làm target cho Sidebar nav theo đúng thiết kế. Bấm vào sẽ bị
-    // catch-all route đá về lại trang chủ cho tới khi task tương ứng được code.
+    ADMIN_ACCOUNTS: '/admin/accounts',
+    ADMIN_SYSTEM_CONFIG: '/admin/system-config',
+    ADMIN_AUDIT_LOG: '/admin/audit-log',
+    ADMIN_ESCALATIONS: '/admin/escalations',
+    ADMIN_ANALYTICS: '/admin/analytics',
     /** List JobLink gợi ý — tái dùng JobListPage với ?section=ai */
     CANDIDATE_AI_SUGGESTIONS: '/jobs?section=ai',
     /** List lịch sử tương tác VIEW/SAVE/APPLY */
@@ -57,11 +58,6 @@ export const ROUTES = {
     MANUAL_CHECK_ACCOUNTS: '/manual-check/accounts',
     MANUAL_CHECK_VERIFICATION: '/manual-check/verification',
     MANUAL_CHECK_REPORTS: '/manual-check/reports',
-
-    ADMIN_SYSTEM_CONFIG: '/admin/system-config',
-    ADMIN_AUDIT_LOG: '/admin/audit-log',
-    ADMIN_ESCALATIONS: '/admin/escalations',
-    ADMIN_ANALYTICS: '/admin/analytics',
 };
 
 export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;

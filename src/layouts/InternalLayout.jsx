@@ -30,6 +30,7 @@ const CONFIG_BY_ROLE = {
         roleLabel: 'Super Admin',
         items: [
             { path: ROUTES.ADMIN_HOME, label: 'Bảng điều khiển', icon: GridIcon },
+            { path: ROUTES.ADMIN_ACCOUNTS, label: 'Quản lý tài khoản', icon: UsersIcon },
             { path: ROUTES.ADMIN_SYSTEM_CONFIG, label: 'Cấu hình hệ thống', icon: SettingsIcon },
             { path: ROUTES.ADMIN_AUDIT_LOG, label: 'Nhật ký hoạt động', icon: ClipboardIcon },
             { path: ROUTES.ADMIN_ESCALATIONS, label: 'Sự cố leo thang', icon: AlertIcon },
