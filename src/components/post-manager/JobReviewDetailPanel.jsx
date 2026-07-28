@@ -3,9 +3,10 @@ import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import { formatJobType, formatSalary } from '../../utils/formatters.js';
 import {
     getAutoScoreTone,
-    getQueueTypeLabel,
-    getQueueTypeTone,
+    getHardRuleFailures,
+    getQueueBadge,
     getRiskDisplay,
+    getRuleList,
     getRuleNameLabel,
     getRuleScoreTone,
     parseRuleEngineResult,
@@ -45,8 +46,13 @@ const JobReviewDetailPanel = ({
     }
 
     const risk = getRiskDisplay(detail.aiAnalysis?.mucDoRuiRo || detail.aiRiskLevel);
-    const queueTone = getQueueTypeTone(detail.queueType);
+    const queueBadge = getQueueBadge(detail);
     const ruleResult = parseRuleEngineResult(detail.ruleEngineResult);
+    const hardFailures = getHardRuleFailures(ruleResult);
+    const allRules = getRuleList(ruleResult);
+    const otherRules = allRules.filter(
+        (rule) => !hardFailures.some((hard) => hard.ruleName === rule.ruleName),
+    );
     const ai = detail.aiAnalysis;
     const locationParts = [detail.locationAddress, detail.locationWard, detail.locationCity].filter(
         Boolean
@@ -92,13 +98,13 @@ const JobReviewDetailPanel = ({
                     <span className={`pm-review-detail__risk pm-review-detail__risk--${risk.tone}`}>
                         {risk.label}
                     </span>
-                    {detail.queueType && (
+                    {queueBadge.label && (
                         <span
                             className={`pm-review-detail__queue${
-                                queueTone ? ` pm-review-detail__queue--${queueTone}` : ''
+                                queueBadge.tone ? ` pm-review-detail__queue--${queueBadge.tone}` : ''
                             }`}
                         >
-                            {getQueueTypeLabel(detail.queueType)}
+                            {queueBadge.label}
                         </span>
                     )}
                 </div>
@@ -128,6 +134,20 @@ const JobReviewDetailPanel = ({
             {detail.aiStatus === 'FAILED' && (
                 <div className="pm-review-detail__ai-alert pm-review-detail__ai-alert--muted">
                     AI phân tích thất bại — vẫn có thể duyệt thủ công.
+                </div>
+            )}
+
+            {hardFailures.length > 0 && (
+                <div className="pm-review-detail__hard-fail" role="alert">
+                    <h3>Vi phạm quy tắc cứng</h3>
+                    <ul>
+                        {hardFailures.map((rule) => (
+                            <li key={`hard-${rule.ruleName}`}>
+                                <strong>{getRuleNameLabel(rule.ruleName)}</strong>
+                                {rule.message ? <p>{rule.message}</p> : null}
+                            </li>
+                        ))}
+                    </ul>
                 </div>
             )}
 
@@ -176,11 +196,11 @@ const JobReviewDetailPanel = ({
                 )}
             </div>
 
-            {ruleResult?.rules?.length > 0 && (
+            {otherRules.length > 0 && (
                 <div className="pm-review-detail__rules">
                     <h3>Đánh giá hệ thống</h3>
                     <ul>
-                        {ruleResult.rules.map((rule) => {
+                        {otherRules.map((rule) => {
                             const tone = getRuleScoreTone(rule);
                             return (
                                 <li

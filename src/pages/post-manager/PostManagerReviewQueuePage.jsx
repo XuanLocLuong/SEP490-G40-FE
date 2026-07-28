@@ -12,6 +12,7 @@ import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import {
     countByRisk,
+    isGreenQueueItem,
     matchesRiskTab,
     matchesSearch,
 } from '../../utils/jobReviewDisplay.js';
@@ -37,6 +38,7 @@ const PostManagerReviewQueuePage = () => {
 
     const [activeRiskTab, setActiveRiskTab] = useState('ALL');
     const [search, setSearch] = useState('');
+    const [showGreenQueue, setShowGreenQueue] = useState(false);
 
     const [selectedReviewId, setSelectedReviewId] = useState(null);
     const [detail, setDetail] = useState(null);
@@ -98,15 +100,26 @@ const PostManagerReviewQueuePage = () => {
         setNote('');
     }, [isPostManager, selectedReviewId, loadDetail]);
 
-    const filteredItems = useMemo(
+    const visibleQueueItems = useMemo(
         () =>
-            queueItems.filter(
-                (item) => matchesRiskTab(item, activeRiskTab) && matchesSearch(item, search)
-            ),
-        [queueItems, activeRiskTab, search]
+            showGreenQueue ? queueItems : queueItems.filter((item) => !isGreenQueueItem(item)),
+        [queueItems, showGreenQueue]
     );
 
-    const riskCounts = useMemo(() => countByRisk(queueItems), [queueItems]);
+    const greenHiddenCount = useMemo(
+        () => queueItems.filter((item) => isGreenQueueItem(item)).length,
+        [queueItems]
+    );
+
+    const filteredItems = useMemo(
+        () =>
+            visibleQueueItems.filter(
+                (item) => matchesRiskTab(item, activeRiskTab) && matchesSearch(item, search)
+            ),
+        [visibleQueueItems, activeRiskTab, search]
+    );
+
+    const riskCounts = useMemo(() => countByRisk(visibleQueueItems), [visibleQueueItems]);
 
     const canLoadMore = totalPages > 1 && page + 1 < totalPages;
 
@@ -169,6 +182,9 @@ const PostManagerReviewQueuePage = () => {
                         riskCounts={riskCounts}
                         search={search}
                         onSearchChange={setSearch}
+                        showGreenQueue={showGreenQueue}
+                        onShowGreenQueueChange={setShowGreenQueue}
+                        greenHiddenCount={greenHiddenCount}
                         loading={queueLoading}
                         onSelect={handleSelect}
                     />

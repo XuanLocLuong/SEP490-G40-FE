@@ -5,8 +5,20 @@ export const RISK_TABS = [
     { id: 'THAP', label: 'Rủi ro thấp' },
 ];
 
+/** Chuẩn hóa AI risk: BE có thể trả CAO/TRUNG_BINH/THAP hoặc HIGH/MEDIUM/THẤP. */
+export const normalizeAiRiskLevel = (aiRiskLevel) => {
+    const raw = String(aiRiskLevel || '')
+        .trim()
+        .toUpperCase()
+        .normalize('NFC');
+    if (raw === 'CAO' || raw === 'HIGH') return 'CAO';
+    if (raw === 'TRUNG_BINH' || raw === 'MEDIUM' || raw === 'TRUNG BINH') return 'TRUNG_BINH';
+    if (raw === 'THAP' || raw === 'THẤP' || raw === 'LOW') return 'THAP';
+    return aiRiskLevel || null;
+};
+
 export const getRiskDisplay = (aiRiskLevel) => {
-    switch (aiRiskLevel) {
+    switch (normalizeAiRiskLevel(aiRiskLevel)) {
         case 'CAO':
             return { label: 'Rủi ro cao', shortLabel: 'Rủi ro cao', tone: 'high' };
         case 'TRUNG_BINH':
@@ -18,19 +30,6 @@ export const getRiskDisplay = (aiRiskLevel) => {
     }
 };
 
-export const getQueueTypeLabel = (queueType) => {
-    if (queueType === 'RED_QUEUE') return 'Ưu tiên cao';
-    if (queueType === 'GREEN_QUEUE') return 'Ưu tiên thấp';
-    return '';
-};
-
-/** Tone CSS cho pill queue: red | green | '' */
-export const getQueueTypeTone = (queueType) => {
-    if (queueType === 'RED_QUEUE') return 'red';
-    if (queueType === 'GREEN_QUEUE') return 'green';
-    return '';
-};
-
 export const parseRuleEngineResult = (raw) => {
     if (!raw) return null;
     if (typeof raw === 'object') return raw;
@@ -40,6 +39,67 @@ export const parseRuleEngineResult = (raw) => {
         return null;
     }
 };
+
+export const getRuleList = (ruleResult) => {
+    if (!ruleResult) return [];
+    if (Array.isArray(ruleResult.rules)) return ruleResult.rules;
+    if (Array.isArray(ruleResult)) return ruleResult;
+    return [];
+};
+
+export const isHardRule = (rule) =>
+    rule?.isHardRule === true || rule?.hardRule === true || rule?.hard === true;
+
+/** Hard rules bị fail — dùng cho detail highlight. */
+export const getHardRuleFailures = (ruleResult) =>
+    getRuleList(ruleResult).filter((rule) => isHardRule(rule) && rule?.passed === false);
+
+/**
+ * Queue item / detail có hard-rule fail không.
+ * Ưu tiên field BE `hasHardRuleFailure`; fallback parse ruleEngineResult nếu có.
+ */
+export const hasHardRuleFailure = (itemOrDetail) => {
+    if (!itemOrDetail) return false;
+    if (itemOrDetail.hasHardRuleFailure === true) return true;
+    if (itemOrDetail.hasHardRuleFailure === false) return false;
+    const ruleResult = parseRuleEngineResult(itemOrDetail.ruleEngineResult);
+    return getHardRuleFailures(ruleResult).length > 0;
+};
+
+/**
+ * Badge hàng chờ:
+ * - Hard Rule fail → "Vi phạm quy tắc cứng" (đỏ)
+ * - RED không hard → "Ưu tiên cao" (không gọi là vi phạm cứng)
+ * - GREEN → "Ưu tiên thấp" (thường ẩn khỏi list chính)
+ */
+export const getQueueBadge = (itemOrDetail) => {
+    const queueType = itemOrDetail?.queueType;
+    if (hasHardRuleFailure(itemOrDetail)) {
+        return { label: 'Vi phạm quy tắc cứng', tone: 'hard', shortLabel: 'Vi phạm cứng' };
+    }
+    if (queueType === 'RED_QUEUE') {
+        return { label: 'Ưu tiên cao', tone: 'red', shortLabel: 'Ưu tiên cao' };
+    }
+    if (queueType === 'GREEN_QUEUE') {
+        return { label: 'Ưu tiên thấp', tone: 'green', shortLabel: 'Ưu tiên thấp' };
+    }
+    return { label: '', tone: '', shortLabel: '' };
+};
+
+/** @deprecated dùng getQueueBadge — giữ alias tránh break import cũ. */
+export const getQueueTypeLabel = (queueType) => {
+    if (queueType === 'RED_QUEUE') return 'Ưu tiên cao';
+    if (queueType === 'GREEN_QUEUE') return 'Ưu tiên thấp';
+    return '';
+};
+
+export const getQueueTypeTone = (queueType) => {
+    if (queueType === 'RED_QUEUE') return 'red';
+    if (queueType === 'GREEN_QUEUE') return 'green';
+    return '';
+};
+
+export const isGreenQueueItem = (item) => item?.queueType === 'GREEN_QUEUE';
 
 export const formatQueueTime = (isoString) => {
     if (!isoString) return '';
@@ -57,17 +117,13 @@ export const formatQueueTime = (isoString) => {
 
 export const matchesRiskTab = (item, tabId) => {
     if (tabId === 'ALL') return true;
-    return item?.aiRiskLevel === tabId;
+    return normalizeAiRiskLevel(item?.aiRiskLevel) === tabId;
 };
 
 export const matchesSearch = (item, keyword) => {
     const q = keyword.trim().toLowerCase();
     if (!q) return true;
-    const haystack = [
-        item?.jobTitle,
-        item?.businessName,
-        item?.recruiterName,
-    ]
+    const haystack = [item?.jobTitle, item?.businessName, item?.recruiterName]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -77,9 +133,8 @@ export const matchesSearch = (item, keyword) => {
 export const countByRisk = (items = []) => {
     const counts = { ALL: items.length, CAO: 0, TRUNG_BINH: 0, THAP: 0 };
     items.forEach((item) => {
-        if (item?.aiRiskLevel && counts[item.aiRiskLevel] != null) {
-            counts[item.aiRiskLevel] += 1;
-        }
+        const level = normalizeAiRiskLevel(item?.aiRiskLevel);
+        if (level && counts[level] != null) counts[level] += 1;
     });
     return counts;
 };

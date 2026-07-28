@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     ROUTES,
@@ -113,9 +113,12 @@ const hasRevisionNote = (job) =>
 
 const MyJobsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [allJobs, setAllJobs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('all');
+    const [activeTab, setActiveTab] = useState(
+        location.state?.highlightStatusTab === 'rejected' ? 'rejected' : 'all'
+    );
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [reviewNoteJob, setReviewNoteJob] = useState(null);
@@ -136,6 +139,13 @@ const MyJobsPage = () => {
     useEffect(() => {
         loadJobs();
     }, [loadJobs]);
+
+    useEffect(() => {
+        if (location.state?.highlightStatusTab === 'rejected') {
+            setActiveTab('rejected');
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location.state, location.pathname, navigate]);
 
     const tabCounts = useMemo(() => {
         const counts = {};

@@ -19,6 +19,59 @@ import JobPreviewPanel from '../../../components/recruiter/jobs/JobPreviewPanel.
 import AiJobDescModal from '../../../components/recruiter/jobs/AiJobDescModal.jsx';
 import '../../../assets/styles/JobPostStyle.css';
 
+const notifyJobSaveResult = (action, savedJob, { isEdit }) => {
+    if (action !== JOB_POST_ACTION.SUBMIT) {
+        toast.success(isEdit ? 'Đã lưu nháp.' : 'Đã lưu nháp tin tuyển dụng.');
+        return;
+    }
+
+    const status = savedJob?.status || savedJob?.jobStatus;
+
+    if (status === 'REVISION_REQUESTED') {
+        const note = String(savedJob?.reviewNote || '').trim();
+        toast.warning(
+            note ||
+                'Tin đăng cần chỉnh sửa vì vi phạm tiêu chuẩn cộng đồng. Vào mục Từ chối / Cần chỉnh sửa để xem chi tiết và sửa lại.',
+            { autoClose: 6000 }
+        );
+        return;
+    }
+
+    if (status === 'PENDING_REVIEW') {
+        toast.info(
+            'Đã gửi tin tuyển dụng. Đang chờ duyệt — Post Manager sẽ xem xét trong thời gian sớm nhất.',
+            { autoClose: 5000 }
+        );
+        return;
+    }
+
+    if (status === 'OPEN') {
+        toast.success('Tin tuyển dụng đã được duyệt và đang hiển thị.');
+        return;
+    }
+
+    toast.success(isEdit ? 'Đã gửi tin tuyển dụng để duyệt.' : 'Tạo tin tuyển dụng thành công.');
+};
+
+const resolveSavedJobId = (savedJob, fallbackId) => {
+    if (typeof savedJob === 'number' && Number.isFinite(savedJob)) return savedJob;
+    if (typeof savedJob === 'string' && /^\d+$/.test(savedJob.trim())) return Number(savedJob);
+    return savedJob?.id ?? savedJob?.jobId ?? fallbackId ?? null;
+};
+
+/** Create/update SUBMIT đôi khi chưa trả status cuối — GET detail để biết REVISION_REQUESTED. */
+const resolveJobAfterSave = async (savedJob, fallbackId) => {
+    const id = resolveSavedJobId(savedJob, fallbackId);
+    if (!id) return savedJob;
+
+    try {
+        const detail = await recruiterJobApi.getJobDetail(id);
+        return detail || savedJob;
+    } catch {
+        return savedJob;
+    }
+};
+
 /**
  * Trang tạo mới / chỉnh sửa tin tuyển dụng.
  * - /recruiter/jobs/new        -> create
@@ -130,22 +183,22 @@ const CreateJobPage = () => {
         setSaving(true);
 
         try {
-            if (isEdit) {
-                await recruiterJobApi.updateJob(jobId, payload);
-                toast.success(
-                    action === JOB_POST_ACTION.SUBMIT
-                        ? 'Đã gửi tin tuyển dụng để duyệt.'
-                        : 'Đã lưu nháp.'
-                );
-            } else {
-                await recruiterJobApi.createJob(payload);
-                toast.success(
-                    action === JOB_POST_ACTION.SUBMIT
-                        ? 'Tạo tin tuyển dụng thành công.'
-                        : 'Đã lưu nháp tin tuyển dụng.'
-                );
-            }
-            navigate(ROUTES.RECRUITER_MY_JOBS);
+            const savedJob = isEdit
+                ? await recruiterJobApi.updateJob(jobId, payload)
+                : await recruiterJobApi.createJob(payload);
+
+            const resolvedJob =
+                action === JOB_POST_ACTION.SUBMIT
+                    ? await resolveJobAfterSave(savedJob, isEdit ? jobId : null)
+                    : savedJob;
+
+            notifyJobSaveResult(action, resolvedJob, { isEdit });
+            navigate(ROUTES.RECRUITER_MY_JOBS, {
+                state:
+                    resolvedJob?.status === 'REVISION_REQUESTED'
+                        ? { highlightStatusTab: 'rejected' }
+                        : undefined,
+            });
         } catch (err) {
             toast.error(getRecruiterJobApiErrorMessage(err, 'Không thể lưu tin tuyển dụng.'));
         } finally {

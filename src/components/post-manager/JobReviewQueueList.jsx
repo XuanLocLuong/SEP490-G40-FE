@@ -1,8 +1,7 @@
 import { getBusinessInitial } from '../../utils/formatters.js';
 import {
     formatQueueTime,
-    getQueueTypeLabel,
-    getQueueTypeTone,
+    getQueueBadge,
     getRiskDisplay,
     RISK_TABS,
 } from '../../utils/jobReviewDisplay.js';
@@ -15,6 +14,9 @@ const JobReviewQueueList = ({
     riskCounts,
     search,
     onSearchChange,
+    showGreenQueue,
+    onShowGreenQueueChange,
+    greenHiddenCount = 0,
     loading,
     onSelect,
 }) => (
@@ -51,6 +53,18 @@ const JobReviewQueueList = ({
             />
         </div>
 
+        <label className="pm-queue__green-toggle">
+            <input
+                type="checkbox"
+                checked={Boolean(showGreenQueue)}
+                onChange={(e) => onShowGreenQueueChange?.(e.target.checked)}
+            />
+            <span>
+                Hiện ưu tiên thấp
+                {greenHiddenCount > 0 && !showGreenQueue ? ` (đang ẩn ${greenHiddenCount})` : ''}
+            </span>
+        </label>
+
         <div className="pm-queue__list" aria-busy={loading}>
             {loading && items.length === 0 &&
                 Array.from({ length: 4 }).map((_, i) => (
@@ -64,8 +78,7 @@ const JobReviewQueueList = ({
             {items.map((item) => {
                 const risk = getRiskDisplay(item.aiRiskLevel);
                 const isActive = item.reviewId === selectedReviewId;
-                const queueLabel = getQueueTypeLabel(item.queueType);
-                const queueTone = getQueueTypeTone(item.queueType);
+                const queueBadge = getQueueBadge(item);
 
                 return (
                     <button
@@ -78,13 +91,16 @@ const JobReviewQueueList = ({
                             <span className={`pm-queue-card__risk pm-queue-card__risk--${risk.tone}`}>
                                 {risk.shortLabel}
                             </span>
-                            {queueLabel && (
+                            {queueBadge.label && (
                                 <span
                                     className={`pm-queue-card__queue-type${
-                                        queueTone ? ` pm-queue-card__queue-type--${queueTone}` : ''
+                                        queueBadge.tone
+                                            ? ` pm-queue-card__queue-type--${queueBadge.tone}`
+                                            : ''
                                     }`}
+                                    title={queueBadge.label}
                                 >
-                                    {queueLabel}
+                                    {queueBadge.shortLabel || queueBadge.label}
                                 </span>
                             )}
                         </div>
@@ -99,13 +115,15 @@ const JobReviewQueueList = ({
                                 <p className="pm-queue-card__meta">
                                     {item.recruiterName && <span>{item.recruiterName}</span>}
                                     {item.autoApprovalScore != null && (
-                                        <span>Điểm: {Math.round(item.autoApprovalScore)}</span>
+                                        <span>{Math.round(item.autoApprovalScore)}</span>
                                     )}
                                 </p>
                             </div>
                         </div>
 
-                        <p className="pm-queue-card__time">{formatQueueTime(item.createdAt)}</p>
+                        {item.submittedAt && (
+                            <p className="pm-queue-card__time">{formatQueueTime(item.submittedAt)}</p>
+                        )}
                     </button>
                 );
             })}
