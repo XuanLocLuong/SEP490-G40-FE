@@ -1,14 +1,28 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { login as LoginApi, loginWithGoogle } from '../../apis/AuthApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { getHomePathByRole, ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
+import { consumeBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
 import AuthCard from '../../components/common/AuthCard.jsx';
 import { MailIcon, LockIcon, EyeIcon, EyeOffIcon } from '../../components/common/icons.jsx';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+const resolvePostLoginPath = (role, locationState) => {
+    const saved = consumeBookmarkReturnPath();
+    if (saved && saved.startsWith('/')) return saved;
+
+    const from = locationState?.from;
+    if (typeof from === 'string' && from.startsWith('/')) return from;
+    if (from?.pathname) {
+        return `${from.pathname}${from.search || ''}`;
+    }
+
+    return getHomePathByRole(role);
+};
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -19,6 +33,7 @@ const Login = () => {
 
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -27,7 +42,7 @@ const Login = () => {
             const res = await LoginApi({ email, password });
             const authData = res.data.data;
             login(authData);
-            navigate(getHomePathByRole(authData.role));
+            navigate(resolvePostLoginPath(authData.role, location.state), { replace: true });
         } catch (err) {
             setError('Đăng nhập thất bại. Vui lòng kiểm tra lại email/mật khẩu.');
         }
@@ -42,7 +57,7 @@ const Login = () => {
             });
             const authData = res.data.data;
             login(authData);
-            navigate(getHomePathByRole(authData.role));
+            navigate(resolvePostLoginPath(authData.role, location.state), { replace: true });
         } catch (err) {
             setError('Đăng nhập bằng Google thất bại. Vui lòng thử lại.');
         }

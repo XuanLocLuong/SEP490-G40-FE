@@ -327,6 +327,8 @@ export const fetchJobListPage = async (page, size, query, section = null) => {
     }
 
     if (hasNearMeCoords(query)) {
+        // Near-me: GPS only for location. City/ward on the form are display-only
+        // (auto-filled from reverse geocode) — do not send them as filters.
         const skillIds = normalizeSkillIds(query.skillIds);
         const schedules = normalizeSchedules(query.schedules);
         const body = {
@@ -335,6 +337,8 @@ export const fetchJobListPage = async (page, size, query, section = null) => {
             page,
             size,
         };
+        const keyword = String(query.keyword || '').trim();
+        if (keyword) body.keyword = keyword;
         if (query.jobType) body.jobType = query.jobType;
         const salaryMin = toNumberOrNull(query.salaryMin);
         const salaryMax = toNumberOrNull(query.salaryMax);

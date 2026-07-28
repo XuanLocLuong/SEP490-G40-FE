@@ -84,7 +84,9 @@ const JobApplyButton = ({
         if (!auth) {
             notifyLoginRequired('apply');
             setBookmarkReturnPath(`${location.pathname}${location.search}`);
-            navigate(ROUTES.LOGIN);
+            navigate(ROUTES.LOGIN, {
+                state: { from: `${location.pathname}${location.search}` },
+            });
             return;
         }
 

@@ -342,6 +342,21 @@
     text-underline-offset: 3px;
 }
 
+.job-detail-panel__company-profile-link {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.job-detail-panel__company-profile-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 .job-detail-panel__verified {
     display: inline-flex;
     align-items: center;
