@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import JobCard from '../../components/job/JobCard.jsx';
 import RichTextContent from '../../components/common/RichTextContent.jsx';
 import ReadonlyMapPreview from '../../components/recruiter/ReadonlyMapPreview.jsx';
@@ -18,7 +18,9 @@ import {
     formatLocation,
     getBusinessInitial,
 } from '../../utils/formatters.js';
+import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
+import { resolveBusinessProfileBack } from '../../utils/businessNavReturn.js';
 import '../../assets/styles/PublicBusinessProfileStyle.css';
 
 const TABS = {
@@ -64,6 +66,19 @@ const buildMapsUrl = (location) => {
 
 const PublicBusinessProfilePage = () => {
     const { businessId } = useParams();
+    const location = useLocation();
+    const { auth } = useAuth();
+
+    const profileBack = useMemo(
+        () =>
+            resolveBusinessProfileBack({
+                fromPath: location.state?.from,
+                label: location.state?.label,
+                role: auth?.role,
+            }),
+        [location.state?.from, location.state?.label, auth?.role]
+    );
+
     const [profile, setProfile] = useState(null);
     const [profileLoading, setProfileLoading] = useState(true);
     const [profileError, setProfileError] = useState('');
@@ -235,8 +250,8 @@ const PublicBusinessProfilePage = () => {
             <div className="public-business-page">
                 <div className="public-business__error">
                     <p>{profileError || 'Không tìm thấy doanh nghiệp.'}</p>
-                    <Link to={ROUTES.LANDING} className="btn btn--secondary">
-                        Về trang chủ
+                    <Link to={profileBack.path} className="btn btn--secondary">
+                        ← {profileBack.label}
                     </Link>
                 </div>
             </div>
@@ -245,6 +260,12 @@ const PublicBusinessProfilePage = () => {
 
     return (
         <div className="public-business-page">
+            <div className="public-business__toolbar">
+                <Link to={profileBack.path} className="public-business__back">
+                    ← {profileBack.label}
+                </Link>
+            </div>
+
             <section className="public-business__hero">
                 {profile.logoUrl ? (
                     <img

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import RichTextContent from '../common/RichTextContent.jsx';
 import {
     formatJobType,
@@ -17,8 +16,8 @@ import {
     hasAppliedToJob,
     isPrimarySkill,
 } from '../../utils/formatters.js';
-import { getBusinessProfilePath } from '../../routes/path.js';
 import { CheckCircleIcon, MapPinIcon, ClockIcon } from '../common/icons.jsx';
+import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import JobApplyButton from '../job/JobApplyButton.jsx';
 import JobBookmarkButton from '../job/JobBookmarkButton.jsx';
 import JobChatButton from '../job/JobChatButton.jsx';
@@ -133,13 +132,14 @@ const JobDetailPanel = ({
                     <div className="job-detail-panel__company-info">
                         <div className="job-detail-panel__company-row">
                             {!isPreview && businessId ? (
-                                <Link
-                                    to={getBusinessProfilePath(businessId)}
+                                <BusinessProfileLink
+                                    businessId={businessId}
                                     className="job-detail-panel__company-name job-detail-panel__company-name--link"
                                     title="Xem trang công ty"
+                                    label="Tin tuyển dụng"
                                 >
                                     {businessName}
-                                </Link>
+                                </BusinessProfileLink>
                             ) : (
                                 <h2 className="job-detail-panel__company-name">{businessName}</h2>
                             )}
@@ -150,6 +150,15 @@ const JobDetailPanel = ({
                                 </span>
                             )}
                         </div>
+                        {!isPreview && businessId ? (
+                            <BusinessProfileLink
+                                businessId={businessId}
+                                className="job-detail-panel__company-profile-link"
+                                label="Tin tuyển dụng"
+                            >
+                                Xem thông tin nhà tuyển dụng
+                            </BusinessProfileLink>
+                        ) : null}
                     </div>
                 </div>
 

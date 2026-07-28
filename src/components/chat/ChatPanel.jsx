@@ -20,7 +20,14 @@ export const ChatFloat = ({ conversation, onClose, onBackToList, onThreadChanged
                     ‹
                 </button>
                 <span className="chat-float__chrome-title">
-                    {conversation.otherPartyName || 'Tin nhắn'}
+                    <span className="chat-float__chrome-name">
+                        {conversation.otherPartyName || 'Tin nhắn'}
+                    </span>
+                    {conversation.jobTitle ? (
+                        <span className="chat-float__chrome-job" title={conversation.jobTitle}>
+                            Việc làm: {conversation.jobTitle}
+                        </span>
+                    ) : null}
                 </span>
                 <button
                     type="button"

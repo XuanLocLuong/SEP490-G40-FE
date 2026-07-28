@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SearchIcon, MapPinIcon } from './icons.jsx';
 import LocationSearchSelects from './LocationSearchSelects.jsx';
@@ -19,6 +19,10 @@ import {
     reverseGeocodeCoords,
     SCHEDULE_DAY_OPTIONS,
 } from '../../utils/jobQuery.js';
+import {
+    bestDidYouMean,
+    suggestJobKeywords,
+} from '../../utils/jobSearchSuggest.js';
 import '../../assets/styles/JobSearchForm.css';
 
 /** Catalog seed — dùng khi guest (API skills yêu cầu ROLE_CANDIDATE). */
@@ -99,6 +103,9 @@ const JobSearchForm = ({
         toTimeInputValue(initialSchedules?.[0]?.endTime) || ''
     );
     const [skillsCatalog, setSkillsCatalog] = useState(FALLBACK_SKILLS);
+    const [keywordFocused, setKeywordFocused] = useState(false);
+    const keywordInputRef = useRef(null);
+    const skipSuggestOpenRef = useRef(false);
     const [advancedOpen, setAdvancedOpen] = useState(
         hasAdvancedFilters({
             jobType: initialJobType,
@@ -108,6 +115,13 @@ const JobSearchForm = ({
             schedules: initialSchedules,
         })
     );
+
+    const keywordSuggestions = useMemo(
+        () => suggestJobKeywords(keyword, 5),
+        [keyword]
+    );
+    const didYouMean = useMemo(() => bestDidYouMean(keyword), [keyword]);
+    const showSuggestList = keywordFocused && keywordSuggestions.length > 0;
 
     useEffect(() => {
         const location = resolveInitialLocationIds(initialCity, initialWard);
@@ -301,8 +315,19 @@ const JobSearchForm = ({
         return locateNearMe();
     };
 
+    const applySuggestedKeyword = (value) => {
+        skipSuggestOpenRef.current = true;
+        setKeyword(value);
+        setKeywordFocused(false);
+        window.requestAnimationFrame(() => {
+            keywordInputRef.current?.focus();
+            skipSuggestOpenRef.current = false;
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setKeywordFocused(false);
         const base = buildBasePayload();
 
         if (!base.nearMe) {
@@ -333,15 +358,46 @@ const JobSearchForm = ({
         <form className={`job-search-form ${className}`.trim()} onSubmit={handleSubmit}>
             <div className="job-search-form__panel">
                 <div className="job-search-form__keyword-row">
-                    <div className="job-search-form__keyword">
-                        <SearchIcon width={20} height={20} aria-hidden="true" />
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm theo tên công việc, công ty..."
-                            value={keyword}
-                            onChange={(e) => setKeyword(e.target.value)}
-                            aria-label="Từ khóa tìm kiếm"
-                        />
+                    <div className="job-search-form__keyword-wrap">
+                        <div className="job-search-form__keyword">
+                            <SearchIcon width={20} height={20} aria-hidden="true" />
+                            <input
+                                ref={keywordInputRef}
+                                type="text"
+                                placeholder="Tìm kiếm theo tên công việc, công ty..."
+                                value={keyword}
+                                onChange={(e) => {
+                                    setKeyword(e.target.value);
+                                    setKeywordFocused(true);
+                                }}
+                                onFocus={() => {
+                                    if (skipSuggestOpenRef.current) return;
+                                    setKeywordFocused(true);
+                                }}
+                                onBlur={() => {
+                                    window.setTimeout(() => setKeywordFocused(false), 180);
+                                }}
+                                aria-label="Từ khóa tìm kiếm"
+                                aria-autocomplete="list"
+                                autoComplete="off"
+                            />
+                        </div>
+                        {showSuggestList ? (
+                            <ul className="job-search-form__suggest-list" role="listbox">
+                                {keywordSuggestions.map((item) => (
+                                    <li key={item}>
+                                        <button
+                                            type="button"
+                                            className="job-search-form__suggest-item"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={() => applySuggestedKeyword(item)}
+                                        >
+                                            {item}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : null}
                     </div>
                     <label className="job-search-form__near-me">
                         <input
@@ -354,6 +410,20 @@ const JobSearchForm = ({
                         <span>{nearMeLabel}</span>
                     </label>
                 </div>
+
+                {didYouMean && keyword.trim().length >= 2 ? (
+                    <p className="job-search-form__did-you-mean">
+                        Có phải bạn đang tìm{' '}
+                        <button
+                            type="button"
+                            className="job-search-form__did-you-mean-btn"
+                            onClick={() => applySuggestedKeyword(didYouMean)}
+                        >
+                            {didYouMean}
+                        </button>
+                        ?
+                    </p>
+                ) : null}
 
                 <div className="job-search-form__filter-row">
                     <div className="job-search-form__locations">

@@ -83,6 +83,11 @@ const ChatConversationList = ({
                                                 {formatChatListTime(conv.lastMessageAt)}
                                             </span>
                                         </span>
+                                        {conv.jobTitle ? (
+                                            <span className="chat-panel__conv-job" title={conv.jobTitle}>
+                                                Việc làm: {conv.jobTitle}
+                                            </span>
+                                        ) : null}
                                         <span className="chat-panel__conv-preview">
                                             {previewLastMessage(conv)}
                                         </span>
