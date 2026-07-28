@@ -19,7 +19,7 @@ import {
     rejectApplication,
 } from '../../apis/RecruiterApplicationApi.jsx';
 import {
-    fetchRecommendedCandidates,
+    getInvitationSkipReasonMessage,
     getRecruiterRecommendationErrorMessage,
     sendCandidateInvitation,
 } from '../../apis/RecruiterRecommendationApi.jsx';
@@ -89,18 +89,6 @@ const findHiredApplicationIdForChat = async ({ jobId, role, conversation }) => {
     }
     if (role === USER_ROLES.RECRUITER) {
         return findRecruiterApplicationId(jobId, conversation, 'HIRED');
-    }
-    return null;
-};
-
-const findCandidateProfileId = async (jobId, otherPartyUserId) => {
-    try {
-        const data = await fetchRecommendedCandidates(jobId, 0, 50);
-        const list = Array.isArray(data?.content) ? data.content : Array.isArray(data) ? data : [];
-        const match = list.find((c) => String(c.userId) === String(otherPartyUserId));
-        if (match?.candidateId != null) return match.candidateId;
-    } catch {
-        // fall through
     }
     return null;
 };
@@ -341,23 +329,17 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             return;
         }
         if (!requireJob()) return;
-        if (conversation?.otherPartyId == null) {
-            toast.error('Không xác định được ứng viên trong hội thoại.');
+
+        const candidateId = conversation?.candidateProfileId;
+        if (candidateId == null) {
+            toast.error(
+                'Không tìm được hồ sơ ứng viên để mời. Hãy tải lại hội thoại hoặc thử mời từ trang Gợi ý ứng viên.'
+            );
             return;
         }
 
         setActionBusy(true);
         try {
-            const candidateId = await findCandidateProfileId(
-                conversation.jobId,
-                conversation.otherPartyId
-            );
-            if (candidateId == null) {
-                toast.error(
-                    'Không tìm được hồ sơ ứng viên để mời. Thử mời từ trang Gợi ý ứng viên.'
-                );
-                return;
-            }
             const response = await sendCandidateInvitation(conversation.jobId, {
                 candidateIds: [candidateId],
                 type: 'JOB_INVITATION',
@@ -371,9 +353,9 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 toast.success('Đã gửi lời mời ứng tuyển.');
                 await refreshAfterAction();
             } else {
-                toast.error(
-                    getRecruiterRecommendationErrorMessage(
-                        { response: { data: { message: result?.status } } },
+                toast.info(
+                    getInvitationSkipReasonMessage(
+                        result?.reason || result?.message,
                         'Không gửi được lời mời.'
                     )
                 );
