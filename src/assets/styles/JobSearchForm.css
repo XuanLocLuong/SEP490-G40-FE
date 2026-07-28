@@ -72,24 +72,6 @@
     background: var(--color-bg);
 }
 
-.job-search-form__did-you-mean {
-    margin: -4px 0 12px;
-    font-size: 13px;
-    color: var(--color-text-muted);
-}
-
-.job-search-form__did-you-mean-btn {
-    border: none;
-    background: none;
-    padding: 0;
-    font: inherit;
-    font-weight: 700;
-    color: var(--color-primary);
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
 .job-search-form__keyword svg {
     flex-shrink: 0;
 }

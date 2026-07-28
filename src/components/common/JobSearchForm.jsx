@@ -20,7 +20,6 @@ import {
     SCHEDULE_DAY_OPTIONS,
 } from '../../utils/jobQuery.js';
 import {
-    bestDidYouMean,
     suggestJobKeywords,
 } from '../../utils/jobSearchSuggest.js';
 import '../../assets/styles/JobSearchForm.css';
@@ -120,7 +119,6 @@ const JobSearchForm = ({
         () => suggestJobKeywords(keyword, 5),
         [keyword]
     );
-    const didYouMean = useMemo(() => bestDidYouMean(keyword), [keyword]);
     const showSuggestList = keywordFocused && keywordSuggestions.length > 0;
 
     useEffect(() => {
@@ -410,20 +408,6 @@ const JobSearchForm = ({
                         <span>{nearMeLabel}</span>
                     </label>
                 </div>
-
-                {didYouMean && keyword.trim().length >= 2 ? (
-                    <p className="job-search-form__did-you-mean">
-                        Có phải bạn đang tìm{' '}
-                        <button
-                            type="button"
-                            className="job-search-form__did-you-mean-btn"
-                            onClick={() => applySuggestedKeyword(didYouMean)}
-                        >
-                            {didYouMean}
-                        </button>
-                        ?
-                    </p>
-                ) : null}
 
                 <div className="job-search-form__filter-row">
                     <div className="job-search-form__locations">

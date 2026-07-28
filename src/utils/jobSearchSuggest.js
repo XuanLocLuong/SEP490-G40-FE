@@ -70,21 +70,3 @@ export const suggestJobKeywords = (keyword, limit = 6) => {
 
     return uniqueKeepOrder([...containsMatches, ...fuzzyMatches]).slice(0, limit);
 };
-
-/**
- * "Did you mean" when typed term is close but not an exact catalog entry.
- * @returns {string|null}
- */
-export const bestDidYouMean = (keyword) => {
-    const q = String(keyword || '').trim();
-    if (q.length < 2) return null;
-
-    const lower = q.toLowerCase();
-    const exact = JOB_SEARCH_SUGGESTIONS.some((label) => label.toLowerCase() === lower);
-    if (exact) return null;
-
-    const suggestions = suggestJobKeywords(q, 3).filter(
-        (label) => label.toLowerCase() !== lower
-    );
-    return suggestions[0] || null;
-};

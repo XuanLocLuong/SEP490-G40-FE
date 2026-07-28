@@ -21,7 +21,6 @@ import {
     parseJobListSection,
 } from '../../utils/jobQuery.js';
 import { resolveJobListBack } from '../../utils/jobNavReturn.js';
-import { bestDidYouMean } from '../../utils/jobSearchSuggest.js';
 import '../../assets/styles/JobListPageStyle.css';
 
 const JobListPage = () => {
@@ -145,18 +144,6 @@ const JobListPage = () => {
     const searching = !section && isSearchQuery(activeQuery);
     const isFirstPage = page <= 0;
     const isLastPage = totalPages > 0 && page >= totalPages - 1;
-    const emptyDidYouMean =
-        searching && !loading && jobs.length === 0
-            ? bestDidYouMean(activeQuery?.keyword)
-            : null;
-
-    const applyDidYouMean = (value) => {
-        handleSearch({
-            ...(activeQuery || {}),
-            keyword: value,
-        });
-    };
-
     return (
         <div className="job-list-page">
             <BookmarkLoginRedirect />
@@ -231,19 +218,6 @@ const JobListPage = () => {
                             {sectionMeta?.empty ||
                                 'Chưa có việc làm phù hợp. Hãy thử bộ lọc khác.'}
                         </p>
-                        {emptyDidYouMean ? (
-                            <p className="job-list-page__did-you-mean">
-                                Có phải bạn đang tìm{' '}
-                                <button
-                                    type="button"
-                                    className="job-list-page__did-you-mean-btn"
-                                    onClick={() => applyDidYouMean(emptyDidYouMean)}
-                                >
-                                    {emptyDidYouMean}
-                                </button>
-                                ?
-                            </p>
-                        ) : null}
                     </div>
                 )
             )}
