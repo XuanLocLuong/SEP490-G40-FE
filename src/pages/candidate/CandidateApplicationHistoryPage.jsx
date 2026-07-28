@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     getMyApplications,
@@ -12,9 +11,9 @@ import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 import { CalendarIcon, ChatIcon, ClockIcon } from '../../components/common/icons.jsx';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useAuth } from '../../contexts/authContext.js';
-import { getBusinessProfilePath } from '../../routes/path.js';
 import { openChatPanel } from '../../utils/chatEvents.js';
 import { formatJobShiftsLabel, getBusinessInitial } from '../../utils/formatters.js';
+import BusinessProfileLink from '../../components/common/BusinessProfileLink.jsx';
 import '../../assets/styles/CandidateApplicationHistoryPageStyle.css';
 
 const PAGE_SIZE = 10;
@@ -319,13 +318,14 @@ const CandidateApplicationHistoryPage = () => {
                                 <div className="cah-item__text">
                                     <h3 className="cah-item__job">{item.jobTitle || '—'}</h3>
                                     {item.businessId ? (
-                                        <Link
-                                            to={getBusinessProfilePath(item.businessId)}
+                                        <BusinessProfileLink
+                                            businessId={item.businessId}
                                             className="cah-item__company cah-item__company--link"
                                             title="Xem thông tin công ty"
+                                            label="Lịch sử ứng tuyển"
                                         >
                                             {item.businessName || '—'}
-                                        </Link>
+                                        </BusinessProfileLink>
                                     ) : (
                                         <p className="cah-item__company">{item.businessName || '—'}</p>
                                     )}

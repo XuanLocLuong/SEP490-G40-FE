@@ -28,8 +28,9 @@ const JobBookmarkButton = ({ jobId, className, initialSaved = false }) => {
 
         if (!auth) {
             notifyLoginRequired('save');
-            setBookmarkReturnPath(`${location.pathname}${location.search}`);
-            navigate(ROUTES.LOGIN);
+            const returnPath = `${location.pathname}${location.search}`;
+            setBookmarkReturnPath(returnPath);
+            navigate(ROUTES.LOGIN, { state: { from: returnPath } });
             return;
         }
 

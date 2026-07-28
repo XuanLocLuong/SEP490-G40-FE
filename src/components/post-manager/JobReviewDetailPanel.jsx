@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
 import RichTextContent from '../common/RichTextContent.jsx';
-import { getBusinessProfilePath } from '../../routes/path.js';
+import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import { formatJobType, formatSalary } from '../../utils/formatters.js';
 import {
     getAutoScoreTone,
@@ -67,12 +66,13 @@ const JobReviewDetailPanel = ({
                     <h2 className="pm-review-detail__title">{detail.jobTitle || '—'}</h2>
                     <p className="pm-review-detail__sub">
                         {detail.businessId ? (
-                            <Link
-                                to={getBusinessProfilePath(detail.businessId)}
+                            <BusinessProfileLink
+                                businessId={detail.businessId}
                                 className="pm-review-detail__company-link"
+                                label="Quản lý tin"
                             >
                                 {detail.businessName || '—'}
-                            </Link>
+                            </BusinessProfileLink>
                         ) : (
                             <span>{detail.businessName || '—'}</span>
                         )}

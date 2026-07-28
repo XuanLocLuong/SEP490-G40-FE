@@ -121,10 +121,29 @@
 
 .chat-float__chrome-title {
     margin: 0;
-    font-size: 14px;
-    font-weight: 700;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
     color: #fff;
     text-align: center;
+}
+
+.chat-float__chrome-name {
+    font-size: 14px;
+    font-weight: 700;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-float__chrome-job {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.9;
+    max-width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -252,6 +271,15 @@
     font-size: 14px;
     font-weight: 700;
     color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-panel__conv-job {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

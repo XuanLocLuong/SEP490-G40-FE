@@ -4,6 +4,24 @@
     padding: 8px 0 40px;
 }
 
+.public-business__toolbar {
+    margin-bottom: 12px;
+}
+
+.public-business__back {
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.public-business__back:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 .public-business__loading,
 .public-business__error {
     padding: 48px 24px;
