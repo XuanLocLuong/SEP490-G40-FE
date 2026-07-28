@@ -5,6 +5,7 @@ import { createOrGetConversation } from '../apis/ChatApi.jsx';
 import { ChatFloat, ChatPicker } from '../components/chat/ChatPanel.jsx';
 import { useChatInbox } from '../hooks/useChatInbox.js';
 import { OPEN_CHAT_PANEL_EVENT } from '../utils/chatEvents.js';
+import { elevateOverlay, OVERLAY_CSS } from '../utils/overlayLayer.js';
 import { unwrapData } from '../utils/chatDisplay.js';
 import { USER_ROLES } from '../utils/Constants.jsx';
 import '../assets/styles/ChatPanelStyle.css';
@@ -16,6 +17,9 @@ const CHAT_ROLES = new Set([USER_ROLES.CANDIDATE, USER_ROLES.RECRUITER]);
 const MULTI_CHAT_MQ = '(min-width: 900px)';
 const MAX_FLOATS_WIDE = 3;
 const MAX_FLOATS_NARROW = 1;
+
+const PICKER_FRONT = 'picker';
+const floatFrontKey = (id) => `float:${id}`;
 
 const getMaxFloats = () =>
     typeof window !== 'undefined' && window.matchMedia(MULTI_CHAT_MQ).matches
@@ -43,9 +47,15 @@ const ChatDockHost = ({
     openFloats,
     selectConversation,
     closeFloat,
-    closeNewestFloat,
+    closeFrontPanel,
     backToList,
     reloadInbox,
+    conversations,
+    inboxLoading,
+    inboxError,
+    frontKey,
+    bringPickerToFront,
+    bringFloatToFront,
 }) => {
     const floatOpen = openFloats.length > 0;
     const dockOpen = pickerOpen || floatOpen;
@@ -55,13 +65,12 @@ const ChatDockHost = ({
 
         const handleKeyDown = (event) => {
             if (event.key !== 'Escape') return;
-            if (floatOpen) closeNewestFloat();
-            else setPickerOpen(false);
+            closeFrontPanel();
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [enabled, dockOpen, floatOpen, closeNewestFloat, setPickerOpen]);
+    }, [enabled, dockOpen, closeFrontPanel]);
 
     if (!enabled || !dockOpen) return null;
 
@@ -73,6 +82,8 @@ const ChatDockHost = ({
                 <ChatFloat
                     key={conv.id}
                     conversation={conv}
+                    isFront={frontKey === floatFrontKey(conv.id)}
+                    onBringToFront={() => bringFloatToFront(conv.id)}
                     onClose={() => closeFloat(conv.id)}
                     onBackToList={() => backToList(conv.id)}
                     onThreadChanged={reloadInbox}
@@ -82,8 +93,14 @@ const ChatDockHost = ({
                 <ChatPicker
                     open={pickerOpen}
                     activeIds={openIds}
+                    conversations={conversations}
+                    loading={inboxLoading}
+                    error={inboxError}
+                    onReload={reloadInbox}
                     onSelect={selectConversation}
                     onClose={() => setPickerOpen(false)}
+                    isFront={frontKey === PICKER_FRONT}
+                    onBringToFront={bringPickerToFront}
                 />
             ) : null}
         </div>,
@@ -100,11 +117,30 @@ export const ChatProvider = ({ children }) => {
 
     const [pickerOpen, setPickerOpen] = useState(false);
     const [openFloats, setOpenFloats] = useState([]);
+    /** Last-opened panel wins stacking: 'picker' | 'float:{id}'. */
+    const [frontKey, setFrontKey] = useState(null);
     const [openingChat, setOpeningChat] = useState(false);
-    const { reloadInbox, totalUnread } = useChatInbox({ enabled: chatEnabled });
+    const {
+        conversations,
+        loading: inboxLoading,
+        error: inboxError,
+        reloadInbox,
+        totalUnread,
+    } = useChatInbox({ enabled: chatEnabled });
 
     const floatOpen = openFloats.length > 0;
     const activeConv = openFloats[openFloats.length - 1] ?? null;
+
+    const bringPickerToFront = useCallback(() => {
+        setFrontKey(PICKER_FRONT);
+        elevateOverlay(OVERLAY_CSS.CHAT);
+    }, []);
+
+    const bringFloatToFront = useCallback((conversationId) => {
+        if (conversationId == null) return;
+        setFrontKey(floatFrontKey(conversationId));
+        elevateOverlay(OVERLAY_CSS.CHAT);
+    }, []);
 
     // Trim when viewport shrinks (3 → 1): keep newest floats.
     useEffect(() => {
@@ -113,15 +149,41 @@ export const ChatProvider = ({ children }) => {
         );
     }, [maxFloats]);
 
-    const pushFloat = useCallback((conv) => {
-        if (!conv?.id) return;
-        setOpenFloats((prev) => {
-            const rest = prev.filter((c) => String(c.id) !== String(conv.id));
-            const next = [...rest, conv];
-            const max = maxFloatsRef.current;
-            return next.length > max ? next.slice(-max) : next;
-        });
-    }, []);
+    // Keep frontKey valid when panels close.
+    useEffect(() => {
+        if (frontKey === PICKER_FRONT) {
+            if (!pickerOpen) {
+                const newest = openFloats[openFloats.length - 1];
+                setFrontKey(newest ? floatFrontKey(newest.id) : null);
+            }
+            return;
+        }
+        if (frontKey?.startsWith('float:')) {
+            const id = frontKey.slice('float:'.length);
+            const stillOpen = openFloats.some((c) => String(c.id) === String(id));
+            if (!stillOpen) {
+                if (pickerOpen) setFrontKey(PICKER_FRONT);
+                else {
+                    const newest = openFloats[openFloats.length - 1];
+                    setFrontKey(newest ? floatFrontKey(newest.id) : null);
+                }
+            }
+        }
+    }, [frontKey, pickerOpen, openFloats]);
+
+    const pushFloat = useCallback(
+        (conv) => {
+            if (!conv?.id) return;
+            setOpenFloats((prev) => {
+                const rest = prev.filter((c) => String(c.id) !== String(conv.id));
+                const next = [...rest, conv];
+                const max = maxFloatsRef.current;
+                return next.length > max ? next.slice(-max) : next;
+            });
+            bringFloatToFront(conv.id);
+        },
+        [bringFloatToFront]
+    );
 
     const closeFloat = useCallback((conversationId) => {
         setOpenFloats((prev) =>
@@ -133,14 +195,29 @@ export const ChatProvider = ({ children }) => {
         setOpenFloats((prev) => (prev.length ? prev.slice(0, -1) : prev));
     }, []);
 
+    const closeFrontPanel = useCallback(() => {
+        if (frontKey === PICKER_FRONT && pickerOpen) {
+            setPickerOpen(false);
+            return;
+        }
+        if (frontKey?.startsWith('float:')) {
+            const id = frontKey.slice('float:'.length);
+            closeFloat(id);
+            return;
+        }
+        if (openFloats.length) closeNewestFloat();
+        else setPickerOpen(false);
+    }, [frontKey, pickerOpen, openFloats.length, closeFloat, closeNewestFloat]);
+
     const openPicker = useCallback(() => {
         // Narrow: only room for one panel — drop floats when opening inbox.
         if (maxFloatsRef.current <= 1) {
             setOpenFloats([]);
         }
         setPickerOpen(true);
+        bringPickerToFront();
         reloadInbox();
-    }, [reloadInbox]);
+    }, [bringPickerToFront, reloadInbox]);
 
     const selectConversation = useCallback(
         (conv) => {
@@ -157,14 +234,16 @@ export const ChatProvider = ({ children }) => {
         (conversationId) => {
             closeFloat(conversationId);
             setPickerOpen(true);
+            bringPickerToFront();
             reloadInbox();
         },
-        [closeFloat, reloadInbox]
+        [bringPickerToFront, closeFloat, reloadInbox]
     );
 
     const closeAll = useCallback(() => {
         setPickerOpen(false);
         setOpenFloats([]);
+        setFrontKey(null);
     }, []);
 
     /**
@@ -241,6 +320,7 @@ export const ChatProvider = ({ children }) => {
             setPickerOpen,
             openFloats,
             activeConv,
+            conversations,
             totalUnread,
             reloadInbox,
             openPicker,
@@ -260,6 +340,7 @@ export const ChatProvider = ({ children }) => {
             pickerOpen,
             openFloats,
             activeConv,
+            conversations,
             totalUnread,
             reloadInbox,
             openPicker,
@@ -285,9 +366,15 @@ export const ChatProvider = ({ children }) => {
                 openFloats={openFloats}
                 selectConversation={selectConversation}
                 closeFloat={closeFloat}
-                closeNewestFloat={closeNewestFloat}
+                closeFrontPanel={closeFrontPanel}
                 backToList={backToList}
                 reloadInbox={reloadInbox}
+                conversations={conversations}
+                inboxLoading={inboxLoading}
+                inboxError={inboxError}
+                frontKey={frontKey}
+                bringPickerToFront={bringPickerToFront}
+                bringFloatToFront={bringFloatToFront}
             />
         </ChatContext.Provider>
     );

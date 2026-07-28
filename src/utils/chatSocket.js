@@ -13,6 +13,12 @@ let client = null;
 /** @type {Map<string, { onMessage?: Function, onActionsUpdated?: Function, messageSub?: { unsubscribe: Function }, actionsSub?: { unsubscribe: Function } }>} */
 const conversationHandlers = new Map();
 
+/** @type {Map<string, { listeners: Set<(summary: object) => void>, sub?: { unsubscribe: Function } }>} */
+const inboxHandlers = new Map();
+
+/** @type {Map<string, { listeners: Set<(notification: object) => void>, sub?: { unsubscribe: Function } }>} */
+const notificationHandlers = new Map();
+
 /** @type {Set<(connected: boolean) => void>} */
 const connectionListeners = new Set();
 
@@ -57,9 +63,49 @@ const subscribeHandlers = (convId, entry) => {
     );
 };
 
+const fanOut = (entry, data) => {
+    entry.listeners.forEach((listener) => {
+        try {
+            listener(data);
+        } catch {
+            // ignore listener errors
+        }
+    });
+};
+
+const subscribeInboxHandlers = (userId, entry) => {
+    if (!client?.connected || userId == null) return;
+
+    const id = String(userId);
+    entry.sub?.unsubscribe?.();
+
+    entry.sub = client.subscribe(`/topic/user/${id}/chat-inbox`, (frame) => {
+        const data = parseBody(frame);
+        if (data) fanOut(entry, data);
+    });
+};
+
+const subscribeNotificationHandlers = (userId, entry) => {
+    if (!client?.connected || userId == null) return;
+
+    const id = String(userId);
+    entry.sub?.unsubscribe?.();
+
+    entry.sub = client.subscribe(`/topic/notifications/${id}`, (frame) => {
+        const data = parseBody(frame);
+        if (data) fanOut(entry, data);
+    });
+};
+
 const resubscribeAll = () => {
     conversationHandlers.forEach((entry, convId) => {
         subscribeHandlers(convId, entry);
+    });
+    inboxHandlers.forEach((entry, userId) => {
+        subscribeInboxHandlers(userId, entry);
+    });
+    notificationHandlers.forEach((entry, userId) => {
+        subscribeNotificationHandlers(userId, entry);
     });
 };
 
@@ -135,5 +181,69 @@ export const subscribeConversationRealtime = (conversationId, handlers = {}) => 
         current.messageSub?.unsubscribe?.();
         current.actionsSub?.unsubscribe?.();
         conversationHandlers.delete(id);
+    };
+};
+
+/**
+ * Subscribe to global inbox/badge updates for a user.
+ * Topic: `/topic/user/{userId}/chat-inbox` (ConversationSummaryDTO).
+ * @returns {() => void} unsubscribe
+ */
+export const subscribeUserChatInbox = (userId, onSummary) => {
+    if (userId == null || typeof onSummary !== 'function') return () => {};
+
+    const id = String(userId);
+    ensureChatSocket();
+
+    let entry = inboxHandlers.get(id);
+    if (!entry) {
+        entry = { listeners: new Set(), sub: null };
+        inboxHandlers.set(id, entry);
+        if (client?.connected) {
+            subscribeInboxHandlers(id, entry);
+        }
+    }
+
+    entry.listeners.add(onSummary);
+
+    return () => {
+        const current = inboxHandlers.get(id);
+        if (!current) return;
+        current.listeners.delete(onSummary);
+        if (current.listeners.size > 0) return;
+        current.sub?.unsubscribe?.();
+        inboxHandlers.delete(id);
+    };
+};
+
+/**
+ * Subscribe to realtime notifications for a user.
+ * Topic: `/topic/notifications/{userId}` (NotificationDTO).
+ * @returns {() => void} unsubscribe
+ */
+export const subscribeUserNotifications = (userId, onNotification) => {
+    if (userId == null || typeof onNotification !== 'function') return () => {};
+
+    const id = String(userId);
+    ensureChatSocket();
+
+    let entry = notificationHandlers.get(id);
+    if (!entry) {
+        entry = { listeners: new Set(), sub: null };
+        notificationHandlers.set(id, entry);
+        if (client?.connected) {
+            subscribeNotificationHandlers(id, entry);
+        }
+    }
+
+    entry.listeners.add(onNotification);
+
+    return () => {
+        const current = notificationHandlers.get(id);
+        if (!current) return;
+        current.listeners.delete(onNotification);
+        if (current.listeners.size > 0) return;
+        current.sub?.unsubscribe?.();
+        notificationHandlers.delete(id);
     };
 };

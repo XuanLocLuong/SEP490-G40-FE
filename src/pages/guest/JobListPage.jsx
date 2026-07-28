@@ -4,6 +4,7 @@ import JobListSearch from '../../components/joblist/JobListSearch.jsx';
 import JobListItem from '../../components/job/JobListItem.jsx';
 import BookmarkLoginRedirect from '../../components/job/BookmarkLoginRedirect.jsx';
 import AiRecommendationsEmptyState from '../../components/landing/AiRecommendationsEmptyState.jsx';
+import AiRecommendationsPendingOfferHint from '../../components/landing/AiRecommendationsPendingOfferHint.jsx';
 import AiRecommendationsProfileHint from '../../components/landing/AiRecommendationsProfileHint.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
@@ -221,7 +222,12 @@ const JobListPage = () => {
 
             {jobs.length > 0 && (
                 <>
-                    {section === JOB_LIST_SECTIONS.AI && <AiRecommendationsProfileHint />}
+                    {section === JOB_LIST_SECTIONS.AI && (
+                        <>
+                            <AiRecommendationsPendingOfferHint />
+                            <AiRecommendationsProfileHint />
+                        </>
+                    )}
                     <div className="job-list-page__list">
                         {jobs.map((job, index) => (
                             <JobListItem

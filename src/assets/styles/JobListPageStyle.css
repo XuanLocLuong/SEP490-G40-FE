@@ -117,6 +117,11 @@
     text-decoration: underline;
 }
 
+.ai-profile-hint--offer {
+    background: color-mix(in srgb, var(--color-warning, #d97706) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-warning, #d97706) 22%, transparent);
+}
+
 /* Pagination */
 .job-list-pagination {
     display: flex;

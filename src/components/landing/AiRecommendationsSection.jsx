@@ -7,6 +7,7 @@ import { ROUTES } from '../../routes/path.js';
 import { mapRecommendationToJob } from '../../utils/formatters.js';
 import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
 import AiRecommendationsEmptyState from './AiRecommendationsEmptyState.jsx';
+import AiRecommendationsPendingOfferHint from './AiRecommendationsPendingOfferHint.jsx';
 import AiRecommendationsProfileHint from './AiRecommendationsProfileHint.jsx';
 
 const PREVIEW_SIZE = 4;
@@ -74,6 +75,7 @@ const AiRecommendationsSection = () => {
 
             {jobs.length > 0 && (
                 <>
+                    <AiRecommendationsPendingOfferHint />
                     <AiRecommendationsProfileHint />
                     <div className="landing-jobs__grid landing-jobs__grid--compact">
                         {jobs.map((job) => (

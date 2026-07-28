@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/authContext.js';
 import { useNotifications } from '../../hooks/useNotifications.js';
 import { getNotificationTargetPath } from '../../utils/notificationNavigation.js';
 import { tryOpenChatFromNotification } from '../../utils/notificationChat.js';
+import { elevateOverlay, OVERLAY_CSS } from '../../utils/overlayLayer.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import NotificationDropdown from './NotificationDropdown.jsx';
@@ -35,6 +36,7 @@ const NotificationBell = () => {
     useEffect(() => {
         if (!open) return undefined;
 
+        elevateOverlay(OVERLAY_CSS.HEADER);
         loadInitial();
 
         const handlePointerDown = (event) => {
@@ -44,7 +46,8 @@ const NotificationBell = () => {
         };
 
         const handleKeyDown = (event) => {
-            if (event.key === 'Escape') setOpen(false);
+            if (event.key !== 'Escape') return;
+            setOpen(false);
         };
 
         document.addEventListener('mousedown', handlePointerDown);
@@ -56,7 +59,11 @@ const NotificationBell = () => {
     }, [open, loadInitial]);
 
     const handleToggle = () => {
-        setOpen((prev) => !prev);
+        setOpen((prev) => {
+            const next = !prev;
+            if (next) elevateOverlay(OVERLAY_CSS.HEADER);
+            return next;
+        });
     };
 
     const handleSelect = async (notification) => {

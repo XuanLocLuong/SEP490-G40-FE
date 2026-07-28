@@ -6,8 +6,18 @@ import {
     markAllNotificationsRead,
     markNotificationRead,
 } from '../apis/NotificationApi.jsx';
+import { useAuth } from '../contexts/authContext.js';
+import { subscribeUserNotifications } from '../utils/chatSocket.js';
 
 const DEFAULT_PAGE_SIZE = 20;
+
+const normalizeNotification = (dto) => {
+    if (!dto || dto.id == null) return null;
+    return {
+        ...dto,
+        read: Boolean(dto.read),
+    };
+};
 
 const EMPTY_SUMMARY = {
     totalCount: 0,
@@ -61,6 +71,8 @@ export const useNotifications = ({
     autoLoad = false,
     isRead = null,
 } = {}) => {
+    const { auth } = useAuth();
+    const userId = auth?.userId ?? auth?.id ?? null;
     const [items, setItems] = useState([]);
     const [summary, setSummary] = useState(EMPTY_SUMMARY);
     const [loading, setLoading] = useState(false);
@@ -192,9 +204,46 @@ export const useNotifications = ({
     useEffect(() => {
         if (!enabled) return undefined;
         refreshUnreadCount();
+        // Soft fallback if a WS frame is missed while disconnected.
         const timer = window.setInterval(refreshUnreadCount, 60_000);
         return () => window.clearInterval(timer);
     }, [enabled, refreshUnreadCount]);
+
+    // Live badge + list via BE `/topic/notifications/{userId}`.
+    useEffect(() => {
+        if (!enabled || userId == null) return undefined;
+
+        return subscribeUserNotifications(userId, (raw) => {
+            const notification = normalizeNotification(raw);
+            if (!notification) return;
+
+            setSummary((prev) => {
+                if (notification.read) {
+                    return {
+                        ...prev,
+                        totalCount: prev.totalCount + 1,
+                        readCount: prev.readCount + 1,
+                    };
+                }
+                return {
+                    ...prev,
+                    totalCount: prev.totalCount + 1,
+                    unreadCount: prev.unreadCount + 1,
+                };
+            });
+
+            // Skip list insert when filter excludes this item.
+            if (isRead === true && !notification.read) return;
+            if (isRead === false && notification.read) return;
+
+            setItems((prev) => {
+                if (prev.some((n) => String(n.id) === String(notification.id))) {
+                    return prev;
+                }
+                return [notification, ...prev];
+            });
+        });
+    }, [enabled, isRead, userId]);
 
     useEffect(() => {
         if (!enabled || !autoLoad) return undefined;

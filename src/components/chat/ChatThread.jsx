@@ -33,6 +33,7 @@ import {
     groupStickyActions,
     normalizeChatAction,
 } from '../../utils/chatDisplay.js';
+import { notifyRecruitmentChanged } from '../../utils/chatEvents.js';
 import ChatActionCard from './ChatActionCard.jsx';
 import ChatMessageBubble from './ChatMessageBubble.jsx';
 import ChatReviewModal from './ChatReviewModal.jsx';
@@ -139,10 +140,17 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         el.scrollTop = el.scrollHeight;
     }, [messages.length, conversation?.id]);
 
-    const refreshAfterAction = async () => {
+    const refreshAfterAction = async (recruitmentDetail = null) => {
         await reloadThread?.();
         await reloadActions();
         onThreadChanged?.();
+        if (recruitmentDetail) {
+            notifyRecruitmentChanged({
+                jobId: conversation?.jobId,
+                source: 'chat',
+                ...recruitmentDetail,
+            });
+        }
     };
 
     const requireJob = () => {
@@ -178,7 +186,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             }
             await confirmOffer(applicationId);
             toast.success('Đã xác nhận nhận việc.');
-            await refreshAfterAction();
+            await refreshAfterAction({ kind: 'application', action: 'ACCEPT_WORK' });
         } catch (err) {
             toast.error(err?.response?.data?.message || 'Không thể xác nhận nhận việc.');
         } finally {
@@ -202,7 +210,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             }
             await declineOffer(applicationId);
             toast.success('Đã từ chối nhận việc.');
-            await refreshAfterAction();
+            await refreshAfterAction({ kind: 'application', action: 'REJECT_WORK' });
         } catch (err) {
             toast.error(err?.response?.data?.message || 'Không thể từ chối nhận việc.');
         } finally {
@@ -226,7 +234,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             }
             await acceptInvitation(invitationId);
             toast.success('Đã chấp nhận lời mời.');
-            await refreshAfterAction();
+            await refreshAfterAction({ kind: 'invitation', action: 'ACCEPT_INVITE' });
         } catch (err) {
             toast.error(getInvitationApiErrorMessage(err, 'Không thể chấp nhận lời mời.'));
         } finally {
@@ -250,7 +258,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             }
             await rejectInvitation(invitationId);
             toast.success('Đã từ chối lời mời.');
-            await refreshAfterAction();
+            await refreshAfterAction({ kind: 'invitation', action: 'REJECT_INVITE' });
         } catch (err) {
             toast.error(getInvitationApiErrorMessage(err, 'Không thể từ chối lời mời.'));
         } finally {
@@ -278,7 +286,10 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             }
             await acceptApplication(applicationId);
             toast.success('Đã chấp nhận đơn ứng tuyển.');
-            await refreshAfterAction();
+            await refreshAfterAction({
+                kind: 'application',
+                action: 'ACCEPT_APPLICATION',
+            });
         } catch (err) {
             toast.error(
                 getRecruiterApplicationApiErrorMessage(err, 'Không thể chấp nhận đơn.')
@@ -311,7 +322,10 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 note: 'Từ chối qua chat',
             });
             toast.success('Đã từ chối đơn ứng tuyển.');
-            await refreshAfterAction();
+            await refreshAfterAction({
+                kind: 'application',
+                action: 'REJECT_APPLICATION',
+            });
         } catch (err) {
             toast.error(
                 getRecruiterApplicationApiErrorMessage(err, 'Không thể từ chối đơn.')

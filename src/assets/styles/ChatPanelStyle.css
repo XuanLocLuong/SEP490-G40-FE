@@ -31,7 +31,7 @@
     position: fixed;
     right: 24px;
     bottom: 24px;
-    z-index: 240;
+    z-index: var(--overlay-z-chat, 240);
     display: flex;
     flex-direction: row;
     align-items: flex-end;
@@ -44,6 +44,8 @@
 
 /* --- List dock --- */
 .chat-picker {
+    position: relative;
+    z-index: 1;
     width: min(360px, calc(100vw - 32px));
     height: min(480px, calc(100vh - 100px));
     flex: 0 0 auto;
@@ -54,6 +56,10 @@
     border-radius: 16px;
     box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
     overflow: hidden;
+}
+
+.chat-picker--front {
+    z-index: 10;
 }
 
 .chat-picker__head {
@@ -98,6 +104,8 @@
 
 /* --- Chat window(s) --- */
 .chat-float {
+    position: relative;
+    z-index: 1;
     width: min(360px, calc(100vw - 32px));
     height: min(520px, calc(100vh - 100px));
     flex: 0 0 auto;
@@ -108,6 +116,10 @@
     border-radius: 16px;
     box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
     overflow: hidden;
+}
+
+.chat-float--front {
+    z-index: 10;
 }
 
 .chat-float__chrome {

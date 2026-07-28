@@ -1,14 +1,25 @@
 import { useEffect, useState } from 'react';
-import { useChatInbox } from '../../hooks/useChatInbox.js';
 import ChatConversationList from './ChatConversationList.jsx';
 import ChatThread from './ChatThread.jsx';
 
 /** Single conversation — rendered inside bottom-right dock (Messenger-style). */
-export const ChatFloat = ({ conversation, onClose, onBackToList, onThreadChanged }) => {
+export const ChatFloat = ({
+    conversation,
+    onClose,
+    onBackToList,
+    onThreadChanged,
+    isFront = false,
+    onBringToFront,
+}) => {
     if (!conversation) return null;
 
     return (
-        <div className="chat-float" role="dialog" aria-label="Hội thoại">
+        <div
+            className={`chat-float${isFront ? ' chat-float--front' : ''}`}
+            role="dialog"
+            aria-label="Hội thoại"
+            onPointerDownCapture={onBringToFront}
+        >
             <div className="chat-float__chrome">
                 <button
                     type="button"
@@ -41,23 +52,36 @@ export const ChatFloat = ({ conversation, onClose, onBackToList, onThreadChanged
 };
 
 /** Conversation list — same bottom-right dock, before picking a person. */
-export const ChatPicker = ({ open, activeId, activeIds, onSelect, onClose }) => {
+export const ChatPicker = ({
+    open,
+    activeId,
+    activeIds,
+    conversations = [],
+    loading = false,
+    error = '',
+    onReload,
+    onSelect,
+    onClose,
+    isFront = false,
+    onBringToFront,
+}) => {
     const [search, setSearch] = useState('');
-    const { conversations, loading, error, reloadInbox } = useChatInbox({
-        enabled: open,
-    });
-
     const resolvedActiveIds = activeIds ?? (activeId != null ? [activeId] : []);
 
     useEffect(() => {
-        if (open) reloadInbox();
+        if (open) onReload?.();
         else setSearch('');
-    }, [open, reloadInbox]);
+    }, [open, onReload]);
 
     if (!open) return null;
 
     return (
-        <div className="chat-picker" role="listbox" aria-label="Chọn cuộc trò chuyện">
+        <div
+            className={`chat-picker${isFront ? ' chat-picker--front' : ''}`}
+            role="listbox"
+            aria-label="Chọn cuộc trò chuyện"
+            onPointerDownCapture={onBringToFront}
+        >
             <div className="chat-picker__head">
                 <h2 className="chat-picker__title">Tin nhắn</h2>
                 <button
