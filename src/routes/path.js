@@ -17,10 +17,6 @@ export const ROUTES = {
     MANUAL_CHECK_HOME: '/manual-check',
     ADMIN_HOME: '/admin',
     ADMIN_ACCOUNTS: '/admin/accounts',
-    ADMIN_SYSTEM_CONFIG: '/admin/system-config',
-    ADMIN_AUDIT_LOG: '/admin/audit-log',
-    ADMIN_ESCALATIONS: '/admin/escalations',
-    ADMIN_ANALYTICS: '/admin/analytics',
     /** List JobLink gợi ý — tái dùng JobListPage với ?section=ai */
     CANDIDATE_AI_SUGGESTIONS: '/jobs?section=ai',
     /** List lịch sử tương tác VIEW/SAVE/APPLY */
@@ -58,6 +54,12 @@ export const ROUTES = {
     MANUAL_CHECK_ACCOUNTS: '/manual-check/accounts',
     MANUAL_CHECK_VERIFICATION: '/manual-check/verification',
     MANUAL_CHECK_REPORTS: '/manual-check/reports',
+
+    ADMIN_SYSTEM_CONFIG: '/admin/system-config',
+    ADMIN_SKILLS: '/admin/skills',
+    ADMIN_AUDIT_LOG: '/admin/audit-log',
+    ADMIN_ESCALATIONS: '/admin/escalations',
+    ADMIN_ANALYTICS: '/admin/analytics',
 };
 
 export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
