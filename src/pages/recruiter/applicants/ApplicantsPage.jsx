@@ -13,7 +13,10 @@ import recruiterApplicationService, {
     isApplicationCancelledError,
 } from '../../../services/recruiterApplicationService.js';
 import { getCandidatePublicProfilePath, ROUTES } from '../../../routes/path.js';
-import { openChatPanel } from '../../../utils/chatEvents.js';
+import {
+    openChatPanel,
+    RECRUITMENT_CHANGED_EVENT,
+} from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 
 const PAGE_SIZE = 12;
@@ -230,6 +233,26 @@ const ApplicantsPage = () => {
     useEffect(() => {
         loadApplications();
     }, [loadApplications]);
+
+    // Refresh list when recruiter accepts/rejects via chat float.
+    useEffect(() => {
+        const onRecruitmentChanged = (event) => {
+            const detail = event?.detail || {};
+            if (detail.kind && detail.kind !== 'application') return;
+            if (
+                detail.jobId != null &&
+                selectedJobId != null &&
+                String(detail.jobId) !== String(selectedJobId)
+            ) {
+                return;
+            }
+            void loadApplications();
+        };
+
+        window.addEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+        return () =>
+            window.removeEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+    }, [loadApplications, selectedJobId]);
 
     const handleJobChange = (event) => {
         updateParams({

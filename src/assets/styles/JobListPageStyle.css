@@ -70,23 +70,6 @@
     border: 1px dashed var(--color-border);
 }
 
-.job-list-page__did-you-mean {
-    margin: 12px 0 0;
-    font-size: 14px;
-}
-
-.job-list-page__did-you-mean-btn {
-    border: none;
-    background: none;
-    padding: 0;
-    font: inherit;
-    font-weight: 700;
-    color: var(--color-primary);
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
 .job-list-page__list {
     display: flex;
     flex-direction: column;
@@ -132,6 +115,11 @@
 
 .ai-profile-hint__link:hover {
     text-decoration: underline;
+}
+
+.ai-profile-hint--offer {
+    background: color-mix(in srgb, var(--color-warning, #d97706) 10%, transparent);
+    border-color: color-mix(in srgb, var(--color-warning, #d97706) 22%, transparent);
 }
 
 /* Pagination */

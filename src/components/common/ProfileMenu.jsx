@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LogOutIcon } from './icons.jsx';
+import { elevateOverlay, OVERLAY_CSS, claimOverlayZ } from '../../utils/overlayLayer.js';
 import '../../assets/styles/ProfileMenuStyle.css';
 
 // items: [{ label, path?, href?, icon?: Component }]
@@ -17,6 +18,7 @@ const ProfileMenu = ({
 }) => {
     const [open, setOpen] = useState(false);
     const [imgFailed, setImgFailed] = useState(false);
+    const [menuZ, setMenuZ] = useState(null);
     const rootRef = useRef(null);
     const initial = name ? name.charAt(0).toUpperCase() : '?';
     const showAvatarImage = Boolean(avatarUrl) && !imgFailed;
@@ -26,6 +28,17 @@ const ProfileMenu = ({
     }, [avatarUrl]);
 
     useEffect(() => {
+        if (!open) {
+            setMenuZ(null);
+            return undefined;
+        }
+
+        if (variant === 'header') {
+            elevateOverlay(OVERLAY_CSS.HEADER);
+        } else {
+            setMenuZ(claimOverlayZ());
+        }
+
         const handleClickOutside = (e) => {
             if (rootRef.current && !rootRef.current.contains(e.target)) {
                 setOpen(false);
@@ -33,14 +46,29 @@ const ProfileMenu = ({
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [open, variant]);
+
+    const handleToggle = () => {
+        setOpen((v) => {
+            const next = !v;
+            if (next) {
+                if (variant === 'header') elevateOverlay(OVERLAY_CSS.HEADER);
+                else setMenuZ(claimOverlayZ());
+            }
+            return next;
+        });
+    };
 
     return (
-        <div className={`profile-menu profile-menu--${variant}`} ref={rootRef}>
+        <div
+            className={`profile-menu profile-menu--${variant}`}
+            ref={rootRef}
+            style={menuZ != null ? { zIndex: menuZ, position: 'relative' } : undefined}
+        >
             <button
                 type="button"
                 className="profile-menu__trigger"
-                onClick={() => setOpen((v) => !v)}
+                onClick={handleToggle}
                 aria-expanded={open}
             >
                 {showAvatarImage ? (
