@@ -36,6 +36,7 @@ import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx
 import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
+import AdminSkillsPage from '../pages/admin/AdminSkillsPage.jsx';
 import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
 import CandidatePublicProfilePage from '../pages/shared/CandidatePublicProfilePage.jsx';
 import RoleBasedShellLayout from '../layouts/RoleBasedShellLayout.jsx';
@@ -180,6 +181,7 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.ADMIN_HOME} element={<AdminDashboard />} />
+                <Route path={ROUTES.ADMIN_SKILLS} element={<AdminSkillsPage />} />
             </Route>
 
             {/* Route không tồn tại -> về trang chủ đúng role (hoặc Landing nếu chưa login) */}

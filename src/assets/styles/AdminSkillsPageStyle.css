@@ -1,0 +1,439 @@
+/* Admin Manage Skills — light content area synced with Internal Admin tokens */
+
+.admin-skills-page {
+    padding: 18px 22px 28px;
+    min-height: 100%;
+}
+
+.admin-skills-page__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.admin-skills-page__title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 850;
+    color: var(--color-text);
+}
+
+.admin-skills-page__subtitle {
+    margin: 6px 0 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+    max-width: 640px;
+}
+
+.admin-skills-page__error {
+    margin: 0 0 12px;
+    color: var(--color-danger);
+    font-size: 14px;
+}
+
+/* ---- Filters ---- */
+.admin-skills-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.admin-skills-filters__keyword {
+    position: relative;
+    flex: 1 1 220px;
+    min-width: 180px;
+}
+
+.admin-skills-filters__search,
+.admin-skills-filters select {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--color-text);
+    background: var(--color-surface);
+    min-height: 40px;
+}
+
+.admin-skills-filters__search {
+    width: 100%;
+}
+
+.admin-skills-filters select {
+    flex: 0 1 180px;
+}
+
+.admin-skills-filters__suggest-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 80;
+    margin: 0;
+    padding: 6px 0;
+    list-style: none;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(30, 36, 51, 0.14);
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.admin-skills-filters__suggest-item {
+    display: block;
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.admin-skills-filters__suggest-item:hover {
+    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg));
+}
+
+.admin-skills-filters__search:focus,
+.admin-skills-filters select:focus,
+.admin-skills-field input:focus,
+.admin-skills-field textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* ---- Table ---- */
+.admin-skills-table-wrap {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: auto;
+    box-shadow: var(--shadow-card);
+}
+
+.admin-skills-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+}
+
+.admin-skills-table th,
+.admin-skills-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.admin-skills-table th {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
+    background: color-mix(in srgb, var(--color-internal-sidebar) 4%, var(--color-bg));
+}
+
+.admin-skills-table tbody tr:hover {
+    background: color-mix(in srgb, var(--color-primary) 4%, transparent);
+}
+
+.admin-skills-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-skills-table__name {
+    font-weight: 650;
+    color: var(--color-text);
+}
+
+.admin-skills-table__desc {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-skills-table__empty {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: 28px 14px !important;
+}
+
+.admin-skills-table__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ---- Badge ---- */
+.admin-skills-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-skills-badge--active {
+    color: var(--color-success);
+    background: var(--color-success-bg);
+}
+
+.admin-skills-badge--inactive {
+    color: var(--color-text-muted);
+    background: #eef1f6;
+}
+
+/* ---- Pagination ---- */
+.admin-skills-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.admin-skills-pagination__meta {
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.admin-skills-pagination__btns {
+    display: flex;
+    gap: 8px;
+}
+
+/* ---- Buttons ---- */
+.admin-skills-btn {
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-skills-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.admin-skills-btn--sm {
+    padding: 7px 12px;
+    font-size: 13px;
+}
+
+.admin-skills-btn--primary {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.admin-skills-btn--primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+.admin-skills-btn--ghost {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.admin-skills-btn--ghost:hover:not(:disabled) {
+    background: var(--color-bg);
+}
+
+.admin-skills-btn--danger {
+    background: var(--color-danger);
+    color: #fff;
+}
+
+.admin-skills-btn--danger:hover:not(:disabled) {
+    filter: brightness(0.95);
+}
+
+.admin-skills-btn--danger-outline {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
+}
+
+.admin-skills-btn--success-outline {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    border: 1px solid color-mix(in srgb, var(--color-success) 25%, transparent);
+}
+
+/* ---- Modal ---- */
+.admin-skills-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.admin-skills-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--color-internal-sidebar) 55%, transparent);
+    border: none;
+    cursor: pointer;
+}
+
+.admin-skills-modal__panel {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 50px rgba(30, 36, 51, 0.22);
+    overflow: hidden;
+}
+
+.admin-skills-modal__panel--sm {
+    max-width: 440px;
+}
+
+.admin-skills-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-internal-sidebar) 3%, var(--color-surface));
+}
+
+.admin-skills-modal__header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--color-text);
+}
+
+.admin-skills-modal__close {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-bg);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+.admin-skills-modal__close:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-skills-modal__body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.admin-skills-modal__message {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--color-text);
+}
+
+.admin-skills-modal__hint {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+}
+
+.admin-skills-modal__hint--warn {
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.admin-skills-modal__error {
+    margin: 0;
+    color: var(--color-danger);
+    font-size: 13px;
+}
+
+.admin-skills-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg);
+}
+
+.admin-skills-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.admin-skills-field--row {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
+.admin-skills-field input,
+.admin-skills-field textarea {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--color-text);
+    background: var(--color-surface);
+    font-family: inherit;
+    resize: vertical;
+}
+
+@media (max-width: 720px) {
+    .admin-skills-page {
+        padding: 14px 14px 24px;
+    }
+
+    .admin-skills-filters {
+        flex-direction: column;
+    }
+
+    .admin-skills-filters select,
+    .admin-skills-filters__keyword {
+        width: 100%;
+        flex: none;
+    }
+}

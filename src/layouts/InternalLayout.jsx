@@ -14,6 +14,7 @@ import {
     ChartIcon,
     SettingsIcon,
     TrendingIcon,
+    LayersIcon,
 } from '../components/common/icons.jsx';
 
 // Internal: InternalSidebar (tối) + InternalTopbar, KHÔNG có Footer (ảnh 6/7/8).
@@ -30,6 +31,7 @@ const CONFIG_BY_ROLE = {
         roleLabel: 'Super Admin',
         items: [
             { path: ROUTES.ADMIN_HOME, label: 'Bảng điều khiển', icon: GridIcon },
+            { path: ROUTES.ADMIN_SKILLS, label: 'Quản lý kỹ năng', icon: LayersIcon },
             { path: ROUTES.ADMIN_SYSTEM_CONFIG, label: 'Cấu hình hệ thống', icon: SettingsIcon },
             { path: ROUTES.ADMIN_AUDIT_LOG, label: 'Nhật ký hoạt động', icon: ClipboardIcon },
             { path: ROUTES.ADMIN_ESCALATIONS, label: 'Sự cố leo thang', icon: AlertIcon },

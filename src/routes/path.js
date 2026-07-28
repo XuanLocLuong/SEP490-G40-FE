@@ -59,6 +59,7 @@ export const ROUTES = {
     MANUAL_CHECK_REPORTS: '/manual-check/reports',
 
     ADMIN_SYSTEM_CONFIG: '/admin/system-config',
+    ADMIN_SKILLS: '/admin/skills',
     ADMIN_AUDIT_LOG: '/admin/audit-log',
     ADMIN_ESCALATIONS: '/admin/escalations',
     ADMIN_ANALYTICS: '/admin/analytics',
