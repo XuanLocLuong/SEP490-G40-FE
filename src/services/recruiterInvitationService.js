@@ -48,6 +48,7 @@ export const formatInvitationSentTime = (isoString) => {
 export const mapInvitationItem = (item) => ({
     id: item?.invitationId ?? null,
     candidateId: item?.candidateId ?? null,
+    candidateUserId: item?.candidateUserId ?? null,
     candidateName: item?.candidateName || 'Ứng viên',
     candidateAvatar: item?.candidateAvatar || null,
     status: item?.status || null,

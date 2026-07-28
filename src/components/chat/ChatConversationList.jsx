@@ -7,6 +7,7 @@ import {
 const ChatConversationList = ({
     conversations,
     activeId,
+    activeIds,
     loading,
     error,
     search,
@@ -14,6 +15,9 @@ const ChatConversationList = ({
     onSelect,
     hideTitle = false,
 }) => {
+    const openIds = new Set(
+        (activeIds ?? (activeId != null ? [activeId] : [])).map(String)
+    );
     const q = search.trim().toLowerCase();
     const filtered = q
         ? conversations.filter((c) => {
@@ -54,7 +58,7 @@ const ChatConversationList = ({
 
                 <ul className="chat-panel__conv-list">
                     {filtered.map((conv) => {
-                        const active = conv.id === activeId;
+                        const active = openIds.has(String(conv.id));
                         const unread = Number(conv.unreadCount) > 0;
                         return (
                             <li key={conv.id}>

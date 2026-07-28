@@ -12,6 +12,7 @@ import {
 import CandidateRecommendationCard from '../../../components/recruiter/recommendations/CandidateRecommendationCard.jsx';
 import SendInvitationModal from '../../../components/recruiter/recommendations/SendInvitationModal.jsx';
 import { ROUTES } from '../../../routes/path.js';
+import { openChatPanel } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/RecruiterRecommendationsStyle.css';
 
 const PAGE_SIZE = 10;
@@ -256,6 +257,20 @@ const RecruiterRecommendationsPage = () => {
                             sending={sendingCandidateId === candidate.candidateId}
                             sent={sentCandidateIds.has(candidate.candidateId)}
                             onInvite={setInviteTarget}
+                            onChat={(c) => {
+                                if (c?.userId == null) {
+                                    toast.error('Thiếu userId để mở chat.');
+                                    return;
+                                }
+                                if (!selectedJobId) {
+                                    toast.error('Chưa chọn tin tuyển dụng.');
+                                    return;
+                                }
+                                openChatPanel({
+                                    jobId: selectedJobId,
+                                    otherUserId: c.userId,
+                                });
+                            }}
                         />
                     ))}
                 </div>

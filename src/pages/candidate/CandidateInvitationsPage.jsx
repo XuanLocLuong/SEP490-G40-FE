@@ -8,9 +8,10 @@ import {
 } from '../../apis/InvitationApi.jsx';
 import InvitationDetailModal from '../../components/candidate/invitations/InvitationDetailModal.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
-import { CheckCircleIcon, ClockIcon, XIcon } from '../../components/common/icons.jsx';
+import { CheckCircleIcon, ChatIcon, ClockIcon, XIcon } from '../../components/common/icons.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
+import { openChatPanel } from '../../utils/chatEvents.js';
 import { formatJobType, getBusinessInitial } from '../../utils/formatters.js';
 import {
     formatInvitationSentAt,
@@ -373,25 +374,45 @@ const CandidateInvitationsPage = () => {
                                 </div>
                             </button>
 
-                            {isSent && (
-                                <div className="ci-card__actions">
+                            {((item.jobId && item.recruiterId) || isSent) && (
+                            <div className="ci-card__actions">
+                                {item.jobId && item.recruiterId ? (
                                     <button
                                         type="button"
                                         className="ci-btn ci-btn--ghost"
-                                        disabled={busy}
-                                        onClick={() => setRejectTarget(item)}
+                                        title="Nhắn tin với nhà tuyển dụng"
+                                        onClick={() =>
+                                            openChatPanel({
+                                                jobId: item.jobId,
+                                                otherUserId: item.recruiterId,
+                                            })
+                                        }
                                     >
-                                        Từ chối
+                                        <ChatIcon width={16} height={16} />
+                                        Chat
                                     </button>
-                                    <button
-                                        type="button"
-                                        className="ci-btn ci-btn--primary"
-                                        disabled={busy}
-                                        onClick={() => handleAccept(item)}
-                                    >
-                                        {busy ? 'Đang xử lý...' : 'Chấp nhận'}
-                                    </button>
-                                </div>
+                                ) : null}
+                                {isSent ? (
+                                    <>
+                                        <button
+                                            type="button"
+                                            className="ci-btn ci-btn--ghost"
+                                            disabled={busy}
+                                            onClick={() => setRejectTarget(item)}
+                                        >
+                                            Từ chối
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="ci-btn ci-btn--primary"
+                                            disabled={busy}
+                                            onClick={() => handleAccept(item)}
+                                        >
+                                            {busy ? 'Đang xử lý...' : 'Chấp nhận'}
+                                        </button>
+                                    </>
+                                ) : null}
+                            </div>
                             )}
                         </article>
                     );

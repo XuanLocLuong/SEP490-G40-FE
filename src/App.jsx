@@ -1,5 +1,6 @@
 import './App.css'
 import {AuthProvider} from "./contexts/AuthContext.jsx";
+import {ChatProvider} from "./contexts/ChatContext.jsx";
 import {BrowserRouter} from "react-router-dom";
 import {ToastContainer} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,8 +12,10 @@ function App() {
         <>
             <AuthProvider>
                 <BrowserRouter>
-                    <ScrollToTop />
-                    <AppRouter />
+                    <ChatProvider>
+                        <ScrollToTop />
+                        <AppRouter />
+                    </ChatProvider>
                 </BrowserRouter>
             </AuthProvider>
             <ToastContainer

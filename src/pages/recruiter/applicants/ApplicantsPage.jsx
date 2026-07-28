@@ -13,6 +13,7 @@ import recruiterApplicationService, {
     isApplicationCancelledError,
 } from '../../../services/recruiterApplicationService.js';
 import { getCandidatePublicProfilePath, ROUTES } from '../../../routes/path.js';
+import { openChatPanel } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 
 const PAGE_SIZE = 12;
@@ -39,6 +40,7 @@ const ApplicantsPage = () => {
     const [totalElements, setTotalElements] = useState(0);
 
     const [actionLoadingId, setActionLoadingId] = useState(null);
+    const [chatLoadingId, setChatLoadingId] = useState(null);
     const [acceptTarget, setAcceptTarget] = useState(null);
     const [rejectTarget, setRejectTarget] = useState(null);
 
@@ -308,6 +310,26 @@ const ApplicantsPage = () => {
         });
     };
 
+    const handleChat = async (application) => {
+        if (application?.candidateUserId == null) {
+            toast.error('Không mở được chat: thiếu ID ứng viên từ API.');
+            return;
+        }
+        if (selectedJobId == null) {
+            toast.error('Chưa chọn tin tuyển dụng.');
+            return;
+        }
+        setChatLoadingId(application.id);
+        try {
+            openChatPanel({
+                jobId: selectedJobId,
+                otherUserId: application.candidateUserId,
+            });
+        } finally {
+            window.setTimeout(() => setChatLoadingId(null), 800);
+        }
+    };
+
     const pageLoading = jobsLoading || focusJobLoading;
     const hasOpenJobs = openJobs.length > 0;
     const hasSelectedJob = Boolean(selectedJob);
@@ -483,10 +505,12 @@ const ApplicantsPage = () => {
                                         key={application.id}
                                         application={application}
                                         actionLoading={actionLoadingId === application.id}
+                                        chatLoading={chatLoadingId === application.id}
                                         readOnly={readOnly}
                                         onAccept={setAcceptTarget}
                                         onReject={setRejectTarget}
                                         onViewProfile={handleViewProfile}
+                                        onChat={handleChat}
                                     />
                                 ))}
                             </div>

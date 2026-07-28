@@ -297,7 +297,7 @@
 
 .candidate-recommendation-card__actions {
     display: grid;
-    grid-template-columns: 1fr 1.2fr;
+    grid-template-columns: 1fr 1fr 1.2fr;
     gap: 10px;
 }
 

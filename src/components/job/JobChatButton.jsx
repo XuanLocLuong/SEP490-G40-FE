@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
@@ -9,6 +10,7 @@ import { ChatIcon } from '../common/icons.jsx';
 
 const JobChatButton = ({
     jobId,
+    otherUserId,
     className,
     label = 'Chat với Nhà tuyển dụng',
     guestLabel = 'Đăng nhập để chat',
@@ -17,6 +19,7 @@ const JobChatButton = ({
     const navigate = useNavigate();
     const location = useLocation();
     const buttonLabel = auth ? label : guestLabel;
+    const hasPeer = otherUserId != null && otherUserId !== '';
 
     if (auth && auth.role !== USER_ROLES.CANDIDATE) {
         return null;
@@ -32,9 +35,15 @@ const JobChatButton = ({
             return;
         }
 
-        // Phase 1: open header chat box (conversation list). Deep-link by job later.
-        void jobId;
-        openChatPanel({ jobId });
+        if (!hasPeer) {
+            toast.error('Không xác định được nhà tuyển dụng để mở chat.');
+            return;
+        }
+
+        openChatPanel({
+            jobId: jobId ?? null,
+            otherUserId,
+        });
     };
 
     return (
@@ -42,7 +51,14 @@ const JobChatButton = ({
             type="button"
             className={className}
             onClick={handleClick}
-            title={auth ? label : guestLabel}
+            title={
+                auth && !hasPeer
+                    ? 'Thiếu thông tin nhà tuyển dụng để chat'
+                    : auth
+                      ? label
+                      : guestLabel
+            }
+            disabled={Boolean(auth) && !hasPeer}
         >
             <ChatIcon width={18} height={18} />
             {buttonLabel}

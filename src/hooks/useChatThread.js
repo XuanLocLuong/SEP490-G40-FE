@@ -6,8 +6,27 @@ import {
     sendMessage,
 } from '../apis/ChatApi.jsx';
 import { filterChatUiActions, unwrapData } from '../utils/chatDisplay.js';
+import {
+    isChatSocketConnected,
+    onChatSocketConnectionChange,
+    subscribeConversationRealtime,
+} from '../utils/chatSocket.js';
 
 const PAGE_SIZE = 30;
+const POLL_CONNECTED_MS = 30000;
+const POLL_DISCONNECTED_MS = 8000;
+const ACTIONS_DEBOUNCE_MS = 300;
+
+const upsertMessage = (prev, msg) => {
+    if (msg?.id == null) return prev;
+    const idx = prev.findIndex((m) => m.id === msg.id);
+    if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = { ...next[idx], ...msg };
+        return next;
+    }
+    return [...prev, msg].sort((a, b) => a.id - b.id);
+};
 
 export const useChatThread = (conversationId) => {
     const [messages, setMessages] = useState([]);
@@ -17,7 +36,10 @@ export const useChatThread = (conversationId) => {
     const [sending, setSending] = useState(false);
     const [hasMore, setHasMore] = useState(false);
     const [error, setError] = useState('');
+    const [socketConnected, setSocketConnected] = useState(() => isChatSocketConnected());
     const pollRef = useRef(null);
+    const actionsDebounceRef = useRef(null);
+    const loadActionsRef = useRef(null);
 
     const loadActions = useCallback(async () => {
         if (conversationId == null) return;
@@ -30,6 +52,17 @@ export const useChatThread = (conversationId) => {
             setActions([]);
         }
     }, [conversationId]);
+
+    loadActionsRef.current = loadActions;
+
+    const scheduleReloadActions = useCallback(() => {
+        if (actionsDebounceRef.current) {
+            window.clearTimeout(actionsDebounceRef.current);
+        }
+        actionsDebounceRef.current = window.setTimeout(() => {
+            loadActionsRef.current?.();
+        }, ACTIONS_DEBOUNCE_MS);
+    }, []);
 
     const loadInitial = useCallback(async () => {
         if (conversationId == null) return;
@@ -92,7 +125,6 @@ export const useChatThread = (conversationId) => {
             setMessages((prev) => {
                 if (prev.length === 0) return content;
                 const oldestKept = prev[0]?.id;
-                // Keep older pages; replace the newest window
                 const older = prev.filter((m) => content.every((n) => n.id !== m.id));
                 const merged = [...older, ...content].sort((a, b) => a.id - b.id);
                 if (oldestKept != null && !merged.some((m) => m.id === oldestKept)) {
@@ -118,10 +150,7 @@ export const useChatThread = (conversationId) => {
                 });
                 const created = unwrapData(res);
                 if (created?.id) {
-                    setMessages((prev) => {
-                        if (prev.some((m) => m.id === created.id)) return prev;
-                        return [...prev, created];
-                    });
+                    setMessages((prev) => upsertMessage(prev, created));
                 } else {
                     await refreshLatest();
                 }
@@ -137,17 +166,49 @@ export const useChatThread = (conversationId) => {
     );
 
     useEffect(() => {
+        return onChatSocketConnectionChange(setSocketConnected);
+    }, []);
+
+    useEffect(() => {
         if (conversationId == null) {
             setMessages([]);
             setActions([]);
             return undefined;
         }
+
         loadInitial();
-        pollRef.current = window.setInterval(refreshLatest, 8000);
-        return () => {
+
+        const unsubscribe = subscribeConversationRealtime(conversationId, {
+            onMessage: (msg) => {
+                setMessages((prev) => upsertMessage(prev, msg));
+            },
+            onActionsUpdated: () => {
+                scheduleReloadActions();
+            },
+        });
+
+        const startPoll = () => {
             if (pollRef.current) window.clearInterval(pollRef.current);
+            const interval = isChatSocketConnected()
+                ? POLL_CONNECTED_MS
+                : POLL_DISCONNECTED_MS;
+            pollRef.current = window.setInterval(refreshLatest, interval);
         };
-    }, [conversationId, loadInitial, refreshLatest]);
+        startPoll();
+
+        const stopListenConn = onChatSocketConnectionChange(() => {
+            startPoll();
+        });
+
+        return () => {
+            unsubscribe();
+            stopListenConn();
+            if (pollRef.current) window.clearInterval(pollRef.current);
+            if (actionsDebounceRef.current) {
+                window.clearTimeout(actionsDebounceRef.current);
+            }
+        };
+    }, [conversationId, loadInitial, refreshLatest, scheduleReloadActions]);
 
     return {
         messages,
@@ -157,6 +218,7 @@ export const useChatThread = (conversationId) => {
         sending,
         hasMore,
         error,
+        socketConnected,
         loadOlder,
         sendText,
         reloadThread: loadInitial,

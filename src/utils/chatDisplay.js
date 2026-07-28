@@ -1,30 +1,180 @@
-/** Actions rendered as cards in chat UI (phase 1). Ignore INVITE / ACCEPT_APPLICATION. */
-export const CHAT_UI_ACTIONS = new Set(['CONFIRM_HIRED', 'REQUEST_REVIEW']);
+/** Invite-group ACTION messages: show card + buttons for the recipient. */
+export const INVITE_GROUP_ACTIONS = new Set([
+    'INVITE',
+    'CONFIRM_WORK',
+    'REQUEST_REVIEW',
+]);
+
+/** Decision actions from GET /actions or button clicks. */
+export const DECISION_ACTIONS = new Set([
+    'ACCEPT_INVITE',
+    'REJECT_INVITE',
+    'ACCEPT_WORK',
+    'REJECT_WORK',
+    'ACCEPT_APPLICATION',
+    'REJECT_APPLICATION',
+]);
+
+/** Sticky /actions names FE will render. */
+export const CHAT_UI_ACTIONS = new Set([
+    'INVITE',
+    'CONFIRM_WORK',
+    'REQUEST_REVIEW',
+    'ACCEPT_INVITE',
+    'REJECT_INVITE',
+    'ACCEPT_WORK',
+    'REJECT_WORK',
+    'ACCEPT_APPLICATION',
+    'REJECT_APPLICATION',
+    // legacy aliases (pre-rename)
+    'CONFIRM_HIRED',
+    'REJECT_INVITATION',
+]);
+
+export const isNotifyAction = (actionName) =>
+    typeof actionName === 'string' && actionName.startsWith('NOTIFY_');
+
+export const normalizeChatAction = (actionName) => {
+    if (actionName === 'CONFIRM_HIRED') return 'ACCEPT_WORK';
+    if (actionName === 'REJECT_INVITATION') return 'REJECT_INVITE';
+    return actionName;
+};
 
 export const filterChatUiActions = (actions = []) =>
-    (Array.isArray(actions) ? actions : []).filter((name) => CHAT_UI_ACTIONS.has(name));
+    (Array.isArray(actions) ? actions : [])
+        .map(normalizeChatAction)
+        .filter((name) => CHAT_UI_ACTIONS.has(name));
+
+/**
+ * Collapse paired decision actions into one sticky card descriptor.
+ * @returns {{ key: string, kind: string, actions: string[] }[]}
+ */
+export const groupStickyActions = (actions = []) => {
+    const set = new Set(filterChatUiActions(actions));
+    const groups = [];
+
+    const takePair = (kind, accept, reject) => {
+        const hasA = set.has(accept);
+        const hasR = set.has(reject);
+        if (!hasA && !hasR) return;
+        const list = [];
+        if (hasA) list.push(accept);
+        if (hasR) list.push(reject);
+        set.delete(accept);
+        set.delete(reject);
+        groups.push({ key: kind, kind, actions: list });
+    };
+
+    takePair('WORK', 'ACCEPT_WORK', 'REJECT_WORK');
+    takePair('INVITE_DECISION', 'ACCEPT_INVITE', 'REJECT_INVITE');
+    takePair('APPLICATION', 'ACCEPT_APPLICATION', 'REJECT_APPLICATION');
+
+    if (set.has('INVITE')) {
+        set.delete('INVITE');
+        groups.push({ key: 'INVITE', kind: 'INVITE', actions: ['INVITE'] });
+    }
+    if (set.has('CONFIRM_WORK')) {
+        set.delete('CONFIRM_WORK');
+        // Sticky CONFIRM_WORK is unusual (usually a bubble); treat as work pair if alone
+        groups.push({
+            key: 'CONFIRM_WORK',
+            kind: 'WORK',
+            actions: ['ACCEPT_WORK', 'REJECT_WORK'],
+        });
+    }
+    if (set.has('REQUEST_REVIEW')) {
+        set.delete('REQUEST_REVIEW');
+        groups.push({
+            key: 'REQUEST_REVIEW',
+            kind: 'REQUEST_REVIEW',
+            actions: ['REQUEST_REVIEW'],
+        });
+    }
+
+    return groups;
+};
 
 export const getActionCardCopy = (actionName) => {
-    switch (actionName) {
-        case 'CONFIRM_HIRED':
+    const name = normalizeChatAction(actionName);
+    switch (name) {
+        case 'INVITE':
+            return {
+                title: 'Mời ứng tuyển',
+                body: 'Gửi lời mời ứng tuyển cho ứng viên trong hội thoại này.',
+                cta: 'Gửi lời mời',
+                acceptCta: null,
+                rejectCta: null,
+            };
+        case 'CONFIRM_WORK':
             return {
                 title: 'Xác nhận nhận việc',
                 body: 'Nhà tuyển dụng đã chấp nhận đơn của bạn. Xác nhận để chuyển sang trạng thái đã nhận việc (HIRED).',
-                cta: 'Xác nhận nhận việc',
+                cta: null,
+                acceptCta: 'Xác nhận nhận việc',
+                rejectCta: 'Từ chối nhận việc',
+            };
+        case 'ACCEPT_WORK':
+        case 'REJECT_WORK':
+            return {
+                title: 'Xác nhận nhận việc',
+                body: 'Đơn của bạn đang ở trạng thái ACCEPTED. Xác nhận hoặc từ chối nhận việc.',
+                cta: null,
+                acceptCta: 'Xác nhận nhận việc',
+                rejectCta: 'Từ chối nhận việc',
+            };
+        case 'ACCEPT_INVITE':
+        case 'REJECT_INVITE':
+            return {
+                title: 'Lời mời ứng tuyển',
+                body: 'Bạn có lời mời đang chờ phản hồi.',
+                cta: null,
+                acceptCta: 'Đồng ý lời mời',
+                rejectCta: 'Từ chối lời mời',
+            };
+        case 'ACCEPT_APPLICATION':
+        case 'REJECT_APPLICATION':
+            return {
+                title: 'Duyệt đơn ứng tuyển',
+                body: 'Ứng viên đang có đơn PENDING cho tin này. Chấp nhận hoặc từ chối.',
+                cta: null,
+                acceptCta: 'Chấp nhận đơn',
+                rejectCta: 'Từ chối đơn',
             };
         case 'REQUEST_REVIEW':
             return {
-                title: 'Yêu cầu đánh giá',
-                body: 'Công việc đã đủ điều kiện đánh giá. Mời bạn viết review cho đối phương.',
+                title: 'Viết đánh giá',
+                body: 'Công việc đã đủ điều kiện đánh giá. Gửi review cho đối phương ngay tại đây.',
                 cta: 'Viết đánh giá',
+                acceptCta: null,
+                rejectCta: null,
             };
         default:
             return {
-                title: actionName,
+                title: name || 'Hành động',
                 body: '',
                 cta: 'Tiếp tục',
+                acceptCta: null,
+                rejectCta: null,
             };
     }
+};
+
+/** Copy for invite-group bubbles by message.actionName */
+export const getInviteGroupCardCopy = (actionName, content) => {
+    const base = getActionCardCopy(actionName);
+    if (content) {
+        return { ...base, body: content };
+    }
+    if (actionName === 'INVITE') {
+        return {
+            title: 'Lời mời ứng tuyển',
+            body: base.body,
+            acceptCta: 'Đồng ý lời mời',
+            rejectCta: 'Từ chối lời mời',
+            cta: null,
+        };
+    }
+    return base;
 };
 
 export const formatChatListTime = (isoString) => {
@@ -69,9 +219,23 @@ export const getInitials = (name = '') => {
     return `${parts[0].slice(0, 1)}${parts[parts.length - 1].slice(0, 1)}`.toUpperCase();
 };
 
+/** True if inbox should list this conversation (has at least one message). */
+export const conversationHasMessages = (conv) => {
+    if (!conv) return false;
+    return Boolean(
+        conv.lastMessageAt ||
+            conv.lastMessageContent ||
+            conv.lastMessageType ||
+            conv.lastMessageActionName
+    );
+};
+
 export const previewLastMessage = (conv) => {
     if (!conv) return 'Chưa có tin nhắn';
     if (conv.lastMessageType === 'ACTION' && conv.lastMessageActionName) {
+        if (isNotifyAction(conv.lastMessageActionName)) {
+            return conv.lastMessageContent || 'Thông báo hệ thống';
+        }
         const copy = getActionCardCopy(conv.lastMessageActionName);
         return copy.title;
     }

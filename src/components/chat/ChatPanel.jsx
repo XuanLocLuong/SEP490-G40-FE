@@ -41,11 +41,13 @@ export const ChatFloat = ({ conversation, onClose, onBackToList, onThreadChanged
 };
 
 /** Conversation list — same bottom-right dock, before picking a person. */
-export const ChatPicker = ({ open, activeId, onSelect, onClose }) => {
+export const ChatPicker = ({ open, activeId, activeIds, onSelect, onClose }) => {
     const [search, setSearch] = useState('');
     const { conversations, loading, error, reloadInbox } = useChatInbox({
         enabled: open,
     });
+
+    const resolvedActiveIds = activeIds ?? (activeId != null ? [activeId] : []);
 
     useEffect(() => {
         if (open) reloadInbox();
@@ -69,7 +71,7 @@ export const ChatPicker = ({ open, activeId, onSelect, onClose }) => {
             </div>
             <ChatConversationList
                 conversations={conversations}
-                activeId={activeId}
+                activeIds={resolvedActiveIds}
                 loading={loading}
                 error={error}
                 search={search}
@@ -79,42 +81,4 @@ export const ChatPicker = ({ open, activeId, onSelect, onClose }) => {
             />
         </div>
     );
-};
-
-export const useChatFloatState = () => {
-    const [pickerOpen, setPickerOpen] = useState(false);
-    const [activeConv, setActiveConv] = useState(null);
-    const { reloadInbox, totalUnread } = useChatInbox({ enabled: true });
-
-    const openPicker = () => {
-        setActiveConv(null);
-        setPickerOpen(true);
-        reloadInbox();
-    };
-
-    const selectConversation = (conv) => {
-        setActiveConv(conv);
-        setPickerOpen(false);
-    };
-
-    const closeFloat = () => setActiveConv(null);
-
-    const backToList = () => {
-        setActiveConv(null);
-        setPickerOpen(true);
-        reloadInbox();
-    };
-
-    return {
-        pickerOpen,
-        setPickerOpen,
-        activeConv,
-        totalUnread,
-        reloadInbox,
-        openPicker,
-        selectConversation,
-        closeFloat,
-        backToList,
-        floatOpen: Boolean(activeConv),
-    };
 };

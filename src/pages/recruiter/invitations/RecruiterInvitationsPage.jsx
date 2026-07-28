@@ -10,6 +10,7 @@ import {
     INVITATION_STATUS_FILTERS,
 } from '../../../services/recruiterInvitationService.js';
 import { getCandidatePublicProfilePath, ROUTES } from '../../../routes/path.js';
+import { openChatPanel } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 import '../../../assets/styles/RecruiterInvitationsStyle.css';
 
@@ -35,6 +36,7 @@ const RecruiterInvitationsPage = () => {
     const [invitations, setInvitations] = useState([]);
     const [listLoading, setListLoading] = useState(false);
     const [listError, setListError] = useState('');
+    const [chatLoadingId, setChatLoadingId] = useState(null);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
 
@@ -248,6 +250,26 @@ const RecruiterInvitationsPage = () => {
         });
     };
 
+    const handleChat = (invitation) => {
+        if (invitation?.candidateUserId == null) {
+            toast.error('Không mở được chat: thiếu ID ứng viên từ API.');
+            return;
+        }
+        if (selectedJobId == null) {
+            toast.error('Chưa chọn tin tuyển dụng.');
+            return;
+        }
+        setChatLoadingId(invitation.id);
+        try {
+            openChatPanel({
+                jobId: selectedJobId,
+                otherUserId: invitation.candidateUserId,
+            });
+        } finally {
+            window.setTimeout(() => setChatLoadingId(null), 800);
+        }
+    };
+
     const pageLoading = jobsLoading || focusJobLoading;
     const hasJobs = myJobs.length > 0;
     const hasSelectedJob = Boolean(selectedJob);
@@ -401,6 +423,8 @@ const RecruiterInvitationsPage = () => {
                                         key={invitation.id}
                                         invitation={invitation}
                                         onViewProfile={handleViewProfile}
+                                        onChat={handleChat}
+                                        chatLoading={chatLoadingId === invitation.id}
                                     />
                                 ))}
                             </div>
