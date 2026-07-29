@@ -116,9 +116,10 @@ const MyJobsPage = () => {
     const location = useLocation();
     const [allJobs, setAllJobs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState(
-        location.state?.highlightStatusTab === 'rejected' ? 'rejected' : 'all'
-    );
+    const [activeTab, setActiveTab] = useState(() => {
+        const tab = location.state?.highlightStatusTab;
+        return tab === 'rejected' || tab === 'pending' ? tab : 'all';
+    });
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [reviewNoteJob, setReviewNoteJob] = useState(null);
@@ -141,8 +142,9 @@ const MyJobsPage = () => {
     }, [loadJobs]);
 
     useEffect(() => {
-        if (location.state?.highlightStatusTab === 'rejected') {
-            setActiveTab('rejected');
+        const tab = location.state?.highlightStatusTab;
+        if (tab === 'rejected' || tab === 'pending') {
+            setActiveTab(tab);
             navigate(location.pathname, { replace: true, state: {} });
         }
     }, [location.state, location.pathname, navigate]);

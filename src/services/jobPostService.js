@@ -223,6 +223,9 @@ export const validateJobFormField = (field, form, action = null) => {
         case 'salaryMax':
             return salaryRangeError(form);
         case 'applicationDeadline':
+            if (!form.applicationDeadline) {
+                return 'Vui lòng chọn hạn nộp hồ sơ.';
+            }
             if (isPastApplicationDeadline(form.applicationDeadline)) {
                 return 'Hạn nộp hồ sơ phải sau thời điểm hiện tại.';
             }
@@ -251,7 +254,7 @@ export const getJobFormErrorKey = (field) => {
 /** Validate trước khi gọi API — trả { valid, errors } */
 export const validateJobForm = (form, action) => {
     const errors = {};
-    const fields = ['title', 'jobType', 'locationId', 'salaryMin', 'requiredCandidates'];
+    const fields = ['title', 'jobType', 'locationId', 'salaryMin', 'requiredCandidates', 'applicationDeadline'];
 
     fields.forEach((field) => {
         const message = validateJobFormField(field, form, action);
@@ -261,9 +264,6 @@ export const validateJobForm = (form, action) => {
 
     const shiftMessage = validateJobFormField('shiftBlocks', form, action);
     if (shiftMessage) errors.shiftBlocks = shiftMessage;
-
-    const deadlineMessage = validateJobFormField('applicationDeadline', form, action);
-    if (deadlineMessage) errors.applicationDeadline = deadlineMessage;
 
     return {
         valid: Object.keys(errors).length === 0,

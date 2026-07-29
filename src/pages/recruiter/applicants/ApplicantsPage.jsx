@@ -275,13 +275,13 @@ const ApplicantsPage = () => {
         setActionLoadingId(acceptTarget.id);
         try {
             await recruiterApplicationService.accept(acceptTarget.id);
-            toast.success('Đã chấp nhận ứng viên.');
+            toast.success('Đã chấp nhận đơn ứng tuyển.');
             setAcceptTarget(null);
             await loadApplications();
         } catch (err) {
             const message = getRecruiterApplicationApiErrorMessage(
                 err,
-                'Không thể chấp nhận ứng viên.'
+                'Không thể chấp nhận đơn ứng tuyển.'
             );
             toast.error(message);
             if (isApplicationCancelledError(err)) {
@@ -568,7 +568,7 @@ const ApplicantsPage = () => {
 
             <ConfirmModal
                 open={Boolean(acceptTarget) && !readOnly}
-                title="Chấp nhận ứng viên"
+                title="Chấp nhận đơn ứng tuyển"
                 confirmLabel="Chấp nhận"
                 variant="primary"
                 loading={Boolean(actionLoadingId)}
@@ -576,9 +576,19 @@ const ApplicantsPage = () => {
                 onConfirm={handleAcceptConfirm}
             >
                 <p>
-                    Gửi lời mời cho <strong>{acceptTarget?.candidateName}</strong>
-                    {selectedJob?.title ? ` cho tin "${selectedJob.title}"` : ''}? Ứng viên cần xác
-                    nhận để chuyển sang trạng thái đã tuyển.
+                    Bạn có chắc muốn chấp nhận đơn ứng tuyển của{' '}
+                    <strong>{acceptTarget?.candidateName}</strong>
+                    {selectedJob?.title ? (
+                        <>
+                            {' '}
+                            cho tin &ldquo;{selectedJob.title}&rdquo;
+                        </>
+                    ) : null}
+                    ?
+                </p>
+                <p className="confirm-modal__hint">
+                    Sau khi chấp nhận, ứng viên cần xác nhận nhận việc để hoàn tất tuyển
+                    dụng.
                 </p>
             </ConfirmModal>
 

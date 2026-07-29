@@ -8,6 +8,7 @@ import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/R
 import {
     buildSavePayload,
     emptyJobForm,
+    formatLocationDisplay,
     getJobFormErrorKey,
     mapJobDetailToForm,
     validateJobForm,
@@ -88,6 +89,7 @@ const CreateJobPage = () => {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [savingAction, setSavingAction] = useState(null);
     const [jobStatus, setJobStatus] = useState(null);
     const [aiDescOpen, setAiDescOpen] = useState(false);
 
@@ -181,6 +183,7 @@ const CreateJobPage = () => {
 
         const payload = buildSavePayload(form, action, guardData?.businessId);
         setSaving(true);
+        setSavingAction(action);
 
         try {
             const savedJob = isEdit
@@ -193,16 +196,23 @@ const CreateJobPage = () => {
                     : savedJob;
 
             notifyJobSaveResult(action, resolvedJob, { isEdit });
+
+            // Mở đúng tab Tin của tôi theo kết quả submit (pending / cần chỉnh sửa).
+            const highlightStatusTab =
+                resolvedJob?.status === 'REVISION_REQUESTED'
+                    ? 'rejected'
+                    : resolvedJob?.status === 'PENDING_REVIEW'
+                      ? 'pending'
+                      : undefined;
+
             navigate(ROUTES.RECRUITER_MY_JOBS, {
-                state:
-                    resolvedJob?.status === 'REVISION_REQUESTED'
-                        ? { highlightStatusTab: 'rejected' }
-                        : undefined,
+                state: highlightStatusTab ? { highlightStatusTab } : undefined,
             });
         } catch (err) {
             toast.error(getRecruiterJobApiErrorMessage(err, 'Không thể lưu tin tuyển dụng.'));
         } finally {
             setSaving(false);
+            setSavingAction(null);
         }
     };
 
@@ -219,7 +229,21 @@ const CreateJobPage = () => {
     const businessLocation = guardData.locations[0];
 
     return (
-        <div className="job-post-page">
+        <div className={`job-post-page${saving ? ' job-post-page--saving' : ''}`}>
+            {saving && (
+                <div className="job-post-page__saving-overlay" role="status" aria-live="polite">
+                    <div className="job-post-page__saving-card">
+                        <span className="job-post-page__spinner" aria-hidden="true" />
+                        <p className="job-post-page__saving-title">
+                            {savingAction === JOB_POST_ACTION.SUBMIT
+                                ? 'Đang gửi tin tuyển dụng…'
+                                : 'Đang lưu bản nháp…'}
+                        </p>
+                        <p className="job-post-page__saving-sub">Vui lòng chờ trong giây lát</p>
+                    </div>
+                </div>
+            )}
+
             <header className="job-post-page__header">
                 <div>
                     <h1>{isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng tin tuyển dụng'}</h1>
@@ -242,12 +266,56 @@ const CreateJobPage = () => {
                     onFieldBlur={handleFieldBlur}
                     onOpenAiDesc={() => setAiDescOpen(true)}
                 />
-                <JobPreviewPanel
-                    form={form}
-                    businessLocation={businessLocation}
-                    businessName={guardData.profile?.businessName}
-                    logoUrl={guardData.profile?.logoUrl}
-                />
+
+                <aside className="job-post-page__sidebar">
+                    <JobPreviewPanel
+                        form={form}
+                        businessLocation={businessLocation}
+                        businessName={guardData.profile?.businessName}
+                        logoUrl={guardData.profile?.logoUrl}
+                    />
+
+                    <div className="job-post-page__actions job-post-page__actions--sidebar">
+                        <button
+                            type="button"
+                            className="job-post-page__btn job-post-page__btn--ghost"
+                            disabled={saving}
+                            onClick={() => navigate(ROUTES.RECRUITER_MY_JOBS)}
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            type="button"
+                            className="job-post-page__btn job-post-page__btn--secondary"
+                            disabled={saving}
+                            onClick={() => handleSave(JOB_POST_ACTION.SAVE_DRAFT)}
+                        >
+                            {saving && savingAction === JOB_POST_ACTION.SAVE_DRAFT ? (
+                                <>
+                                    <span className="job-post-page__btn-spinner" aria-hidden="true" />
+                                    Đang lưu...
+                                </>
+                            ) : (
+                                'Lưu nháp'
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            className="job-post-page__btn job-post-page__btn--primary"
+                            disabled={saving}
+                            onClick={() => handleSave(JOB_POST_ACTION.SUBMIT)}
+                        >
+                            {saving && savingAction === JOB_POST_ACTION.SUBMIT ? (
+                                <>
+                                    <span className="job-post-page__btn-spinner" aria-hidden="true" />
+                                    Đang đăng...
+                                </>
+                            ) : (
+                                'Đăng tin'
+                            )}
+                        </button>
+                    </div>
+                </aside>
             </div>
 
             <AiJobDescModal
@@ -256,41 +324,18 @@ const CreateJobPage = () => {
                 jobType={form.jobType}
                 businessName={guardData.profile?.businessName}
                 businessType={guardData.profile?.businessType}
+                salaryMin={form.salaryMin}
+                salaryMax={form.salaryMax}
+                requiredCandidates={form.requiredCandidates}
+                isUrgent={form.isUrgent}
+                locationLabel={formatLocationDisplay(businessLocation)}
+                skillIds={form.skillIds}
                 onClose={() => setAiDescOpen(false)}
                 onApply={(html) => {
                     setForm((prev) => ({ ...prev, description: html }));
                     toast.success('Đã chèn mô tả do AI gợi ý.');
                 }}
             />
-
-            <footer className="job-post-page__footer">
-                <div className="job-post-page__actions">
-                    <button
-                        type="button"
-                        className="job-post-page__btn job-post-page__btn--ghost"
-                        disabled={saving}
-                        onClick={() => navigate(ROUTES.RECRUITER_MY_JOBS)}
-                    >
-                        Hủy
-                    </button>
-                    <button
-                        type="button"
-                        className="job-post-page__btn job-post-page__btn--secondary"
-                        disabled={saving}
-                        onClick={() => handleSave(JOB_POST_ACTION.SAVE_DRAFT)}
-                    >
-                        {saving ? 'Đang lưu...' : 'Lưu nháp'}
-                    </button>
-                    <button
-                        type="button"
-                        className="job-post-page__btn job-post-page__btn--primary"
-                        disabled={saving}
-                        onClick={() => handleSave(JOB_POST_ACTION.SUBMIT)}
-                    >
-                        {saving ? 'Đang đăng...' : 'Đăng tin'}
-                    </button>
-                </div>
-            </footer>
         </div>
     );
 };

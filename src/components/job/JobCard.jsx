@@ -201,9 +201,6 @@ const JobCard = ({
             {isPreview ? (
                 <div className="job-card__actions">
                     <span className="job-card__detail-link">Xem chi tiết</span>
-                    <button type="button" className="btn btn--primary job-card__apply" tabIndex={-1}>
-                        Ứng tuyển ngay
-                    </button>
                 </div>
             ) : isClosed ? (
                 <div className="job-card__actions">

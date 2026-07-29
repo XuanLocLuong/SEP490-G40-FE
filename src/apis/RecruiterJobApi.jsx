@@ -57,13 +57,7 @@ const recruiterJobApi = {
         return unwrapData(res);
     },
 
-    /** AI: sinh bộ câu hỏi gợi ý mô tả */
-    generateJobDescQuestions: async (payload) => {
-        const res = await axiosClient.post(`${JOBS_BASE}/ai/generate-questions`, payload);
-        return unwrapData(res);
-    },
-
-    /** AI: sinh description HTML từ câu trả lời */
+    /** AI: sinh 3 phiên bản description từ thông tin job (title + businessName bắt buộc) */
     generateJobDescription: async (payload) => {
         const res = await axiosClient.post(`${JOBS_BASE}/ai/generate-description`, payload);
         return unwrapData(res);
