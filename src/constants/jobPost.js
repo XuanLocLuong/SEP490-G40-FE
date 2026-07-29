@@ -35,7 +35,7 @@ export const DAY_PRESETS = [
     { id: 'all', label: 'Cả tuần', days: ALL_DAY_VALUES },
 ];
 
-/** Ngành nghề — gửi kèm AI generate-questions (optional) */
+/** Ngành nghề — optional khi gửi AI generate-description */
 export const INDUSTRY_OPTIONS = [
     { value: '', label: '— Chọn ngành nghề —' },
     { value: 'F&B / Nhà hàng', label: 'F&B / Nhà hàng' },

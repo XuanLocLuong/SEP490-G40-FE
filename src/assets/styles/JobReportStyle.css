@@ -1,0 +1,393 @@
+/* Báo cáo tin tuyển dụng — styles riêng, không sửa JobDetailPageStyle của team khác */
+
+.job-detail-panel__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.job-detail-panel__report {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 50%;
+    background: var(--color-surface, #fff);
+    color: var(--color-text-muted, #64748b);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.job-detail-panel__report:hover:not(:disabled) {
+    color: #b91c1c;
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+.job-detail-panel__report--reported {
+    color: #b91c1c;
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+.job-detail-panel__report:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.job-report-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.job-report-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: rgba(15, 23, 42, 0.45);
+    cursor: pointer;
+}
+
+.job-report-modal__panel {
+    position: relative;
+    z-index: 1;
+    width: min(520px, 100%);
+    max-height: min(90vh, 720px);
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+    overflow: hidden;
+}
+
+.job-report-modal__panel--submitting {
+    pointer-events: none;
+}
+
+.job-report-modal__saving-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.35);
+    pointer-events: auto;
+}
+
+.job-report-modal__saving-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-width: 220px;
+    padding: 24px 28px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
+    text-align: center;
+}
+
+.job-report-modal__spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #fee2e2;
+    border-top-color: #dc2626;
+    border-radius: 50%;
+    animation: job-report-spin 0.75s linear infinite;
+}
+
+.job-report-modal__saving-title {
+    margin: 0;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.job-report-modal__saving-sub {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.job-report-modal__btn-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 8px;
+    vertical-align: -2px;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: job-report-spin 0.75s linear infinite;
+}
+
+@keyframes job-report-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.job-report-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.job-report-modal__header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #0f172a;
+}
+
+.job-report-modal__close {
+    border: none;
+    background: transparent;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.job-report-modal__close:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.job-report-modal__body {
+    padding: 16px 20px;
+    overflow: auto;
+}
+
+.job-report-modal__job {
+    margin: 0 0 8px;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+.job-report-modal__hint {
+    margin: 0 0 14px;
+    font-size: 0.85rem;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.job-report-modal__fieldset {
+    margin: 0 0 14px;
+    padding: 0;
+    border: none;
+}
+
+.job-report-modal__fieldset legend {
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.job-report-modal__req {
+    color: #dc2626;
+}
+
+.job-report-modal__optional {
+    font-weight: 400;
+    color: #94a3b8;
+}
+
+.job-report-modal__reasons {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.job-report-modal__reason {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.job-report-modal__reason:has(input:checked) {
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+.job-report-modal__reason input {
+    margin-top: 3px;
+}
+
+.job-report-modal__reason span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.9rem;
+    color: #0f172a;
+}
+
+.job-report-modal__reason-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 400;
+}
+
+.job-report-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.job-report-modal__field label,
+.job-report-modal__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.job-report-modal__field textarea {
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font: inherit;
+    resize: vertical;
+    min-height: 96px;
+}
+
+.job-report-modal__thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.job-report-modal__thumb {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.job-report-modal__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.job-report-modal__thumb-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.82);
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.job-report-modal__thumb-remove:hover:not(:disabled) {
+    background: #dc2626;
+}
+
+.job-report-modal__thumb-remove:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.job-report-modal__thumb-add {
+    width: 72px;
+    height: 72px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.job-report-modal__thumb-add:hover:not(:disabled) {
+    border-color: #94a3b8;
+    color: #334155;
+}
+
+.job-report-modal__thumb-add:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.job-report-modal__loading,
+.job-report-modal__empty {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.job-report-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.job-report-modal__btn {
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.job-report-modal__btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.job-report-modal__btn--ghost {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+}
+
+.job-report-modal__btn--danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dc2626;
+    background: #dc2626;
+    color: #fff;
+}
+
+.job-report-modal__btn--danger:hover:not(:disabled) {
+    background: #b91c1c;
+}

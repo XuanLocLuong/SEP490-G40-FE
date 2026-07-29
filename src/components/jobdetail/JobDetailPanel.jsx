@@ -20,6 +20,7 @@ import { CheckCircleIcon, MapPinIcon, ClockIcon } from '../common/icons.jsx';
 import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import JobApplyButton from '../job/JobApplyButton.jsx';
 import JobBookmarkButton from '../job/JobBookmarkButton.jsx';
+import JobReportButton from '../job/JobReportButton.jsx';
 import JobChatButton from '../job/JobChatButton.jsx';
 
 const APPLY_DISABLED_TITLE = 'Tin tuyển dụng đã hết vị trí.';
@@ -169,6 +170,7 @@ const JobDetailPanel = ({
                             className="job-detail-panel__bookmark"
                             initialSaved={job.saved}
                         />
+                        <JobReportButton jobId={job.id} jobTitle={job.title} />
                     </div>
                 )}
             </header>

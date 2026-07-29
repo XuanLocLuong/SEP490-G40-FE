@@ -156,7 +156,10 @@ const JobPostForm = ({
 
                 <div className="job-post-form__row">
                     <div className="job-post-form__field job-post-form__field--deadline">
-                        <label htmlFor="application-deadline">Hạn nộp hồ sơ</label>
+                        <label htmlFor="application-deadline">
+                            Hạn nộp hồ sơ
+                            <RequiredMark />
+                        </label>
                         <DateTimeInput24h
                             id="application-deadline"
                             value={form.applicationDeadline}
@@ -197,6 +200,10 @@ const JobPostForm = ({
                         Gợi ý bằng AI
                     </button>
                 </div>
+                <p className="job-post-form__ai-hint">
+                    AI dùng thông tin bạn đã nhập phía trên. Thêm
+                    lương, kỹ năng sẽ giúp mô tả sát hơn.
+                </p>
                 <div className="job-post-form__field">
                     <RichTextEditor
                         rows={8}
