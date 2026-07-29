@@ -44,6 +44,8 @@ export const ROUTES = {
     RECRUITER_TRUST_SCORE: '/recruiter/trust-score',
     RECRUITER_ALL_JOBS: '/recruiter/all-jobs',
     RECRUITER_PROFILE: '/recruiter/profile',
+    /** Xác minh CCCD + GPKD / hộ KD */
+    RECRUITER_VERIFICATION: '/recruiter/verification',
     RECRUITER_SETTINGS: '/recruiter/settings',
     RECRUITER_NOTIFICATIONS: '/recruiter/notifications',
 

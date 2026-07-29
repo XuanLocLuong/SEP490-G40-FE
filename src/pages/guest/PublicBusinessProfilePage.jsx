@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import { resolveBusinessProfileBack } from '../../utils/businessNavReturn.js';
+import { formatBusinessTypeLabel } from '../../utils/businessTypeDisplay.js';
 import '../../assets/styles/PublicBusinessProfileStyle.css';
 
 const TABS = {
@@ -35,15 +36,7 @@ const JOB_SUBTABS = {
 };
 
 const LOW_TRUST_THRESHOLD = 40;
-const VERIFIED_TRUST_THRESHOLD = 70;
 const JOBS_PAGE_SIZE = 12;
-
-const isVerificationPassed = (status) =>
-    status === 'BUSINESS_PASSED' ||
-    status === 'CCCD_PASSED' ||
-    status === 'FACE_PASSED' ||
-    status === 'BUSINESS_MANUALLY' ||
-    status === 'CCCD_MANUALLY';
 
 const isTrustedBadge = (badge) => badge === 'BUSINESS_VERIFIED';
 
@@ -222,10 +215,8 @@ const PublicBusinessProfilePage = () => {
 
     const trustScoreNumber =
         profile?.trustScore != null ? Number(profile.trustScore) : null;
-    const showVerified =
-        isVerificationPassed(profile?.verificationStatus) ||
-        isTrustedBadge(profile?.badge) ||
-        (trustScoreNumber != null && trustScoreNumber >= VERIFIED_TRUST_THRESHOLD);
+    /** Đã xác thực đầy đủ theo BE: badge, không dùng verificationStatus (vd. CCCD_PASSED). */
+    const showVerified = isTrustedBadge(profile?.badge);
     const showLowTrustWarning =
         trustScoreNumber != null && trustScoreNumber < LOW_TRUST_THRESHOLD;
 
@@ -295,7 +286,7 @@ const PublicBusinessProfilePage = () => {
                         </div>
                         {profile.businessType && (
                             <span className="public-business__badge public-business__badge--muted">
-                                {profile.businessType}
+                                {formatBusinessTypeLabel(profile.businessType)}
                             </span>
                         )}
                         {showVerified && (

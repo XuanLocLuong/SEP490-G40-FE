@@ -28,6 +28,7 @@ import CandidateInvitationsPage from '../pages/candidate/CandidateInvitationsPag
 import CandidateNotificationsPage from '../pages/candidate/CandidateNotificationsPage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
+import RecruiterVerificationPage from '../pages/recruiter/RecruiterVerificationPage.jsx';
 import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
 import MyJobsPage from '../pages/recruiter/jobs/MyJobsPage.jsx';
 import ApplicantsPage from '../pages/recruiter/applicants/ApplicantsPage.jsx';
@@ -37,6 +38,7 @@ import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx
 import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import PostManagerReportQueuePage from '../pages/post-manager/PostManagerReportQueuePage.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
+import ManualVerificationQueuePage from '../pages/manual-check/ManualVerificationQueuePage.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import AdminSkillsPage from '../pages/admin/AdminSkillsPage.jsx';
 import AdminAccountsPage from '../pages/admin/AdminAccountsPage.jsx';
@@ -140,6 +142,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.RECRUITER_HOME} element={<RecruiterHomePage />} />
                 <Route path={ROUTES.RECRUITER_SETTINGS} element={<CandidateSettingsPage />} />
                 <Route path={ROUTES.RECRUITER_PROFILE} element={<RecruiterProfilePage />} />
+                <Route path={ROUTES.RECRUITER_VERIFICATION} element={<RecruiterVerificationPage />} />
                 <Route path={ROUTES.RECRUITER_CREATE_JOB} element={<CreateJobPage />} />
                 <Route path={ROUTES.RECRUITER_EDIT_JOB} element={<CreateJobPage />} />
                 <Route path={ROUTES.RECRUITER_MY_JOBS} element={<MyJobsPage />} />
@@ -177,6 +180,7 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.MANUAL_CHECK_HOME} element={<ManualCheckDashboard />} />
+                <Route path={ROUTES.MANUAL_CHECK_VERIFICATION} element={<ManualVerificationQueuePage />} />
             </Route>
 
             {/* ---- Admin ---- */}

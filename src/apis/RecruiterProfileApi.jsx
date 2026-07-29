@@ -4,8 +4,13 @@ const PROFILE_BASE = `${API_PREFIX}/recruiter/profile`;
 
 const unwrapData = (response) => response.data.data;
 
-export const getApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') =>
-    error?.response?.data?.message || error?.message || fallback;
+export const getApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') => {
+    const message = error?.response?.data?.message || error?.message;
+    if (message === 'INVALID_BUSINESS_TYPE') {
+        return 'Loại hình doanh nghiệp không hợp lệ. Chọn lại ngành nghề trong danh sách.';
+    }
+    return message || fallback;
+};
 
 const recruiterProfileApi = {
     getProfile: async (businessId) => {
