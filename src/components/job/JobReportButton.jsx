@@ -8,7 +8,7 @@ import {
     REPORT_STATUS_LABELS,
     loadJobReportStatus,
 } from '../../services/jobReportService.js';
-import { FlagIcon } from '../common/icons.jsx';
+import { AlertIcon } from '../common/icons.jsx';
 import JobReportModal from './JobReportModal.jsx';
 import '../../assets/styles/JobReportStyle.css';
 
@@ -86,7 +86,7 @@ const JobReportButton = ({ jobId, jobTitle, className = 'job-detail-panel__repor
                 aria-label={label}
                 title={auth ? label : 'Đăng nhập để báo cáo tin tuyển dụng'}
             >
-                <FlagIcon width={18} height={18} />
+                <AlertIcon width={18} height={18} />
             </button>
 
             <JobReportModal
