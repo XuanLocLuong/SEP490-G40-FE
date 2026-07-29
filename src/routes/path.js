@@ -59,6 +59,8 @@ export const ROUTES = {
 
     ADMIN_SYSTEM_CONFIG: '/admin/system-config',
     ADMIN_SKILLS: '/admin/skills',
+    /** UC-51: cấu hình Trust Score Rules */
+    ADMIN_TRUST_SCORE_RULES: '/admin/trust-score-rules',
     ADMIN_AUDIT_LOG: '/admin/audit-log',
     ADMIN_ESCALATIONS: '/admin/escalations',
     ADMIN_ANALYTICS: '/admin/analytics',
