@@ -23,6 +23,8 @@ export const ROUTES = {
     CANDIDATE_INTERACTIONS: '/jobs?section=interactions',
     /** List việc tuyển gấp */
     JOB_LIST_URGENT: '/jobs?section=urgent',
+    /** UC-54: Top nhà tuyển dụng uy tín */
+    TOP_RECRUITERS: '/top-recruiters',
     CANDIDATE_PROFILE: '/candidate/profile',
     CANDIDATE_AVAILABILITY: '/candidate/availability',
     CANDIDATE_INVITATIONS: '/candidate/invitations',

@@ -38,9 +38,14 @@
 .landing-hero__subtitle {
     margin: 0 0 28px;
     font-size: 16px;
-    line-height: 1.6;
+    line-height: 1.5;
     color: var(--color-text-muted);
-    max-width: 540px;
+}
+
+@media (min-width: 768px) {
+    .landing-hero__subtitle {
+        white-space: nowrap;
+    }
 }
 
 .landing-hero__search {
@@ -217,8 +222,24 @@
 }
 
 .landing-employers__grid--compact {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
+}
+
+.landing-employers__grid--count-1 {
+    grid-template-columns: minmax(0, 400px);
+    justify-content: center;
+}
+
+.landing-employers__grid--count-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.landing-employers__grid--count-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.landing-employers__grid--count-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .landing-employers__grid > * {
@@ -236,7 +257,29 @@
     flex-direction: column;
     gap: 16px;
     height: 100%;
+    position: relative;
     transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.employer-card--skeleton {
+    min-height: 220px;
+    background: linear-gradient(
+        90deg,
+        var(--color-border) 0%,
+        #eef2f8 50%,
+        var(--color-border) 100%
+    );
+    background-size: 200% 100%;
+    animation: employer-card-skeleton 1.2s ease-in-out infinite;
+}
+
+@keyframes employer-card-skeleton {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: -100% 0;
+    }
 }
 
 .employer-card:hover {
@@ -264,10 +307,26 @@
     padding: 8px 10px;
 }
 
-.employer-card__top {
+.employer-card__header {
     display: flex;
+    flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
+    min-width: 0;
+    width: 100%;
+}
+
+.employer-card__header--ranked {
+    padding-right: 48px;
+}
+
+.employer-card__brand {
+    display: grid;
+    grid-template-columns: auto 1fr 16px;
+    column-gap: 12px;
+    align-items: start;
+    min-width: 0;
+    width: 100%;
 }
 
 .employer-card__logo {
@@ -282,15 +341,43 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    object-fit: cover;
+}
+
+.employer-card__logo--image {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+}
+
+.employer-card__rank {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    border-radius: 999px;
+    padding: 4px 10px;
 }
 
 .employer-card__name {
     margin: 0;
+    min-width: 0;
     font-size: 15px;
     font-weight: 700;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.employer-card__verified-slot {
     display: flex;
-    align-items: center;
-    gap: 6px;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 2px;
 }
 
 .employer-card__verified {
@@ -298,9 +385,30 @@
     flex-shrink: 0;
 }
 
-.employer-card__industry {
+.employer-card__meta-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 3.9em;
+}
+
+.employer-card__meta-line {
     font-size: 13px;
+    line-height: 1.45;
     color: var(--color-text-muted);
+}
+
+.employer-card__meta-line--placeholder {
+    color: var(--color-text-soft, #94a3b8);
+    font-style: italic;
+}
+
+.employer-card__score {
+    min-height: 52px;
 }
 
 .employer-card__score-header {
@@ -332,6 +440,8 @@
 .employer-card__cta {
     width: 100%;
     margin-top: auto;
+    text-align: center;
+    text-decoration: none;
 }
 
 /* ---- Why JobLink ---- */
@@ -416,6 +526,10 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
+    .landing-employers__grid.landing-employers__grid--count-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .landing-jobs__grid--compact {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -475,6 +589,10 @@
     letter-spacing: -0.01em;
 }
 
+.landing-page--candidate .landing-hero__subtitle {
+    font-size: 14px;
+}
+
 .landing-page--candidate .landing-hero__inner {
     grid-template-columns: 1fr;
 }
@@ -483,17 +601,37 @@
     display: none;
 }
 
-/* Force one row of 4 compact cards on candidate homepage (override global 2-col rules). */
+/* Force one row of compact cards on candidate homepage (override global 2-col rules). */
 .landing-page--candidate .landing-jobs__grid--compact,
 .landing-page--candidate .landing-employers__grid--compact {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
+}
+
+.landing-page--candidate .landing-jobs__grid--compact {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.landing-page--candidate .landing-employers__grid--compact.landing-employers__grid--count-1 {
+    grid-template-columns: minmax(0, 400px);
+    justify-content: center;
+}
+
+.landing-page--candidate .landing-employers__grid--compact.landing-employers__grid--count-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.landing-page--candidate .landing-employers__grid--compact.landing-employers__grid--count-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.landing-page--candidate .landing-employers__grid--compact.landing-employers__grid--count-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 @media (max-width: 1100px) {
     .landing-page--candidate .landing-jobs__grid--compact,
-    .landing-page--candidate .landing-employers__grid--compact {
+    .landing-page--candidate .landing-employers__grid--compact.landing-employers__grid--count-4 {
         display: flex;
         align-items: stretch;
         gap: 12px;
@@ -502,11 +640,22 @@
     }
 
     .landing-page--candidate .landing-jobs__grid--compact > *,
-    .landing-page--candidate .landing-employers__grid--compact > * {
+    .landing-page--candidate .landing-employers__grid--compact.landing-employers__grid--count-4 > * {
         flex: 0 0 220px;
         max-width: 220px;
         height: auto;
         align-self: stretch;
+    }
+
+    .landing-page--candidate .landing-employers__grid--compact:not(.landing-employers__grid--count-4) {
+        display: grid;
+        overflow-x: visible;
+        padding-bottom: 0;
+    }
+
+    .landing-page--candidate .landing-employers__grid--compact:not(.landing-employers__grid--count-4) > * {
+        flex: unset;
+        max-width: none;
     }
 }
 
