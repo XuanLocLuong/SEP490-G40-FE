@@ -181,6 +181,7 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.ADMIN_HOME} element={<AdminDashboard />} />
+                <Route path={ROUTES.ADMIN_ANALYTICS} element={<AdminDashboard />} />
                 <Route path={ROUTES.ADMIN_SKILLS} element={<AdminSkillsPage />} />
             </Route>
 
