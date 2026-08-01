@@ -1,8 +1,8 @@
 import AppLayout from '../components/common/AppLayout.jsx';
-import Header from '../components/common/Header.jsx';
 import Footer from '../components/common/Footer.jsx';
 import CandidateHeader from '../components/candidate/CandidateHeader.jsx';
 import RecruiterHeader from '../components/recruiter/RecruiterHeader.jsx';
+import GuestHeader from '../components/guest/GuestHeader.jsx';
 import { useAuth } from '../contexts/authContext.js';
 import { USER_ROLES } from '../utils/Constants.jsx';
 
@@ -20,7 +20,7 @@ const JobDiscoveryLayout = () => {
     ) : isRecruiter ? (
         <RecruiterHeader />
     ) : (
-        <Header />
+        <GuestHeader />
     );
 
     return <AppLayout header={header} footer={<Footer />} />;

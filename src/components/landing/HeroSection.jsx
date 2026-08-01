@@ -1,9 +1,7 @@
 import JobSearchForm from '../common/JobSearchForm.jsx';
 
 const DEFAULT_TITLE = 'Tìm việc part-time dễ dàng cho ứng viên';
-const DEFAULT_SUBTITLE =
-    'Nền tảng kết nối sinh viên với cơ hội việc làm linh hoạt, uy tín và phù hợp với lịch học của bạn.';
-
+const DEFAULT_SUBTITLE = 'Nền tảng kết nối sinh viên với cơ hội việc làm linh hoạt, uy tín và phù hợp với lịch học của bạn.';
 const HeroSection = ({
     onSearch,
     loading,

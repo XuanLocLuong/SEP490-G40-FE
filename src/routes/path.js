@@ -23,6 +23,8 @@ export const ROUTES = {
     CANDIDATE_INTERACTIONS: '/jobs?section=interactions',
     /** List việc tuyển gấp */
     JOB_LIST_URGENT: '/jobs?section=urgent',
+    /** UC-54: Top nhà tuyển dụng uy tín */
+    TOP_RECRUITERS: '/top-recruiters',
     CANDIDATE_PROFILE: '/candidate/profile',
     CANDIDATE_AVAILABILITY: '/candidate/availability',
     CANDIDATE_INVITATIONS: '/candidate/invitations',
@@ -43,6 +45,8 @@ export const ROUTES = {
     RECRUITER_TRUST_SCORE: '/recruiter/trust-score',
     RECRUITER_ALL_JOBS: '/recruiter/all-jobs',
     RECRUITER_PROFILE: '/recruiter/profile',
+    /** Xác minh CCCD + GPKD / hộ KD */
+    RECRUITER_VERIFICATION: '/recruiter/verification',
     RECRUITER_SETTINGS: '/recruiter/settings',
     RECRUITER_NOTIFICATIONS: '/recruiter/notifications',
 
@@ -58,6 +62,8 @@ export const ROUTES = {
 
     ADMIN_SYSTEM_CONFIG: '/admin/system-config',
     ADMIN_SKILLS: '/admin/skills',
+    /** UC-51: cấu hình Trust Score Rules */
+    ADMIN_TRUST_SCORE_RULES: '/admin/trust-score-rules',
     ADMIN_AUDIT_LOG: '/admin/audit-log',
     ADMIN_ESCALATIONS: '/admin/escalations',
     ADMIN_ANALYTICS: '/admin/analytics',

@@ -36,6 +36,11 @@ import ReadonlyMapPreview from '../../components/recruiter/ReadonlyMapPreview.js
 import HiringHistoryTab from '../../components/recruiter/HiringHistoryTab.jsx';
 import { clampPercent } from '../../utils/profileFormat.js';
 import { plainTextLength } from '../../utils/richTextUtils.js';
+import {
+    BUSINESS_TYPE_OPTIONS,
+    formatBusinessTypeLabel,
+    toBusinessTypeCode,
+} from '../../utils/businessTypeDisplay.js';
 import '../../assets/styles/AccountSettingsStyle.css';
 import '../../assets/styles/RecruiterProfileStyle.css';
 
@@ -46,17 +51,6 @@ const BUSINESS_DESCRIPTION_MAX_LENGTH = 2000;
 const BUSINESS_DESCRIPTION_TEMPLATE = `<h2>Giới thiệu</h2><p>Mô tả ngắn về doanh nghiệp, lĩnh vực, quy mô...</p><h2>Văn hóa &amp; môi trường làm việc</h2><ul><li>Môi trường năng động, hỗ trợ sinh viên part-time</li><li>Văn hóa giao tiếp cởi mở, làm việc nhóm</li></ul><h2>Phúc lợi</h2><ul><li>Lương theo ca + thưởng hiệu suất</li><li>BHXH, phụ cấp ăn ca (nếu có)</li></ul><h2>Đặc quyền khác</h2><ul><li>Đào tạo nghiệp vụ khi vào làm</li><li>Cơ hội chuyển chính thức</li></ul>`;
 
 const hasLogo = (url) => Boolean(url?.trim());
-
-const BUSINESS_TYPE_OPTIONS = [
-    'Công ty TNHH',
-    'Công ty cổ phần',
-    'Doanh nghiệp tư nhân',
-    'Hộ kinh doanh',
-    'Startup',
-    'Tập đoàn',
-    'F&B (Dịch vụ ăn uống)',
-    'Khác',
-];
 
 const emptyAddressInitial = () => ({
     provinceId: '',
@@ -104,7 +98,7 @@ const mapProfileFromApi = (data) => ({
     businessName: data?.businessName || '',
     description: data?.description || '',
     websiteUrl: data?.websiteUrl || '',
-    businessType: data?.businessType || '',
+    businessType: toBusinessTypeCode(data?.businessType) || data?.businessType || '',
     phone: data?.phone || '',
     email: data?.email || '',
     logoUrl: data?.logoUrl || null,
@@ -126,7 +120,7 @@ const buildUpdatePayload = (form, businessId) => ({
     phone: form.phone?.trim() || null,
     email: form.email?.trim() || null,
     websiteUrl: form.websiteUrl?.trim() || null,
-    businessType: form.businessType?.trim() || null,
+    businessType: toBusinessTypeCode(form.businessType),
 });
 
 const formatMemberSince = (value) => {
@@ -137,12 +131,15 @@ const formatMemberSince = (value) => {
     return `${month}/${date.getFullYear()}`;
 };
 
-const isVerified = (status) =>
-    status === 'BUSINESS_PASSED' ||
-    status === 'CCCD_PASSED' ||
-    status === 'FACE_PASSED' ||
+const isBusinessVerifiedBadge = (badge) => badge === 'BUSINESS_VERIFIED';
+
+const isPendingManualVerification = (status) =>
     status === 'BUSINESS_MANUALLY' ||
     status === 'CCCD_MANUALLY';
+
+const isRejectedVerification = (status) =>
+    status === 'BUSINESS_REJECTED' ||
+    status === 'CCCD_REJECTED';
 
 const getHeroTitle = (noProfile, form, profile) => {
     if (noProfile) {
@@ -443,6 +440,12 @@ const RecruiterProfilePage = () => {
             }
         }
 
+        const businessTypeCode = toBusinessTypeCode(form.businessType);
+        if (form.businessType?.trim() && !businessTypeCode) {
+            toast.error('Ngành nghề không hợp lệ. Vui lòng chọn lại trong danh sách.');
+            return;
+        }
+
         setSaving(true);
         const isCreate = noProfile || !profile.businessId;
         let businessId = profile.businessId;
@@ -453,7 +456,7 @@ const RecruiterProfilePage = () => {
                     businessName: form.businessName.trim(),
                     description: form.description?.trim() || null,
                     websiteUrl: form.websiteUrl?.trim() || null,
-                    businessType: form.businessType?.trim() || null,
+                    businessType: businessTypeCode,
                     email: form.email?.trim() || null,
                     phone: form.phone?.trim() || null,
                 });
@@ -654,6 +657,11 @@ const RecruiterProfilePage = () => {
     const galleryCount = profile.galleryImages?.length || 0;
     const canAddGallery = galleryCount < MAX_GALLERY;
     const profileReadyForJob = !noProfile && Boolean(savedLocation);
+    /** Cần hồ sơ đã lưu (businessId + tên + địa chỉ) trước khi mở wizard xác minh. */
+    const canStartVerification =
+        Boolean(profile.businessId) &&
+        Boolean(profile.businessName?.trim()) &&
+        Boolean(savedLocation);
     const displayLogoUrl = pendingLogoPreview || profile.logoUrl;
     const hasDisplayLogo = hasLogo(displayLogoUrl);
 
@@ -787,14 +795,68 @@ const RecruiterProfilePage = () => {
                                 </div>
                                 {profile.businessType && (
                                     <span className="recruiter-profile__badge recruiter-profile__badge--muted">
-                                        {profile.businessType}
+                                        {formatBusinessTypeLabel(profile.businessType)}
                                     </span>
                                 )}
-                                {isVerified(profile.verificationStatus) && (
+                                {isBusinessVerifiedBadge(profile.badge) ? (
                                     <span className="recruiter-profile__badge recruiter-profile__badge--verified">
                                         <CheckCircleIcon width={14} height={14} />
                                         Đã xác thực
                                     </span>
+                                ) : (
+                                    <>
+                                        {isPendingManualVerification(profile.verificationStatus) ? (
+                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                <ClockIcon width={14} height={14} />
+                                                Đang chờ duyệt
+                                            </span>
+                                        ) : isRejectedVerification(profile.verificationStatus) ? (
+                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                Xác minh chưa đạt
+                                            </span>
+                                        ) : profile.verificationStatus === 'CCCD_PASSED' ? (
+                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                Đã xác minh CCCD — còn thiếu giấy tờ KD
+                                            </span>
+                                        ) : profile.verificationStatus === 'BUSINESS_PASSED' &&
+                                          !isBusinessVerifiedBadge(profile.badge) ? (
+                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                Đang hoàn tất xác minh
+                                            </span>
+                                        ) : (
+                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                Chưa xác thực
+                                            </span>
+                                        )}
+                                        {canStartVerification ? (
+                                            <Link
+                                                to={
+                                                    isRejectedVerification(profile.verificationStatus) ||
+                                                    isPendingManualVerification(profile.verificationStatus)
+                                                        ? `${ROUTES.RECRUITER_VERIFICATION}?retry=1`
+                                                        : ROUTES.RECRUITER_VERIFICATION
+                                                }
+                                                className="recruiter-profile__badge recruiter-profile__badge--verify-cta"
+                                            >
+                                                {isPendingManualVerification(profile.verificationStatus)
+                                                    ? 'Xem / nộp lại'
+                                                    : isRejectedVerification(profile.verificationStatus)
+                                                      ? 'Thử lại ngay'
+                                                      : profile.verificationStatus === 'CCCD_PASSED'
+                                                        ? 'Xác minh giấy tờ ngay'
+                                                        : 'Xác minh ngay'}
+                                            </Link>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                className="recruiter-profile__badge recruiter-profile__badge--verify-cta recruiter-profile__badge--verify-cta-disabled"
+                                                disabled
+                                                title="Vui lòng lưu tên doanh nghiệp và địa chỉ trụ sở trước khi xác minh"
+                                            >
+                                                Xác minh ngay
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             </div>
 
@@ -940,15 +1002,15 @@ const RecruiterProfilePage = () => {
                                         <label htmlFor="rp-business-type">Ngành nghề</label>
                                         <select
                                             id="rp-business-type"
-                                            value={form.businessType}
+                                            value={toBusinessTypeCode(form.businessType) || ''}
                                             onChange={(e) =>
                                                 updateFormField('businessType', e.target.value)
                                             }
                                         >
                                             <option value="">— Chọn ngành nghề —</option>
                                             {BUSINESS_TYPE_OPTIONS.map((opt) => (
-                                                <option key={opt} value={opt}>
-                                                    {opt}
+                                                <option key={opt.value} value={opt.value}>
+                                                    {opt.label}
                                                 </option>
                                             ))}
                                         </select>

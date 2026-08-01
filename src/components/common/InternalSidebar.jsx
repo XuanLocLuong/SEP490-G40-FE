@@ -8,7 +8,7 @@ import '../../assets/styles/InternalSidebarStyle.css';
 //
 // Lưu ý: 3 ảnh thiết kế gốc không đồng nhất 100% (topbar mỗi ảnh có
 // icon/chip khác nhau) — mình gộp lại thành 1 pattern chung nhất quán:
-// profile + logout luôn nằm cuối Sidebar, Topbar chỉ còn icon thông báo/cài đặt.
+// profile + logout luôn nằm cuối Sidebar, Topbar chỉ còn icon cài đặt.
 const InternalSidebar = ({
                              title = 'JobLink',
                              subtitle,

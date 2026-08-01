@@ -21,17 +21,18 @@ import {
 //
 // Lưu ý: 3 thiết kế gốc (Admin/Post Manager/Manual Check Team) không đồng
 // nhất 100% về vị trí avatar/chip role ở topbar — mình gộp thống nhất:
-// avatar + tên + logout luôn nằm cuối Sidebar (giống ảnh Admin), Topbar chỉ
-// còn icon thông báo/cài đặt cho cả 3 role.
+// avatar + tên + logout luôn nằm cuối Sidebar (giống ảnh Admin), Topbar
+// chỉ giữ icon cài đặt (không dùng chuông thông báo cho role nội bộ).
 const CONFIG_BY_ROLE = {
     [USER_ROLES.ADMIN]: {
         title: 'JobLink',
-        subtitle: 'Super Admin Console',
+        subtitle: 'Admin Console',
         variant: 'dark',
         roleLabel: 'Super Admin',
         items: [
             { path: ROUTES.ADMIN_HOME, label: 'Bảng điều khiển', icon: GridIcon },
             { path: ROUTES.ADMIN_SKILLS, label: 'Quản lý kỹ năng', icon: LayersIcon },
+            { path: ROUTES.ADMIN_TRUST_SCORE_RULES, label: 'Cấu hình điểm uy tín', icon: ShieldIcon },
             { path: ROUTES.ADMIN_ACCOUNTS, label: 'Quản lý tài khoản', icon: UsersIcon },
             { path: ROUTES.ADMIN_SYSTEM_CONFIG, label: 'Cấu hình hệ thống', icon: SettingsIcon },
             { path: ROUTES.ADMIN_AUDIT_LOG, label: 'Nhật ký hoạt động', icon: ClipboardIcon },
@@ -41,8 +42,8 @@ const CONFIG_BY_ROLE = {
         actionButton: { label: '📊  Xuất báo cáo' },
     },
     [USER_ROLES.POST_MANAGER]: {
-        title: 'JobLink Admin',
-        subtitle: 'Management Portal',
+        title: 'JobLink',
+        subtitle: 'Post Management Portal',
         variant: 'dark',
         roleLabel: 'Post Manager',
         items: [
@@ -53,7 +54,6 @@ const CONFIG_BY_ROLE = {
             { path: ROUTES.POST_MANAGER_REPORTS, label: 'Báo cáo và khiếu nại', icon: AlertIcon },
             { path: ROUTES.POST_MANAGER_SETTINGS, label: 'Cài đặt', icon: SettingsIcon },
         ],
-        actionButton: { label: '+ Tạo tin mới' },
     },
     [USER_ROLES.MANUAL_CHECK_TEAM]: {
         title: 'JobLink',
@@ -78,7 +78,7 @@ const InternalLayout = () => {
 
     return (
         <AppLayout
-            header={<InternalTopbar hasNotification />}
+            header={<InternalTopbar />}
             sidebar={
                 <InternalSidebar
                     title={config.title}

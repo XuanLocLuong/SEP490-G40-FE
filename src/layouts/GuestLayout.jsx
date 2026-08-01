@@ -1,10 +1,10 @@
 import AppLayout from '../components/common/AppLayout.jsx';
-import Header from '../components/common/Header.jsx';
 import Footer from '../components/common/Footer.jsx';
+import GuestHeader from '../components/guest/GuestHeader.jsx';
 
 // Guest: Header + Footer, không sidebar (ảnh 1 — landing page).
 const GuestLayout = () => (
-    <AppLayout header={<Header />} footer={<Footer />} />
+    <AppLayout header={<GuestHeader />} footer={<Footer />} />
 );
 
 export default GuestLayout;
