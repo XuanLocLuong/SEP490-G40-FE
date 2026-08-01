@@ -1,0 +1,145 @@
+.review-submit-modal {
+    z-index: 40;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(15, 23, 42, 0.35);
+}
+
+.review-submit-modal--page {
+    position: fixed;
+    inset: 0;
+    align-items: center;
+}
+
+.review-submit-modal--dock {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+}
+
+.review-submit-modal__panel {
+    width: 100%;
+    max-width: 420px;
+    background: var(--color-surface, #fff);
+    border-radius: 14px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+    padding: 18px 20px;
+}
+
+.review-submit-modal__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+.review-submit-modal__titles {
+    min-width: 0;
+    flex: 1;
+    text-align: center;
+    padding-left: 28px; /* cân với nút đóng bên phải */
+}
+
+.review-submit-modal__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.review-submit-modal__subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.review-submit-modal__close {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    color: #64748b;
+    flex-shrink: 0;
+    width: 28px;
+}
+
+.review-submit-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.review-submit-modal__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.review-submit-modal__rating .review-submit-modal__label {
+    text-align: center;
+    width: 100%;
+}
+
+.review-submit-modal__rating {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.review-submit-modal__stars {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.review-submit-modal__star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: none;
+    background: transparent;
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.review-submit-modal__star:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+
+.review-submit-modal__star.is-active {
+    color: #f59e0b;
+}
+
+.review-submit-modal__star:disabled {
+    cursor: default;
+}
+
+.review-submit-modal__textarea {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+    color: #0f172a;
+    background: #fff;
+    resize: vertical;
+    min-height: 72px;
+}
+
+.review-submit-modal__actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+}

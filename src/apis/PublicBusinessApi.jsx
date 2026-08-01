@@ -10,3 +10,7 @@ export const fetchPublicBusinessJobs = (businessId, page = 0, size = 12) =>
 
 export const fetchPublicBusinessClosedJobs = (businessId, page = 0, size = 12) =>
     axiosClient.get(`${BUSINESS_BASE}/${businessId}/jobs/closed`, { params: { page, size } });
+
+/** GET /businesses/{id}/reviews — public VISIBLE reviews */
+export const fetchPublicBusinessReviews = (businessId, page = 0, size = 10) =>
+    axiosClient.get(`${BUSINESS_BASE}/${businessId}/reviews`, { params: { page, size } });

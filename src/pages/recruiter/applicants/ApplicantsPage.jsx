@@ -5,7 +5,13 @@ import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/R
 import ApplicationCard from '../../../components/recruiter/applicants/ApplicationCard.jsx';
 import ApplicationRejectModal from '../../../components/recruiter/applicants/ApplicationRejectModal.jsx';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
+import ReviewSubmitModal from '../../../components/review/ReviewSubmitModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
+import {
+    getMyApplicationReview,
+    getReviewApiErrorMessage,
+    submitApplicationReview,
+} from '../../../apis/ReviewApi.jsx';
 import recruiterApplicationService, {
     APPLICATION_SORT_OPTIONS,
     APPLICATION_STATUS_FILTERS,
@@ -47,6 +53,13 @@ const ApplicantsPage = () => {
     const [chatLoadingId, setChatLoadingId] = useState(null);
     const [acceptTarget, setAcceptTarget] = useState(null);
     const [rejectTarget, setRejectTarget] = useState(null);
+    const [reviewTarget, setReviewTarget] = useState(null);
+    const [reviewBusy, setReviewBusy] = useState(false);
+    const [reviewMode, setReviewMode] = useState('edit');
+    const [reviewDraft, setReviewDraft] = useState({ rating: 5, comment: '' });
+    const [reviewedIds, setReviewedIds] = useState(() => new Set());
+    const [reviewCache, setReviewCache] = useState(() => ({}));
+
 
     const sortValue = searchParams.get('sort') || DEFAULT_SORT;
     const page = Math.max(0, Number(searchParams.get('page') || 0) || 0);
@@ -250,6 +263,48 @@ const ApplicantsPage = () => {
         loadApplications();
     }, [loadApplications]);
 
+    useEffect(() => {
+        const hired = applications.filter((app) => app.status === 'HIRED' && app.id != null);
+        if (hired.length === 0) return undefined;
+
+        let cancelled = false;
+        (async () => {
+            const found = new Set();
+            const cache = {};
+            await Promise.all(
+                hired.map(async (app) => {
+                    try {
+                        const res = await getMyApplicationReview(app.id);
+                        const data = res?.data?.data ?? res?.data ?? null;
+                        if (data) {
+                            const key = String(app.id);
+                            found.add(key);
+                            cache[key] = {
+                                rating: data.rating ?? 5,
+                                comment: data.comment || '',
+                            };
+                        }
+                    } catch {
+                        // 404 = chưa đánh giá
+                    }
+                })
+            );
+            if (cancelled) return;
+            if (found.size > 0) {
+                setReviewedIds((prev) => {
+                    const next = new Set(prev);
+                    found.forEach((id) => next.add(id));
+                    return next;
+                });
+                setReviewCache((prev) => ({ ...prev, ...cache }));
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [applications]);
+
     // Refresh list when recruiter accepts/rejects via chat float.
     useEffect(() => {
         const onRecruitmentChanged = (event) => {
@@ -371,6 +426,60 @@ const ApplicantsPage = () => {
             });
         } finally {
             window.setTimeout(() => setChatLoadingId(null), 800);
+        }
+    };
+
+    const handleOpenReview = async (application) => {
+        if (!application?.id || application.status !== 'HIRED') return;
+        const key = String(application.id);
+
+        if (reviewedIds.has(key)) {
+            setReviewBusy(true);
+            try {
+                let draft = reviewCache[key];
+                if (!draft) {
+                    const res = await getMyApplicationReview(application.id);
+                    const data = res?.data?.data ?? res?.data ?? null;
+                    draft = {
+                        rating: data?.rating ?? 5,
+                        comment: data?.comment || '',
+                    };
+                    setReviewCache((prev) => ({ ...prev, [key]: draft }));
+                }
+                setReviewDraft(draft);
+                setReviewMode('view');
+                setReviewTarget(application);
+            } catch (err) {
+                toast.error(getReviewApiErrorMessage(err, 'Không tải được đánh giá.'));
+            } finally {
+                setReviewBusy(false);
+            }
+            return;
+        }
+
+        setReviewDraft({ rating: 5, comment: '' });
+        setReviewMode('edit');
+        setReviewTarget(application);
+    };
+
+    const handleSubmitReview = async ({ rating, comment }) => {
+        if (!reviewTarget?.id || reviewBusy || reviewMode === 'view') return;
+        setReviewBusy(true);
+        try {
+            await submitApplicationReview(reviewTarget.id, {
+                rating,
+                comment: comment || null,
+            });
+            const key = String(reviewTarget.id);
+            const draft = { rating, comment: comment || '' };
+            setReviewedIds((prev) => new Set(prev).add(key));
+            setReviewCache((prev) => ({ ...prev, [key]: draft }));
+            setReviewTarget(null);
+            toast.success('Đã gửi đánh giá.');
+        } catch (err) {
+            toast.error(getReviewApiErrorMessage(err, 'Không gửi được đánh giá.'));
+        } finally {
+            setReviewBusy(false);
         }
     };
 
@@ -554,11 +663,16 @@ const ApplicantsPage = () => {
                                         application={application}
                                         actionLoading={actionLoadingId === application.id}
                                         chatLoading={chatLoadingId === application.id}
+                                        reviewLoading={
+                                            reviewBusy && reviewTarget?.id === application.id
+                                        }
+                                        hasReviewed={reviewedIds.has(String(application.id))}
                                         readOnly={readOnly}
                                         onAccept={setAcceptTarget}
                                         onReject={setRejectTarget}
                                         onViewProfile={handleViewProfile}
                                         onChat={handleChat}
+                                        onReview={handleOpenReview}
                                     />
                                 ))}
                             </div>
@@ -624,6 +738,22 @@ const ApplicantsPage = () => {
                 loading={Boolean(actionLoadingId)}
                 onCancel={() => !actionLoadingId && setRejectTarget(null)}
                 onConfirm={handleRejectConfirm}
+            />
+
+            <ReviewSubmitModal
+                open={Boolean(reviewTarget)}
+                busy={reviewBusy}
+                variant="page"
+                mode={reviewMode}
+                title={reviewMode === 'view' ? 'Xem đánh giá' : 'Đánh giá ứng viên'}
+                subtitle={reviewTarget?.candidateName || ''}
+                initialRating={reviewDraft.rating}
+                initialComment={reviewDraft.comment}
+                onClose={() => {
+                    if (reviewBusy) return;
+                    setReviewTarget(null);
+                }}
+                onSubmit={handleSubmitReview}
             />
         </div>
     );

@@ -59,15 +59,29 @@ const matchesTab = (job, tabId) => {
 
 const getJobMetrics = (job) => {
     const requiredCandidates = Number(job.requiredCandidates);
+    const required =
+        Number.isFinite(requiredCandidates) && requiredCandidates > 0
+            ? requiredCandidates
+            : 1;
+
+    // My Jobs summary: BE trả remainingPositions (không có hiredCount).
+    // hired = filledPositions | hiredCount | required - remainingPositions
+    const directHired = Number(job.hiredCount ?? job.filledPositions);
+    let hiredCount = 0;
+    if (Number.isFinite(directHired) && directHired >= 0) {
+        hiredCount = directHired;
+    } else if (job.remainingPositions != null && job.remainingPositions !== '') {
+        const remaining = Number(job.remainingPositions);
+        if (Number.isFinite(remaining)) {
+            hiredCount = Math.max(0, required - remaining);
+        }
+    }
 
     return {
         viewCount: Math.max(0, Number(job.viewCount) || 0),
         applicationCount: Math.max(0, Number(job.applicationCount) || 0),
-        hiredCount: Math.max(0, Number(job.hiredCount) || 0),
-        requiredCandidates:
-            Number.isFinite(requiredCandidates) && requiredCandidates > 0
-                ? requiredCandidates
-                : 1,
+        hiredCount,
+        requiredCandidates: required,
     };
 };
 
