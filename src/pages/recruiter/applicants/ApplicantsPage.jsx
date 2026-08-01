@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import ApplicationCard from '../../../components/recruiter/applicants/ApplicationCard.jsx';
@@ -12,7 +12,7 @@ import recruiterApplicationService, {
     getRecruiterApplicationApiErrorMessage,
     isApplicationCancelledError,
 } from '../../../services/recruiterApplicationService.js';
-import { getCandidatePublicProfilePath, ROUTES } from '../../../routes/path.js';
+import { getCandidatePublicProfilePath, getRecruiterJobAnalyticsPath, ROUTES } from '../../../routes/path.js';
 import {
     openChatPanel,
     RECRUITMENT_CHANGED_EVENT,
@@ -28,6 +28,7 @@ const canManageApplications = (job) => job?.status === 'OPEN';
 
 const ApplicantsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [openJobs, setOpenJobs] = useState([]);
@@ -51,9 +52,24 @@ const ApplicantsPage = () => {
     const page = Math.max(0, Number(searchParams.get('page') || 0) || 0);
     const jobIdParam = searchParams.get('jobId');
     const statusParam = searchParams.get('status');
+    const fromParam = searchParams.get('from');
 
-    /** Có jobId trên URL = vào từ My Jobs (hoặc deep link) → hiện nút back. */
-    const showBackToMyJobs = Boolean(jobIdParam);
+    /** Có jobId trên URL = vào từ My Jobs / thống kê / deep link → hiện nút back. */
+    const showBackLink = Boolean(jobIdParam);
+    const backNav = useMemo(() => {
+        if (fromParam === 'analytics' && jobIdParam) {
+            return {
+                to: getRecruiterJobAnalyticsPath(jobIdParam),
+                label: 'Quay lại thống kê',
+                state: location.state,
+            };
+        }
+        return {
+            to: ROUTES.RECRUITER_MY_JOBS,
+            label: 'Quay lại tin tuyển dụng',
+            state: undefined,
+        };
+    }, [fromParam, jobIdParam, location.state]);
 
     const selectedJobId = useMemo(() => {
         if (jobIdParam) {
@@ -322,7 +338,12 @@ const ApplicantsPage = () => {
             toast.error('Không tìm thấy hồ sơ ứng viên.');
             return;
         }
-        const backQuery = selectedJobId != null ? `?jobId=${selectedJobId}` : '';
+        const returnParams = new URLSearchParams();
+        if (selectedJobId != null) returnParams.set('jobId', String(selectedJobId));
+        if (fromParam === 'my-jobs' || fromParam === 'analytics') {
+            returnParams.set('from', fromParam);
+        }
+        const backQuery = returnParams.toString() ? `?${returnParams.toString()}` : '';
         navigate(getCandidatePublicProfilePath(candidateId), {
             state: {
                 backTo: {
@@ -364,9 +385,13 @@ const ApplicantsPage = () => {
 
     return (
         <div className="applicants-page">
-            {showBackToMyJobs && (
-                <Link to={ROUTES.RECRUITER_MY_JOBS} className="applicants-page__back">
-                    ← Quay lại tin tuyển dụng
+            {showBackLink && (
+                <Link
+                    to={backNav.to}
+                    state={backNav.state}
+                    className="applicants-page__back"
+                >
+                    ← {backNav.label}
                 </Link>
             )}
 

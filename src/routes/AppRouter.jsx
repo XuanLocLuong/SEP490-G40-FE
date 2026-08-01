@@ -32,6 +32,8 @@ import MyJobsPage from '../pages/recruiter/jobs/MyJobsPage.jsx';
 import ApplicantsPage from '../pages/recruiter/applicants/ApplicantsPage.jsx';
 import RecruiterInvitationsPage from '../pages/recruiter/invitations/RecruiterInvitationsPage.jsx';
 import RecruiterRecommendationsPage from '../pages/recruiter/recommendations/RecruiterRecommendationsPage.jsx';
+import RecruiterAnalyticsPage from '../pages/recruiter/analytics/RecruiterAnalyticsPage.jsx';
+import JobAnalyticsDetailPage from '../pages/recruiter/analytics/JobAnalyticsDetailPage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import PostManagerReportQueuePage from '../pages/post-manager/PostManagerReportQueuePage.jsx';
@@ -146,6 +148,11 @@ const AppRouter = () => {
                 <Route
                     path={ROUTES.RECRUITER_AI_SUGGESTIONS}
                     element={<RecruiterRecommendationsPage />}
+                />
+                <Route path={ROUTES.RECRUITER_ANALYTICS} element={<RecruiterAnalyticsPage />} />
+                <Route
+                    path={ROUTES.RECRUITER_JOB_ANALYTICS}
+                    element={<JobAnalyticsDetailPage />}
                 />
                 <Route
                     path={ROUTES.RECRUITER_NOTIFICATIONS}

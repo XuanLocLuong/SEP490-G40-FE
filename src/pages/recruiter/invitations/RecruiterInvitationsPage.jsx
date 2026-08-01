@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import InvitationCard from '../../../components/recruiter/invitations/InvitationCard.jsx';
@@ -9,7 +9,11 @@ import {
     getRecruiterInvitationApiErrorMessage,
     INVITATION_STATUS_FILTERS,
 } from '../../../services/recruiterInvitationService.js';
-import { getCandidatePublicProfilePath, ROUTES } from '../../../routes/path.js';
+import {
+    getCandidatePublicProfilePath,
+    getRecruiterJobAnalyticsPath,
+    ROUTES,
+} from '../../../routes/path.js';
 import { openChatPanel } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 import '../../../assets/styles/RecruiterInvitationsStyle.css';
@@ -19,13 +23,29 @@ const DEFAULT_STATUS = 'ALL';
 
 const RecruiterInvitationsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
 
     const jobIdParam = searchParams.get('jobId');
     const statusFilter = searchParams.get('status') || DEFAULT_STATUS;
     const page = Math.max(0, Number(searchParams.get('page') || 0) || 0);
-    /** Chỉ hiện back khi vào từ My Jobs (?from=my-jobs). */
-    const showBackToMyJobs = searchParams.get('from') === 'my-jobs';
+    const fromParam = searchParams.get('from');
+    /** Back khi vào từ My Jobs hoặc thống kê chi tiết tin. */
+    const showBackLink = fromParam === 'my-jobs' || fromParam === 'analytics';
+    const backNav = useMemo(() => {
+        if (fromParam === 'analytics' && jobIdParam) {
+            return {
+                to: getRecruiterJobAnalyticsPath(jobIdParam),
+                label: 'Quay lại thống kê',
+                state: location.state,
+            };
+        }
+        return {
+            to: ROUTES.RECRUITER_MY_JOBS,
+            label: 'Quay lại tin tuyển dụng',
+            state: undefined,
+        };
+    }, [fromParam, jobIdParam, location.state]);
 
     const [myJobs, setMyJobs] = useState([]);
     const [jobsLoading, setJobsLoading] = useState(true);
@@ -238,7 +258,9 @@ const RecruiterInvitationsPage = () => {
         if (statusFilter && statusFilter !== DEFAULT_STATUS) {
             returnParams.set('status', statusFilter);
         }
-        if (showBackToMyJobs) returnParams.set('from', 'my-jobs');
+        if (fromParam === 'my-jobs' || fromParam === 'analytics') {
+            returnParams.set('from', fromParam);
+        }
         const backQuery = returnParams.toString() ? `?${returnParams.toString()}` : '';
         navigate(getCandidatePublicProfilePath(candidateId), {
             state: {
@@ -284,9 +306,13 @@ const RecruiterInvitationsPage = () => {
 
     return (
         <div className="applicants-page">
-            {showBackToMyJobs && (
-                <Link to={ROUTES.RECRUITER_MY_JOBS} className="applicants-page__back">
-                    ← Quay lại tin tuyển dụng
+            {showBackLink && (
+                <Link
+                    to={backNav.to}
+                    state={backNav.state}
+                    className="applicants-page__back"
+                >
+                    ← {backNav.label}
                 </Link>
             )}
 

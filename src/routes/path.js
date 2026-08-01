@@ -38,6 +38,7 @@ export const ROUTES = {
     RECRUITER_INVITATIONS: '/recruiter/invitations',
     RECRUITER_AI_SUGGESTIONS: '/recruiter/ai-suggestions',
     RECRUITER_ANALYTICS: '/recruiter/analytics',
+    RECRUITER_JOB_ANALYTICS: '/recruiter/analytics/jobs/:jobId',
     RECRUITER_MESSAGES: '/recruiter/messages',
     RECRUITER_TRUST_SCORE: '/recruiter/trust-score',
     RECRUITER_ALL_JOBS: '/recruiter/all-jobs',
@@ -66,12 +67,41 @@ export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
 
 export const getRecruiterEditJobPath = (jobId) => `/recruiter/jobs/${jobId}/edit`;
 
-export const getRecruiterApplicantsPath = (jobId) =>
-    `${ROUTES.RECRUITER_APPLICANTS}?jobId=${jobId}`;
-
-export const getRecruiterInvitationsPath = (jobId, { fromMyJobs = false } = {}) => {
+/**
+ * @param {string|number} jobId
+ * @param {{ from?: 'my-jobs' | 'analytics' }} [options]
+ */
+export const getRecruiterApplicantsPath = (jobId, { from } = {}) => {
     const params = new URLSearchParams({ jobId: String(jobId) });
-    if (fromMyJobs) params.set('from', 'my-jobs');
+    if (from) params.set('from', String(from));
+    return `${ROUTES.RECRUITER_APPLICANTS}?${params.toString()}`;
+};
+
+export const getRecruiterJobAnalyticsPath = (jobId) =>
+    `/recruiter/analytics/jobs/${jobId}`;
+
+/** My Jobs list — optional tab, jobId (highlight card), from (vd. overview → hiện nút quay lại). */
+export const getRecruiterMyJobsPath = ({ tab, jobId, from } = {}) => {
+    const params = new URLSearchParams();
+    if (tab) params.set('tab', String(tab));
+    if (jobId != null && jobId !== '') params.set('jobId', String(jobId));
+    if (from) params.set('from', String(from));
+    const qs = params.toString();
+    return qs ? `${ROUTES.RECRUITER_MY_JOBS}?${qs}` : ROUTES.RECRUITER_MY_JOBS;
+};
+
+/**
+ * @param {string|number} jobId
+ * @param {{ from?: 'my-jobs' | 'analytics', fromMyJobs?: boolean }} [options]
+ * fromMyJobs giữ tương thích gọi cũ → from=my-jobs
+ */
+export const getRecruiterInvitationsPath = (
+    jobId,
+    { from, fromMyJobs = false } = {}
+) => {
+    const params = new URLSearchParams({ jobId: String(jobId) });
+    const fromValue = from || (fromMyJobs ? 'my-jobs' : null);
+    if (fromValue) params.set('from', String(fromValue));
     return `${ROUTES.RECRUITER_INVITATIONS}?${params.toString()}`;
 };
 

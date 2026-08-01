@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     ROUTES,
@@ -23,6 +23,8 @@ const STATUS_TABS = [
     { id: 'rejected', label: 'Từ chối', dotClass: 'my-jobs-page__tab-dot--rejected' },
     { id: 'closed', label: 'Đã đóng', dotClass: 'my-jobs-page__tab-dot--closed' },
 ];
+
+const VALID_STATUS_TABS = new Set(STATUS_TABS.map((tab) => tab.id));
 
 const formatDate = (value) => {
     if (!value) return '—';
@@ -114,6 +116,7 @@ const hasRevisionNote = (job) =>
 const MyJobsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [allJobs, setAllJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState(() => {
@@ -124,6 +127,10 @@ const MyJobsPage = () => {
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [reviewNoteJob, setReviewNoteJob] = useState(null);
     const [detailJobId, setDetailJobId] = useState(null);
+    const [highlightJobId, setHighlightJobId] = useState(null);
+
+    /** true khi vào từ Tổng quan (?from=overview) — giữ trên URL để hiện nút quay lại. */
+    const showBackToOverview = searchParams.get('from') === 'overview';
 
     const loadJobs = useCallback(async () => {
         setLoading(true);
@@ -149,6 +156,31 @@ const MyJobsPage = () => {
         }
     }, [location.state, location.pathname, navigate]);
 
+    /** Deep-link từ Tổng quan: ?tab=open&jobId=&from=overview → list card, không mở modal.
+     *  Chỉ gỡ tab/jobId sau khi áp dụng; GIỮ from=overview để còn hiện nút Quay lại. */
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        const rawJobId = searchParams.get('jobId');
+        if (!tab && !rawJobId) return;
+
+        if (tab && VALID_STATUS_TABS.has(tab)) {
+            setActiveTab(tab);
+        } else if (rawJobId) {
+            setActiveTab('open');
+        }
+
+        if (rawJobId) {
+            const parsed = Number(rawJobId);
+            if (Number.isFinite(parsed)) setHighlightJobId(parsed);
+        }
+
+        const next = new URLSearchParams(searchParams);
+        next.delete('tab');
+        next.delete('jobId');
+        // không xóa `from`
+        setSearchParams(next, { replace: true });
+    }, [searchParams, setSearchParams]);
+
     const tabCounts = useMemo(() => {
         const counts = {};
         STATUS_TABS.forEach((tab) => {
@@ -164,6 +196,16 @@ const MyJobsPage = () => {
         () => allJobs.filter((job) => matchesTab(job, activeTab)),
         [allJobs, activeTab]
     );
+
+    useEffect(() => {
+        if (highlightJobId == null || loading) return undefined;
+        const el = document.getElementById(`my-job-card-${highlightJobId}`);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        const timer = window.setTimeout(() => setHighlightJobId(null), 2800);
+        return () => window.clearTimeout(timer);
+    }, [highlightJobId, loading, filteredJobs]);
 
     const openConfirm = (type, job, nextStatus = null) => {
         setConfirmDialog({ type, job, nextStatus });
@@ -253,13 +295,13 @@ const MyJobsPage = () => {
                     job.status === 'BLOCKED') && (
                     <>
                         <Link
-                            to={getRecruiterApplicantsPath(job.id)}
+                            to={getRecruiterApplicantsPath(job.id, { from: 'my-jobs' })}
                             className="my-jobs-page__action my-jobs-page__action--primary"
                         >
                             Xem ứng viên
                         </Link>
                         <Link
-                            to={getRecruiterInvitationsPath(job.id, { fromMyJobs: true })}
+                            to={getRecruiterInvitationsPath(job.id, { from: 'my-jobs' })}
                             className="my-jobs-page__action my-jobs-page__action--edit"
                         >
                             Xem lời mời
@@ -317,6 +359,14 @@ const MyJobsPage = () => {
         );
     };
 
+    const getCardClassName = (job, ...modifiers) => {
+        const classes = ['my-jobs-page__card', ...modifiers.filter(Boolean)];
+        if (highlightJobId != null && String(job.id) === String(highlightJobId)) {
+            classes.push('my-jobs-page__card--highlight');
+        }
+        return classes.join(' ');
+    };
+
     const renderCardFooter = (job) => (
         <div className="my-jobs-page__card-footer">{renderJobActions(job)}</div>
     );
@@ -328,7 +378,7 @@ const MyJobsPage = () => {
             job.status === 'OPEN' ? getDaysLeftLabel(job.applicationDeadline) : null;
         const businessName = job.business?.name;
         const locationLabel = job.location?.name || job.location?.city;
-        const cardModifier =
+        const statusModifier =
             job.status === 'CLOSED'
                 ? 'my-jobs-page__card--closed'
                 : job.status === 'BLOCKED'
@@ -336,7 +386,11 @@ const MyJobsPage = () => {
                   : 'my-jobs-page__card--open';
 
         return (
-            <article key={job.id} className={`my-jobs-page__card ${cardModifier}`}>
+            <article
+                key={job.id}
+                id={`my-job-card-${job.id}`}
+                className={getCardClassName(job, statusModifier)}
+            >
                 <div className="my-jobs-page__card-body">
                     <div className="my-jobs-page__card-top">
                         <h2>{job.title}</h2>
@@ -415,7 +469,11 @@ const MyJobsPage = () => {
         }
 
         return (
-            <article key={job.id} className="my-jobs-page__card">
+            <article
+                key={job.id}
+                id={`my-job-card-${job.id}`}
+                className={getCardClassName(job)}
+            >
                 <div className="my-jobs-page__card-body">
                     <div className="my-jobs-page__card-top">
                         <h2>{job.title}</h2>
@@ -444,6 +502,12 @@ const MyJobsPage = () => {
 
     return (
         <div className="my-jobs-page">
+            {showBackToOverview && (
+                <Link to={ROUTES.RECRUITER_HOME} className="my-jobs-page__back">
+                    ← Quay lại tổng quan
+                </Link>
+            )}
+
             <header className="my-jobs-page__header">
                 <div>
                     <h1>Tin tuyển dụng của tôi</h1>
