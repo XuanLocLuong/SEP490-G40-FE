@@ -1,0 +1,349 @@
+/* Trust Score History — Candidate / Recruiter (chỉ UI theo data BE) */
+
+.trust-score-page {
+    --ts-up: #16a34a;
+    --ts-up-soft: rgba(22, 163, 74, 0.12);
+    --ts-down: #dc2626;
+    --ts-down-soft: rgba(220, 38, 38, 0.12);
+    --ts-line: #e2e8f0;
+    --ts-card-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+
+    width: min(920px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 28px 0 56px;
+}
+
+.trust-score-page__header {
+    margin-bottom: 22px;
+}
+
+.trust-score-page__title {
+    margin: 0;
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--color-text, #0f172a);
+    letter-spacing: -0.02em;
+}
+
+.trust-score-page__subtitle {
+    margin: 8px 0 0;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--color-text-muted, #64748b);
+}
+
+/* —— Summary —— */
+.trust-score-page__summary {
+    margin-bottom: 36px;
+}
+
+.trust-score-page__summary-card {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 24px 28px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 16px;
+    background: var(--color-surface, #fff);
+    box-shadow: var(--ts-card-shadow);
+}
+
+.trust-score-page__ring {
+    position: relative;
+    width: 132px;
+    height: 132px;
+    flex-shrink: 0;
+}
+
+.trust-score-page__ring-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.trust-score-page__ring-track {
+    stroke: #e2e8f0;
+}
+
+.trust-score-page__ring-progress {
+    stroke: var(--ts-up);
+    transition: stroke-dashoffset 0.45s ease;
+}
+
+.trust-score-page__ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    pointer-events: none;
+}
+
+.trust-score-page__ring-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--ts-up);
+    line-height: 1;
+}
+
+.trust-score-page__ring-max {
+    font-size: 0.95rem;
+    font-weight: 650;
+    color: var(--color-text-muted, #64748b);
+    line-height: 1;
+    /* Căn quang học với số lớn */
+    transform: translateY(0.15em);
+}
+
+.trust-score-page__summary-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.trust-score-page__score-caption {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 750;
+    color: var(--color-text, #0f172a);
+}
+
+.trust-score-page__warning {
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+}
+
+.trust-score-page__warning--high-risk,
+.trust-score-page__warning--public-warning {
+    background: var(--ts-down-soft);
+    color: #b91c1c;
+}
+
+.trust-score-page__warning--light-warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+}
+
+.trust-score-page__loading,
+.trust-score-page__empty,
+.trust-score-page__error {
+    margin: 0;
+    padding: 16px 0;
+    color: var(--color-text-muted, #64748b);
+    font-size: 0.95rem;
+}
+
+.trust-score-page__error {
+    color: #b91c1c;
+}
+
+/* —— History —— */
+.trust-score-page__history-title {
+    margin: 0 0 20px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-text, #0f172a);
+}
+
+.trust-score-page__timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+
+/* Trục giữa (desktop) */
+.trust-score-page__timeline::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 50%;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--ts-line);
+}
+
+.trust-score-page__event {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 22px;
+    align-items: start;
+}
+
+.trust-score-page__event:last-child {
+    margin-bottom: 0;
+}
+
+.trust-score-page__event-marker {
+    position: absolute;
+    left: 50%;
+    top: 22px;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px var(--ts-line);
+    background: #94a3b8;
+    z-index: 1;
+}
+
+.trust-score-page__event-marker--up {
+    background: var(--ts-up);
+    box-shadow: 0 0 0 2px var(--ts-up-soft);
+}
+
+.trust-score-page__event-marker--down {
+    background: var(--ts-down);
+    box-shadow: 0 0 0 2px var(--ts-down-soft);
+}
+
+.trust-score-page__event-card {
+    padding: 14px 16px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 12px;
+    background: var(--color-surface, #fff);
+    box-shadow: var(--ts-card-shadow);
+}
+
+/* Xen kẽ trái / phải */
+.trust-score-page__event:nth-child(odd) .trust-score-page__event-card {
+    grid-column: 1;
+    justify-self: end;
+    width: min(100%, 360px);
+}
+
+.trust-score-page__event:nth-child(even) .trust-score-page__event-card {
+    grid-column: 2;
+    justify-self: start;
+    width: min(100%, 360px);
+}
+
+.trust-score-page__event-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.trust-score-page__event-date {
+    font-size: 0.82rem;
+    font-weight: 650;
+    color: var(--color-text-muted, #64748b);
+}
+
+.trust-score-page__event-badge {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 750;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.trust-score-page__event-badge--up {
+    background: var(--ts-up-soft);
+    color: #15803d;
+}
+
+.trust-score-page__event-badge--down {
+    background: var(--ts-down-soft);
+    color: #b91c1c;
+}
+
+.trust-score-page__event-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 750;
+    color: var(--color-text, #0f172a);
+    line-height: 1.4;
+}
+
+.trust-score-page__event-note {
+    margin: 6px 0 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--color-text-muted, #64748b);
+}
+
+.trust-score-page__event-meta {
+    margin: 8px 0 0;
+    font-size: 0.8rem;
+    font-weight: 650;
+    color: #94a3b8;
+}
+
+.trust-score-page__more {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.trust-score-page__more-btn {
+    border-radius: 999px;
+    padding: 10px 20px;
+    border: 1px solid rgba(37, 99, 235, 0.35);
+    background: transparent;
+    color: var(--color-primary, #2563eb);
+    font-weight: 750;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.trust-score-page__more-btn:hover:not(:disabled) {
+    background: rgba(37, 99, 235, 0.06);
+}
+
+.trust-score-page__more-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* —— Mobile: 1 cột, trục trái —— */
+@media (max-width: 720px) {
+    .trust-score-page {
+        width: min(100% - 24px, 920px);
+        padding: 20px 0 40px;
+    }
+
+    .trust-score-page__summary-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 20px;
+    }
+
+    .trust-score-page__timeline::before {
+        left: 7px;
+        margin-left: 0;
+    }
+
+    .trust-score-page__event {
+        display: block;
+        padding-left: 28px;
+        margin-bottom: 16px;
+    }
+
+    .trust-score-page__event-marker {
+        left: 0;
+        margin-left: 0;
+        top: 18px;
+    }
+
+    .trust-score-page__event:nth-child(odd) .trust-score-page__event-card,
+    .trust-score-page__event:nth-child(even) .trust-score-page__event-card {
+        grid-column: auto;
+        justify-self: stretch;
+        width: 100%;
+    }
+}

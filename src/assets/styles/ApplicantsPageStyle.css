@@ -206,8 +206,54 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 6px;
     margin-top: 24px;
+}
+
+.applicants-page__page-ellipsis {
+    min-width: 1.5rem;
+    text-align: center;
+    color: #94a3b8;
+    font-weight: 650;
+    user-select: none;
+}
+
+.applicants-page__page-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+    font-weight: 650;
+    font-size: 0.9rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.applicants-page__page-btn--nav {
+    font-size: 1.25rem;
+    color: #1d4ed8;
+}
+
+.applicants-page__page-btn:hover:not(:disabled):not(.is-active) {
+    background: #f8fafc;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.applicants-page__page-btn.is-active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #fff;
+    cursor: default;
+}
+
+.applicants-page__page-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 /* Application card */

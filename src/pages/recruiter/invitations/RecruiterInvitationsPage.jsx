@@ -18,7 +18,7 @@ import { openChatPanel } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 import '../../../assets/styles/RecruiterInvitationsStyle.css';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const DEFAULT_STATUS = 'ALL';
 
 const RecruiterInvitationsPage = () => {
@@ -304,6 +304,30 @@ const RecruiterInvitationsPage = () => {
     const hasMorePages = page + 1 < totalPages;
     const showJobSelect = hasSelectedJob && jobOptions.length > 0;
 
+    const pageItems = useMemo(() => {
+        if (totalPages <= 1) return [];
+        if (totalPages <= 4) {
+            return Array.from({ length: totalPages }, (_, i) => i);
+        }
+        const last = totalPages - 1;
+        const set = new Set([0, last, page, page - 1, page + 1, page - 2, page + 2]);
+        const sorted = [...set].filter((p) => p >= 0 && p <= last).sort((a, b) => a - b);
+        const items = [];
+        let prev = null;
+        sorted.forEach((p) => {
+            if (prev != null && p - prev > 1) items.push('ellipsis');
+            items.push(p);
+            prev = p;
+        });
+        return items;
+    }, [page, totalPages]);
+
+    const goToPage = (nextPage) => {
+        if (listLoading) return;
+        if (nextPage < 0 || nextPage >= totalPages || nextPage === page) return;
+        updateParams({ page: nextPage });
+    };
+
     return (
         <div className="applicants-page">
             {showBackLink && (
@@ -456,27 +480,54 @@ const RecruiterInvitationsPage = () => {
                             </div>
 
                             {totalPages > 1 && (
-                                <div className="applicants-page__pagination">
+                                <nav
+                                    className="applicants-page__pagination"
+                                    aria-label="Phân trang lời mời"
+                                >
                                     <button
                                         type="button"
-                                        className="btn btn--secondary"
+                                        className="applicants-page__page-btn applicants-page__page-btn--nav"
                                         disabled={page <= 0 || listLoading}
-                                        onClick={() => updateParams({ page: page - 1 })}
+                                        onClick={() => goToPage(page - 1)}
+                                        aria-label="Trang trước"
                                     >
-                                        Trang trước
+                                        ‹
                                     </button>
-                                    <span>
-                                        {page + 1} / {totalPages}
-                                    </span>
+                                    {pageItems.map((item, index) =>
+                                        item === 'ellipsis' ? (
+                                            <span
+                                                key={`e-${index}`}
+                                                className="applicants-page__page-ellipsis"
+                                                aria-hidden="true"
+                                            >
+                                                …
+                                            </span>
+                                        ) : (
+                                            <button
+                                                key={item}
+                                                type="button"
+                                                className={`applicants-page__page-btn${
+                                                    item === page ? ' is-active' : ''
+                                                }`}
+                                                disabled={listLoading}
+                                                aria-current={item === page ? 'page' : undefined}
+                                                aria-label={`Trang ${item + 1}`}
+                                                onClick={() => goToPage(item)}
+                                            >
+                                                {item + 1}
+                                            </button>
+                                        )
+                                    )}
                                     <button
                                         type="button"
-                                        className="btn btn--secondary"
+                                        className="applicants-page__page-btn applicants-page__page-btn--nav"
                                         disabled={!hasMorePages || listLoading}
-                                        onClick={() => updateParams({ page: page + 1 })}
+                                        onClick={() => goToPage(page + 1)}
+                                        aria-label="Trang sau"
                                     >
-                                        Trang sau
+                                        ›
                                     </button>
-                                </div>
+                                </nav>
                             )}
                         </>
                     )}

@@ -90,6 +90,8 @@ const ScoreRow = ({ label, value }) => {
 
 const CandidateRecommendationCard = ({
     candidate,
+    selected = false,
+    onToggleSelect,
     sending = false,
     sent = false,
     onInvite,
@@ -103,9 +105,25 @@ const CandidateRecommendationCard = ({
     const skills = Array.isArray(candidate.skills) ? candidate.skills.slice(0, 6) : [];
     const rating = Number(candidate.rating);
     const trustScore = Number(candidate.trustScore);
+    const canSelect = typeof onToggleSelect === 'function' && !sent;
 
     return (
-        <article className="candidate-recommendation-card">
+        <article
+            className={`candidate-recommendation-card${
+                selected ? ' candidate-recommendation-card--selected' : ''
+            }`}
+        >
+            {canSelect ? (
+                <label className="candidate-recommendation-card__check">
+                    <input
+                        type="checkbox"
+                        checked={selected}
+                        disabled={sending}
+                        onChange={() => onToggleSelect(candidate.candidateId)}
+                        aria-label={`Chọn ${candidate.fullName || 'ứng viên'}`}
+                    />
+                </label>
+            ) : null}
             <header className="candidate-recommendation-card__header">
                 <CandidateAvatar candidate={candidate} />
                 <div className="candidate-recommendation-card__identity">
