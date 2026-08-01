@@ -41,6 +41,7 @@ import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQ
 import PostManagerReportQueuePage from '../pages/post-manager/PostManagerReportQueuePage.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import ManualVerificationQueuePage from '../pages/manual-check/ManualVerificationQueuePage.jsx';
+import ManualCheckReviewModerationPage from '../pages/manual-check/ManualCheckReviewModerationPage.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import AdminSkillsPage from '../pages/admin/AdminSkillsPage.jsx';
 import AdminTrustScoreRulesPage from '../pages/admin/AdminTrustScoreRulesPage.jsx';
@@ -189,6 +190,10 @@ const AppRouter = () => {
             >
                 <Route path={ROUTES.MANUAL_CHECK_HOME} element={<ManualCheckDashboard />} />
                 <Route path={ROUTES.MANUAL_CHECK_VERIFICATION} element={<ManualVerificationQueuePage />} />
+                <Route
+                    path={ROUTES.MANUAL_CHECK_REPORTS}
+                    element={<ManualCheckReviewModerationPage />}
+                />
             </Route>
 
             {/* ---- Admin ---- */}
