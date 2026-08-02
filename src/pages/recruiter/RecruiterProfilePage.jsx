@@ -76,6 +76,7 @@ const emptyProfile = () => ({
     memberSince: null,
     verificationStatus: null,
     badge: null,
+    taxCode: '',
     totalActiveJobs: 0,
 });
 
@@ -110,6 +111,7 @@ const mapProfileFromApi = (data) => ({
     memberSince: data?.memberSince || null,
     verificationStatus: data?.verificationStatus || null,
     badge: data?.badge || null,
+    taxCode: data?.taxCode || '',
     totalActiveJobs: data?.totalActiveJobs ?? 0,
 });
 
@@ -662,6 +664,16 @@ const RecruiterProfilePage = () => {
         Boolean(profile.businessId) &&
         Boolean(profile.businessName?.trim()) &&
         Boolean(savedLocation);
+    const verificationGateHint = (() => {
+        if (canStartVerification || isBusinessVerifiedBadge(profile.badge)) return '';
+        const missing = [];
+        if (!profile.businessId || !profile.businessName?.trim()) missing.push('tên doanh nghiệp');
+        if (!savedLocation) missing.push('địa chỉ trụ sở');
+        if (noProfile || missing.length === 2) {
+            return 'Hãy cập nhật và lưu thông tin doanh nghiệp bên dưới (tên + địa chỉ trụ sở) trước khi xác minh.';
+        }
+        return `Hãy bổ sung và lưu ${missing.join(' và ')} bên dưới trước khi xác minh.`;
+    })();
     const displayLogoUrl = pendingLogoPreview || profile.logoUrl;
     const hasDisplayLogo = hasLogo(displayLogoUrl);
 
@@ -804,59 +816,55 @@ const RecruiterProfilePage = () => {
                                         Đã xác thực
                                     </span>
                                 ) : (
-                                    <>
-                                        {isPendingManualVerification(profile.verificationStatus) ? (
-                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
-                                                <ClockIcon width={14} height={14} />
-                                                Đang chờ duyệt
-                                            </span>
-                                        ) : isRejectedVerification(profile.verificationStatus) ? (
-                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
-                                                Xác minh chưa đạt
-                                            </span>
-                                        ) : profile.verificationStatus === 'CCCD_PASSED' ? (
-                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
-                                                Đã xác minh CCCD — còn thiếu giấy tờ KD
-                                            </span>
-                                        ) : profile.verificationStatus === 'BUSINESS_PASSED' &&
-                                          !isBusinessVerifiedBadge(profile.badge) ? (
-                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
-                                                Đang hoàn tất xác minh
-                                            </span>
-                                        ) : (
-                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
-                                                Chưa xác thực
-                                            </span>
-                                        )}
-                                        {canStartVerification ? (
-                                            <Link
-                                                to={
-                                                    isRejectedVerification(profile.verificationStatus) ||
-                                                    isPendingManualVerification(profile.verificationStatus)
-                                                        ? `${ROUTES.RECRUITER_VERIFICATION}?retry=1`
-                                                        : ROUTES.RECRUITER_VERIFICATION
-                                                }
-                                                className="recruiter-profile__badge recruiter-profile__badge--verify-cta"
-                                            >
-                                                {isPendingManualVerification(profile.verificationStatus)
-                                                    ? 'Xem / nộp lại'
-                                                    : isRejectedVerification(profile.verificationStatus)
-                                                      ? 'Thử lại ngay'
-                                                      : profile.verificationStatus === 'CCCD_PASSED'
-                                                        ? 'Xác minh giấy tờ ngay'
-                                                        : 'Xác minh ngay'}
-                                            </Link>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                className="recruiter-profile__badge recruiter-profile__badge--verify-cta recruiter-profile__badge--verify-cta-disabled"
-                                                disabled
-                                                title="Vui lòng lưu tên doanh nghiệp và địa chỉ trụ sở trước khi xác minh"
-                                            >
-                                                Xác minh ngay
-                                            </button>
-                                        )}
-                                    </>
+                                    <div className="recruiter-profile__verify-cluster">
+                                        <div className="recruiter-profile__verify-cluster-row">
+                                            {isPendingManualVerification(profile.verificationStatus) ? (
+                                                <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                    <ClockIcon width={14} height={14} />
+                                                    Đang chờ duyệt
+                                                </span>
+                                            ) : isRejectedVerification(profile.verificationStatus) ? (
+                                                <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                    Xác minh chưa đạt
+                                                </span>
+                                            ) : (
+                                                <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                    Chưa xác thực
+                                                </span>
+                                            )}
+                                            {canStartVerification ? (
+                                                <Link
+                                                    to={
+                                                        isRejectedVerification(profile.verificationStatus) ||
+                                                        isPendingManualVerification(profile.verificationStatus)
+                                                            ? `${ROUTES.RECRUITER_VERIFICATION}?retry=1`
+                                                            : ROUTES.RECRUITER_VERIFICATION
+                                                    }
+                                                    className="recruiter-profile__badge recruiter-profile__badge--verify-cta"
+                                                >
+                                                    {isPendingManualVerification(profile.verificationStatus)
+                                                        ? 'Xem / nộp lại'
+                                                        : isRejectedVerification(profile.verificationStatus)
+                                                          ? 'Thử lại ngay'
+                                                          : 'Xác minh ngay'}
+                                                </Link>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className="recruiter-profile__badge recruiter-profile__badge--verify-cta recruiter-profile__badge--verify-cta-disabled"
+                                                    disabled
+                                                    title={verificationGateHint}
+                                                >
+                                                    Xác minh ngay
+                                                </button>
+                                            )}
+                                        </div>
+                                        {!canStartVerification && verificationGateHint ? (
+                                            <p className="recruiter-profile__verify-gate-hint">
+                                                {verificationGateHint}
+                                            </p>
+                                        ) : null}
+                                    </div>
                                 )}
                             </div>
 
@@ -1097,7 +1105,7 @@ const RecruiterProfilePage = () => {
                                             Tài khoản
                                         </h2>
                                         <Link
-                                            to={ROUTES.RECRUITER_SETTINGS}
+                                            to={`${ROUTES.RECRUITER_SETTINGS}?from=profile`}
                                             className="recruiter-profile__panel-action"
                                         >
                                             Cài đặt
@@ -1184,14 +1192,21 @@ const RecruiterProfilePage = () => {
                                 <button
                                     type="button"
                                     className="account-settings__btn account-settings__btn--primary recruiter-profile__save-btn"
-                                    disabled={saving || !canSave}
+                                    disabled={saving || !canSave || galleryLoading || logoLoading}
+                                    title={
+                                        galleryLoading || logoLoading
+                                            ? 'Vui lòng đợi ảnh đang xử lý xong trước khi lưu.'
+                                            : undefined
+                                    }
                                     onClick={handleSaveAll}
                                 >
                                     {saving
                                         ? 'Đang lưu...'
-                                        : noProfile
-                                          ? 'Tạo hồ sơ'
-                                          : 'Lưu thay đổi'}
+                                        : galleryLoading || logoLoading
+                                          ? 'Đang xử lý ảnh...'
+                                          : noProfile
+                                            ? 'Tạo hồ sơ'
+                                            : 'Lưu thay đổi'}
                                 </button>
                                 </div>
                             </div>

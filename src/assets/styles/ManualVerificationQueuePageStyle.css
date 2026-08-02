@@ -195,6 +195,25 @@
     word-break: break-word;
 }
 
+.mv-reason-list {
+    margin: 0;
+    padding: 8px 12px 8px 28px;
+    border-radius: 10px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #991b1b;
+}
+
+.mv-reason-list li + li {
+    margin-top: 6px;
+}
+
+.mv-detail__grid--ocr {
+    margin-top: 0;
+}
+
 .mv-gallery {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

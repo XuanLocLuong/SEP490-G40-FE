@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import UserAvatar from '../../components/common/UserAvatar.jsx';
 import EditFieldModal from '../../components/common/EditFieldModal.jsx';
@@ -7,6 +7,7 @@ import { CheckCircleIcon, PencilIcon } from '../../components/common/icons.jsx';
 import userApi, { getApiErrorMessage } from '../../apis/UserApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
+import { USER_ROLES } from '../../utils/Constants.jsx';
 import '../../assets/styles/AccountSettingsStyle.css';
 
 const PHONE_PATTERN = /^(\+84|0)[35789][0-9]{8}$/;
@@ -35,7 +36,11 @@ const buildInitialUser = (auth) => ({
 const CandidateSettingsPage = () => {
     const { auth, updateProfile, logout } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const fileInputRef = useRef(null);
+
+    const showBackToRecruiterProfile =
+        auth?.role === USER_ROLES.RECRUITER && searchParams.get('from') === 'profile';
 
     const [user, setUser] = useState(() => buildInitialUser(auth));
     const [loading, setLoading] = useState(true);
@@ -261,6 +266,11 @@ const CandidateSettingsPage = () => {
 
     return (
         <div className="account-settings-page">
+            {showBackToRecruiterProfile ? (
+                <Link to={ROUTES.RECRUITER_PROFILE} className="account-settings__back">
+                    ← Quay lại hồ sơ nhà tuyển dụng
+                </Link>
+            ) : null}
             {loading ? (
                 <div className="account-settings__loading">Đang tải thông tin tài khoản...</div>
             ) : (

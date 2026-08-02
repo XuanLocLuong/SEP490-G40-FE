@@ -16,44 +16,53 @@ const appendIfPresent = (formData, key, value) => {
 };
 
 /**
- * POST /verifications/cccd | /cccd/retry
- * @param {{ businessId: number|string, frontImage: File, backImage: File }} payload
+ * Nộp xác minh gộp CCCD + MST/GPKD.
+ * POST /verifications/submit | /retry
+ *
+ * @param {{
+ *   businessId: number|string,
+ *   frontImage: File,
+ *   backImage: File,
+ *   taxCode?: string,
+ *   certificateImage?: File,
+ *   businessImages?: File[],
+ * }} payload
+ * @param {{ retry?: boolean }} options
  */
-export const submitCccdVerification = ({ businessId, frontImage, backImage }, { retry = false } = {}) => {
+export const submitVerification = (
+    {
+        businessId,
+        frontImage,
+        backImage,
+        taxCode,
+        certificateImage,
+        businessImages = [],
+    },
+    { retry = false } = {}
+) => {
     const formData = new FormData();
     appendIfPresent(formData, 'businessId', businessId);
     if (frontImage) formData.append('frontImage', frontImage);
     if (backImage) formData.append('backImage', backImage);
 
-    const path = retry ? `${BASE}/cccd/retry` : `${BASE}/cccd`;
-    return axiosClient
-        .post(path, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-        .then(unwrap);
-};
+    const trimmedTax = typeof taxCode === 'string' ? taxCode.trim() : taxCode;
+    appendIfPresent(formData, 'taxCode', trimmedTax);
 
-/**
- * POST /verifications/business-license | /business-license/retry
- * @param {{
- *   businessId: number|string,
- *   taxCode?: string,
- *   certificateImage?: File,
- *   businessImages?: File[],
- * }} payload
- */
-export const submitBusinessLicenseVerification = (
-    { businessId, taxCode, certificateImage, businessImages = [] },
-    { retry = false } = {}
-) => {
-    const formData = new FormData();
-    appendIfPresent(formData, 'businessId', businessId);
-    appendIfPresent(formData, 'taxCode', taxCode?.trim?.() ? taxCode.trim() : taxCode);
     if (certificateImage) formData.append('certificateImage', certificateImage);
     (businessImages || []).forEach((file) => {
         if (file) formData.append('businessImages', file);
     });
 
-    const path = retry ? `${BASE}/business-license/retry` : `${BASE}/business-license`;
+    const path = retry ? `${BASE}/retry` : `${BASE}/submit`;
     return axiosClient
         .post(path, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
         .then(unwrap);
 };
+
+/** @deprecated Dùng submitVerification — giữ alias tạm nếu còn chỗ import cũ. */
+export const submitCccdVerification = (payload, options) =>
+    submitVerification(payload, options);
+
+/** @deprecated Dùng submitVerification */
+export const submitBusinessLicenseVerification = (payload, options) =>
+    submitVerification(payload, options);

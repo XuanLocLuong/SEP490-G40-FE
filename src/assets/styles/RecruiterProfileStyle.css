@@ -145,6 +145,31 @@
     filter: none;
 }
 
+.recruiter-profile__verify-cluster {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+    max-width: min(100%, 320px);
+}
+
+.recruiter-profile__verify-cluster-row {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.recruiter-profile__verify-gate-hint {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--color-text-muted, #6b7280);
+    text-align: right;
+}
+
 .recruiter-profile__hero-meta {
     display: flex;
     flex-wrap: wrap;
@@ -699,6 +724,19 @@
     .recruiter-profile__hero-stats,
     .recruiter-profile__completion-row {
         justify-content: center;
+    }
+
+    .recruiter-profile__verify-cluster {
+        align-items: center;
+        max-width: 100%;
+    }
+
+    .recruiter-profile__verify-cluster-row {
+        justify-content: center;
+    }
+
+    .recruiter-profile__verify-gate-hint {
+        text-align: center;
     }
 
     .recruiter-profile__completion {

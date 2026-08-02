@@ -11,6 +11,8 @@ import {
     formatAiRiskLevel,
     formatVerificationType,
     mediaFilesToEntries,
+    toLabelValueEntries,
+    toReasonList,
 } from '../../utils/verificationDisplay.js';
 import '../../assets/styles/ManualVerificationQueuePageStyle.css';
 
@@ -110,6 +112,16 @@ const ManualVerificationQueuePage = () => {
     const mediaEntries = useMemo(
         () => mediaFilesToEntries(detail?.mediaFiles),
         [detail?.mediaFiles]
+    );
+
+    const extractedEntries = useMemo(
+        () => toLabelValueEntries(detail?.extractedData),
+        [detail?.extractedData]
+    );
+
+    const failedReasonList = useMemo(
+        () => toReasonList(detail?.failedReasons),
+        [detail?.failedReasons]
     );
 
     const reasonOptions = useMemo(() => {
@@ -269,21 +281,28 @@ const ManualVerificationQueuePage = () => {
                                 </div>
                             ) : null}
 
-                            {detail.failedReasons ? (
+                            {failedReasonList.length > 0 ? (
                                 <div className="mv-block">
-                                    <h3>Failed reasons</h3>
-                                    <pre>{typeof detail.failedReasons === 'string'
-                                        ? detail.failedReasons
-                                        : JSON.stringify(detail.failedReasons, null, 2)}</pre>
+                                    <h3>Lý do AI / failed</h3>
+                                    <ul className="mv-reason-list">
+                                        {failedReasonList.map((reason) => (
+                                            <li key={reason}>{reason}</li>
+                                        ))}
+                                    </ul>
                                 </div>
                             ) : null}
 
-                            {detail.extractedData ? (
+                            {extractedEntries.length > 0 ? (
                                 <div className="mv-block">
                                     <h3>OCR / extracted</h3>
-                                    <pre>{typeof detail.extractedData === 'string'
-                                        ? detail.extractedData
-                                        : JSON.stringify(detail.extractedData, null, 2)}</pre>
+                                    <dl className="mv-detail__grid mv-detail__grid--ocr">
+                                        {extractedEntries.map((item) => (
+                                            <div key={item.label}>
+                                                <dt>{item.label}</dt>
+                                                <dd>{item.value}</dd>
+                                            </div>
+                                        ))}
+                                    </dl>
                                 </div>
                             ) : null}
 
