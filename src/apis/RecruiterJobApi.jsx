@@ -51,6 +51,12 @@ const recruiterJobApi = {
         return unwrapData(res);
     },
 
+    /** GET /api/v1/jobs/skills — kỹ năng đang active để chọn khi đăng tin */
+    getActiveSkills: async () => {
+        const res = await axiosClient.get(`${JOBS_BASE}/skills`);
+        return unwrapData(res);
+    },
+
     /** OPEN ↔ CLOSED — BE: PATCH /api/v1/{jobId}/status */
     changeJobStatus: async (jobId, status) => {
         const res = await axiosClient.patch(`${API_PREFIX}/${jobId}/status`, { status });

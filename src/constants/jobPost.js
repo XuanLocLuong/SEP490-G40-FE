@@ -1,6 +1,7 @@
 /**
  * Hằng số dùng chung cho màn đăng tin tuyển dụng (recruiter).
- * Skill catalog lấy từ data.sql — BE chưa có API public cho recruiter.
+ * Skill catalog: GET /api/v1/jobs/skills (không hardcode FE).
+ * JobType khớp BE enum com.project.sep490g40be.constant.JobType
  */
 
 export const JOB_POST_ACTION = {
@@ -8,10 +9,12 @@ export const JOB_POST_ACTION = {
     SUBMIT: 'SUBMIT',
 };
 
+/** Label FE cho JobType BE (không có API danh mục — enum cố định). */
 export const JOB_TYPES = [
     { value: 'PART_TIME', label: 'Part-time' },
     { value: 'FULL_TIME', label: 'Full-time' },
-    { value: 'INTERN', label: 'Thực tập' },
+    { value: 'INTERNSHIP', label: 'Thực tập' },
+    { value: 'FREELANCE', label: 'Freelance' },
     { value: 'SEASONAL', label: 'Thời vụ' },
 ];
 
@@ -33,29 +36,6 @@ export const DAY_PRESETS = [
     { id: 'weekday', label: 'T2–T6', days: ['2', '3', '4', '5', '6'] },
     { id: 'weekend', label: 'T7–CN', days: ['7', '8'] },
     { id: 'all', label: 'Cả tuần', days: ALL_DAY_VALUES },
-];
-
-/** Ngành nghề — optional khi gửi AI generate-description */
-export const INDUSTRY_OPTIONS = [
-    { value: '', label: '— Chọn ngành nghề —' },
-    { value: 'F&B / Nhà hàng', label: 'F&B / Nhà hàng' },
-    { value: 'Cà phê / Trà sữa', label: 'Cà phê / Trà sữa' },
-    { value: 'Bán lẻ', label: 'Bán lẻ' },
-    { value: 'Siêu thị / Cửa hàng tiện lợi', label: 'Siêu thị / Cửa hàng tiện lợi' },
-    { value: 'Kho / Giao nhận', label: 'Kho / Giao nhận' },
-    { value: 'Văn phòng / Hành chính', label: 'Văn phòng / Hành chính' },
-    { value: 'Khác', label: 'Khác' },
-];
-
-export const SKILLS_CATALOG = [
-    { id: 1, name: 'Pha chế' },
-    { id: 2, name: 'Thu ngân' },
-    { id: 3, name: 'Phục vụ' },
-    { id: 4, name: 'Giao tiếp' },
-    { id: 5, name: 'Tiếng Anh' },
-    { id: 6, name: 'Bán hàng' },
-    { id: 7, name: 'Quản lý kho' },
-    { id: 8, name: 'Tin học văn phòng' },
 ];
 
 export const EDITABLE_JOB_STATUSES = ['DRAFT', 'REVISION_REQUESTED'];

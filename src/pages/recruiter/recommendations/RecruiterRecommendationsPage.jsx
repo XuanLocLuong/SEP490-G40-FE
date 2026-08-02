@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recruiterJobApi, {
     getRecruiterJobApiErrorMessage,
@@ -19,6 +19,9 @@ import '../../../assets/styles/RecruiterRecommendationsStyle.css';
 const PAGE_SIZE = 10;
 
 const RecruiterRecommendationsPage = () => {
+    const [searchParams] = useSearchParams();
+    const showBackToOverview = searchParams.get('from') === 'overview';
+
     const [jobs, setJobs] = useState([]);
     const [selectedJobId, setSelectedJobId] = useState('');
     const [jobsLoading, setJobsLoading] = useState(true);
@@ -288,6 +291,11 @@ const RecruiterRecommendationsPage = () => {
 
     return (
         <div className="recruiter-recommendations-page">
+            {showBackToOverview ? (
+                <Link to={ROUTES.RECRUITER_HOME} className="recruiter-back-overview">
+                    ← Quay lại tổng quan
+                </Link>
+            ) : null}
             <h1 className="recruiter-recommendations__sr-only">JobLink gợi ý</h1>
             <p className="recruiter-recommendations__intro">
                 Những ứng viên phù hợp nhất với tin tuyển dụng của bạn.

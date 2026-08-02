@@ -616,7 +616,7 @@ const MyJobsPage = () => {
     return (
         <div className="my-jobs-page">
             {showBackToOverview && (
-                <Link to={ROUTES.RECRUITER_HOME} className="my-jobs-page__back">
+                <Link to={ROUTES.RECRUITER_HOME} className="recruiter-back-overview">
                     ← Quay lại tổng quan
                 </Link>
             )}

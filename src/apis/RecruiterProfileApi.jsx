@@ -25,6 +25,12 @@ const recruiterProfileApi = {
         return unwrapData(res);
     },
 
+    /** GET /recruiter/profile/business-types — ngành nghề active từ BE */
+    getBusinessTypes: async () => {
+        const res = await axiosClient.get(`${PROFILE_BASE}/business-types`);
+        return unwrapData(res);
+    },
+
     createProfile: async (data) => {
         const res = await axiosClient.post(PROFILE_BASE, data);
         return unwrapData(res);

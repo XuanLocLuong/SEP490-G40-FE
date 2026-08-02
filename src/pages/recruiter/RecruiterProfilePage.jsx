@@ -37,8 +37,8 @@ import HiringHistoryTab from '../../components/recruiter/HiringHistoryTab.jsx';
 import { clampPercent } from '../../utils/profileFormat.js';
 import { plainTextLength } from '../../utils/richTextUtils.js';
 import {
-    BUSINESS_TYPE_OPTIONS,
     formatBusinessTypeLabel,
+    mapBusinessTypeOptions,
     toBusinessTypeCode,
 } from '../../utils/businessTypeDisplay.js';
 import '../../assets/styles/AccountSettingsStyle.css';
@@ -208,6 +208,7 @@ const RecruiterProfilePage = () => {
     const [profile, setProfile] = useState(emptyProfile);
     const [form, setForm] = useState(emptyForm);
     const [loading, setLoading] = useState(true);
+    const [businessTypeOptions, setBusinessTypeOptions] = useState([]);
     const [noProfile, setNoProfile] = useState(false);
     const [saving, setSaving] = useState(false);
     const [logoLoading, setLogoLoading] = useState(false);
@@ -363,6 +364,14 @@ const RecruiterProfilePage = () => {
         const accountContact = await getAccountContact();
 
         try {
+            try {
+                const types = await recruiterProfileApi.getBusinessTypes();
+                setBusinessTypeOptions(mapBusinessTypeOptions(types));
+            } catch {
+                setBusinessTypeOptions([]);
+                toast.warn('Không tải được danh mục ngành nghề.');
+            }
+
             const data = await recruiterProfileApi.getProfile();
             const mapped = mapProfileFromApi(data);
             setProfile(mapped);
@@ -440,7 +449,7 @@ const RecruiterProfilePage = () => {
             }
         }
 
-        const businessTypeCode = toBusinessTypeCode(form.businessType);
+        const businessTypeCode = toBusinessTypeCode(form.businessType, businessTypeOptions);
         if (form.businessType?.trim() && !businessTypeCode) {
             toast.error('Ngành nghề không hợp lệ. Vui lòng chọn lại trong danh sách.');
             return;
@@ -795,7 +804,10 @@ const RecruiterProfilePage = () => {
                                 </div>
                                 {profile.businessType && (
                                     <span className="recruiter-profile__badge recruiter-profile__badge--muted">
-                                        {formatBusinessTypeLabel(profile.businessType)}
+                                        {formatBusinessTypeLabel(
+                                            profile.businessType,
+                                            businessTypeOptions
+                                        )}
                                     </span>
                                 )}
                                 {isBusinessVerifiedBadge(profile.badge) ? (
@@ -1002,13 +1014,23 @@ const RecruiterProfilePage = () => {
                                         <label htmlFor="rp-business-type">Ngành nghề</label>
                                         <select
                                             id="rp-business-type"
-                                            value={toBusinessTypeCode(form.businessType) || ''}
+                                            value={
+                                                toBusinessTypeCode(
+                                                    form.businessType,
+                                                    businessTypeOptions
+                                                ) || ''
+                                            }
                                             onChange={(e) =>
                                                 updateFormField('businessType', e.target.value)
                                             }
+                                            disabled={businessTypeOptions.length === 0}
                                         >
-                                            <option value="">— Chọn ngành nghề —</option>
-                                            {BUSINESS_TYPE_OPTIONS.map((opt) => (
+                                            <option value="">
+                                                {businessTypeOptions.length === 0
+                                                    ? '— Đang tải ngành nghề —'
+                                                    : '— Chọn ngành nghề —'}
+                                            </option>
+                                            {businessTypeOptions.map((opt) => (
                                                 <option key={opt.value} value={opt.value}>
                                                     {opt.label}
                                                 </option>

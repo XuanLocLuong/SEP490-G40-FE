@@ -112,8 +112,8 @@ const RecruiterAnalyticsPage = () => {
     return (
         <div className="recruiter-analytics">
             {showBackToOverview ? (
-                <Link to={ROUTES.RECRUITER_HOME} className="recruiter-analytics__back">
-                    ← Về tổng quan
+                <Link to={ROUTES.RECRUITER_HOME} className="recruiter-back-overview">
+                    ← Quay lại tổng quan
                 </Link>
             ) : null}
 

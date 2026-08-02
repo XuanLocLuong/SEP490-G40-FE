@@ -1,9 +1,10 @@
-import { JOB_TYPES, SKILLS_CATALOG } from '../../../constants/jobPost.js';
+import { JOB_TYPES } from '../../../constants/jobPost.js';
 import {
     formatLocationDisplay,
     formatSalaryInputDisplay,
     getMinApplicationDeadline,
     parseSalaryInput,
+    sameSkillId,
 } from '../../../services/jobPostService.js';
 import RequiredMark from '../../common/RequiredMark.jsx';
 import RichTextEditor from '../../common/RichTextEditor.jsx';
@@ -18,6 +19,8 @@ const JobPostForm = ({
     errors = {},
     disabled = false,
     onOpenAiDesc,
+    skillsCatalog = [],
+    skillsLoading = false,
 }) => {
     const minApplicationDeadline = getMinApplicationDeadline();
 
@@ -33,8 +36,9 @@ const JobPostForm = ({
 
     const toggleSkill = (skillId) => {
         const ids = form.skillIds || [];
-        const next = ids.includes(skillId)
-            ? ids.filter((id) => id !== skillId)
+        const exists = ids.some((id) => sameSkillId(id, skillId));
+        const next = exists
+            ? ids.filter((id) => !sameSkillId(id, skillId))
             : [...ids, skillId];
         setField('skillIds', next);
     };
@@ -217,24 +221,34 @@ const JobPostForm = ({
 
             <section className="job-post-form__section">
                 <h2 className="job-post-form__section-title">Kỹ năng yêu cầu</h2>
-                <div className="job-post-form__chips">
-                    {SKILLS_CATALOG.map((skill) => {
-                        const active = (form.skillIds || []).includes(skill.id);
-                        return (
-                            <button
-                                key={skill.id}
-                                type="button"
-                                disabled={disabled}
-                                className={`job-post-form__chip${
-                                    active ? ' job-post-form__chip--active' : ''
-                                }`}
-                                onClick={() => toggleSkill(skill.id)}
-                            >
-                                {skill.name}
-                            </button>
-                        );
-                    })}
-                </div>
+                {skillsLoading ? (
+                    <p className="job-post-form__hint">Đang tải danh sách kỹ năng…</p>
+                ) : skillsCatalog.length === 0 ? (
+                    <p className="job-post-form__hint">
+                        Chưa có kỹ năng nào trong hệ thống. Liên hệ admin để bổ sung.
+                    </p>
+                ) : (
+                    <div className="job-post-form__chips">
+                        {skillsCatalog.map((skill) => {
+                            const active = (form.skillIds || []).some((id) =>
+                                sameSkillId(id, skill.id)
+                            );
+                            return (
+                                <button
+                                    key={skill.id}
+                                    type="button"
+                                    disabled={disabled}
+                                    className={`job-post-form__chip${
+                                        active ? ' job-post-form__chip--active' : ''
+                                    }`}
+                                    onClick={() => toggleSkill(skill.id)}
+                                >
+                                    {skill.name}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
             </section>
 
             <section className="job-post-form__section">

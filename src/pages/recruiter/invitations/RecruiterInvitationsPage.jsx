@@ -30,9 +30,17 @@ const RecruiterInvitationsPage = () => {
     const statusFilter = searchParams.get('status') || DEFAULT_STATUS;
     const page = Math.max(0, Number(searchParams.get('page') || 0) || 0);
     const fromParam = searchParams.get('from');
-    /** Back khi vào từ My Jobs hoặc thống kê chi tiết tin. */
-    const showBackLink = fromParam === 'my-jobs' || fromParam === 'analytics';
+    /** Back khi vào từ Tổng quan / My Jobs / thống kê chi tiết tin. */
+    const showBackLink =
+        fromParam === 'overview' || fromParam === 'my-jobs' || fromParam === 'analytics';
     const backNav = useMemo(() => {
+        if (fromParam === 'overview') {
+            return {
+                to: ROUTES.RECRUITER_HOME,
+                label: 'Quay lại tổng quan',
+                state: undefined,
+            };
+        }
         if (fromParam === 'analytics' && jobIdParam) {
             return {
                 to: getRecruiterJobAnalyticsPath(jobIdParam),
@@ -334,7 +342,11 @@ const RecruiterInvitationsPage = () => {
                 <Link
                     to={backNav.to}
                     state={backNav.state}
-                    className="applicants-page__back"
+                    className={
+                        fromParam === 'overview'
+                            ? 'recruiter-back-overview'
+                            : 'applicants-page__back'
+                    }
                 >
                     ← {backNav.label}
                 </Link>

@@ -67,9 +67,16 @@ const ApplicantsPage = () => {
     const statusParam = searchParams.get('status');
     const fromParam = searchParams.get('from');
 
-    /** Có jobId trên URL = vào từ My Jobs / thống kê / deep link → hiện nút back. */
-    const showBackLink = Boolean(jobIdParam);
+    /** Có jobId trên URL = vào từ My Jobs / thống kê / deep link; from=overview = từ Tổng quan. */
+    const showBackLink = Boolean(jobIdParam) || fromParam === 'overview';
     const backNav = useMemo(() => {
+        if (fromParam === 'overview') {
+            return {
+                to: ROUTES.RECRUITER_HOME,
+                label: 'Quay lại tổng quan',
+                state: undefined,
+            };
+        }
         if (fromParam === 'analytics' && jobIdParam) {
             return {
                 to: getRecruiterJobAnalyticsPath(jobIdParam),
@@ -522,7 +529,11 @@ const ApplicantsPage = () => {
                 <Link
                     to={backNav.to}
                     state={backNav.state}
-                    className="applicants-page__back"
+                    className={
+                        fromParam === 'overview'
+                            ? 'recruiter-back-overview'
+                            : 'applicants-page__back'
+                    }
                 >
                     ← {backNav.label}
                 </Link>
@@ -668,7 +679,7 @@ const ApplicantsPage = () => {
                             {!readOnly && statusFilter === 'PENDING' && (
                                 <div className="applicants-page__empty-actions">
                                     <Link
-                                        to={ROUTES.RECRUITER_AI_SUGGESTIONS}
+                                        to={ROUTES.RECRUITER_JOBLINK_SUGGESTIONS}
                                         className="btn btn--secondary"
                                     >
                                         Xem JobLink gợi ý

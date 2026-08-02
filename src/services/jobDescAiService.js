@@ -1,5 +1,5 @@
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../apis/RecruiterJobApi.jsx';
-import { SKILLS_CATALOG } from '../constants/jobPost.js';
+import { resolveSkillsFromCatalog } from './jobPostService.js';
 
 /**
  * Adapter AI gợi ý mô tả tin tuyển dụng.
@@ -33,11 +33,8 @@ const toOptionalString = (value) => {
 };
 
 /** Map skillIds form → tên skill gửi BE (không gửi id). */
-export const mapSkillIdsToNames = (skillIds) => {
-    if (!Array.isArray(skillIds) || !skillIds.length) return null;
-    const names = skillIds
-        .map((id) => SKILLS_CATALOG.find((s) => s.id === id || String(s.id) === String(id))?.name)
-        .filter(Boolean);
+export const mapSkillIdsToNames = (skillIds, skillsCatalog = []) => {
+    const names = resolveSkillsFromCatalog(skillIds, skillsCatalog).map((s) => s.name);
     return names.length ? names : null;
 };
 
@@ -54,6 +51,7 @@ export const buildGeneratePayload = ({
     salaryMax,
     requiredSkills,
     skillIds,
+    skillsCatalog,
     requiredCandidates,
     location,
     isUrgent,
@@ -78,7 +76,7 @@ export const buildGeneratePayload = ({
     const skills =
         Array.isArray(requiredSkills) && requiredSkills.length
             ? requiredSkills
-            : mapSkillIdsToNames(skillIds);
+            : mapSkillIdsToNames(skillIds, skillsCatalog);
     if (skills?.length) payload.requiredSkills = skills;
 
     const candidates = toOptionalNumber(requiredCandidates);
@@ -101,7 +99,7 @@ export const resolveVariantLabel = (variant) => {
 /** Chuẩn hoá & sắp xếp variants theo thứ tự tab. */
 export const normalizeVariants = (data) => {
     const list = Array.isArray(data?.variants) ? data.variants : [];
-    const order = ['default', 'concise', 'youthful'];
+    const order = ['concise', 'default', 'youthful'];
     const sorted = [...list].sort((a, b) => {
         const ia = order.indexOf(a?.tone);
         const ib = order.indexOf(b?.tone);

@@ -4,34 +4,6 @@
     padding: 24px 20px 48px;
 }
 
-.my-jobs-page__back {
-    position: sticky;
-    /* Dưới site-header sticky (~padding 18*2 + nội dung); khi header ẩn vẫn dùng được */
-    top: 80px;
-    z-index: 40;
-    display: inline-flex;
-    align-items: center;
-    width: fit-content;
-    max-width: 100%;
-    margin-bottom: 12px;
-    padding: 10px 14px;
-    border: 1px solid #e2e8f0;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
-    backdrop-filter: blur(8px);
-    color: #2563eb;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.my-jobs-page__back:hover {
-    text-decoration: none;
-    background: #eff6ff;
-    border-color: #bfdbfe;
-}
-
 .my-jobs-page__header {
     display: flex;
     flex-wrap: wrap;

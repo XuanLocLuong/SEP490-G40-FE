@@ -158,7 +158,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.RECRUITER_APPLICANTS} element={<ApplicantsPage />} />
                 <Route path={ROUTES.RECRUITER_INVITATIONS} element={<RecruiterInvitationsPage />} />
                 <Route
-                    path={ROUTES.RECRUITER_AI_SUGGESTIONS}
+                    path={ROUTES.RECRUITER_JOBLINK_SUGGESTIONS}
                     element={<RecruiterRecommendationsPage />}
                 />
                 <Route path={ROUTES.RECRUITER_ANALYTICS} element={<RecruiterAnalyticsPage />} />

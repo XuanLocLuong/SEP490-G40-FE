@@ -2,10 +2,16 @@ import { useMemo } from 'react';
 import { toPreviewJob } from '../../../services/jobPostService.js';
 import JobCard from '../../job/JobCard.jsx';
 
-const JobPreviewPanel = ({ form, businessName, businessLocation, logoUrl }) => {
+const JobPreviewPanel = ({
+    form,
+    businessName,
+    businessLocation,
+    logoUrl,
+    skillsCatalog = [],
+}) => {
     const previewListJob = useMemo(
-        () => toPreviewJob(form, businessName, businessLocation, logoUrl),
-        [form, businessName, businessLocation, logoUrl]
+        () => toPreviewJob(form, businessName, businessLocation, logoUrl, skillsCatalog),
+        [form, businessName, businessLocation, logoUrl, skillsCatalog]
     );
 
     return (
