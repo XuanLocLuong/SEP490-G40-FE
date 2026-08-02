@@ -5,6 +5,9 @@ import { TrendingIcon } from '../common/icons.jsx';
 import { fetchUrgentJobs } from '../../apis/JobApi.jsx';
 import { ROUTES } from '../../routes/path.js';
 import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
+import { JOB_LIST_SECTIONS } from '../../utils/jobQuery.js';
+
+const DETAIL_SEARCH = `?section=${JOB_LIST_SECTIONS.URGENT}`;
 
 const PREVIEW_SIZE = 4;
 
@@ -73,7 +76,13 @@ const UrgentJobsSection = () => {
             {jobs.length > 0 && (
                 <div className="landing-jobs__grid landing-jobs__grid--compact">
                     {jobs.map((job) => (
-                        <JobCard key={job.id} job={job} compact />
+                        <JobCard
+                            key={job.id}
+                            job={job}
+                            compact
+                            detailSearch={DETAIL_SEARCH}
+                            homeSectionId={HOME_SECTION_IDS.URGENT}
+                        />
                     ))}
                 </div>
             )}

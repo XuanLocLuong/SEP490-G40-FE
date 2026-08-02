@@ -4,12 +4,19 @@ const BUSINESS_RETURN_KEY = 'joblink_business_profile_return';
 
 const isJobDetailPath = (pathname) => /^\/jobs\/[^/]+$/.test(pathname || '');
 
+const normalizeScrollSection = (scrollToSection) => {
+    if (!scrollToSection || typeof scrollToSection !== 'string') return undefined;
+    const trimmed = scrollToSection.trim();
+    return trimmed || undefined;
+};
+
 /**
  * Map a source path to a back target for public business profile.
  */
-export const resolveBusinessBackFromPath = (pathWithSearch, role, labelHint) => {
+export const resolveBusinessBackFromPath = (pathWithSearch, role, labelHint, scrollToSection) => {
     const homePath = getHomePathByRole(role);
-    const fallback = { path: homePath, label: 'Trang chủ' };
+    const scroll = normalizeScrollSection(scrollToSection);
+    const fallback = { path: homePath, label: 'Trang chủ', scrollToSection: scroll };
 
     if (!pathWithSearch || typeof pathWithSearch !== 'string') {
         return fallback;
@@ -26,11 +33,22 @@ export const resolveBusinessBackFromPath = (pathWithSearch, role, labelHint) => 
     const fullPath = `${pathname}${search}`;
 
     if (pathname === ROUTES.LANDING || pathname === ROUTES.CANDIDATE_HOME) {
-        return { path: fullPath || pathname, label: labelHint || 'Trang chủ' };
+        return {
+            path: fullPath || pathname,
+            label: labelHint || 'Trang chủ',
+            scrollToSection: scroll,
+        };
     }
 
     if (pathname === ROUTES.JOB_LIST) {
         return { path: fullPath || ROUTES.JOB_LIST, label: labelHint || 'Danh sách việc làm' };
+    }
+
+    if (pathname === ROUTES.TOP_RECRUITERS) {
+        return {
+            path: fullPath || ROUTES.TOP_RECRUITERS,
+            label: labelHint || 'Top nhà tuyển dụng',
+        };
     }
 
     if (isJobDetailPath(pathname)) {
@@ -59,7 +77,14 @@ export const resolveBusinessBackFromPath = (pathWithSearch, role, labelHint) => 
 export const setBusinessProfileReturn = (back) => {
     if (!back?.path || !back?.label) return;
     try {
-        sessionStorage.setItem(BUSINESS_RETURN_KEY, JSON.stringify(back));
+        const payload = {
+            path: back.path,
+            label: back.label,
+        };
+        if (back.scrollToSection) {
+            payload.scrollToSection = back.scrollToSection;
+        }
+        sessionStorage.setItem(BUSINESS_RETURN_KEY, JSON.stringify(payload));
     } catch {
         // ignore
     }
@@ -71,7 +96,11 @@ export const peekBusinessProfileReturn = () => {
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (parsed?.path && typeof parsed.label === 'string' && parsed.label.trim()) {
-            return { path: parsed.path, label: parsed.label.trim() };
+            return {
+                path: parsed.path,
+                label: parsed.label.trim(),
+                scrollToSection: normalizeScrollSection(parsed.scrollToSection),
+            };
         }
     } catch {
         // ignore
@@ -82,13 +111,16 @@ export const peekBusinessProfileReturn = () => {
 /**
  * Resolve back for business profile: navigate state → sessionStorage → home.
  */
-export const resolveBusinessProfileBack = ({ fromPath, label, role } = {}) => {
+export const resolveBusinessProfileBack = ({ fromPath, label, scrollToSection, role } = {}) => {
     if (fromPath) {
-        const resolved = resolveBusinessBackFromPath(fromPath, role, label);
+        const resolved = resolveBusinessBackFromPath(fromPath, role, label, scrollToSection);
         setBusinessProfileReturn(resolved);
         return resolved;
     }
-    return peekBusinessProfileReturn() || resolveBusinessBackFromPath(null, role);
+    return (
+        peekBusinessProfileReturn() ||
+        resolveBusinessBackFromPath(null, role, label, scrollToSection)
+    );
 };
 
 /** Build job-detail path helper for callers that only have jobId. */

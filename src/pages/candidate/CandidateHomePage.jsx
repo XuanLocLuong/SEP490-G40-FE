@@ -2,10 +2,7 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/authContext.js';
 import JobDiscoveryHome from '../../components/landing/JobDiscoveryHome.jsx';
-import {
-    HOME_SCROLL_STATE_KEY,
-    scrollToHomeSectionWhenReady,
-} from '../../utils/homeSections.js';
+import { consumeHomeSectionScrollState } from '../../utils/homeSections.js';
 import { ROUTES } from '../../routes/path.js';
 
 const CandidateHomePage = () => {
@@ -15,12 +12,13 @@ const CandidateHomePage = () => {
     const displayName = auth?.fullName?.trim() || 'bạn';
 
     useEffect(() => {
-        const sectionId = location.state?.[HOME_SCROLL_STATE_KEY];
-
-        if (sectionId) {
-            scrollToHomeSectionWhenReady(sectionId);
-            // Clear one-shot state without changing pathname (avoids ScrollToTop re-fire).
-            navigate(ROUTES.CANDIDATE_HOME, { replace: true, state: {} });
+        if (
+            consumeHomeSectionScrollState({
+                location,
+                navigate,
+                homePath: ROUTES.CANDIDATE_HOME,
+            })
+        ) {
             return;
         }
 

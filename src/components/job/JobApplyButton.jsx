@@ -7,7 +7,6 @@ import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { getApplyErrorMessage } from '../../utils/applicationErrorMessages.js';
 import { setBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
-import { notifyLoginRequired } from '../../utils/notifyLoginRequired.js';
 import JobApplyConfirmModal from './JobApplyConfirmModal.jsx';
 
 const JobApplyButton = ({
@@ -82,7 +81,6 @@ const JobApplyButton = ({
         if (disabled || applied) return;
 
         if (!auth) {
-            notifyLoginRequired('apply');
             setBookmarkReturnPath(`${location.pathname}${location.search}`);
             navigate(ROUTES.LOGIN, {
                 state: { from: `${location.pathname}${location.search}` },

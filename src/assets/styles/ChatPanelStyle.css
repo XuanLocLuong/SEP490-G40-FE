@@ -365,6 +365,25 @@
     font-weight: 650;
 }
 
+.chat-panel__thread-who {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.chat-panel__profile-link {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--color-primary);
+    text-decoration: none;
+    width: fit-content;
+}
+
+.chat-panel__profile-link:hover {
+    text-decoration: underline;
+}
+
 .chat-panel__job-bar {
     display: flex;
     align-items: center;

@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import JobCard from '../job/JobCard.jsx';
 import { ClockIcon } from '../common/icons.jsx';
-import { fetchDedupedInteractionPage } from '../../utils/jobQuery.js';
+import { fetchDedupedInteractionPage, JOB_LIST_SECTIONS } from '../../utils/jobQuery.js';
 import { ROUTES } from '../../routes/path.js';
 
 const PREVIEW_SIZE = 4;
+const DETAIL_SEARCH = `?section=${JOB_LIST_SECTIONS.INTERACTIONS}`;
 
 const InteractionHistorySection = () => {
     const [jobs, setJobs] = useState([]);
@@ -75,6 +76,7 @@ const InteractionHistorySection = () => {
                             key={`${job.id}-${job.interactionType}-${index}`}
                             job={job}
                             compact
+                            detailSearch={DETAIL_SEARCH}
                         />
                     ))}
                 </div>

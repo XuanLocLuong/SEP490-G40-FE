@@ -21,6 +21,8 @@ import {
 } from '../../utils/formatters.js';
 import { useAuth } from '../../contexts/authContext.js';
 import { resolveBusinessProfileBack } from '../../utils/businessNavReturn.js';
+import { buildHomeScrollState } from '../../utils/jobNavReturn.js';
+import { HOME_SCROLL_STATE_KEY } from '../../utils/homeSections.js';
 import { formatBusinessTypeLabel } from '../../utils/businessTypeDisplay.js';
 import '../../assets/styles/PublicBusinessProfileStyle.css';
 
@@ -100,9 +102,15 @@ const PublicBusinessProfilePage = () => {
             resolveBusinessProfileBack({
                 fromPath: location.state?.from,
                 label: location.state?.label,
+                scrollToSection: location.state?.[HOME_SCROLL_STATE_KEY],
                 role: auth?.role,
             }),
-        [location.state?.from, location.state?.label, auth?.role]
+        [location.state, auth?.role]
+    );
+
+    const profileBackState = useMemo(
+        () => buildHomeScrollState(profileBack.scrollToSection),
+        [profileBack.scrollToSection]
     );
 
     const [profile, setProfile] = useState(null);
@@ -327,7 +335,11 @@ const PublicBusinessProfilePage = () => {
             <div className="public-business-page">
                 <div className="public-business__error">
                     <p>{profileError || 'Không tìm thấy doanh nghiệp.'}</p>
-                    <Link to={profileBack.path} className="btn btn--secondary">
+                    <Link
+                        to={profileBack.path}
+                        state={profileBackState}
+                        className="btn btn--secondary"
+                    >
                         ← {profileBack.label}
                     </Link>
                 </div>
@@ -338,7 +350,11 @@ const PublicBusinessProfilePage = () => {
     return (
         <div className="public-business-page">
             <div className="public-business__toolbar">
-                <Link to={profileBack.path} className="public-business__back">
+                <Link
+                    to={profileBack.path}
+                    state={profileBackState}
+                    className="public-business__back"
+                >
                     ← {profileBack.label}
                 </Link>
             </div>

@@ -9,6 +9,8 @@ import {
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES, getHomePathByRole } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
+import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
+import { buildHomeScrollState } from '../../utils/jobNavReturn.js';
 import '../../assets/styles/TopRecruitersPageStyle.css';
 
 const TopRecruitersPage = () => {
@@ -21,6 +23,11 @@ const TopRecruitersPage = () => {
         if (auth?.role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_HOME;
         return getHomePathByRole(auth?.role) || ROUTES.LANDING;
     }, [auth?.role]);
+
+    const backState = useMemo(
+        () => buildHomeScrollState(HOME_SECTION_IDS.TOP_EMPLOYERS),
+        []
+    );
 
     useEffect(() => {
         let cancelled = false;
@@ -50,7 +57,9 @@ const TopRecruitersPage = () => {
         <div className="top-recruiters-page">
             <div className="top-recruiters-page__inner">
                 <nav className="top-recruiters-page__back">
-                    <Link to={backPath}>← Quay lại trang chủ</Link>
+                    <Link to={backPath} state={backState}>
+                        ← Quay lại trang chủ
+                    </Link>
                 </nav>
 
                 <header className="top-recruiters-page__header">

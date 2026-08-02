@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
+import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import { CheckCircleIcon } from '../common/icons.jsx';
-import { getBusinessProfilePath } from '../../routes/path.js';
 import { getBusinessInitial } from '../../utils/formatters.js';
 import {
     buildEmployerMetaLines,
@@ -13,7 +12,6 @@ const EmployerListRow = ({ employer }) => {
 
     const trustScore = formatEmployerTrustScore(employer.trustScore);
     const trustPercent = getEmployerTrustPercent(employer.trustScore);
-    const profilePath = getBusinessProfilePath(employer.businessId);
     const metaLines = buildEmployerMetaLines(employer);
     const rankLabel =
         employer.rankingPosition != null ? `#${employer.rankingPosition}` : '—';
@@ -80,9 +78,13 @@ const EmployerListRow = ({ employer }) => {
                             <span style={{ width: `${trustPercent}%` }} />
                         </div>
                     </div>
-                    <Link to={profilePath} className="btn btn--ghost employer-list-row__cta">
+                    <BusinessProfileLink
+                        businessId={employer.businessId}
+                        className="btn btn--ghost employer-list-row__cta"
+                        label="Top nhà tuyển dụng"
+                    >
                         Xem trang công ty
-                    </Link>
+                    </BusinessProfileLink>
                 </div>
             </div>
         </article>

@@ -11,12 +11,17 @@ import {
     applyCandidateScheduleAccess,
     fetchJobListPage,
     isSearchQuery,
+    isSearchableJobListSection,
     JOB_DETAIL_SIDEBAR_PAGE_SIZE,
+    JOB_LIST_SECTIONS,
+    JOB_LIST_SECTION_META,
     LANDING_PREVIEW_SIZE,
     buildJobListSearchParams,
     parseJobListSearchParams,
+    parseJobListSection,
 } from '../../utils/jobQuery.js';
-import { resolveJobDetailBack } from '../../utils/jobNavReturn.js';
+import { resolveJobDetailBack, buildHomeScrollState } from '../../utils/jobNavReturn.js';
+import { HOME_SCROLL_STATE_KEY } from '../../utils/homeSections.js';
 import '../../assets/styles/JobDetailPageStyle.css';
 
 const mergeJobPages = (existing, incoming) => {
@@ -54,30 +59,38 @@ const JobDetailPage = () => {
     const layoutRef = useRef(null);
     const detailColRef = useRef(null);
     const activeQueryRef = useRef(null);
+    const activeSectionRef = useRef(null);
 
     const [detailBack] = useState(() =>
         resolveJobDetailBack({
             fromPath: location.state?.from,
+            scrollToSection: location.state?.[HOME_SCROLL_STATE_KEY],
             role: auth?.role,
         })
     );
 
+    const section = useMemo(() => parseJobListSection(searchParams), [searchParams]);
+    const sectionMeta = section ? JOB_LIST_SECTION_META[section] : null;
+    const showSearch = !section || isSearchableJobListSection(section);
+
     const urlQuery = useMemo(() => {
+        if (section && !isSearchableJobListSection(section)) return null;
         const parsed = parseJobListSearchParams(searchParams);
         return applyCandidateScheduleAccess(parsed, isCandidate);
-    }, [searchParams, isCandidate]);
+    }, [searchParams, isCandidate, section]);
     const searchSuffix = searchParams.toString() ? `?${searchParams.toString()}` : '';
     const selectedJobId = Number(jobId);
 
     const hasMore = listPage + 1 < totalPages;
 
-    const applyListPage = useCallback((pageData, query, append) => {
+    const applyListPage = useCallback((pageData, query, listSection, append) => {
         setJobs((prev) => (append ? mergeJobPages(prev, pageData.content) : pageData.content));
         setListPage(pageData.currentPage);
         setTotalPages(pageData.totalPages);
         setTotalElements(pageData.totalElements);
         setActiveQuery(query);
         activeQueryRef.current = query;
+        activeSectionRef.current = listSection;
     }, []);
 
     useEffect(() => {
@@ -88,21 +101,30 @@ const JobDetailPage = () => {
             setListError('');
             setLoadingMore(false);
             try {
-                const parsedQuery = applyCandidateScheduleAccess(
-                    parseJobListSearchParams(searchParams),
-                    isCandidate
-                );
+                const listSection = parseJobListSection(searchParams);
+                const parsedQuery =
+                    listSection && !isSearchableJobListSection(listSection)
+                        ? null
+                        : applyCandidateScheduleAccess(
+                              parseJobListSearchParams(searchParams),
+                              isCandidate
+                          );
                 const pageData = await fetchJobListPage(
                     0,
                     JOB_DETAIL_SIDEBAR_PAGE_SIZE,
-                    parsedQuery
+                    parsedQuery,
+                    listSection
                 );
                 if (!cancelled) {
-                    applyListPage(pageData, parsedQuery, false);
+                    applyListPage(pageData, parsedQuery, listSection, false);
                 }
             } catch (err) {
                 if (!cancelled) {
-                    setListError(err.message || 'Không thể tải danh sách việc làm. Vui lòng thử lại sau.');
+                    setListError(
+                        err.message ||
+                            sectionMeta?.error ||
+                            'Không thể tải danh sách việc làm. Vui lòng thử lại sau.'
+                    );
                     setJobs([]);
                     setListPage(0);
                     setTotalPages(0);
@@ -118,7 +140,7 @@ const JobDetailPage = () => {
         return () => {
             cancelled = true;
         };
-    }, [searchParams, applyListPage, isCandidate]);
+    }, [searchParams, applyListPage, isCandidate, sectionMeta?.error]);
 
     useEffect(() => {
         let cancelled = false;
@@ -196,11 +218,16 @@ const JobDetailPage = () => {
             const pageData = await fetchJobListPage(
                 nextPage,
                 JOB_DETAIL_SIDEBAR_PAGE_SIZE,
-                activeQueryRef.current
+                activeQueryRef.current,
+                activeSectionRef.current
             );
-            applyListPage(pageData, activeQueryRef.current, true);
+            applyListPage(pageData, activeQueryRef.current, activeSectionRef.current, true);
         } catch (err) {
-            setListError(err.message || 'Không thể tải thêm việc làm. Vui lòng thử lại sau.');
+            setListError(
+                err.message ||
+                    sectionMeta?.error ||
+                    'Không thể tải thêm việc làm. Vui lòng thử lại sau.'
+            );
         } finally {
             setLoadingMore(false);
         }
@@ -208,44 +235,63 @@ const JobDetailPage = () => {
 
     const handleSearch = (payload) => {
         const nextQuery = applyCandidateScheduleAccess(payload, isCandidate);
+        const keepSection = isSearchableJobListSection(section) ? section : null;
         if (isSearchQuery(nextQuery)) {
-            setSearchParams(buildJobListSearchParams(nextQuery));
+            setSearchParams(buildJobListSearchParams(nextQuery, { section: keepSection }));
+        } else if (keepSection) {
+            setSearchParams(buildJobListSearchParams(null, { section: keepSection }));
         } else {
             setSearchParams({});
         }
     };
 
     const handleReset = () => {
-        setSearchParams({});
+        if (isSearchableJobListSection(section)) {
+            setSearchParams(buildJobListSearchParams(null, { section }));
+        } else {
+            setSearchParams({});
+        }
     };
+
+    const searching = showSearch && isSearchQuery(activeQuery);
 
     return (
         <div className="job-detail-page">
             <BookmarkLoginRedirect />
 
             <div className="job-detail-page__toolbar">
-                <Link to={detailBack.path} className="job-detail-page__back">
+                <Link
+                    to={detailBack.path}
+                    state={buildHomeScrollState(detailBack.scrollToSection)}
+                    className="job-detail-page__back"
+                >
                     ← {detailBack.label}
                 </Link>
             </div>
 
-            <JobListSearch
-                initialKeyword={urlQuery?.keyword || ''}
-                initialCity={urlQuery?.city || ''}
-                initialWard={urlQuery?.ward || ''}
-                initialJobType={urlQuery?.jobType || ''}
-                initialSalaryMin={urlQuery?.salaryMin ?? null}
-                initialSalaryMax={urlQuery?.salaryMax ?? null}
-                initialSkillIds={urlQuery?.skillIds || []}
-                initialSchedules={urlQuery?.schedules || []}
-                initialNearMe={Boolean(urlQuery?.nearMe)}
-                initialLatitude={urlQuery?.latitude ?? null}
-                initialLongitude={urlQuery?.longitude ?? null}
-                onSearch={handleSearch}
-                loading={listLoading}
-            />
+            {section && sectionMeta && (
+                <p className="job-detail-page__section-hint">{sectionMeta.title}</p>
+            )}
 
-            {isSearchQuery(activeQuery) && (
+            {showSearch && (
+                <JobListSearch
+                    initialKeyword={urlQuery?.keyword || ''}
+                    initialCity={urlQuery?.city || ''}
+                    initialWard={urlQuery?.ward || ''}
+                    initialJobType={urlQuery?.jobType || ''}
+                    initialSalaryMin={urlQuery?.salaryMin ?? null}
+                    initialSalaryMax={urlQuery?.salaryMax ?? null}
+                    initialSkillIds={urlQuery?.skillIds || []}
+                    initialSchedules={urlQuery?.schedules || []}
+                    initialNearMe={Boolean(urlQuery?.nearMe)}
+                    initialLatitude={urlQuery?.latitude ?? null}
+                    initialLongitude={urlQuery?.longitude ?? null}
+                    onSearch={handleSearch}
+                    loading={listLoading}
+                />
+            )}
+
+            {searching && (
                 <div className="job-detail-page__filter-actions">
                     <button type="button" className="job-detail-page__reset" onClick={handleReset}>
                         Xóa bộ lọc
@@ -268,7 +314,11 @@ const JobDetailPage = () => {
                     )}
 
                     {!listLoading && !listError && jobs.length === 0 && (
-                        <p className="job-detail-page__empty">Chưa có việc làm phù hợp.</p>
+                        <p className="job-detail-page__empty">
+                            {searching
+                                ? 'Chưa có việc làm phù hợp.'
+                                : sectionMeta?.empty || 'Chưa có việc làm phù hợp.'}
+                        </p>
                     )}
 
                     {jobs.length > 0 && (
@@ -280,7 +330,10 @@ const JobDetailPage = () => {
                                         job={item}
                                         active={item.id === selectedJobId}
                                         searchSuffix={searchSuffix}
-                                        nearMe={Boolean(urlQuery?.nearMe)}
+                                        nearMe={
+                                            Boolean(urlQuery?.nearMe) ||
+                                            section === JOB_LIST_SECTIONS.AI
+                                        }
                                     />
                                 ))}
                             </div>

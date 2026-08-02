@@ -26,7 +26,10 @@ import {
 import { submitApplicationReview, getReviewApiErrorMessage } from '../../apis/ReviewApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useChatThread } from '../../hooks/useChatThread.js';
-import { getJobDetailPath } from '../../routes/path.js';
+import {
+    getCandidatePublicProfilePath,
+    getJobDetailPath,
+} from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import {
     getInitials,
@@ -455,6 +458,8 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
     const roleLabel =
         auth?.role === USER_ROLES.CANDIDATE ? 'Nhà tuyển dụng' : 'Ứng viên';
+    const canViewCandidateProfile =
+        auth?.role === USER_ROLES.RECRUITER && conversation.candidateProfileId != null;
 
     return (
         <section className={`chat-panel__thread${compact ? ' chat-panel__thread--compact' : ''}`}>
@@ -473,6 +478,14 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                         </h3>
                         <span className="chat-panel__role-badge">{roleLabel}</span>
                     </div>
+                    {canViewCandidateProfile ? (
+                        <Link
+                            to={getCandidatePublicProfilePath(conversation.candidateProfileId)}
+                            className="chat-panel__profile-link"
+                        >
+                            Xem hồ sơ →
+                        </Link>
+                    ) : null}
                 </div>
             </header>
 

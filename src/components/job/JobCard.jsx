@@ -85,6 +85,10 @@ const JobCard = ({
     compact = false,
     showDistance = false,
     variant = 'default',
+    /** e.g. `?section=urgent` — preserves list context on job detail sidebar */
+    detailSearch,
+    /** Homepage section id — scroll back to this section after leaving detail */
+    homeSectionId,
 }) => {
     const isPreview = variant === 'preview';
     const isClosed = job?.status === 'CLOSED';
@@ -234,11 +238,21 @@ const JobCard = ({
                 </div>
             ) : isClosed ? (
                 <div className="job-card__actions">
-                    <JobDetailLink jobId={job.id} className="job-card__detail-link" />
+                    <JobDetailLink
+                        jobId={job.id}
+                        className="job-card__detail-link"
+                        search={detailSearch}
+                        homeSectionId={homeSectionId}
+                    />
                 </div>
             ) : (
                 <div className="job-card__actions">
-                    <JobDetailLink jobId={job.id} className="job-card__detail-link" />
+                    <JobDetailLink
+                        jobId={job.id}
+                        className="job-card__detail-link"
+                        search={detailSearch}
+                        homeSectionId={homeSectionId}
+                    />
                     {applied ? (
                         <button type="button" className="btn btn--primary job-card__apply" disabled>
                             Đã ứng tuyển

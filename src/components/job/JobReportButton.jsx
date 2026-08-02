@@ -59,7 +59,6 @@ const JobReportButton = ({ jobId, jobTitle, className = 'job-detail-panel__repor
         e.stopPropagation();
 
         if (!auth) {
-            toast.error('Vui lòng đăng nhập để báo cáo tin tuyển dụng.');
             const returnPath = `${location.pathname}${location.search}`;
             navigate(ROUTES.LOGIN, { state: { from: returnPath } });
             return;

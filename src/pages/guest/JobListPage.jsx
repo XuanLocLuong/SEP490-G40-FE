@@ -12,6 +12,7 @@ import {
     applyCandidateScheduleAccess,
     fetchJobListPage,
     isSearchQuery,
+    isSearchableJobListSection,
     JOB_LIST_PAGE_SIZE,
     JOB_LIST_SECTIONS,
     JOB_LIST_SECTION_META,
@@ -20,7 +21,7 @@ import {
     parseJobListSearchParams,
     parseJobListSection,
 } from '../../utils/jobQuery.js';
-import { resolveJobListBack } from '../../utils/jobNavReturn.js';
+import { resolveJobListBack, buildHomeScrollState } from '../../utils/jobNavReturn.js';
 import '../../assets/styles/JobListPageStyle.css';
 
 const JobListPage = () => {
@@ -37,10 +38,14 @@ const JobListPage = () => {
 
     const section = useMemo(() => parseJobListSection(searchParams), [searchParams]);
     const sectionMeta = section ? JOB_LIST_SECTION_META[section] : null;
-    const listBack = useMemo(() => resolveJobListBack(auth?.role), [auth?.role]);
+    const listBack = useMemo(
+        () => resolveJobListBack(auth?.role, section),
+        [auth?.role, section]
+    );
+    const showSearch = !section || isSearchableJobListSection(section);
 
     const urlQuery = useMemo(() => {
-        if (section) return null;
+        if (section && !isSearchableJobListSection(section)) return null;
         const parsed = parseJobListSearchParams(searchParams);
         return applyCandidateScheduleAccess(parsed, isCandidate);
     }, [searchParams, isCandidate, section]);
@@ -86,17 +91,19 @@ const JobListPage = () => {
             setLoading(true);
             setError('');
             try {
-                const parsedQuery = section
-                    ? null
-                    : applyCandidateScheduleAccess(
-                          parseJobListSearchParams(searchParams),
-                          isCandidate
-                      );
+                const listSection = parseJobListSection(searchParams);
+                const parsedQuery =
+                    listSection && !isSearchableJobListSection(listSection)
+                        ? null
+                        : applyCandidateScheduleAccess(
+                              parseJobListSearchParams(searchParams),
+                              isCandidate
+                          );
                 const pageData = await fetchJobListPage(
                     0,
                     JOB_LIST_PAGE_SIZE,
                     parsedQuery,
-                    section
+                    listSection
                 );
                 if (!cancelled) {
                     applyPageData(pageData, parsedQuery);
@@ -124,8 +131,11 @@ const JobListPage = () => {
 
     const handleSearch = (payload) => {
         const nextQuery = applyCandidateScheduleAccess(payload, isCandidate);
+        const keepSection = isSearchableJobListSection(section) ? section : null;
         if (isSearchQuery(nextQuery)) {
-            setSearchParams(buildJobListSearchParams(nextQuery));
+            setSearchParams(buildJobListSearchParams(nextQuery, { section: keepSection }));
+        } else if (keepSection) {
+            setSearchParams(buildJobListSearchParams(null, { section: keepSection }));
         } else {
             setSearchParams({});
         }
@@ -138,17 +148,25 @@ const JobListPage = () => {
     };
 
     const handleReset = () => {
-        setSearchParams({});
+        if (isSearchableJobListSection(section)) {
+            setSearchParams(buildJobListSearchParams(null, { section }));
+        } else {
+            setSearchParams({});
+        }
     };
 
-    const searching = !section && isSearchQuery(activeQuery);
+    const searching = showSearch && isSearchQuery(activeQuery);
     const isFirstPage = page <= 0;
     const isLastPage = totalPages > 0 && page >= totalPages - 1;
     return (
         <div className="job-list-page">
             <BookmarkLoginRedirect />
             <header className="job-list-page__header">
-                <Link to={listBack.path} className="job-list-page__back">
+                <Link
+                    to={listBack.path}
+                    state={buildHomeScrollState(listBack.scrollToSection)}
+                    className="job-list-page__back"
+                >
                     ← {listBack.label}
                 </Link>
                 <h1 className="job-list-page__title">
@@ -156,7 +174,7 @@ const JobListPage = () => {
                 </h1>
             </header>
 
-            {!section && (
+            {showSearch && (
                 <JobListSearch
                     initialKeyword={urlQuery?.keyword || ''}
                     initialCity={urlQuery?.city || ''}
@@ -184,13 +202,13 @@ const JobListPage = () => {
                     <p className="job-list-page__subtitle">
                         {totalElements > 0
                             ? `${totalElements} việc làm`
-                            : section
-                              ? sectionMeta?.empty
-                              : searching
-                                ? 'Không có việc làm phù hợp'
+                            : searching
+                              ? 'Không có việc làm phù hợp'
+                              : section
+                                ? sectionMeta?.empty
                                 : 'Tìm việc part-time phù hợp với bạn'}
                     </p>
-                    {section && sectionMeta?.subtitle && totalElements > 0 && (
+                    {section && sectionMeta?.subtitle && totalElements > 0 && !searching && (
                         <p className="job-list-page__search-hint">{sectionMeta.subtitle}</p>
                     )}
                 </div>
@@ -215,8 +233,10 @@ const JobListPage = () => {
                 ) : (
                     <div className="job-list-page__empty">
                         <p>
-                            {sectionMeta?.empty ||
-                                'Chưa có việc làm phù hợp. Hãy thử bộ lọc khác.'}
+                            {searching
+                                ? 'Chưa có việc làm phù hợp. Hãy thử bộ lọc khác.'
+                                : sectionMeta?.empty ||
+                                  'Chưa có việc làm phù hợp. Hãy thử bộ lọc khác.'}
                         </p>
                     </div>
                 )

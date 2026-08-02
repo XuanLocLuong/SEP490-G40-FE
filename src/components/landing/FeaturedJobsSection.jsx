@@ -84,7 +84,12 @@ const FeaturedJobsSection = ({ size = PREVIEW_SIZE, compact = false }) => {
             {jobs.length > 0 && (
                 <div className={gridClass}>
                     {jobs.map((job) => (
-                        <JobCard key={job.id} job={job} compact={compact} />
+                        <JobCard
+                            key={job.id}
+                            job={job}
+                            compact={compact}
+                            homeSectionId={HOME_SECTION_IDS.FEATURED}
+                        />
                     ))}
                 </div>
             )}
