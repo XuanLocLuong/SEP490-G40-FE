@@ -1,0 +1,126 @@
+/* Bổ sung cho hàng chờ kiểm duyệt đánh giá (dùng chung layout pm-queue-*). */
+
+.mc-review-card__stars {
+    color: #f59e0b;
+    letter-spacing: 1px;
+}
+
+.mc-review-card__preview {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    line-height: 1.4;
+}
+
+.mc-review-detail__header {
+    align-items: flex-start;
+}
+
+.mc-review-detail__heading {
+    min-width: 0;
+    flex: 1;
+}
+
+.mc-review-detail__type-badge {
+    display: inline-flex;
+    margin: 8px 0 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    background: var(--color-bg, #f8fafc);
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--color-text, #0f172a);
+}
+
+.mc-review-detail__job-line,
+.mc-review-detail__business-line {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted, #64748b);
+}
+
+.mc-review-detail__job-line {
+    margin-top: 2px;
+}
+
+.mc-review-detail__business-line {
+    margin-top: 2px;
+    font-weight: 600;
+    color: var(--color-text, #0f172a);
+}
+
+.mc-review-detail__meta-label {
+    display: inline-block;
+    margin-right: 6px;
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+}
+
+.mc-review-detail__rating {
+    margin: 0 0 10px;
+    font-size: 1.05rem;
+    color: #f59e0b;
+}
+
+.mc-review-detail__comment {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: var(--radius-md, 8px);
+    background: var(--color-bg, #f8fafc);
+    border: 1px solid var(--color-border, #e2e8f0);
+    white-space: pre-wrap;
+    line-height: 1.55;
+    font-size: 0.95rem;
+    color: var(--color-text, #0f172a);
+}
+
+.mc-review-detail__ai {
+    padding-bottom: 8px;
+}
+
+.mc-review-detail__ai h4 {
+    margin: 12px 0 8px;
+    font-size: 0.95rem;
+}
+
+.mc-review-detail__violations ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mc-review-detail__violations li {
+    padding: 10px 12px;
+    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--color-border, #e2e8f0);
+    background: var(--color-bg, #f8fafc);
+}
+
+.mc-review-detail__violations p {
+    margin: 6px 0 0;
+    font-size: 0.9rem;
+    color: var(--color-text-muted, #64748b);
+}
+
+.mc-review-detail__quote {
+    font-style: italic;
+    color: var(--color-text, #0f172a) !important;
+}
+
+/* Thu gọn khoảng trống giữa khối AI và ghi chú */
+.mc-review-detail .pm-review-detail__preview,
+.mc-review-detail .pm-review-detail__rules {
+    padding-top: 12px;
+}
+
+.mc-review-detail__footer.pm-review-detail__footer {
+    margin-top: 8px;
+    padding-top: 12px;
+}

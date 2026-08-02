@@ -25,6 +25,7 @@ import '../../assets/styles/HeaderStyle.css';
 
 const DROPDOWN_ITEMS = [
     { label: 'Hồ sơ của tôi', path: ROUTES.CANDIDATE_PROFILE, icon: FileTextIcon },
+    { label: 'Tổng điểm Trust Score', path: ROUTES.CANDIDATE_TRUST_SCORE, icon: StarIcon },
     { label: 'Tài khoản và bảo mật', path: ROUTES.CANDIDATE_SETTINGS, icon: SettingsIcon },
     { label: 'Lời mời', path: ROUTES.CANDIDATE_INVITATIONS, icon: MailIcon },
     { label: 'Lịch sử ứng tuyển', path: ROUTES.CANDIDATE_APPLICATION_HISTORY, icon: ClockIcon },
@@ -146,12 +147,6 @@ const CandidateHeader = () => {
                             handleLogout();
                             navigate(ROUTES.LANDING);
                         }}
-                        extra={
-                            <a href="#" className="profile-menu__item profile-menu__item--trust">
-                                <StarIcon className="profile-menu__item-icon" />
-                                Tổng điểm Trust Score
-                            </a>
-                        }
                     />
                 </div>
             </div>

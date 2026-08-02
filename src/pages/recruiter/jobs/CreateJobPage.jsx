@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../../contexts/authContext.js';
 import { ROUTES } from '../../../routes/path.js';
@@ -82,7 +82,10 @@ const CreateJobPage = () => {
     const { auth } = useAuth();
     const navigate = useNavigate();
     const { jobId } = useParams();
+    const [searchParams] = useSearchParams();
     const isEdit = Boolean(jobId);
+    const showBackToOverview = !isEdit && searchParams.get('from') === 'overview';
+    const cancelPath = showBackToOverview ? ROUTES.RECRUITER_HOME : ROUTES.RECRUITER_MY_JOBS;
 
     const [guardData, setGuardData] = useState(null);
     const [form, setForm] = useState(emptyJobForm);
@@ -92,9 +95,12 @@ const CreateJobPage = () => {
     const [savingAction, setSavingAction] = useState(null);
     const [jobStatus, setJobStatus] = useState(null);
     const [aiDescOpen, setAiDescOpen] = useState(false);
+    const [skillsCatalog, setSkillsCatalog] = useState([]);
+    const [skillsLoading, setSkillsLoading] = useState(false);
 
     const loadPage = useCallback(async () => {
         setLoading(true);
+        setSkillsLoading(true);
 
         try {
             const guard = await ensureCanPostJob({ auth, navigate });
@@ -106,6 +112,16 @@ const CreateJobPage = () => {
                 ? String(businessLocation.id)
                 : '';
             const businessId = guard.businessId ?? null;
+
+            try {
+                const skills = await recruiterJobApi.getActiveSkills();
+                setSkillsCatalog(Array.isArray(skills) ? skills : []);
+            } catch {
+                setSkillsCatalog([]);
+                toast.warn('Không tải được danh sách kỹ năng. Bạn vẫn có thể đăng tin.');
+            } finally {
+                setSkillsLoading(false);
+            }
 
             if (isEdit) {
                 const detail = await recruiterJobApi.getJobDetail(jobId);
@@ -135,6 +151,7 @@ const CreateJobPage = () => {
             navigate(ROUTES.RECRUITER_HOME);
         } finally {
             setLoading(false);
+            setSkillsLoading(false);
         }
     }, [auth, navigate, isEdit, jobId]);
 
@@ -246,6 +263,11 @@ const CreateJobPage = () => {
 
             <header className="job-post-page__header">
                 <div>
+                    {showBackToOverview ? (
+                        <Link to={ROUTES.RECRUITER_HOME} className="recruiter-back-overview">
+                            ← Quay lại tổng quan
+                        </Link>
+                    ) : null}
                     <h1>{isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng tin tuyển dụng'}</h1>
                     {isEdit && jobStatus && (
                         <p className="job-post-page__subtitle">
@@ -262,6 +284,8 @@ const CreateJobPage = () => {
                     errors={errors}
                     businessLocation={businessLocation}
                     disabled={saving}
+                    skillsCatalog={skillsCatalog}
+                    skillsLoading={skillsLoading}
                     onChange={handleFormChange}
                     onFieldBlur={handleFieldBlur}
                     onOpenAiDesc={() => setAiDescOpen(true)}
@@ -273,6 +297,7 @@ const CreateJobPage = () => {
                         businessLocation={businessLocation}
                         businessName={guardData.profile?.businessName}
                         logoUrl={guardData.profile?.logoUrl}
+                        skillsCatalog={skillsCatalog}
                     />
 
                     <div className="job-post-page__actions job-post-page__actions--sidebar">
@@ -280,7 +305,7 @@ const CreateJobPage = () => {
                             type="button"
                             className="job-post-page__btn job-post-page__btn--ghost"
                             disabled={saving}
-                            onClick={() => navigate(ROUTES.RECRUITER_MY_JOBS)}
+                            onClick={() => navigate(cancelPath)}
                         >
                             Hủy
                         </button>
@@ -330,6 +355,7 @@ const CreateJobPage = () => {
                 isUrgent={form.isUrgent}
                 locationLabel={formatLocationDisplay(businessLocation)}
                 skillIds={form.skillIds}
+                skillsCatalog={skillsCatalog}
                 onClose={() => setAiDescOpen(false)}
                 onApply={(html) => {
                     setForm((prev) => ({ ...prev, description: html }));

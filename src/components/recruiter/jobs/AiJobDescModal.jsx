@@ -29,6 +29,7 @@ const AiJobDescModal = ({
     isUrgent,
     locationLabel,
     skillIds,
+    skillsCatalog = [],
     onClose,
     onApply,
 }) => {
@@ -50,6 +51,7 @@ const AiJobDescModal = ({
             isUrgent,
             location: locationLabel,
             skillIds,
+            skillsCatalog,
         }),
         [
             jobTitle,
@@ -62,6 +64,7 @@ const AiJobDescModal = ({
             isUrgent,
             locationLabel,
             skillIds,
+            skillsCatalog,
         ]
     );
 
@@ -88,7 +91,9 @@ const AiJobDescModal = ({
                 return;
             }
             setVariants(next);
-            setActiveTone(next[0].tone);
+            setActiveTone(
+                next.find((v) => v.tone === 'concise')?.tone || next[0].tone
+            );
             setStep(STEP.PREVIEW);
         } catch (err) {
             if (requestId !== requestIdRef.current) return;

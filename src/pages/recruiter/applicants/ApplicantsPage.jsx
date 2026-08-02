@@ -1,25 +1,31 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import ApplicationCard from '../../../components/recruiter/applicants/ApplicationCard.jsx';
 import ApplicationRejectModal from '../../../components/recruiter/applicants/ApplicationRejectModal.jsx';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
+import ReviewSubmitModal from '../../../components/review/ReviewSubmitModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
+import {
+    getMyApplicationReview,
+    getReviewApiErrorMessage,
+    submitApplicationReview,
+} from '../../../apis/ReviewApi.jsx';
 import recruiterApplicationService, {
     APPLICATION_SORT_OPTIONS,
     APPLICATION_STATUS_FILTERS,
     getRecruiterApplicationApiErrorMessage,
     isApplicationCancelledError,
 } from '../../../services/recruiterApplicationService.js';
-import { getCandidatePublicProfilePath, ROUTES } from '../../../routes/path.js';
+import { getCandidatePublicProfilePath, getRecruiterJobAnalyticsPath, ROUTES } from '../../../routes/path.js';
 import {
     openChatPanel,
     RECRUITMENT_CHANGED_EVENT,
 } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 const DEFAULT_STATUS_MANAGE = 'PENDING';
 const DEFAULT_STATUS_READONLY = 'ALL';
 const DEFAULT_SORT = 'appliedAt,desc';
@@ -28,6 +34,7 @@ const canManageApplications = (job) => job?.status === 'OPEN';
 
 const ApplicantsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
 
     const [openJobs, setOpenJobs] = useState([]);
@@ -46,14 +53,43 @@ const ApplicantsPage = () => {
     const [chatLoadingId, setChatLoadingId] = useState(null);
     const [acceptTarget, setAcceptTarget] = useState(null);
     const [rejectTarget, setRejectTarget] = useState(null);
+    const [reviewTarget, setReviewTarget] = useState(null);
+    const [reviewBusy, setReviewBusy] = useState(false);
+    const [reviewMode, setReviewMode] = useState('edit');
+    const [reviewDraft, setReviewDraft] = useState({ rating: 5, comment: '' });
+    const [reviewedIds, setReviewedIds] = useState(() => new Set());
+    const [reviewCache, setReviewCache] = useState(() => ({}));
+
 
     const sortValue = searchParams.get('sort') || DEFAULT_SORT;
     const page = Math.max(0, Number(searchParams.get('page') || 0) || 0);
     const jobIdParam = searchParams.get('jobId');
     const statusParam = searchParams.get('status');
+    const fromParam = searchParams.get('from');
 
-    /** Có jobId trên URL = vào từ My Jobs (hoặc deep link) → hiện nút back. */
-    const showBackToMyJobs = Boolean(jobIdParam);
+    /** Có jobId trên URL = vào từ My Jobs / thống kê / deep link; from=overview = từ Tổng quan. */
+    const showBackLink = Boolean(jobIdParam) || fromParam === 'overview';
+    const backNav = useMemo(() => {
+        if (fromParam === 'overview') {
+            return {
+                to: ROUTES.RECRUITER_HOME,
+                label: 'Quay lại tổng quan',
+                state: undefined,
+            };
+        }
+        if (fromParam === 'analytics' && jobIdParam) {
+            return {
+                to: getRecruiterJobAnalyticsPath(jobIdParam),
+                label: 'Quay lại thống kê',
+                state: location.state,
+            };
+        }
+        return {
+            to: ROUTES.RECRUITER_MY_JOBS,
+            label: 'Quay lại tin tuyển dụng',
+            state: undefined,
+        };
+    }, [fromParam, jobIdParam, location.state]);
 
     const selectedJobId = useMemo(() => {
         if (jobIdParam) {
@@ -234,6 +270,48 @@ const ApplicantsPage = () => {
         loadApplications();
     }, [loadApplications]);
 
+    useEffect(() => {
+        const hired = applications.filter((app) => app.status === 'HIRED' && app.id != null);
+        if (hired.length === 0) return undefined;
+
+        let cancelled = false;
+        (async () => {
+            const found = new Set();
+            const cache = {};
+            await Promise.all(
+                hired.map(async (app) => {
+                    try {
+                        const res = await getMyApplicationReview(app.id);
+                        const data = res?.data?.data ?? res?.data ?? null;
+                        if (data) {
+                            const key = String(app.id);
+                            found.add(key);
+                            cache[key] = {
+                                rating: data.rating ?? 5,
+                                comment: data.comment || '',
+                            };
+                        }
+                    } catch {
+                        // 404 = chưa đánh giá
+                    }
+                })
+            );
+            if (cancelled) return;
+            if (found.size > 0) {
+                setReviewedIds((prev) => {
+                    const next = new Set(prev);
+                    found.forEach((id) => next.add(id));
+                    return next;
+                });
+                setReviewCache((prev) => ({ ...prev, ...cache }));
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [applications]);
+
     // Refresh list when recruiter accepts/rejects via chat float.
     useEffect(() => {
         const onRecruitmentChanged = (event) => {
@@ -322,7 +400,12 @@ const ApplicantsPage = () => {
             toast.error('Không tìm thấy hồ sơ ứng viên.');
             return;
         }
-        const backQuery = selectedJobId != null ? `?jobId=${selectedJobId}` : '';
+        const returnParams = new URLSearchParams();
+        if (selectedJobId != null) returnParams.set('jobId', String(selectedJobId));
+        if (fromParam === 'my-jobs' || fromParam === 'analytics') {
+            returnParams.set('from', fromParam);
+        }
+        const backQuery = returnParams.toString() ? `?${returnParams.toString()}` : '';
         navigate(getCandidatePublicProfilePath(candidateId), {
             state: {
                 backTo: {
@@ -353,6 +436,60 @@ const ApplicantsPage = () => {
         }
     };
 
+    const handleOpenReview = async (application) => {
+        if (!application?.id || application.status !== 'HIRED') return;
+        const key = String(application.id);
+
+        if (reviewedIds.has(key)) {
+            setReviewBusy(true);
+            try {
+                let draft = reviewCache[key];
+                if (!draft) {
+                    const res = await getMyApplicationReview(application.id);
+                    const data = res?.data?.data ?? res?.data ?? null;
+                    draft = {
+                        rating: data?.rating ?? 5,
+                        comment: data?.comment || '',
+                    };
+                    setReviewCache((prev) => ({ ...prev, [key]: draft }));
+                }
+                setReviewDraft(draft);
+                setReviewMode('view');
+                setReviewTarget(application);
+            } catch (err) {
+                toast.error(getReviewApiErrorMessage(err, 'Không tải được đánh giá.'));
+            } finally {
+                setReviewBusy(false);
+            }
+            return;
+        }
+
+        setReviewDraft({ rating: 5, comment: '' });
+        setReviewMode('edit');
+        setReviewTarget(application);
+    };
+
+    const handleSubmitReview = async ({ rating, comment }) => {
+        if (!reviewTarget?.id || reviewBusy || reviewMode === 'view') return;
+        setReviewBusy(true);
+        try {
+            await submitApplicationReview(reviewTarget.id, {
+                rating,
+                comment: comment || null,
+            });
+            const key = String(reviewTarget.id);
+            const draft = { rating, comment: comment || '' };
+            setReviewedIds((prev) => new Set(prev).add(key));
+            setReviewCache((prev) => ({ ...prev, [key]: draft }));
+            setReviewTarget(null);
+            toast.success('Đã gửi đánh giá.');
+        } catch (err) {
+            toast.error(getReviewApiErrorMessage(err, 'Không gửi được đánh giá.'));
+        } finally {
+            setReviewBusy(false);
+        }
+    };
+
     const pageLoading = jobsLoading || focusJobLoading;
     const hasOpenJobs = openJobs.length > 0;
     const hasSelectedJob = Boolean(selectedJob);
@@ -362,11 +499,43 @@ const ApplicantsPage = () => {
     const hasMorePages = page + 1 < totalPages;
     const showManageDropdown = hasSelectedJob && !readOnly && hasOpenJobs;
 
+    const pageItems = useMemo(() => {
+        if (totalPages <= 1) return [];
+        if (totalPages <= 4) {
+            return Array.from({ length: totalPages }, (_, i) => i);
+        }
+        const last = totalPages - 1;
+        const set = new Set([0, last, page, page - 1, page + 1, page - 2, page + 2]);
+        const sorted = [...set].filter((p) => p >= 0 && p <= last).sort((a, b) => a - b);
+        const items = [];
+        let prev = null;
+        sorted.forEach((p) => {
+            if (prev != null && p - prev > 1) items.push('ellipsis');
+            items.push(p);
+            prev = p;
+        });
+        return items;
+    }, [page, totalPages]);
+
+    const goToPage = (nextPage) => {
+        if (listLoading) return;
+        if (nextPage < 0 || nextPage >= totalPages || nextPage === page) return;
+        updateParams({ page: nextPage });
+    };
+
     return (
         <div className="applicants-page">
-            {showBackToMyJobs && (
-                <Link to={ROUTES.RECRUITER_MY_JOBS} className="applicants-page__back">
-                    ← Quay lại tin tuyển dụng
+            {showBackLink && (
+                <Link
+                    to={backNav.to}
+                    state={backNav.state}
+                    className={
+                        fromParam === 'overview'
+                            ? 'recruiter-back-overview'
+                            : 'applicants-page__back'
+                    }
+                >
+                    ← {backNav.label}
                 </Link>
             )}
 
@@ -510,7 +679,7 @@ const ApplicantsPage = () => {
                             {!readOnly && statusFilter === 'PENDING' && (
                                 <div className="applicants-page__empty-actions">
                                     <Link
-                                        to={ROUTES.RECRUITER_AI_SUGGESTIONS}
+                                        to={ROUTES.RECRUITER_JOBLINK_SUGGESTIONS}
                                         className="btn btn--secondary"
                                     >
                                         Xem JobLink gợi ý
@@ -529,37 +698,69 @@ const ApplicantsPage = () => {
                                         application={application}
                                         actionLoading={actionLoadingId === application.id}
                                         chatLoading={chatLoadingId === application.id}
+                                        reviewLoading={
+                                            reviewBusy && reviewTarget?.id === application.id
+                                        }
+                                        hasReviewed={reviewedIds.has(String(application.id))}
                                         readOnly={readOnly}
                                         onAccept={setAcceptTarget}
                                         onReject={setRejectTarget}
                                         onViewProfile={handleViewProfile}
                                         onChat={handleChat}
+                                        onReview={handleOpenReview}
                                     />
                                 ))}
                             </div>
 
                             {totalPages > 1 && (
-                                <div className="applicants-page__pagination">
+                                <nav
+                                    className="applicants-page__pagination"
+                                    aria-label="Phân trang ứng viên"
+                                >
                                     <button
                                         type="button"
-                                        className="btn btn--secondary"
+                                        className="applicants-page__page-btn applicants-page__page-btn--nav"
                                         disabled={page <= 0 || listLoading}
-                                        onClick={() => updateParams({ page: page - 1 })}
+                                        onClick={() => goToPage(page - 1)}
+                                        aria-label="Trang trước"
                                     >
-                                        Trang trước
+                                        ‹
                                     </button>
-                                    <span>
-                                        {page + 1} / {totalPages}
-                                    </span>
+                                    {pageItems.map((item, index) =>
+                                        item === 'ellipsis' ? (
+                                            <span
+                                                key={`e-${index}`}
+                                                className="applicants-page__page-ellipsis"
+                                                aria-hidden="true"
+                                            >
+                                                …
+                                            </span>
+                                        ) : (
+                                            <button
+                                                key={item}
+                                                type="button"
+                                                className={`applicants-page__page-btn${
+                                                    item === page ? ' is-active' : ''
+                                                }`}
+                                                disabled={listLoading}
+                                                aria-current={item === page ? 'page' : undefined}
+                                                aria-label={`Trang ${item + 1}`}
+                                                onClick={() => goToPage(item)}
+                                            >
+                                                {item + 1}
+                                            </button>
+                                        )
+                                    )}
                                     <button
                                         type="button"
-                                        className="btn btn--secondary"
+                                        className="applicants-page__page-btn applicants-page__page-btn--nav"
                                         disabled={!hasMorePages || listLoading}
-                                        onClick={() => updateParams({ page: page + 1 })}
+                                        onClick={() => goToPage(page + 1)}
+                                        aria-label="Trang sau"
                                     >
-                                        Trang sau
+                                        ›
                                     </button>
-                                </div>
+                                </nav>
                             )}
                         </>
                     )}
@@ -599,6 +800,22 @@ const ApplicantsPage = () => {
                 loading={Boolean(actionLoadingId)}
                 onCancel={() => !actionLoadingId && setRejectTarget(null)}
                 onConfirm={handleRejectConfirm}
+            />
+
+            <ReviewSubmitModal
+                open={Boolean(reviewTarget)}
+                busy={reviewBusy}
+                variant="page"
+                mode={reviewMode}
+                title={reviewMode === 'view' ? 'Xem đánh giá' : 'Đánh giá ứng viên'}
+                subtitle={reviewTarget?.candidateName || ''}
+                initialRating={reviewDraft.rating}
+                initialComment={reviewDraft.comment}
+                onClose={() => {
+                    if (reviewBusy) return;
+                    setReviewTarget(null);
+                }}
+                onSubmit={handleSubmitReview}
             />
         </div>
     );

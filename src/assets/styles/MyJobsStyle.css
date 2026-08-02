@@ -136,6 +136,12 @@
     box-shadow: 0 1px 3px rgba(185, 28, 28, 0.06);
 }
 
+.my-jobs-page__card--highlight {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
 .my-jobs-page__card-body {
     min-width: 0;
 }
@@ -358,6 +364,60 @@
 
 .my-jobs-page__action:disabled {
     opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.my-jobs-page__pagination {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.my-jobs-page__page-ellipsis {
+    min-width: 1.5rem;
+    text-align: center;
+    color: #94a3b8;
+    font-weight: 650;
+    user-select: none;
+}
+
+.my-jobs-page__page-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+    font-weight: 650;
+    font-size: 0.9rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.my-jobs-page__page-btn--nav {
+    font-size: 1.25rem;
+    color: #1d4ed8;
+}
+
+.my-jobs-page__page-btn:hover:not(:disabled):not(.is-active) {
+    background: #f8fafc;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.my-jobs-page__page-btn.is-active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #fff;
+    cursor: default;
+}
+
+.my-jobs-page__page-btn:disabled {
+    opacity: 0.45;
     cursor: not-allowed;
 }
 

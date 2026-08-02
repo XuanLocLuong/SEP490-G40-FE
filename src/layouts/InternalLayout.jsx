@@ -64,7 +64,7 @@ const CONFIG_BY_ROLE = {
             { path: ROUTES.MANUAL_CHECK_HOME, label: 'Dashboard', icon: GridIcon },
             { path: ROUTES.MANUAL_CHECK_ACCOUNTS, label: 'Quản lý tài khoản', icon: UsersIcon },
             { path: ROUTES.MANUAL_CHECK_VERIFICATION, label: 'Duyệt xác minh', icon: ShieldIcon },
-            { path: ROUTES.MANUAL_CHECK_REPORTS, label: 'Uy tín & Khiếu nại', icon: AlertIcon },
+            { path: ROUTES.MANUAL_CHECK_REPORTS, label: 'Kiểm duyệt đánh giá', icon: AlertIcon },
         ],
     },
 };

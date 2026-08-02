@@ -1,4 +1,4 @@
-import { JOB_POST_ACTION, SKILLS_CATALOG } from '../constants/jobPost.js';
+import { JOB_POST_ACTION } from '../constants/jobPost.js';
 
 // ---------------------------------------------------------------------------
 // Adapter giữa shape UI (form + shiftBlocks) <-> payload BE (JobSaveRequest).
@@ -10,6 +10,18 @@ import { JOB_POST_ACTION, SKILLS_CATALOG } from '../constants/jobPost.js';
 // ---------------------------------------------------------------------------
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
+
+export const sameSkillId = (a, b) =>
+    a != null && b != null && String(a) === String(b);
+
+/** Resolve skillIds → { id, name } từ catalog BE. */
+export const resolveSkillsFromCatalog = (skillIds, skillsCatalog = []) => {
+    const catalog = toArray(skillsCatalog);
+    return toArray(skillIds)
+        .map((skillId) => catalog.find((s) => sameSkillId(s.id, skillId)))
+        .filter(Boolean)
+        .map((skill) => ({ id: skill.id, name: skill.name }));
+};
 
 /** Chỉ giữ chữ số — lưu trong form (VD: "22000") */
 export const parseSalaryInput = (value) => String(value ?? '').replace(/\D/g, '');
@@ -272,16 +284,21 @@ export const validateJobForm = (form, action) => {
 };
 
 /** Map form đăng tin → shape JobDetailDTO cho JobDetailPanel preview */
-export const toPreviewJobDetail = (form, businessName, businessLocation, logoUrl = null) => {
+export const toPreviewJobDetail = (
+    form,
+    businessName,
+    businessLocation,
+    logoUrl = null,
+    skillsCatalog = []
+) => {
     const requiredCandidates = parseNumber(form.requiredCandidates) ?? 1;
     const applicationDeadline = form.applicationDeadline
         ? new Date(form.applicationDeadline).toISOString()
         : null;
 
-    const requiredSkills = toArray(form.skillIds)
-        .map((skillId) => SKILLS_CATALOG.find((s) => s.id === skillId))
-        .filter(Boolean)
-        .map((skill) => ({ id: skill.id, name: skill.name, weight: 1 }));
+    const requiredSkills = resolveSkillsFromCatalog(form.skillIds, skillsCatalog).map(
+        (skill) => ({ id: skill.id, name: skill.name, weight: 1 })
+    );
 
     return {
         id: 'preview',
@@ -321,8 +338,20 @@ export const toPreviewJobDetail = (form, businessName, businessLocation, logoUrl
 };
 
 /** Map form → shape list card (Landing JobCard) */
-export const toPreviewJob = (form, businessName, businessLocation, logoUrl = null) => {
-    const detail = toPreviewJobDetail(form, businessName, businessLocation, logoUrl);
+export const toPreviewJob = (
+    form,
+    businessName,
+    businessLocation,
+    logoUrl = null,
+    skillsCatalog = []
+) => {
+    const detail = toPreviewJobDetail(
+        form,
+        businessName,
+        businessLocation,
+        logoUrl,
+        skillsCatalog
+    );
     return {
         id: detail.id,
         title: detail.title,

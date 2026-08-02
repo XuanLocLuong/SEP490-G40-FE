@@ -23,7 +23,7 @@ import {
     getRecruiterRecommendationErrorMessage,
     sendCandidateInvitation,
 } from '../../apis/RecruiterRecommendationApi.jsx';
-import { submitApplicationReview } from '../../apis/ReviewApi.jsx';
+import { submitApplicationReview, getReviewApiErrorMessage } from '../../apis/ReviewApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useChatThread } from '../../hooks/useChatThread.js';
 import { getJobDetailPath } from '../../routes/path.js';
@@ -34,9 +34,9 @@ import {
     normalizeChatAction,
 } from '../../utils/chatDisplay.js';
 import { notifyRecruitmentChanged } from '../../utils/chatEvents.js';
+import ReviewSubmitModal from '../review/ReviewSubmitModal.jsx';
 import ChatActionCard from './ChatActionCard.jsx';
 import ChatMessageBubble from './ChatMessageBubble.jsx';
-import ChatReviewModal from './ChatReviewModal.jsx';
 
 const pageContent = (res) => {
     const page = res?.data?.data ?? res?.data;
@@ -405,8 +405,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             setReviewAppId(null);
             await refreshAfterAction();
         } catch (err) {
-            const msg = err?.response?.data?.message;
-            toast.error(msg || 'Không gửi được đánh giá. Vui lòng thử lại.');
+            toast.error(getReviewApiErrorMessage(err, 'Không gửi được đánh giá. Vui lòng thử lại.'));
         } finally {
             setActionBusy(false);
         }
@@ -555,9 +554,11 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 </button>
             </form>
 
-            <ChatReviewModal
+            <ReviewSubmitModal
                 open={reviewOpen}
                 busy={actionBusy}
+                variant="dock"
+                title="Viết đánh giá"
                 onClose={() => {
                     if (actionBusy) return;
                     setReviewOpen(false);

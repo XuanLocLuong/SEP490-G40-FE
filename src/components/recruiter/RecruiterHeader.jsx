@@ -14,6 +14,7 @@ import {
     BuildingIcon,
     SettingsIcon,
     MailIcon,
+    StarIcon,
 } from '../common/icons.jsx';
 import '../../assets/styles/HeaderStyle.css';
 
@@ -24,6 +25,7 @@ const DROPDOWN_ITEMS = [
     { label: 'Quản lý lời mời', path: ROUTES.RECRUITER_INVITATIONS, icon: MailIcon },
     { label: 'Thống kê', path: ROUTES.RECRUITER_ANALYTICS, icon: ChartIcon },
     { label: 'Tất cả tin tuyển dụng', path: ROUTES.RECRUITER_ALL_JOBS, icon: ListIcon },
+    { label: 'Điểm uy tín', path: ROUTES.RECRUITER_TRUST_SCORE, icon: StarIcon },
     { label: 'Hồ sơ nhà tuyển dụng', path: ROUTES.RECRUITER_PROFILE, icon: BuildingIcon },
     { label: 'Tài khoản và bảo mật', path: ROUTES.RECRUITER_SETTINGS, icon: SettingsIcon },
 ];
@@ -42,7 +44,7 @@ const RecruiterHeader = () => {
                     </NavLink>
 
                     <nav className="site-header__nav site-header__nav--role">
-                        <NavLink to={ROUTES.RECRUITER_AI_SUGGESTIONS} className="site-header__nav-link">
+                        <NavLink to={ROUTES.RECRUITER_JOBLINK_SUGGESTIONS} className="site-header__nav-link">
                             JobLink gợi ý
                         </NavLink>
                         <a href="#" className="site-header__nav-link">
