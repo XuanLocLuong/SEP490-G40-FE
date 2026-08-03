@@ -6,6 +6,8 @@ export const ROUTES = {
     LOGIN: '/login',
     REGISTER: '/register',
     VERIFY_EMAIL: '/verify-email',
+    FORGOT_PASSWORD: '/forgot-password',
+    RESET_PASSWORD: '/reset-password',
     JOB_LIST: '/jobs',
     JOB_DETAIL: '/jobs/:jobId',
     BUSINESS_PROFILE: '/business/:businessId',
