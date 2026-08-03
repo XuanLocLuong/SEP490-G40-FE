@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { ROUTES } from '../../../routes/path.js';
 import {
     formatCount,
     NAV_ACTION_LABELS,
@@ -5,14 +7,23 @@ import {
     WARNING_META,
 } from '../../../utils/platformMonitoringDisplay.js';
 
+/** FE routes Admin có thể mở ngay từ cảnh báo. Role khác chỉ hiện gợi ý chữ. */
+const WARNING_ROUTE_BY_ACTION = {
+    MANAGE_ACCOUNTS: ROUTES.ADMIN_ACCOUNTS,
+    REVIEW_AUDIT_LOGS: ROUTES.ADMIN_AUDIT_LOG,
+    MANAGE_SYSTEM_CONFIGURATIONS: ROUTES.ADMIN_SYSTEM_CONFIG,
+};
+
 const OperationalAlertItem = ({ warning }) => {
     const severity = String(warning.severity || 'INFO').toLowerCase();
     const meta = WARNING_META[warning.code] || {};
     const title = meta.title || warning.message || warning.code;
     const detail = meta.detail || '';
-    const actionLabel = warning.navigationAction
-        ? NAV_ACTION_LABELS[warning.navigationAction] || warning.navigationAction
+    const actionKey = warning.navigationAction;
+    const actionLabel = actionKey
+        ? NAV_ACTION_LABELS[actionKey] || actionKey
         : null;
+    const to = actionKey ? WARNING_ROUTE_BY_ACTION[actionKey] : null;
 
     return (
         <article className={`admin-monitor-alert admin-monitor-alert--${severity}`}>
@@ -27,8 +38,12 @@ const OperationalAlertItem = ({ warning }) => {
                     </span>
                 </div>
                 {detail ? <p>{detail}</p> : null}
-                {actionLabel ? (
-                    <span className="admin-monitor-alert__action" title="Màn hình liên quan — chưa gắn điều hướng Admin">
+                {to && actionLabel ? (
+                    <Link className="admin-monitor-alert__action admin-monitor-alert__action--link" to={to}>
+                        Mở: {actionLabel}
+                    </Link>
+                ) : actionLabel ? (
+                    <span className="admin-monitor-alert__action">
                         Gợi ý quy trình: {actionLabel}
                     </span>
                 ) : null}
@@ -44,7 +59,8 @@ const OperationalAlertsCard = ({ warnings }) => {
             <header className="admin-monitor-alerts-panel__header">
                 <h2 id="monitor-alerts-title">Vấn đề cần chú ý</h2>
                 <p>
-                    Theo dõi thôi — không tự xử lý. Pending chưa quá SLA không đồng nghĩa sự cố nghiêm trọng.
+                    Theo dõi thôi — không tự xử lý. Pending chưa quá SLA không đồng nghĩa sự cố nghiêm
+                    trọng.
                     {list.length > 0 ? ` · ${list.length} mục` : ''}
                 </p>
             </header>

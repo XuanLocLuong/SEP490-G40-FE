@@ -1,7 +1,15 @@
 import {
     formatInstantVi,
+    isSectionAvailable,
     SECTION_LABELS,
 } from '../../../utils/platformMonitoringDisplay.js';
+
+const statusClass = (status) => {
+    const s = String(status || '').toUpperCase();
+    if (s === 'UP' || s === 'AVAILABLE') return 'admin-monitor-pill--ok';
+    if (s === 'DOWN' || s === 'TEMPORARILY_UNAVAILABLE') return 'admin-monitor-pill--warn';
+    return '';
+};
 
 const DashboardDataHealth = ({ data }) => {
     if (!data) {
@@ -19,13 +27,14 @@ const DashboardDataHealth = ({ data }) => {
 
     const unavailable = Array.isArray(data.unavailableSections) ? data.unavailableSections : [];
     const partial = data.availability === 'PARTIALLY_AVAILABLE';
+    const health = isSectionAvailable(data.operationalHealth) ? data.operationalHealth.data : null;
 
     return (
         <section className="admin-monitor-card admin-monitor-health-card">
             <header className="admin-monitor-card__header">
                 <div>
-                    <h2>Tình trạng dữ liệu</h2>
-                    <p className="admin-monitor-hint">Độ đầy đủ của dashboard lần tải này.</p>
+                    <h2>Tình trạng dữ liệu & hệ thống</h2>
+                    <p className="admin-monitor-hint">Độ đầy đủ dashboard và health check API/DB.</p>
                 </div>
                 <span
                     className={`admin-monitor-pill ${
@@ -46,6 +55,34 @@ const DashboardDataHealth = ({ data }) => {
                     <span>Nhóm tạm lỗi</span>
                     <strong>{unavailable.length}</strong>
                 </div>
+                {health ? (
+                    <>
+                        <div>
+                            <span>API</span>
+                            <strong>
+                                <span className={`admin-monitor-pill ${statusClass(health.apiStatus)}`}>
+                                    {health.apiStatus || '—'}
+                                </span>
+                            </strong>
+                        </div>
+                        <div>
+                            <span>Database</span>
+                            <strong>
+                                <span
+                                    className={`admin-monitor-pill ${statusClass(health.databaseStatus)}`}
+                                >
+                                    {health.databaseStatus || '—'}
+                                </span>
+                            </strong>
+                        </div>
+                        <div>
+                            <span>Health check</span>
+                            <strong className="admin-monitor-compact-metrics__text">
+                                {formatInstantVi(health.checkedAt)}
+                            </strong>
+                        </div>
+                    </>
+                ) : null}
             </div>
             {unavailable.length > 0 ? (
                 <ul className="admin-monitor-unavailable-list">
