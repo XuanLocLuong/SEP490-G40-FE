@@ -67,7 +67,7 @@ const GuestHeader = () => {
         // On landing (`/`): behave like candidate header (scroll to section).
         if (isOnHome) {
             setActiveHomeSection(item.id);
-            scrollToHomeSection(item.id);
+            scrollToHomeSection(item.id, { behavior: 'smooth' });
             return;
         }
 

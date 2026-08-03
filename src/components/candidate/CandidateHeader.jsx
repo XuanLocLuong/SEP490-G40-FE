@@ -83,7 +83,7 @@ const CandidateHeader = () => {
 
         if (isOnHome) {
             setActiveHomeSection(item.id);
-            scrollToHomeSection(item.id);
+            scrollToHomeSection(item.id, { behavior: 'smooth' });
             return;
         }
 

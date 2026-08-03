@@ -10,6 +10,7 @@ export const ROUTES = {
     JOB_DETAIL: '/jobs/:jobId',
     BUSINESS_PROFILE: '/business/:businessId',
     CANDIDATE_PUBLIC_PROFILE: '/candidates/:candidateId',
+    TOP_RECRUITERS: '/top-recruiters',
 
     CANDIDATE_HOME: '/candidate',
     RECRUITER_HOME: '/recruiter',

@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { setBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
-import { notifyLoginRequired } from '../../utils/notifyLoginRequired.js';
 import { openChatPanel } from '../../utils/chatEvents.js';
 import { ChatIcon } from '../common/icons.jsx';
 
@@ -29,7 +28,6 @@ const JobChatButton = ({
         e.stopPropagation();
 
         if (!auth) {
-            notifyLoginRequired('chat');
             const returnPath = `${location.pathname}${location.search}`;
             setBookmarkReturnPath(returnPath);
             navigate(ROUTES.LOGIN, { state: { from: returnPath } });

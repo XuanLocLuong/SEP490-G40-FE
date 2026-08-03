@@ -5,11 +5,12 @@ import {
     formatSalary,
     formatLocation,
     formatVacancyLabel,
+    formatJobShiftsLabel,
     getBusinessInitial,
     hasAppliedToJob,
 } from '../../utils/formatters.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
-import { MapPinIcon, BriefcaseIcon, UsersIcon } from '../common/icons.jsx';
+import { MapPinIcon, BriefcaseIcon, UsersIcon, ClockIcon } from '../common/icons.jsx';
 import { getJobDetailPath } from '../../routes/path.js';
 
 const CompactBusinessLogo = ({ name, logoUrl }) => {
@@ -41,6 +42,7 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
     const applied = hasAppliedToJob(job);
     const vacancyLabel = formatVacancyLabel(job);
     const isVacancyFull = vacancyLabel === 'Đã hết vị trí';
+    const shiftsLabel = formatJobShiftsLabel(job.shifts);
 
     return (
         <Link
@@ -76,6 +78,11 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
                             {distance.label}
                         </span>
                     )}
+                    {job.urgent && (
+                        <span className="job-compact-card__meta-item job-compact-card__urgent">
+                            Tuyển gấp
+                        </span>
+                    )}
                     {applied && (
                         <span className="job-compact-card__meta-item job-compact-card__applied">
                             Đã ứng tuyển
@@ -84,6 +91,15 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
                     <span className="job-compact-card__meta-item job-compact-card__salary">
                         {formatSalary(job.salaryMin, job.salaryMax)}
                     </span>
+                    {shiftsLabel && (
+                        <span
+                            className="job-compact-card__meta-item job-compact-card__shifts"
+                            title={shiftsLabel}
+                        >
+                            <ClockIcon width={14} height={14} />
+                            <span className="job-compact-card__meta-text">{shiftsLabel}</span>
+                        </span>
+                    )}
                     {formatJobType(job.jobType) && (
                         <span className="job-compact-card__meta-item">
                             <BriefcaseIcon width={14} height={14} />

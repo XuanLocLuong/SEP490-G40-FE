@@ -6,11 +6,13 @@ import { fetchRecommendedJobs } from '../../apis/RecommendationApi.jsx';
 import { ROUTES } from '../../routes/path.js';
 import { mapRecommendationToJob } from '../../utils/formatters.js';
 import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
+import { JOB_LIST_SECTIONS } from '../../utils/jobQuery.js';
 import AiRecommendationsEmptyState from './AiRecommendationsEmptyState.jsx';
 import AiRecommendationsPendingOfferHint from './AiRecommendationsPendingOfferHint.jsx';
 import AiRecommendationsProfileHint from './AiRecommendationsProfileHint.jsx';
 
 const PREVIEW_SIZE = 4;
+const DETAIL_SEARCH = `?section=${JOB_LIST_SECTIONS.AI}`;
 
 const AiRecommendationsSection = () => {
     const [jobs, setJobs] = useState([]);
@@ -79,7 +81,14 @@ const AiRecommendationsSection = () => {
                     <AiRecommendationsProfileHint />
                     <div className="landing-jobs__grid landing-jobs__grid--compact">
                         {jobs.map((job) => (
-                            <JobCard key={job.id} job={job} compact showDistance />
+                            <JobCard
+                                key={job.id}
+                                job={job}
+                                compact
+                                showDistance
+                                detailSearch={DETAIL_SEARCH}
+                                homeSectionId={HOME_SECTION_IDS.SUGGESTIONS}
+                            />
                         ))}
                     </div>
                 </>

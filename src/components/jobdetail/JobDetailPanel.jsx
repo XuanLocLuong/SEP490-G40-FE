@@ -16,7 +16,7 @@ import {
     hasAppliedToJob,
     isPrimarySkill,
 } from '../../utils/formatters.js';
-import { CheckCircleIcon, MapPinIcon, ClockIcon } from '../common/icons.jsx';
+import { CheckCircleIcon, MapPinIcon, ClockIcon, UsersIcon } from '../common/icons.jsx';
 import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import JobApplyButton from '../job/JobApplyButton.jsx';
 import JobBookmarkButton from '../job/JobBookmarkButton.jsx';
@@ -177,6 +177,24 @@ const JobDetailPanel = ({
 
             <h1 className="job-detail-panel__title">{job.title}</h1>
 
+            {(vacancyLabel || job.urgent) && (
+                <div className="job-detail-panel__badges">
+                    {vacancyLabel && (
+                        <span
+                            className={`job-detail-panel__vacancy-badge${
+                                isVacancyFull ? ' job-detail-panel__vacancy-badge--full' : ''
+                            }`}
+                        >
+                            <UsersIcon width={16} height={16} />
+                            {vacancyLabel}
+                        </span>
+                    )}
+                    {job.urgent && (
+                        <span className="job-detail-panel__badge">Tuyển gấp</span>
+                    )}
+                </div>
+            )}
+
             {engagementStats.length > 0 && (
                 <p className="job-detail-panel__engagement-row">
                     {engagementStats.map((stat, index) => (
@@ -227,10 +245,6 @@ const JobDetailPanel = ({
                     </strong>
                 </div>
             </div>
-
-            {job.urgent && (
-                <p className="job-detail-panel__badge">Tuyển gấp</p>
-            )}
 
             {!isPreview && (
                 <div className="job-detail-panel__actions">
@@ -320,22 +334,13 @@ const JobDetailPanel = ({
                 </section>
             )}
 
-            <div className="job-detail-panel__footer-meta">
-                {formatJobType(job.jobType) && (
+            {formatJobType(job.jobType) && (
+                <div className="job-detail-panel__footer-meta">
                     <span className="job-detail-panel__tag job-detail-panel__tag--type">
                         {formatJobType(job.jobType)}
                     </span>
-                )}
-                {vacancyLabel && (
-                    <span
-                        className={`job-detail-panel__meta-text${
-                            isVacancyFull ? ' job-detail-panel__meta-text--full' : ''
-                        }`}
-                    >
-                        {vacancyLabel}
-                    </span>
-                )}
-            </div>
+                </div>
+            )}
         </article>
     );
 };

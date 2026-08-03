@@ -101,6 +101,7 @@ const TopEmployersSection = ({ compact = false }) => {
                             employer={employer}
                             compact={compact}
                             showRank
+                            homeSectionId={HOME_SECTION_IDS.TOP_EMPLOYERS}
                         />
                     ))}
                 </div>
