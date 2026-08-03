@@ -10,6 +10,16 @@ export const getVerificationApiErrorMessage = (error, fallback = 'Có lỗi xả
     return error?.message || fallback;
 };
 
+/** BE: /retry khi chưa có request → báo dùng /submit. */
+export const isVerificationRetryWithoutRequestError = (error) => {
+    const msg = String(getVerificationApiErrorMessage(error, '') || '').toLowerCase();
+    return (
+        msg.includes('/submit') ||
+        msg.includes('chưa có yêu cầu') ||
+        msg.includes('chua co yeu cau')
+    );
+};
+
 const appendIfPresent = (formData, key, value) => {
     if (value == null || value === '') return;
     formData.append(key, value);
@@ -24,8 +34,7 @@ const appendIfPresent = (formData, key, value) => {
  *   frontImage: File,
  *   backImage: File,
  *   taxCode?: string,
- *   certificateImage?: File,
- *   businessImages?: File[],
+ *   certificateImages?: File[],
  * }} payload
  * @param {{ retry?: boolean }} options
  */
@@ -35,8 +44,7 @@ export const submitVerification = (
         frontImage,
         backImage,
         taxCode,
-        certificateImage,
-        businessImages = [],
+        certificateImages = [],
     },
     { retry = false } = {}
 ) => {
@@ -48,9 +56,8 @@ export const submitVerification = (
     const trimmedTax = typeof taxCode === 'string' ? taxCode.trim() : taxCode;
     appendIfPresent(formData, 'taxCode', trimmedTax);
 
-    if (certificateImage) formData.append('certificateImage', certificateImage);
-    (businessImages || []).forEach((file) => {
-        if (file) formData.append('businessImages', file);
+    (certificateImages || []).forEach((file) => {
+        if (file) formData.append('certificateImages', file);
     });
 
     const path = retry ? `${BASE}/retry` : `${BASE}/submit`;
