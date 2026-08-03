@@ -10,16 +10,14 @@ export const ROUTES = {
     JOB_DETAIL: '/jobs/:jobId',
     BUSINESS_PROFILE: '/business/:businessId',
     CANDIDATE_PUBLIC_PROFILE: '/candidates/:candidateId',
+    TOP_RECRUITERS: '/top-recruiters',
 
     CANDIDATE_HOME: '/candidate',
     RECRUITER_HOME: '/recruiter',
     POST_MANAGER_HOME: '/post-manager',
     MANUAL_CHECK_HOME: '/manual-check',
     ADMIN_HOME: '/admin',
-
-    // ⚠️ Các path dưới đây CHƯA có Page/Route đăng ký trong AppRouter —
-    // chỉ dùng làm target cho Sidebar nav theo đúng thiết kế. Bấm vào sẽ bị
-    // catch-all route đá về lại trang chủ cho tới khi task tương ứng được code.
+    ADMIN_ACCOUNTS: '/admin/accounts',
     /** List JobLink gợi ý — tái dùng JobListPage với ?section=ai */
     CANDIDATE_AI_SUGGESTIONS: '/jobs?section=ai',
     /** List lịch sử tương tác VIEW/SAVE/APPLY */
@@ -39,8 +37,9 @@ export const ROUTES = {
     RECRUITER_MY_JOBS: '/recruiter/jobs',
     RECRUITER_APPLICANTS: '/recruiter/applicants',
     RECRUITER_INVITATIONS: '/recruiter/invitations',
-    RECRUITER_AI_SUGGESTIONS: '/recruiter/ai-suggestions',
+    RECRUITER_JOBLINK_SUGGESTIONS: '/recruiter/joblink-suggestions',
     RECRUITER_ANALYTICS: '/recruiter/analytics',
+    RECRUITER_JOB_ANALYTICS: '/recruiter/analytics/jobs/:jobId',
     RECRUITER_MESSAGES: '/recruiter/messages',
     RECRUITER_TRUST_SCORE: '/recruiter/trust-score',
     RECRUITER_ALL_JOBS: '/recruiter/all-jobs',
@@ -69,12 +68,41 @@ export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
 
 export const getRecruiterEditJobPath = (jobId) => `/recruiter/jobs/${jobId}/edit`;
 
-export const getRecruiterApplicantsPath = (jobId) =>
-    `${ROUTES.RECRUITER_APPLICANTS}?jobId=${jobId}`;
-
-export const getRecruiterInvitationsPath = (jobId, { fromMyJobs = false } = {}) => {
+/**
+ * @param {string|number} jobId
+ * @param {{ from?: 'my-jobs' | 'analytics' }} [options]
+ */
+export const getRecruiterApplicantsPath = (jobId, { from } = {}) => {
     const params = new URLSearchParams({ jobId: String(jobId) });
-    if (fromMyJobs) params.set('from', 'my-jobs');
+    if (from) params.set('from', String(from));
+    return `${ROUTES.RECRUITER_APPLICANTS}?${params.toString()}`;
+};
+
+export const getRecruiterJobAnalyticsPath = (jobId) =>
+    `/recruiter/analytics/jobs/${jobId}`;
+
+/** My Jobs list — optional tab, jobId (highlight card), from (vd. overview → hiện nút quay lại). */
+export const getRecruiterMyJobsPath = ({ tab, jobId, from } = {}) => {
+    const params = new URLSearchParams();
+    if (tab) params.set('tab', String(tab));
+    if (jobId != null && jobId !== '') params.set('jobId', String(jobId));
+    if (from) params.set('from', String(from));
+    const qs = params.toString();
+    return qs ? `${ROUTES.RECRUITER_MY_JOBS}?${qs}` : ROUTES.RECRUITER_MY_JOBS;
+};
+
+/**
+ * @param {string|number} jobId
+ * @param {{ from?: 'my-jobs' | 'analytics', fromMyJobs?: boolean }} [options]
+ * fromMyJobs giữ tương thích gọi cũ → from=my-jobs
+ */
+export const getRecruiterInvitationsPath = (
+    jobId,
+    { from, fromMyJobs = false } = {}
+) => {
+    const params = new URLSearchParams({ jobId: String(jobId) });
+    const fromValue = from || (fromMyJobs ? 'my-jobs' : null);
+    if (fromValue) params.set('from', String(fromValue));
     return `${ROUTES.RECRUITER_INVITATIONS}?${params.toString()}`;
 };
 

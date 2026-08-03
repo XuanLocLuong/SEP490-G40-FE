@@ -22,6 +22,13 @@
     text-decoration: underline;
 }
 
+.job-detail-page__section-hint {
+    margin: 0 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
 .job-detail-page__filter-actions {
     display: flex;
     justify-content: flex-end;
@@ -206,6 +213,10 @@
     font-weight: 600;
 }
 
+.job-compact-card__shifts {
+    color: var(--color-text-muted);
+}
+
 .job-compact-card__vacancy {
     font-weight: 600;
     color: var(--color-text);
@@ -216,6 +227,8 @@
 }
 
 .job-compact-card__distance {
+    align-self: flex-start;
+    width: fit-content;
     padding: 2px 8px;
     border-radius: 999px;
     background: #e8f3ff;
@@ -230,7 +243,20 @@
     border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
 }
 
+.job-compact-card__urgent {
+    align-self: flex-start;
+    width: fit-content;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--color-danger-bg, #fef2f2);
+    color: var(--color-danger);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
+    font-weight: 700;
+}
+
 .job-compact-card__applied {
+    align-self: flex-start;
+    width: fit-content;
     padding: 2px 8px;
     border-radius: 999px;
     background: #ecfdf5;
@@ -395,6 +421,38 @@
     color: var(--color-text);
 }
 
+.job-detail-panel__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+}
+
+.job-detail-panel__vacancy-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid color-mix(in srgb, #059669 35%, transparent);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.job-detail-panel__vacancy-badge svg {
+    flex-shrink: 0;
+}
+
+.job-detail-panel__vacancy-badge--full {
+    background: #fef2f2;
+    color: var(--color-danger, #b91c1c);
+    border-color: color-mix(in srgb, var(--color-danger, #dc2626) 35%, transparent);
+}
+
 .job-detail-panel__engagement-row {
     display: flex;
     flex-wrap: wrap;
@@ -507,14 +565,17 @@
 }
 
 .job-detail-panel__badge {
-    display: inline-block;
-    margin: 0 0 12px;
-    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 6px 12px;
     border-radius: 999px;
     background: #fff0f0;
     color: var(--color-danger);
+    border: 1px solid color-mix(in srgb, var(--color-danger, #dc2626) 35%, transparent);
     font-size: 12px;
     font-weight: 700;
+    line-height: 1.2;
 }
 
 .job-detail-panel__section {
@@ -560,7 +621,7 @@
 }
 
 .job-detail-panel__tag--primary {
-    border: 1px solid #c7d7fe;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 40%, #c7d7fe);
     background: #eef3ff;
     color: var(--color-primary);
     font-weight: 600;

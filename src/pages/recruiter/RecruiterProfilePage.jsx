@@ -36,6 +36,11 @@ import ReadonlyMapPreview from '../../components/recruiter/ReadonlyMapPreview.js
 import HiringHistoryTab from '../../components/recruiter/HiringHistoryTab.jsx';
 import { clampPercent } from '../../utils/profileFormat.js';
 import { plainTextLength } from '../../utils/richTextUtils.js';
+import {
+    formatBusinessTypeLabel,
+    mapBusinessTypeOptions,
+    toBusinessTypeCode,
+} from '../../utils/businessTypeDisplay.js';
 import '../../assets/styles/AccountSettingsStyle.css';
 import '../../assets/styles/RecruiterProfileStyle.css';
 
@@ -46,17 +51,6 @@ const BUSINESS_DESCRIPTION_MAX_LENGTH = 2000;
 const BUSINESS_DESCRIPTION_TEMPLATE = `<h2>Giới thiệu</h2><p>Mô tả ngắn về doanh nghiệp, lĩnh vực, quy mô...</p><h2>Văn hóa &amp; môi trường làm việc</h2><ul><li>Môi trường năng động, hỗ trợ sinh viên part-time</li><li>Văn hóa giao tiếp cởi mở, làm việc nhóm</li></ul><h2>Phúc lợi</h2><ul><li>Lương theo ca + thưởng hiệu suất</li><li>BHXH, phụ cấp ăn ca (nếu có)</li></ul><h2>Đặc quyền khác</h2><ul><li>Đào tạo nghiệp vụ khi vào làm</li><li>Cơ hội chuyển chính thức</li></ul>`;
 
 const hasLogo = (url) => Boolean(url?.trim());
-
-const BUSINESS_TYPE_OPTIONS = [
-    'Công ty TNHH',
-    'Công ty cổ phần',
-    'Doanh nghiệp tư nhân',
-    'Hộ kinh doanh',
-    'Startup',
-    'Tập đoàn',
-    'F&B (Dịch vụ ăn uống)',
-    'Khác',
-];
 
 const emptyAddressInitial = () => ({
     provinceId: '',
@@ -82,6 +76,7 @@ const emptyProfile = () => ({
     memberSince: null,
     verificationStatus: null,
     badge: null,
+    taxCode: '',
     totalActiveJobs: 0,
 });
 
@@ -104,7 +99,7 @@ const mapProfileFromApi = (data) => ({
     businessName: data?.businessName || '',
     description: data?.description || '',
     websiteUrl: data?.websiteUrl || '',
-    businessType: data?.businessType || '',
+    businessType: toBusinessTypeCode(data?.businessType) || data?.businessType || '',
     phone: data?.phone || '',
     email: data?.email || '',
     logoUrl: data?.logoUrl || null,
@@ -116,6 +111,7 @@ const mapProfileFromApi = (data) => ({
     memberSince: data?.memberSince || null,
     verificationStatus: data?.verificationStatus || null,
     badge: data?.badge || null,
+    taxCode: data?.taxCode || '',
     totalActiveJobs: data?.totalActiveJobs ?? 0,
 });
 
@@ -126,7 +122,7 @@ const buildUpdatePayload = (form, businessId) => ({
     phone: form.phone?.trim() || null,
     email: form.email?.trim() || null,
     websiteUrl: form.websiteUrl?.trim() || null,
-    businessType: form.businessType?.trim() || null,
+    businessType: toBusinessTypeCode(form.businessType),
 });
 
 const formatMemberSince = (value) => {
@@ -137,12 +133,15 @@ const formatMemberSince = (value) => {
     return `${month}/${date.getFullYear()}`;
 };
 
-const isVerified = (status) =>
-    status === 'BUSINESS_PASSED' ||
-    status === 'CCCD_PASSED' ||
-    status === 'FACE_PASSED' ||
+const isBusinessVerifiedBadge = (badge) => badge === 'BUSINESS_VERIFIED';
+
+const isPendingManualVerification = (status) =>
     status === 'BUSINESS_MANUALLY' ||
     status === 'CCCD_MANUALLY';
+
+const isRejectedVerification = (status) =>
+    status === 'BUSINESS_REJECTED' ||
+    status === 'CCCD_REJECTED';
 
 const getHeroTitle = (noProfile, form, profile) => {
     if (noProfile) {
@@ -211,6 +210,7 @@ const RecruiterProfilePage = () => {
     const [profile, setProfile] = useState(emptyProfile);
     const [form, setForm] = useState(emptyForm);
     const [loading, setLoading] = useState(true);
+    const [businessTypeOptions, setBusinessTypeOptions] = useState([]);
     const [noProfile, setNoProfile] = useState(false);
     const [saving, setSaving] = useState(false);
     const [logoLoading, setLogoLoading] = useState(false);
@@ -366,6 +366,14 @@ const RecruiterProfilePage = () => {
         const accountContact = await getAccountContact();
 
         try {
+            try {
+                const types = await recruiterProfileApi.getBusinessTypes();
+                setBusinessTypeOptions(mapBusinessTypeOptions(types));
+            } catch {
+                setBusinessTypeOptions([]);
+                toast.warn('Không tải được danh mục ngành nghề.');
+            }
+
             const data = await recruiterProfileApi.getProfile();
             const mapped = mapProfileFromApi(data);
             setProfile(mapped);
@@ -443,6 +451,12 @@ const RecruiterProfilePage = () => {
             }
         }
 
+        const businessTypeCode = toBusinessTypeCode(form.businessType, businessTypeOptions);
+        if (form.businessType?.trim() && !businessTypeCode) {
+            toast.error('Ngành nghề không hợp lệ. Vui lòng chọn lại trong danh sách.');
+            return;
+        }
+
         setSaving(true);
         const isCreate = noProfile || !profile.businessId;
         let businessId = profile.businessId;
@@ -453,7 +467,7 @@ const RecruiterProfilePage = () => {
                     businessName: form.businessName.trim(),
                     description: form.description?.trim() || null,
                     websiteUrl: form.websiteUrl?.trim() || null,
-                    businessType: form.businessType?.trim() || null,
+                    businessType: businessTypeCode,
                     email: form.email?.trim() || null,
                     phone: form.phone?.trim() || null,
                 });
@@ -654,6 +668,21 @@ const RecruiterProfilePage = () => {
     const galleryCount = profile.galleryImages?.length || 0;
     const canAddGallery = galleryCount < MAX_GALLERY;
     const profileReadyForJob = !noProfile && Boolean(savedLocation);
+    /** Cần hồ sơ đã lưu (businessId + tên + địa chỉ) trước khi mở wizard xác minh. */
+    const canStartVerification =
+        Boolean(profile.businessId) &&
+        Boolean(profile.businessName?.trim()) &&
+        Boolean(savedLocation);
+    const verificationGateHint = (() => {
+        if (canStartVerification || isBusinessVerifiedBadge(profile.badge)) return '';
+        const missing = [];
+        if (!profile.businessId || !profile.businessName?.trim()) missing.push('tên doanh nghiệp');
+        if (!savedLocation) missing.push('địa chỉ trụ sở');
+        if (noProfile || missing.length === 2) {
+            return 'Hãy cập nhật và lưu thông tin doanh nghiệp bên dưới (tên + địa chỉ trụ sở) trước khi xác minh.';
+        }
+        return `Hãy bổ sung và lưu ${missing.join(' và ')} bên dưới trước khi xác minh.`;
+    })();
     const displayLogoUrl = pendingLogoPreview || profile.logoUrl;
     const hasDisplayLogo = hasLogo(displayLogoUrl);
 
@@ -787,14 +816,67 @@ const RecruiterProfilePage = () => {
                                 </div>
                                 {profile.businessType && (
                                     <span className="recruiter-profile__badge recruiter-profile__badge--muted">
-                                        {profile.businessType}
+                                        {formatBusinessTypeLabel(
+                                            profile.businessType,
+                                            businessTypeOptions
+                                        )}
                                     </span>
                                 )}
-                                {isVerified(profile.verificationStatus) && (
+                                {isBusinessVerifiedBadge(profile.badge) ? (
                                     <span className="recruiter-profile__badge recruiter-profile__badge--verified">
                                         <CheckCircleIcon width={14} height={14} />
                                         Đã xác thực
                                     </span>
+                                ) : (
+                                    <div className="recruiter-profile__verify-cluster">
+                                        <div className="recruiter-profile__verify-cluster-row">
+                                            {isPendingManualVerification(profile.verificationStatus) ? (
+                                                <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                    <ClockIcon width={14} height={14} />
+                                                    Đang chờ duyệt
+                                                </span>
+                                            ) : isRejectedVerification(profile.verificationStatus) ? (
+                                                <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                    Xác minh chưa đạt
+                                                </span>
+                                            ) : (
+                                                <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                    Chưa xác thực
+                                                </span>
+                                            )}
+                                            {canStartVerification ? (
+                                                <Link
+                                                    to={
+                                                        isRejectedVerification(profile.verificationStatus) ||
+                                                        isPendingManualVerification(profile.verificationStatus)
+                                                            ? `${ROUTES.RECRUITER_VERIFICATION}?retry=1`
+                                                            : ROUTES.RECRUITER_VERIFICATION
+                                                    }
+                                                    className="recruiter-profile__badge recruiter-profile__badge--verify-cta"
+                                                >
+                                                    {isPendingManualVerification(profile.verificationStatus)
+                                                        ? 'Xem / nộp lại'
+                                                        : isRejectedVerification(profile.verificationStatus)
+                                                          ? 'Thử lại ngay'
+                                                          : 'Xác minh ngay'}
+                                                </Link>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className="recruiter-profile__badge recruiter-profile__badge--verify-cta recruiter-profile__badge--verify-cta-disabled"
+                                                    disabled
+                                                    title={verificationGateHint}
+                                                >
+                                                    Xác minh ngay
+                                                </button>
+                                            )}
+                                        </div>
+                                        {!canStartVerification && verificationGateHint ? (
+                                            <p className="recruiter-profile__verify-gate-hint">
+                                                {verificationGateHint}
+                                            </p>
+                                        ) : null}
+                                    </div>
                                 )}
                             </div>
 
@@ -940,15 +1022,25 @@ const RecruiterProfilePage = () => {
                                         <label htmlFor="rp-business-type">Ngành nghề</label>
                                         <select
                                             id="rp-business-type"
-                                            value={form.businessType}
+                                            value={
+                                                toBusinessTypeCode(
+                                                    form.businessType,
+                                                    businessTypeOptions
+                                                ) || ''
+                                            }
                                             onChange={(e) =>
                                                 updateFormField('businessType', e.target.value)
                                             }
+                                            disabled={businessTypeOptions.length === 0}
                                         >
-                                            <option value="">— Chọn ngành nghề —</option>
-                                            {BUSINESS_TYPE_OPTIONS.map((opt) => (
-                                                <option key={opt} value={opt}>
-                                                    {opt}
+                                            <option value="">
+                                                {businessTypeOptions.length === 0
+                                                    ? '— Đang tải ngành nghề —'
+                                                    : '— Chọn ngành nghề —'}
+                                            </option>
+                                            {businessTypeOptions.map((opt) => (
+                                                <option key={opt.value} value={opt.value}>
+                                                    {opt.label}
                                                 </option>
                                             ))}
                                         </select>
@@ -1035,7 +1127,7 @@ const RecruiterProfilePage = () => {
                                             Tài khoản
                                         </h2>
                                         <Link
-                                            to={ROUTES.RECRUITER_SETTINGS}
+                                            to={`${ROUTES.RECRUITER_SETTINGS}?from=profile`}
                                             className="recruiter-profile__panel-action"
                                         >
                                             Cài đặt
@@ -1122,14 +1214,21 @@ const RecruiterProfilePage = () => {
                                 <button
                                     type="button"
                                     className="account-settings__btn account-settings__btn--primary recruiter-profile__save-btn"
-                                    disabled={saving || !canSave}
+                                    disabled={saving || !canSave || galleryLoading || logoLoading}
+                                    title={
+                                        galleryLoading || logoLoading
+                                            ? 'Vui lòng đợi ảnh đang xử lý xong trước khi lưu.'
+                                            : undefined
+                                    }
                                     onClick={handleSaveAll}
                                 >
                                     {saving
                                         ? 'Đang lưu...'
-                                        : noProfile
-                                          ? 'Tạo hồ sơ'
-                                          : 'Lưu thay đổi'}
+                                        : galleryLoading || logoLoading
+                                          ? 'Đang xử lý ảnh...'
+                                          : noProfile
+                                            ? 'Tạo hồ sơ'
+                                            : 'Lưu thay đổi'}
                                 </button>
                                 </div>
                             </div>

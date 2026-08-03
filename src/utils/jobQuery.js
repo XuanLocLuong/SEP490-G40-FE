@@ -39,6 +39,10 @@ export const parseJobListSection = (searchParams) => {
     if (Object.values(JOB_LIST_SECTIONS).includes(section)) return section;
     return null;
 };
+
+/** Section có form search + filter (urgent API nhận JobSearchRequestDTO). */
+export const isSearchableJobListSection = (section) =>
+    section === JOB_LIST_SECTIONS.URGENT;
 /** Jobs loaded per request in /jobs/:id sidebar (append via Load more). BE max size = 50. */
 export const JOB_DETAIL_SIDEBAR_PAGE_SIZE = 10;
 
@@ -312,7 +316,7 @@ export const fetchDedupedInteractionPage = async (page = 0, size = JOB_LIST_PAGE
 
 export const fetchJobListPage = async (page, size, query, section = null) => {
     if (section === JOB_LIST_SECTIONS.URGENT) {
-        const data = unwrapPage(await fetchUrgentJobs({ page, size }));
+        const data = unwrapPage(await fetchUrgentJobs(buildSearchBody(page, size, query)));
         return data;
     }
     if (section === JOB_LIST_SECTIONS.AI) {
@@ -373,8 +377,11 @@ const decodeSchedules = (raw) => {
     );
 };
 
-export const buildJobListSearchParams = (query) => {
+export const buildJobListSearchParams = (query, options = {}) => {
     const params = new URLSearchParams();
+    if (options.section) {
+        params.set('section', options.section);
+    }
     if (query?.nearMe && hasNearMeCoords(query)) {
         params.set('nearMe', '1');
         params.set('lat', String(query.latitude));

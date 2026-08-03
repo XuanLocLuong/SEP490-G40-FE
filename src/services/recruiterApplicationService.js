@@ -11,7 +11,7 @@ export { getRecruiterApplicationApiErrorMessage, isApplicationCancelledError };
 
 export const APPLICATION_STATUS_FILTERS = [
     { value: 'PENDING', label: 'Chờ duyệt' },
-    { value: 'ACCEPTED', label: 'Đã mời' },
+    { value: 'ACCEPTED', label: 'Đã chấp nhận' },
     { value: 'REJECTED', label: 'Từ chối' },
     { value: 'HIRED', label: 'Đã tuyển' },
     { value: 'ALL', label: 'Tất cả' },
@@ -32,7 +32,7 @@ export const REJECTION_REASONS = [
 
 const STATUS_LABELS = {
     PENDING: 'Chờ duyệt',
-    ACCEPTED: 'Đã mời – chờ ứng viên xác nhận',
+    ACCEPTED: 'Đã chấp nhận – chờ xác nhận nhận việc',
     REJECTED: 'Đã từ chối',
     HIRED: 'Đã tuyển',
     COMPLETED: 'Đã hoàn thành',

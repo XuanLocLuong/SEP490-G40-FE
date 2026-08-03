@@ -4,6 +4,20 @@
     padding: 8px 0 24px;
 }
 
+.account-settings__back {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 16px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-primary, #2563eb);
+    text-decoration: none;
+}
+
+.account-settings__back:hover {
+    text-decoration: underline;
+}
+
 .account-settings__header h1 {
     margin: 0 0 8px;
     font-size: 1.5rem;

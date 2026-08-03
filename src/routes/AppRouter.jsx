@@ -16,6 +16,7 @@ import LandingPage from '../pages/guest/LandingPage.jsx';
 import JobListPage from '../pages/guest/JobListPage.jsx';
 import JobDetailPage from '../pages/guest/JobDetailPage.jsx';
 import PublicBusinessProfilePage from '../pages/guest/PublicBusinessProfilePage.jsx';
+import TopRecruitersPage from '../pages/guest/TopRecruitersPage.jsx';
 import Login from '../pages/auth/Login.jsx';
 import Register from '../pages/auth/Register.jsx';
 import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
@@ -25,18 +26,29 @@ import AvailabilityPage from '../pages/candidate/availability/AvailabilityPage.j
 import CandidateApplicationHistoryPage from '../pages/candidate/CandidateApplicationHistoryPage.jsx';
 import CandidateInvitationsPage from '../pages/candidate/CandidateInvitationsPage.jsx';
 import CandidateNotificationsPage from '../pages/candidate/CandidateNotificationsPage.jsx';
+import TrustScoreHistoryPage from '../pages/shared/TrustScoreHistoryPage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
+import RecruiterVerificationPage from '../pages/recruiter/RecruiterVerificationPage.jsx';
 import CreateJobPage from '../pages/recruiter/jobs/CreateJobPage.jsx';
 import MyJobsPage from '../pages/recruiter/jobs/MyJobsPage.jsx';
 import ApplicantsPage from '../pages/recruiter/applicants/ApplicantsPage.jsx';
 import RecruiterInvitationsPage from '../pages/recruiter/invitations/RecruiterInvitationsPage.jsx';
 import RecruiterRecommendationsPage from '../pages/recruiter/recommendations/RecruiterRecommendationsPage.jsx';
+import RecruiterAnalyticsPage from '../pages/recruiter/analytics/RecruiterAnalyticsPage.jsx';
+import JobAnalyticsDetailPage from '../pages/recruiter/analytics/JobAnalyticsDetailPage.jsx';
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
+import PostManagerReportQueuePage from '../pages/post-manager/PostManagerReportQueuePage.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
+import ManualVerificationQueuePage from '../pages/manual-check/ManualVerificationQueuePage.jsx';
+import ManualCheckReviewModerationPage from '../pages/manual-check/ManualCheckReviewModerationPage.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import AdminSkillsPage from '../pages/admin/AdminSkillsPage.jsx';
+import AdminTrustScoreRulesPage from '../pages/admin/AdminTrustScoreRulesPage.jsx';
+import AdminAccountsPage from '../pages/admin/AdminAccountsPage.jsx';
+import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage.jsx';
+import AdminSystemConfigPage from '../pages/admin/AdminSystemConfigPage.jsx';
 import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
 import CandidatePublicProfilePage from '../pages/shared/CandidatePublicProfilePage.jsx';
 import RoleBasedShellLayout from '../layouts/RoleBasedShellLayout.jsx';
@@ -66,6 +78,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.JOB_LIST} element={<JobListPage />} />
                 <Route path={ROUTES.JOB_DETAIL} element={<JobDetailPage />} />
                 <Route path={ROUTES.BUSINESS_PROFILE} element={<PublicBusinessProfilePage />} />
+                <Route path={ROUTES.TOP_RECRUITERS} element={<TopRecruitersPage />} />
             </Route>
 
             {/* ---- Auth (Login/Register/Verify) — KHÔNG có Header/Footer,
@@ -118,6 +131,10 @@ const AppRouter = () => {
                     element={<CandidateApplicationHistoryPage />}
                 />
                 <Route
+                    path={ROUTES.CANDIDATE_TRUST_SCORE}
+                    element={<TrustScoreHistoryPage />}
+                />
+                <Route
                     path={ROUTES.CANDIDATE_NOTIFICATIONS}
                     element={<CandidateNotificationsPage />}
                 />
@@ -134,14 +151,24 @@ const AppRouter = () => {
                 <Route path={ROUTES.RECRUITER_HOME} element={<RecruiterHomePage />} />
                 <Route path={ROUTES.RECRUITER_SETTINGS} element={<CandidateSettingsPage />} />
                 <Route path={ROUTES.RECRUITER_PROFILE} element={<RecruiterProfilePage />} />
+                <Route path={ROUTES.RECRUITER_VERIFICATION} element={<RecruiterVerificationPage />} />
                 <Route path={ROUTES.RECRUITER_CREATE_JOB} element={<CreateJobPage />} />
                 <Route path={ROUTES.RECRUITER_EDIT_JOB} element={<CreateJobPage />} />
                 <Route path={ROUTES.RECRUITER_MY_JOBS} element={<MyJobsPage />} />
                 <Route path={ROUTES.RECRUITER_APPLICANTS} element={<ApplicantsPage />} />
                 <Route path={ROUTES.RECRUITER_INVITATIONS} element={<RecruiterInvitationsPage />} />
                 <Route
-                    path={ROUTES.RECRUITER_AI_SUGGESTIONS}
+                    path={ROUTES.RECRUITER_JOBLINK_SUGGESTIONS}
                     element={<RecruiterRecommendationsPage />}
+                />
+                <Route path={ROUTES.RECRUITER_ANALYTICS} element={<RecruiterAnalyticsPage />} />
+                <Route
+                    path={ROUTES.RECRUITER_JOB_ANALYTICS}
+                    element={<JobAnalyticsDetailPage />}
+                />
+                <Route
+                    path={ROUTES.RECRUITER_TRUST_SCORE}
+                    element={<TrustScoreHistoryPage />}
                 />
                 <Route
                     path={ROUTES.RECRUITER_NOTIFICATIONS}
@@ -159,6 +186,7 @@ const AppRouter = () => {
             >
                 <Route path={ROUTES.POST_MANAGER_HOME} element={<PostManagerDashboard />} />
                 <Route path={ROUTES.POST_MANAGER_QUEUE} element={<PostManagerReviewQueuePage />} />
+                <Route path={ROUTES.POST_MANAGER_REPORTS} element={<PostManagerReportQueuePage />} />
             </Route>
 
             {/* ---- Manual Verification Team ---- */}
@@ -170,6 +198,11 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.MANUAL_CHECK_HOME} element={<ManualCheckDashboard />} />
+                <Route path={ROUTES.MANUAL_CHECK_VERIFICATION} element={<ManualVerificationQueuePage />} />
+                <Route
+                    path={ROUTES.MANUAL_CHECK_REPORTS}
+                    element={<ManualCheckReviewModerationPage />}
+                />
             </Route>
 
             {/* ---- Admin ---- */}
@@ -183,6 +216,10 @@ const AppRouter = () => {
                 <Route path={ROUTES.ADMIN_HOME} element={<AdminDashboard />} />
                 <Route path={ROUTES.ADMIN_ANALYTICS} element={<AdminDashboard />} />
                 <Route path={ROUTES.ADMIN_SKILLS} element={<AdminSkillsPage />} />
+                <Route path={ROUTES.ADMIN_TRUST_SCORE_RULES} element={<AdminTrustScoreRulesPage />} />
+                <Route path={ROUTES.ADMIN_ACCOUNTS} element={<AdminAccountsPage />} />
+                <Route path={ROUTES.ADMIN_SYSTEM_CONFIG} element={<AdminSystemConfigPage />} />
+                <Route path={ROUTES.ADMIN_AUDIT_LOG} element={<AdminAuditLogsPage />} />
             </Route>
 
             {/* Route không tồn tại -> về trang chủ đúng role (hoặc Landing nếu chưa login) */}

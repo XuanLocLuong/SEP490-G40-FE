@@ -1,6 +1,7 @@
 import AppLayout from '../components/common/AppLayout.jsx';
 import Footer from '../components/common/Footer.jsx';
 import RecruiterHeader from '../components/recruiter/RecruiterHeader.jsx';
+import '../assets/styles/RecruiterBackOverviewStyle.css';
 
 // Recruiter: Header (top, giống Guest) + Footer, KHÔNG còn Sidebar nữa.
 const RecruiterLayout = () => (

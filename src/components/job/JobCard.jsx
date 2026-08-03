@@ -45,12 +45,50 @@ const CardBusinessLogo = ({ name, logoUrl }) => {
     );
 };
 
+const buildJobMetaRows = (job, shiftsLabel, vacancyLabel, isVacancyFull) => {
+    const locationText = formatLocation(job.location);
+    const locationLine = locationText && locationText !== '—' ? locationText : null;
+    const shiftsLine = shiftsLabel || null;
+    const vacancyLine = vacancyLabel || null;
+
+    return [
+        {
+            key: 'location',
+            text: locationLine || 'Chưa có địa điểm',
+            placeholder: !locationLine,
+            Icon: MapPinIcon,
+            className: 'job-card__meta-item--location',
+        },
+        {
+            key: 'shifts',
+            text: shiftsLine || 'Chưa có thông tin ca làm',
+            placeholder: !shiftsLine,
+            Icon: ClockIcon,
+            className: 'job-card__meta-item--shifts',
+            title: shiftsLine || undefined,
+        },
+        {
+            key: 'vacancy',
+            text: vacancyLine || 'Chưa công bố chỗ trống',
+            placeholder: !vacancyLine,
+            Icon: UsersIcon,
+            className: `job-card__meta-item--vacancy${
+                isVacancyFull ? ' job-card__meta-item--vacancy-full' : ''
+            }`,
+        },
+    ];
+};
+
 const JobCard = ({
     job,
     nearMe = false,
     compact = false,
     showDistance = false,
     variant = 'default',
+    /** e.g. `?section=urgent` — preserves list context on job detail sidebar */
+    detailSearch,
+    /** Homepage section id — scroll back to this section after leaving detail */
+    homeSectionId,
 }) => {
     const isPreview = variant === 'preview';
     const isClosed = job?.status === 'CLOSED';
@@ -65,6 +103,15 @@ const JobCard = ({
     const shiftsLabel = formatJobShiftsLabel(job.shifts);
     const vacancyLabel = formatVacancyLabel(job);
     const isVacancyFull = vacancyLabel === 'Đã hết vị trí';
+    const metaRows = buildJobMetaRows(job, shiftsLabel, vacancyLabel, isVacancyFull);
+    const hasMetaTags =
+        isClosed ||
+        matchLabel ||
+        scheduleMatchLabel ||
+        interactionLabel ||
+        job.urgent ||
+        applied ||
+        distance;
 
     return (
         <article
@@ -97,90 +144,77 @@ const JobCard = ({
                 )}
             </div>
             <div className="job-card__meta">
-                {(matchLabel ||
-                    scheduleMatchLabel ||
-                    interactionLabel ||
-                    job.urgent ||
-                    applied ||
-                    distance ||
-                    isClosed) && (
-                    <div className="job-card__meta-tags">
-                        {isClosed && (
-                            <span className="job-card__meta-item job-card__meta-item--closed">
-                                Ngưng nhận hồ sơ
-                            </span>
-                        )}
-                        {matchLabel && (
-                            <span className="job-card__meta-item job-card__meta-item--match">
-                                {matchLabel}
-                            </span>
-                        )}
-                        {scheduleMatchLabel && (
-                            <span className="job-card__meta-item job-card__meta-item--schedule-match">
-                                {scheduleMatchLabel}
-                            </span>
-                        )}
-                        {interactionLabel && (
-                            <span
-                                className={`job-card__meta-item job-card__meta-item--interaction job-card__meta-item--interaction-${String(job.interactionType || '').toLowerCase()}`}
-                            >
-                                {job.interactionType === 'SAVE' ? (
-                                    <BookmarkIcon width={12} height={12} />
-                                ) : job.interactionType === 'APPLY' ? (
-                                    <CheckCircleIcon width={12} height={12} />
-                                ) : (
-                                    <EyeIcon width={12} height={12} />
-                                )}
-                                {interactionLabel}
-                            </span>
-                        )}
-                        {job.urgent && !isClosed && (
-                            <span className="job-card__meta-item job-card__meta-item--urgent">
-                                Tuyển gấp
-                            </span>
-                        )}
-                        {applied && !interactionLabel && (
-                            <span className="job-card__meta-item job-card__meta-item--applied">
-                                Đã ứng tuyển
-                            </span>
-                        )}
-                        {distance && (
-                            <span
-                                className={`job-card__meta-item job-card__meta-item--distance${
-                                    distance.variant === 'outside'
-                                        ? ' job-card__meta-item--distance-outside'
-                                        : ''
-                                }`}
-                            >
-                                {distance.label}
-                            </span>
-                        )}
-                    </div>
-                )}
-                <div className="job-card__meta-rows">
-                    <span className="job-card__meta-item job-card__meta-item--location">
-                        <MapPinIcon width={16} height={16} />
-                        <span className="job-card__meta-text">{formatLocation(job.location)}</span>
-                    </span>
-                    {shiftsLabel && (
-                        <span
-                            className="job-card__meta-item job-card__meta-item--shifts"
-                            title={shiftsLabel}
-                        >
-                            <ClockIcon width={16} height={16} />
-                            <span className="job-card__meta-text">{shiftsLabel}</span>
+                <div
+                    className="job-card__meta-tags"
+                    aria-hidden={!hasMetaTags}
+                >
+                    {isClosed && (
+                        <span className="job-card__meta-item job-card__meta-item--closed">
+                            Ngưng nhận hồ sơ
                         </span>
                     )}
-                    {vacancyLabel && (
+                    {matchLabel && (
+                        <span className="job-card__meta-item job-card__meta-item--match">
+                            {matchLabel}
+                        </span>
+                    )}
+                    {scheduleMatchLabel && (
+                        <span className="job-card__meta-item job-card__meta-item--schedule-match">
+                            {scheduleMatchLabel}
+                        </span>
+                    )}
+                    {interactionLabel && (
                         <span
-                            className={`job-card__meta-item job-card__meta-item--vacancy${
-                                isVacancyFull ? ' job-card__meta-item--vacancy-full' : ''
+                            className={`job-card__meta-item job-card__meta-item--interaction job-card__meta-item--interaction-${String(job.interactionType || '').toLowerCase()}`}
+                        >
+                            {job.interactionType === 'SAVE' ? (
+                                <BookmarkIcon width={12} height={12} />
+                            ) : job.interactionType === 'APPLY' ? (
+                                <CheckCircleIcon width={12} height={12} />
+                            ) : (
+                                <EyeIcon width={12} height={12} />
+                            )}
+                            {interactionLabel}
+                        </span>
+                    )}
+                    {job.urgent && !isClosed && (
+                        <span className="job-card__meta-item job-card__meta-item--urgent">
+                            Tuyển gấp
+                        </span>
+                    )}
+                    {applied && !interactionLabel && (
+                        <span className="job-card__meta-item job-card__meta-item--applied">
+                            Đã ứng tuyển
+                        </span>
+                    )}
+                    {distance && (
+                        <span
+                            className={`job-card__meta-item job-card__meta-item--distance${
+                                distance.variant === 'outside'
+                                    ? ' job-card__meta-item--distance-outside'
+                                    : ''
                             }`}
                         >
-                            <UsersIcon width={16} height={16} />
-                            <span className="job-card__meta-text">{vacancyLabel}</span>
+                            {distance.label}
                         </span>
                     )}
+                </div>
+                <div className="job-card__meta-rows">
+                    {metaRows.map((row) => {
+                        const { Icon } = row;
+                        return (
+                            <span
+                                key={row.key}
+                                className={`job-card__meta-item ${row.className}${
+                                    row.placeholder ? ' job-card__meta-item--placeholder' : ''
+                                }`}
+                                title={row.title}
+                            >
+                                <Icon width={16} height={16} />
+                                <span className="job-card__meta-text">{row.text}</span>
+                            </span>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -201,17 +235,24 @@ const JobCard = ({
             {isPreview ? (
                 <div className="job-card__actions">
                     <span className="job-card__detail-link">Xem chi tiết</span>
-                    <button type="button" className="btn btn--primary job-card__apply" tabIndex={-1}>
-                        Ứng tuyển ngay
-                    </button>
                 </div>
             ) : isClosed ? (
                 <div className="job-card__actions">
-                    <JobDetailLink jobId={job.id} className="job-card__detail-link" />
+                    <JobDetailLink
+                        jobId={job.id}
+                        className="job-card__detail-link"
+                        search={detailSearch}
+                        homeSectionId={homeSectionId}
+                    />
                 </div>
             ) : (
                 <div className="job-card__actions">
-                    <JobDetailLink jobId={job.id} className="job-card__detail-link" />
+                    <JobDetailLink
+                        jobId={job.id}
+                        className="job-card__detail-link"
+                        search={detailSearch}
+                        homeSectionId={homeSectionId}
+                    />
                     {applied ? (
                         <button type="button" className="btn btn--primary job-card__apply" disabled>
                             Đã ứng tuyển

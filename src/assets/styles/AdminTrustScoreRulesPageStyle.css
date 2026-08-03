@@ -1,0 +1,143 @@
+.admin-trust-hint {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+}
+
+/* Soft vertical separators between columns */
+.admin-trust-rules-page .admin-skills-table th,
+.admin-trust-rules-page .admin-skills-table td {
+    border-right: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.admin-trust-rules-page .admin-skills-table th:last-child,
+.admin-trust-rules-page .admin-skills-table td:last-child {
+    border-right: none;
+}
+
+.admin-trust-rules-page .admin-skills-table th {
+    background: color-mix(in srgb, var(--color-bg) 55%, var(--color-surface));
+}
+
+.admin-trust-link {
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--color-primary);
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+}
+
+.admin-trust-link:hover {
+    text-decoration: underline;
+}
+
+.admin-trust-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    min-width: 132px;
+}
+
+.admin-trust-actions--detail-only {
+    justify-content: center;
+    min-height: 72px;
+}
+
+.admin-trust-actions__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-trust-actions__row:first-child {
+    justify-content: center;
+}
+
+.admin-trust-actions__row:not(:first-child) {
+    justify-content: center;
+}
+
+.admin-trust-detail-panel {
+    max-width: 720px;
+    width: min(720px, 96vw);
+}
+
+.admin-trust-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    margin: 0 0 16px;
+}
+
+.admin-trust-detail-grid dt {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+}
+
+.admin-trust-detail-grid dd {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: var(--color-text);
+    word-break: break-word;
+}
+
+.admin-trust-detail-grid__full {
+    grid-column: 1 / -1;
+}
+
+.admin-trust-history-title {
+    margin: 8px 0 10px;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.admin-trust-history-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 280px;
+    overflow: auto;
+}
+
+.admin-trust-history-item {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    background: var(--color-bg);
+}
+
+.admin-trust-history-item__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+    font-size: 13px;
+}
+
+.admin-trust-history-diff {
+    margin: 8px 0 0;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    background: #0f172a;
+    color: #e2e8f0;
+    font-size: 11px;
+    overflow: auto;
+    max-height: 160px;
+}
+
+@media (max-width: 720px) {
+    .admin-trust-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

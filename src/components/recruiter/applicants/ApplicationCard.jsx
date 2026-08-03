@@ -10,15 +10,19 @@ const ApplicationCard = ({
     application,
     actionLoading,
     chatLoading = false,
+    reviewLoading = false,
+    hasReviewed = false,
     readOnly = false,
     onAccept,
     onReject,
     onViewProfile,
     onChat,
+    onReview,
 }) => {
     const canDecide = !readOnly && application.status === 'PENDING';
     const tone = getApplicationStatusTone(application.status);
     const canChat = application.candidateUserId != null;
+    const canReview = application.status === 'HIRED';
 
     return (
         <article className="application-card">
@@ -30,7 +34,10 @@ const ApplicationCard = ({
                         className="application-card__avatar"
                     />
                 ) : (
-                    <div className="application-card__avatar application-card__avatar--placeholder" aria-hidden="true">
+                    <div
+                        className="application-card__avatar application-card__avatar--placeholder"
+                        aria-hidden="true"
+                    >
                         {getBusinessInitial(application.candidateName)}
                     </div>
                 )}
@@ -73,14 +80,22 @@ const ApplicationCard = ({
                 >
                     Xem hồ sơ
                 </button>
+                {canReview ? (
+                    <button
+                        type="button"
+                        className={`btn application-card__btn application-card__btn--review${
+                            hasReviewed ? ' is-view' : ''
+                        }`}
+                        disabled={reviewLoading || !onReview}
+                        onClick={() => onReview?.(application)}
+                    >
+                        {hasReviewed ? 'Xem đánh giá' : 'Gửi đánh giá'}
+                    </button>
+                ) : null}
                 <button
                     type="button"
                     className="btn application-card__btn application-card__btn--chat"
-                    title={
-                        canChat
-                            ? 'Nhắn tin'
-                            : 'Thiếu candidateUserId từ API'
-                    }
+                    title={canChat ? 'Nhắn tin' : 'Thiếu candidateUserId từ API'}
                     aria-label="Nhắn tin"
                     disabled={chatLoading || !canChat}
                     onClick={() => onChat?.(application)}

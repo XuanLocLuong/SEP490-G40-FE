@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import JobCard from '../../components/job/JobCard.jsx';
 import RichTextContent from '../../components/common/RichTextContent.jsx';
+import GalleryLightbox from '../../components/common/GalleryLightbox.jsx';
 import ReadonlyMapPreview from '../../components/recruiter/ReadonlyMapPreview.jsx';
 import {
     CheckCircleIcon,
@@ -19,8 +20,10 @@ import {
     getBusinessInitial,
 } from '../../utils/formatters.js';
 import { useAuth } from '../../contexts/authContext.js';
-import { ROUTES } from '../../routes/path.js';
 import { resolveBusinessProfileBack } from '../../utils/businessNavReturn.js';
+import { buildHomeScrollState } from '../../utils/jobNavReturn.js';
+import { HOME_SCROLL_STATE_KEY } from '../../utils/homeSections.js';
+import { formatBusinessTypeLabel } from '../../utils/businessTypeDisplay.js';
 import '../../assets/styles/PublicBusinessProfileStyle.css';
 
 const TABS = {
@@ -34,16 +37,41 @@ const JOB_SUBTABS = {
     CLOSED: 'closed',
 };
 
-const LOW_TRUST_THRESHOLD = 40;
-const VERIFIED_TRUST_THRESHOLD = 70;
+const LOW_TRUST_THRESHOLD = 95;
 const JOBS_PAGE_SIZE = 12;
+const REVIEWS_PAGE_SIZE = 10;
 
-const isVerificationPassed = (status) =>
-    status === 'BUSINESS_PASSED' ||
-    status === 'CCCD_PASSED' ||
-    status === 'FACE_PASSED' ||
-    status === 'BUSINESS_MANUALLY' ||
-    status === 'CCCD_MANUALLY';
+const formatReviewDate = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
+};
+
+const ReviewStars = ({ rating = 0, size = 14 }) => {
+    const value = Math.max(0, Math.min(5, Number(rating) || 0));
+    return (
+        <span className="public-business__stars" aria-label={`${value} trên 5 sao`}>
+            {Array.from({ length: 5 }, (_, index) => (
+                <StarIcon
+                    key={index}
+                    width={size}
+                    height={size}
+                    className={
+                        index < Math.round(value)
+                            ? 'public-business__star public-business__star--filled'
+                            : 'public-business__star'
+                    }
+                    aria-hidden="true"
+                />
+            ))}
+        </span>
+    );
+};
 
 const isTrustedBadge = (badge) => badge === 'BUSINESS_VERIFIED';
 
@@ -74,9 +102,15 @@ const PublicBusinessProfilePage = () => {
             resolveBusinessProfileBack({
                 fromPath: location.state?.from,
                 label: location.state?.label,
+                scrollToSection: location.state?.[HOME_SCROLL_STATE_KEY],
                 role: auth?.role,
             }),
-        [location.state?.from, location.state?.label, auth?.role]
+        [location.state, auth?.role]
+    );
+
+    const profileBackState = useMemo(
+        () => buildHomeScrollState(profileBack.scrollToSection),
+        [profileBack.scrollToSection]
     );
 
     const [profile, setProfile] = useState(null);
@@ -102,6 +136,15 @@ const PublicBusinessProfilePage = () => {
     const [closedJobsTotalElements, setClosedJobsTotalElements] = useState(0);
     const [closedJobsLoaded, setClosedJobsLoaded] = useState(false);
 
+    const [reviews, setReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+    const [reviewsError, setReviewsError] = useState('');
+    const [reviewsPage, setReviewsPage] = useState(0);
+    const [reviewsTotal, setReviewsTotal] = useState(0);
+    const [reviewsAvg, setReviewsAvg] = useState(0);
+    const [reviewsLoaded, setReviewsLoaded] = useState(false);
+    const [galleryLightboxIndex, setGalleryLightboxIndex] = useState(null);
+
     useEffect(() => {
         setProfile(null);
         setProfileLoading(true);
@@ -118,6 +161,13 @@ const PublicBusinessProfilePage = () => {
         setClosedJobsTotalPages(0);
         setClosedJobsTotalElements(0);
         setClosedJobsError('');
+        setReviews([]);
+        setReviewsLoaded(false);
+        setReviewsPage(0);
+        setReviewsTotal(0);
+        setReviewsAvg(0);
+        setReviewsError('');
+        setGalleryLightboxIndex(null);
         setJobsSubTab(JOB_SUBTABS.OPEN);
         setActiveTab(TABS.ABOUT);
     }, [businessId]);
@@ -203,6 +253,34 @@ const PublicBusinessProfilePage = () => {
         [businessId]
     );
 
+    const loadReviews = useCallback(
+        async (page, append) => {
+            setReviewsLoading(true);
+            setReviewsError('');
+            try {
+                const data = await publicBusinessService.getReviews(
+                    businessId,
+                    page,
+                    REVIEWS_PAGE_SIZE
+                );
+                setReviews((prev) =>
+                    append ? [...prev, ...data.reviews] : data.reviews
+                );
+                setReviewsPage(page);
+                setReviewsTotal(data.totalReviews ?? 0);
+                setReviewsAvg(data.averageRating ?? 0);
+                setReviewsLoaded(true);
+            } catch (err) {
+                setReviewsError(
+                    getApiErrorMessage(err, 'Không tải được danh sách đánh giá.')
+                );
+            } finally {
+                setReviewsLoading(false);
+            }
+        },
+        [businessId]
+    );
+
     useEffect(() => {
         if (activeTab !== TABS.JOBS) {
             return;
@@ -215,6 +293,13 @@ const PublicBusinessProfilePage = () => {
         }
     }, [activeTab, jobsLoaded, closedJobsLoaded, loadJobs, loadClosedJobs]);
 
+    useEffect(() => {
+        if (activeTab !== TABS.REVIEWS || reviewsLoaded) {
+            return;
+        }
+        loadReviews(0, false);
+    }, [activeTab, reviewsLoaded, loadReviews]);
+
     const primaryCity = useMemo(() => {
         const first = profile?.locations?.[0];
         return first?.city || formatLocation(first) || null;
@@ -222,16 +307,16 @@ const PublicBusinessProfilePage = () => {
 
     const trustScoreNumber =
         profile?.trustScore != null ? Number(profile.trustScore) : null;
-    const showVerified =
-        isVerificationPassed(profile?.verificationStatus) ||
-        isTrustedBadge(profile?.badge) ||
-        (trustScoreNumber != null && trustScoreNumber >= VERIFIED_TRUST_THRESHOLD);
+    /** Đã xác thực đầy đủ theo BE: badge, không dùng verificationStatus (vd. CCCD_PASSED). */
+    const showVerified = isTrustedBadge(profile?.badge);
     const showLowTrustWarning =
         trustScoreNumber != null && trustScoreNumber < LOW_TRUST_THRESHOLD;
 
     const memberSinceLabel = formatMemberSince(profile?.memberSince);
     const hasMoreJobs = jobsPage + 1 < jobsTotalPages;
     const hasMoreClosedJobs = closedJobsPage + 1 < closedJobsTotalPages;
+    const hasMoreReviews = reviews.length < reviewsTotal;
+    const galleryImages = profile?.galleryImages ?? [];
     const primaryLocation = profile?.locations?.[0] ?? null;
     const primaryMapsUrl = buildMapsUrl(primaryLocation);
     const primaryLocationLabel = primaryLocation ? formatLocation(primaryLocation) : '';
@@ -250,7 +335,11 @@ const PublicBusinessProfilePage = () => {
             <div className="public-business-page">
                 <div className="public-business__error">
                     <p>{profileError || 'Không tìm thấy doanh nghiệp.'}</p>
-                    <Link to={profileBack.path} className="btn btn--secondary">
+                    <Link
+                        to={profileBack.path}
+                        state={profileBackState}
+                        className="btn btn--secondary"
+                    >
                         ← {profileBack.label}
                     </Link>
                 </div>
@@ -261,7 +350,11 @@ const PublicBusinessProfilePage = () => {
     return (
         <div className="public-business-page">
             <div className="public-business__toolbar">
-                <Link to={profileBack.path} className="public-business__back">
+                <Link
+                    to={profileBack.path}
+                    state={profileBackState}
+                    className="public-business__back"
+                >
                     ← {profileBack.label}
                 </Link>
             </div>
@@ -295,7 +388,7 @@ const PublicBusinessProfilePage = () => {
                         </div>
                         {profile.businessType && (
                             <span className="public-business__badge public-business__badge--muted">
-                                {profile.businessType}
+                                {formatBusinessTypeLabel(profile.businessType)}
                             </span>
                         )}
                         {showVerified && (
@@ -309,7 +402,7 @@ const PublicBusinessProfilePage = () => {
                     <div className="public-business__stats">
                         {trustScoreNumber != null && (
                             <div className="public-business__stat">
-                                <strong>{trustScoreNumber.toFixed(0)}</strong>
+                                <strong>{trustScoreNumber.toFixed(0)}/100</strong>
                                 <span>Trust Score</span>
                             </div>
                         )}
@@ -362,13 +455,18 @@ const PublicBusinessProfilePage = () => {
                     >
                         Tuyển dụng
                     </button>
-                    <Link
-                        to={ROUTES.LANDING}
-                        className="public-business__tab"
+                    <button
+                        type="button"
                         role="tab"
+                        className={`public-business__tab${
+                            activeTab === TABS.REVIEWS ? ' public-business__tab--active' : ''
+                        }`}
+                        aria-selected={activeTab === TABS.REVIEWS}
+                        onClick={() => setActiveTab(TABS.REVIEWS)}
                     >
                         Đánh giá
-                    </Link>
+                        {profile.totalReviews > 0 ? ` (${profile.totalReviews})` : ''}
+                    </button>
                 </div>
 
                 <main className="public-business__main">
@@ -384,8 +482,42 @@ const PublicBusinessProfilePage = () => {
                                     />
                                 </div>
                             </div>
+
+                            {galleryImages.length > 0 && (
+                                <div className="public-business__gallery">
+                                    <h3 className="public-business__gallery-title">
+                                        Không gian làm việc
+                                    </h3>
+                                    <div className="public-business__gallery-grid">
+                                        {galleryImages.map((img, imgIndex) => (
+                                            <button
+                                                key={img.id ?? img.fileUrl}
+                                                type="button"
+                                                className="public-business__gallery-item"
+                                                onClick={() =>
+                                                    setGalleryLightboxIndex(imgIndex)
+                                                }
+                                                aria-label={`Xem ảnh ${imgIndex + 1} phóng to`}
+                                            >
+                                                <img
+                                                    src={img.fileUrl}
+                                                    alt=""
+                                                    loading="lazy"
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </section>
                     )}
+
+                    <GalleryLightbox
+                        images={galleryImages}
+                        index={galleryLightboxIndex}
+                        onClose={() => setGalleryLightboxIndex(null)}
+                        onIndexChange={setGalleryLightboxIndex}
+                    />
 
                     {activeTab === TABS.JOBS && (
                         <section className="public-business__panel">
@@ -534,6 +666,119 @@ const PublicBusinessProfilePage = () => {
                                         </div>
                                     )}
                                 </>
+                            )}
+                        </section>
+                    )}
+
+                    {activeTab === TABS.REVIEWS && (
+                        <section className="public-business__panel">
+                            <div className="public-business__reviews-header">
+                                <h2 className="public-business__section-title">
+                                    Đánh giá từ ứng viên
+                                </h2>
+                                {reviewsLoaded && !reviewsError && reviewsTotal > 0 && (
+                                    <div className="public-business__reviews-summary">
+                                        <ReviewStars rating={reviewsAvg} size={18} />
+                                        <strong>{Number(reviewsAvg).toFixed(1)}</strong>
+                                        <span>
+                                            {reviewsTotal} đánh giá
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {reviewsLoading && reviews.length === 0 && (
+                                <p className="public-business__jobs-empty">
+                                    Đang tải đánh giá…
+                                </p>
+                            )}
+
+                            {reviewsError && (
+                                <div className="public-business__jobs-empty public-business__jobs-error">
+                                    <p>{reviewsError}</p>
+                                    <button
+                                        type="button"
+                                        className="btn btn--secondary"
+                                        disabled={reviewsLoading}
+                                        onClick={() => loadReviews(0, false)}
+                                    >
+                                        {reviewsLoading ? 'Đang tải…' : 'Thử lại'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {!reviewsLoading && !reviewsError && reviews.length === 0 && (
+                                <p className="public-business__jobs-empty">
+                                    Doanh nghiệp chưa có đánh giá công khai.
+                                </p>
+                            )}
+
+                            {reviews.length > 0 && (
+                                <ul className="public-business__reviews-list">
+                                    {reviews.map((review) => (
+                                        <li
+                                            key={review.id}
+                                            className="public-business__review-item"
+                                        >
+                                            <div className="public-business__review-top">
+                                                {review.reviewerProfilePicture ? (
+                                                    <img
+                                                        src={review.reviewerProfilePicture}
+                                                        alt=""
+                                                        className="public-business__review-avatar"
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className="public-business__review-avatar public-business__review-avatar--placeholder"
+                                                        aria-hidden="true"
+                                                    >
+                                                        {(review.reviewerName || '?')
+                                                            .charAt(0)
+                                                            .toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div className="public-business__review-meta">
+                                                    <strong>
+                                                        {review.reviewerName || 'Ứng viên'}
+                                                    </strong>
+                                                    <div className="public-business__review-rating-row">
+                                                        <ReviewStars
+                                                            rating={review.rating}
+                                                            size={14}
+                                                        />
+                                                        {formatReviewDate(review.createdAt) && (
+                                                            <time dateTime={review.createdAt}>
+                                                                {formatReviewDate(
+                                                                    review.createdAt
+                                                                )}
+                                                            </time>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {review.comment ? (
+                                                <p className="public-business__review-comment">
+                                                    {review.comment}
+                                                </p>
+                                            ) : null}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+
+                            {hasMoreReviews && (
+                                <div className="public-business__load-more">
+                                    <button
+                                        type="button"
+                                        className="btn btn--secondary"
+                                        disabled={reviewsLoading}
+                                        onClick={() =>
+                                            loadReviews(reviewsPage + 1, true)
+                                        }
+                                    >
+                                        {reviewsLoading ? 'Đang tải…' : 'Xem thêm'}
+                                    </button>
+                                </div>
                             )}
                         </section>
                     )}

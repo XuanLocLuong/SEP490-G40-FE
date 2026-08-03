@@ -1,7 +1,8 @@
 const JOB_TYPE_LABELS = {
     PART_TIME: 'Part-time',
     FULL_TIME: 'Full-time',
-    INTERN: 'Thực tập',
+    INTERNSHIP: 'Thực tập',
+    INTERN: 'Thực tập', // legacy FE
     FREELANCE: 'Freelance',
     SEASONAL: 'Thời vụ',
 };
