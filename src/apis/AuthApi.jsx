@@ -15,3 +15,11 @@ export const refreshToken = (data) => axiosClient.post(`${AUTH_BASE}/refresh`, d
 
 // Cần gọi trước khi clear localStorage để backend revoke refresh token.
 export const logout = () => axiosClient.post(`${AUTH_BASE}/logout`);
+
+/** data: { email } — luôn 200 nếu hợp lệ; không lộ email có/không tồn tại. */
+export const forgotPassword = (data) =>
+    axiosClient.post(`${AUTH_BASE}/forgot-password`, data);
+
+/** data: { token, newPassword } — min password 6 ký tự (BE). */
+export const resetPassword = (data) =>
+    axiosClient.post(`${AUTH_BASE}/reset-password`, data);

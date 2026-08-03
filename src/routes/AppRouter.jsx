@@ -19,6 +19,9 @@ import PublicBusinessProfilePage from '../pages/guest/PublicBusinessProfilePage.
 import TopRecruitersPage from '../pages/guest/TopRecruitersPage.jsx';
 import Login from '../pages/auth/Login.jsx';
 import Register from '../pages/auth/Register.jsx';
+import VerifyEmail from '../pages/auth/VerifyEmail.jsx';
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage.jsx';
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage.jsx';
 import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
 import CandidateSettingsPage from '../pages/candidate/CandidateSettingsPage.jsx';
 import CandidateProfilePage from '../pages/candidate/CandidateProfile/CandidateProfilePage.jsx';
@@ -49,7 +52,6 @@ import AdminTrustScoreRulesPage from '../pages/admin/AdminTrustScoreRulesPage.js
 import AdminAccountsPage from '../pages/admin/AdminAccountsPage.jsx';
 import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage.jsx';
 import AdminSystemConfigPage from '../pages/admin/AdminSystemConfigPage.jsx';
-import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
 import CandidatePublicProfilePage from '../pages/shared/CandidatePublicProfilePage.jsx';
 import RoleBasedShellLayout from '../layouts/RoleBasedShellLayout.jsx';
 
@@ -85,7 +87,9 @@ const AppRouter = () => {
                  tự đứng độc lập full-page theo đúng ảnh thiết kế ---- */}
             <Route path={ROUTES.LOGIN} element={<Login />} />
             <Route path={ROUTES.REGISTER} element={<Register />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmail />} />
+            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+            <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
 
             {/* Hồ sơ public candidate — 1 route dùng chung, layout theo role đang login.
                 Tránh đăng ký trùng path dưới nhiều ProtectedRoute (recruiter bị đá về home). */}

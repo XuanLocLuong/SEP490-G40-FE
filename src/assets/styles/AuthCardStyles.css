@@ -86,6 +86,11 @@
     font-weight: 500;
     color: var(--color-primary);
     text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .form-field__input-wrap {
