@@ -43,6 +43,7 @@ import JobAnalyticsDetailPage from '../pages/recruiter/analytics/JobAnalyticsDet
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import PostManagerReportQueuePage from '../pages/post-manager/PostManagerReportQueuePage.jsx';
+import PostManagerAnalyticsPage from '../pages/post-manager/PostManagerAnalyticsPage.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import ManualVerificationQueuePage from '../pages/manual-check/ManualVerificationQueuePage.jsx';
 import ManualCheckReviewModerationPage from '../pages/manual-check/ManualCheckReviewModerationPage.jsx';
@@ -191,6 +192,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.POST_MANAGER_HOME} element={<PostManagerDashboard />} />
                 <Route path={ROUTES.POST_MANAGER_QUEUE} element={<PostManagerReviewQueuePage />} />
                 <Route path={ROUTES.POST_MANAGER_REPORTS} element={<PostManagerReportQueuePage />} />
+                <Route path={ROUTES.POST_MANAGER_ANALYTICS} element={<PostManagerAnalyticsPage />} />
             </Route>
 
             {/* ---- Manual Verification Team ---- */}

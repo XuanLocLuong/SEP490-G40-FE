@@ -1,0 +1,562 @@
+.jpm-page {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 8px 4px 36px;
+    color: var(--color-text);
+}
+
+.jpm-page__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.jpm-page__title {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 850;
+}
+
+.jpm-page__subtitle {
+    margin: 0;
+    max-width: 640px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+}
+
+.jpm-page__meta {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+.jpm-filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+}
+
+.jpm-filters label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.jpm-filters input,
+.jpm-filters select {
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    color: var(--color-text);
+}
+
+.jpm-filters__check {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px !important;
+    min-height: 38px;
+    margin-top: 18px;
+}
+
+.jpm-filters__check input {
+    min-height: auto;
+    width: 16px;
+    height: 16px;
+}
+
+.jpm-filters__actions {
+    display: flex;
+    align-items: flex-end;
+}
+
+.jpm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.jpm-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.jpm-btn--primary {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.jpm-btn--primary:hover {
+    background: var(--color-primary-dark);
+}
+
+.jpm-btn--ghost {
+    background: #fff;
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.jpm-error {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #fff0f0;
+    color: #dc2626;
+    font-size: 13px;
+}
+
+.jpm-queue-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.jpm-queue-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+}
+
+.jpm-queue-card h2 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.jpm-queue-card p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.jpm-queue-card__link {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.jpm-queue-card__link:hover {
+    text-decoration: underline;
+}
+
+.jpm-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.jpm-kpi {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    padding: 12px 14px;
+    min-height: 104px;
+}
+
+.jpm-kpi--warn {
+    border-color: #f6d9a8;
+    background: #fffbeb;
+}
+
+.jpm-kpi h3 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--color-text-muted);
+}
+
+.jpm-kpi__value {
+    margin: 10px 0 4px;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.jpm-kpi__sub {
+    margin: 0;
+    font-size: 11px;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+}
+
+.jpm-kpi__stack {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.jpm-kpi__stack--wrap {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+}
+
+.jpm-kpi__tone {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.jpm-kpi__tone--danger { color: var(--color-danger); }
+.jpm-kpi__tone--warning { color: var(--color-warning); }
+.jpm-kpi__tone--success { color: var(--color-success); }
+
+.jpm-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    padding: 14px;
+    min-width: 0;
+}
+
+.jpm-card__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.jpm-card__head h2,
+.jpm-detail__head h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.jpm-muted,
+.jpm-hint,
+.jpm-empty,
+.jpm-detail__head p {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.jpm-table-wrap {
+    overflow-x: auto;
+}
+
+.jpm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.jpm-table th,
+.jpm-table td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+}
+
+.jpm-table th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-text-muted);
+}
+
+.jpm-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 2px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #eef2f7;
+    color: #475569;
+}
+
+.jpm-badge--success {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.jpm-badge--warning {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.jpm-badge--danger {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.jpm-badge--muted {
+    background: #eef2f7;
+    color: #64748b;
+}
+
+.jpm-report-count {
+    font-weight: 700;
+}
+
+.jpm-report-count--hot {
+    color: var(--color-danger);
+}
+
+.jpm-ai-mod {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.jpm-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.jpm-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    background: #eef2f7;
+    color: #475569;
+}
+
+.jpm-chip--warn {
+    background: var(--color-warning-bg);
+    color: #92400e;
+}
+
+.jpm-chip--link {
+    text-decoration: none;
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+}
+
+.jpm-chip--link:hover {
+    text-decoration: underline;
+}
+
+.jpm-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--color-primary);
+    cursor: pointer;
+}
+
+.jpm-icon-btn:hover {
+    background: var(--color-primary-light);
+}
+
+.jpm-pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.jpm-pager__meta {
+    color: var(--color-text-muted);
+}
+
+.jpm-pager__controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.jpm-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(15, 23, 42, 0.35);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.jpm-drawer {
+    width: min(460px, 100%);
+    height: 100%;
+    background: var(--color-surface);
+    box-shadow: -8px 0 24px rgba(15, 23, 42, 0.12);
+    overflow-y: auto;
+}
+
+.jpm-detail {
+    padding: 16px;
+    min-height: 100%;
+}
+
+.jpm-detail--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    text-align: center;
+}
+
+.jpm-detail__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.jpm-detail__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.jpm-detail__section {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+}
+
+.jpm-detail__section h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.jpm-hint {
+    margin: 0 0 8px;
+}
+
+.jpm-empty {
+    margin: 0;
+}
+
+.jpm-dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+}
+
+.jpm-dl dt {
+    font-size: 11px;
+    color: var(--color-text-muted);
+}
+
+.jpm-dl dd {
+    margin: 2px 0 0;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.jpm-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.jpm-timeline li {
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border-left: 3px solid #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+}
+
+.jpm-timeline p {
+    margin: 4px 0 0;
+    color: var(--color-text);
+}
+
+.jpm-inline--danger { color: var(--color-danger); }
+.jpm-inline--warning { color: var(--color-warning); }
+.jpm-inline--success { color: var(--color-success); }
+
+@media (max-width: 1200px) {
+    .jpm-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 960px) {
+    .jpm-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .jpm-queue-strip {
+        grid-template-columns: 1fr;
+    }
+
+    .jpm-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .jpm-page__header {
+        flex-direction: column;
+    }
+
+    .jpm-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .jpm-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .jpm-pager {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .jpm-dl {
+        grid-template-columns: 1fr;
+    }
+}

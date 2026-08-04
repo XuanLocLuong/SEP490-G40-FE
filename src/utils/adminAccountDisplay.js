@@ -47,6 +47,19 @@ export const INTERNAL_STAFF_ROLE_OPTIONS = INTERNAL_STAFF_ROLES.map((value) => (
     label: USER_ROLE_LABELS[value],
 }));
 
+/** Role tạo staff từ Dashboard Super Admin (theo handoff — không gồm Admin). */
+export const DASHBOARD_STAFF_ROLES = [USER_ROLES.POST_MANAGER, USER_ROLES.MANUAL_CHECK_TEAM];
+
+export const DASHBOARD_STAFF_ROLE_OPTIONS = DASHBOARD_STAFF_ROLES.map((value) => ({
+    value,
+    label: USER_ROLE_LABELS[value],
+}));
+
+export const DASHBOARD_STAFF_ROLE_FILTER_OPTIONS = [
+    { value: '', label: 'Tất cả role' },
+    ...DASHBOARD_STAFF_ROLE_OPTIONS,
+];
+
 /** Role có thể gán khi đổi role (hạn chế CANDIDATE ↔ RECRUITER: không hiện 2 role public nếu đang là staff, và ngược lại giữ đủ nhưng warn). */
 export const getChangeRoleOptions = (currentRole) => {
     const all = Object.entries(USER_ROLE_LABELS).map(([value, label]) => ({ value, label }));

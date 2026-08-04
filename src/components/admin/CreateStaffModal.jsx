@@ -1,24 +1,40 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ConfirmModal from '../common/ConfirmModal.jsx';
 import { INTERNAL_STAFF_ROLE_OPTIONS } from '../../utils/adminAccountDisplay.js';
 
-const emptyForm = {
-    email: '',
-    fullName: '',
-    phone: '',
-    role: INTERNAL_STAFF_ROLE_OPTIONS[0]?.value || '',
-    reason: '',
-};
+const CreateStaffModal = ({
+    open,
+    loading = false,
+    onConfirm,
+    onCancel,
+    roleOptions = INTERNAL_STAFF_ROLE_OPTIONS,
+    hint = 'Chỉ tạo được Post Manager, Manual Check hoặc Admin. Password tạm do BE sinh (email kích hoạt có thể chưa gửi).',
+}) => {
+    const options = useMemo(
+        () => (Array.isArray(roleOptions) && roleOptions.length ? roleOptions : INTERNAL_STAFF_ROLE_OPTIONS),
+        [roleOptions]
+    );
 
-const CreateStaffModal = ({ open, loading = false, onConfirm, onCancel }) => {
+    const emptyForm = useMemo(
+        () => ({
+            email: '',
+            fullName: '',
+            phone: '',
+            role: options[0]?.value || '',
+            reason: '',
+        }),
+        [options]
+    );
+
     const [form, setForm] = useState(emptyForm);
     const [error, setError] = useState('');
 
     useEffect(() => {
         if (!open) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- reset form when modal opens
         setForm(emptyForm);
         setError('');
-    }, [open]);
+    }, [open, emptyForm]);
 
     if (!open) return null;
 
@@ -87,7 +103,7 @@ const CreateStaffModal = ({ open, loading = false, onConfirm, onCancel }) => {
                 <label className="admin-accounts__field">
                     <span>Role</span>
                     <select value={form.role} onChange={(e) => patch('role', e.target.value)}>
-                        {INTERNAL_STAFF_ROLE_OPTIONS.map((opt) => (
+                        {options.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                                 {opt.label}
                             </option>
@@ -105,10 +121,7 @@ const CreateStaffModal = ({ open, loading = false, onConfirm, onCancel }) => {
                 </label>
             </div>
             {error ? <p className="admin-accounts__field-error">{error}</p> : null}
-            <p className="admin-accounts__hint">
-                Chỉ tạo được Post Manager, Manual Check hoặc Admin. Password tạm do BE sinh (email kích
-                hoạt có thể chưa gửi).
-            </p>
+            {hint ? <p className="admin-accounts__hint">{hint}</p> : null}
         </ConfirmModal>
     );
 };
