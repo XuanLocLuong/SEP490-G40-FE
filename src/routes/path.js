@@ -59,12 +59,14 @@ export const ROUTES = {
     MANUAL_CHECK_ACCOUNTS: '/manual-check/accounts',
     MANUAL_CHECK_VERIFICATION: '/manual-check/verification',
     MANUAL_CHECK_REPORTS: '/manual-check/reports',
+    MANUAL_CHECK_SETTINGS: '/manual-check/settings',
 
     ADMIN_SYSTEM_CONFIG: '/admin/system-config',
     ADMIN_SKILLS: '/admin/skills',
     ADMIN_AUDIT_LOG: '/admin/audit-log',
     ADMIN_ESCALATIONS: '/admin/escalations',
     ADMIN_ANALYTICS: '/admin/analytics',
+    ADMIN_SETTINGS: '/admin/settings',
 };
 
 export const getJobDetailPath = (jobId) => `/jobs/${jobId}`;
@@ -130,6 +132,24 @@ export const getHomePathByRole = (role) => {
             return ROUTES.MANUAL_CHECK_HOME;
         case USER_ROLES.ADMIN:
             return ROUTES.ADMIN_HOME;
+        default:
+            return ROUTES.LANDING;
+    }
+};
+
+/** Tài khoản & bảo mật (UC-07 / đổi mật khẩu) theo role. */
+export const getSettingsPathByRole = (role) => {
+    switch (role) {
+        case USER_ROLES.CANDIDATE:
+            return ROUTES.CANDIDATE_SETTINGS;
+        case USER_ROLES.RECRUITER:
+            return ROUTES.RECRUITER_SETTINGS;
+        case USER_ROLES.POST_MANAGER:
+            return ROUTES.POST_MANAGER_SETTINGS;
+        case USER_ROLES.MANUAL_CHECK_TEAM:
+            return ROUTES.MANUAL_CHECK_SETTINGS;
+        case USER_ROLES.ADMIN:
+            return ROUTES.ADMIN_SETTINGS;
         default:
             return ROUTES.LANDING;
     }

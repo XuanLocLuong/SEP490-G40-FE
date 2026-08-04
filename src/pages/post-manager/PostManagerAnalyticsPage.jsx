@@ -7,6 +7,7 @@ import {
     searchJobPostMetricsJobs,
 } from '../../apis/JobPostMetricsApi.jsx';
 import JobPostMetricsDetailPanel from '../../components/post-manager/JobPostMetricsDetailPanel.jsx';
+import MetricsBadgeSelect from '../../components/post-manager/MetricsBadgeSelect.jsx';
 import { EyeIcon } from '../../components/common/icons.jsx';
 import { ROUTES } from '../../routes/path.js';
 import {
@@ -28,6 +29,7 @@ import {
     getAiRiskTone,
     getJobStatusTone,
     getModerationStatusTone,
+    getReportStatusTone,
     getSuspiciousIndicatorLabel,
 } from '../../utils/jobPostMetricsDisplay.js';
 import '../../assets/styles/JobPostMetricsStyle.css';
@@ -209,55 +211,43 @@ const PostManagerAnalyticsPage = () => {
                 </label>
                 <label>
                     <span>Trạng thái Job</span>
-                    <select
+                    <MetricsBadgeSelect
+                        ariaLabel="Trạng thái Job"
                         value={draft.jobStatus}
-                        onChange={(e) => patchDraft('jobStatus', e.target.value)}
-                    >
-                        {JOB_STATUS_OPTIONS.map((opt) => (
-                            <option key={opt.value || 'all-job'} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
+                        options={JOB_STATUS_OPTIONS}
+                        getTone={getJobStatusTone}
+                        onChange={(next) => patchDraft('jobStatus', next)}
+                    />
                 </label>
                 <label>
                     <span>Kiểm duyệt</span>
-                    <select
+                    <MetricsBadgeSelect
+                        ariaLabel="Trạng thái kiểm duyệt"
                         value={draft.moderationStatus}
-                        onChange={(e) => patchDraft('moderationStatus', e.target.value)}
-                    >
-                        {MODERATION_STATUS_OPTIONS.map((opt) => (
-                            <option key={opt.value || 'all-mod'} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
+                        options={MODERATION_STATUS_OPTIONS}
+                        getTone={getModerationStatusTone}
+                        onChange={(next) => patchDraft('moderationStatus', next)}
+                    />
                 </label>
                 <label>
                     <span>Kết quả AI</span>
-                    <select
+                    <MetricsBadgeSelect
+                        ariaLabel="Kết quả AI"
                         value={draft.aiOutcome}
-                        onChange={(e) => patchDraft('aiOutcome', e.target.value)}
-                    >
-                        {AI_OUTCOME_OPTIONS.map((opt) => (
-                            <option key={opt.value || 'all-ai'} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
+                        options={AI_OUTCOME_OPTIONS}
+                        getTone={getAiRiskTone}
+                        onChange={(next) => patchDraft('aiOutcome', next)}
+                    />
                 </label>
                 <label>
                     <span>Trạng thái báo cáo</span>
-                    <select
+                    <MetricsBadgeSelect
+                        ariaLabel="Trạng thái báo cáo"
                         value={draft.reportStatus}
-                        onChange={(e) => patchDraft('reportStatus', e.target.value)}
-                    >
-                        {REPORT_STATUS_OPTIONS.map((opt) => (
-                            <option key={opt.value || 'all-report'} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
+                        options={REPORT_STATUS_OPTIONS}
+                        getTone={getReportStatusTone}
+                        onChange={(next) => patchDraft('reportStatus', next)}
+                    />
                 </label>
                 <label>
                     <span>ID nhà tuyển dụng</span>
@@ -395,9 +385,11 @@ const PostManagerAnalyticsPage = () => {
                                 <th>Tin tuyển</th>
                                 <th>NTD / Doanh nghiệp</th>
                                 <th>Trạng thái</th>
-                                <th>Lượt xem / Ứng tuyển</th>
+                                <th>Lượt xem</th>
+                                <th>Ứng tuyển</th>
                                 <th>Báo cáo</th>
-                                <th>AI / Duyệt</th>
+                                <th>Rủi ro AI</th>
+                                <th>Kiểm duyệt</th>
                                 <th>Cảnh báo</th>
                                 <th>Thao tác</th>
                             </tr>
@@ -405,12 +397,12 @@ const PostManagerAnalyticsPage = () => {
                         <tbody>
                             {listLoading ? (
                                 <tr>
-                                    <td colSpan={8}>Đang tải danh sách…</td>
+                                    <td colSpan={10}>Đang tải danh sách…</td>
                                 </tr>
                             ) : null}
                             {!listLoading && jobs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8}>Không có job phù hợp bộ lọc.</td>
+                                    <td colSpan={10}>Không có job phù hợp bộ lọc.</td>
                                 </tr>
                             ) : null}
                             {!listLoading &&
@@ -430,7 +422,7 @@ const PostManagerAnalyticsPage = () => {
                                                 <div>{job.businessName || '—'}</div>
                                                 <div className="jpm-muted">
                                                     {job.recruiterName || '—'}
-                                                    {job.recruiterId != null ? ` · REC-${job.recruiterId}` : ''}
+                                                    {job.recruiterId != null ? ` · ID-${job.recruiterId}` : ''}
                                                 </div>
                                             </td>
                                             <td>
@@ -440,16 +432,15 @@ const PostManagerAnalyticsPage = () => {
                                                     {formatJobStatusLabel(job.jobStatus)}
                                                 </span>
                                             </td>
+                                            <td>{formatMetricsNumber(job.viewCount)}</td>
                                             <td>
-                                                {formatMetricsNumber(job.viewCount)} /{' '}
                                                 {formatMetricsNumber(job.applicationCount)}
                                                 {job.conversionRate != null &&
                                                 job.conversionRate !== '' &&
                                                 !Number.isNaN(Number(job.conversionRate)) ? (
-                                                    <span className="jpm-muted">
-                                                        {' '}
-                                                        · {formatMetricsRate(job.conversionRate)}
-                                                    </span>
+                                                    <div className="jpm-muted">
+                                                        {formatMetricsRate(job.conversionRate)}
+                                                    </div>
                                                 ) : null}
                                             </td>
                                             <td>
@@ -464,12 +455,14 @@ const PostManagerAnalyticsPage = () => {
                                                 </span>
                                             </td>
                                             <td>
+                                                <span
+                                                    className={`jpm-badge jpm-badge--${getAiRiskTone(job.aiRiskLevel)}`}
+                                                >
+                                                    {formatAiRiskLabel(job.aiRiskLevel)}
+                                                </span>
+                                            </td>
+                                            <td>
                                                 <div className="jpm-ai-mod">
-                                                    <span
-                                                        className={`jpm-badge jpm-badge--${getAiRiskTone(job.aiRiskLevel)}`}
-                                                    >
-                                                        {formatAiRiskLabel(job.aiRiskLevel)}
-                                                    </span>
                                                     <span
                                                         className={`jpm-badge jpm-badge--${getModerationStatusTone(job.moderationStatus)}`}
                                                     >

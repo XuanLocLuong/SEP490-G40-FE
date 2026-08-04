@@ -240,6 +240,15 @@ export const getAiRiskTone = (level) => {
     return 'muted';
 };
 
+export const getReportStatusTone = (status) => {
+    const value = String(status || '').toUpperCase();
+    if (value === 'PENDING') return 'warning';
+    if (value === 'RESOLVED') return 'success';
+    if (value === 'REJECTED') return 'danger';
+    if (value === 'NONE' || value === 'MIXED') return 'muted';
+    return 'muted';
+};
+
 export const resolveModerationActionHint = (action) => {
     const key = String(action || '').toUpperCase();
     return MODERATION_ACTION_HINTS[key] || null;

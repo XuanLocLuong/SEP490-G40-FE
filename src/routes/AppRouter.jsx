@@ -193,6 +193,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.POST_MANAGER_QUEUE} element={<PostManagerReviewQueuePage />} />
                 <Route path={ROUTES.POST_MANAGER_REPORTS} element={<PostManagerReportQueuePage />} />
                 <Route path={ROUTES.POST_MANAGER_ANALYTICS} element={<PostManagerAnalyticsPage />} />
+                <Route path={ROUTES.POST_MANAGER_SETTINGS} element={<CandidateSettingsPage />} />
             </Route>
 
             {/* ---- Manual Verification Team ---- */}
@@ -209,6 +210,7 @@ const AppRouter = () => {
                     path={ROUTES.MANUAL_CHECK_REPORTS}
                     element={<ManualCheckReviewModerationPage />}
                 />
+                <Route path={ROUTES.MANUAL_CHECK_SETTINGS} element={<CandidateSettingsPage />} />
             </Route>
 
             {/* ---- Admin ---- */}
@@ -225,6 +227,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.ADMIN_ACCOUNTS} element={<AdminAccountsPage />} />
                 <Route path={ROUTES.ADMIN_SYSTEM_CONFIG} element={<AdminSystemConfigPage />} />
                 <Route path={ROUTES.ADMIN_AUDIT_LOG} element={<AdminAuditLogsPage />} />
+                <Route path={ROUTES.ADMIN_SETTINGS} element={<CandidateSettingsPage />} />
             </Route>
 
             {/* Route không tồn tại -> về trang chủ đúng role (hoặc Landing nếu chưa login) */}

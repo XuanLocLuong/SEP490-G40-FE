@@ -52,6 +52,7 @@ const CONFIG_BY_ROLE = {
             },
             { path: ROUTES.ADMIN_ESCALATIONS, label: 'Sự cố leo thang', icon: AlertIcon },
             { path: ROUTES.ADMIN_ANALYTICS, label: 'Thống kê toàn hệ thống', icon: ChartIcon },
+            { path: ROUTES.ADMIN_SETTINGS, label: 'Cài đặt', icon: SettingsIcon },
         ],
         actionButton: { label: '📊  Xuất báo cáo' },
     },
@@ -79,6 +80,7 @@ const CONFIG_BY_ROLE = {
             { path: ROUTES.MANUAL_CHECK_ACCOUNTS, label: 'Quản lý tài khoản', icon: UsersIcon },
             { path: ROUTES.MANUAL_CHECK_VERIFICATION, label: 'Duyệt xác minh', icon: ShieldIcon },
             { path: ROUTES.MANUAL_CHECK_REPORTS, label: 'Kiểm duyệt đánh giá', icon: AlertIcon },
+            { path: ROUTES.MANUAL_CHECK_SETTINGS, label: 'Cài đặt', icon: SettingsIcon },
         ],
     },
 };
