@@ -5,7 +5,16 @@ import {
     getWeekdayShort,
 } from './availabilityConstants.js';
 
-const AvailabilityEditor = ({ slots, onChange, errors = {} }) => {
+const AvailabilityEditor = ({
+    slots,
+    onChange,
+    errors = {},
+    readOnly = false,
+    embedded = false,
+    title = 'Khung giờ rảnh của bạn (Có thể chỉnh sửa)',
+    emptyText = 'Chưa có khung giờ. Hãy thêm thủ công hoặc tải thời khóa biểu để AI gợi ý.',
+    addButtonLabel = 'Thêm khung giờ rảnh thủ công',
+}) => {
     const updateSlot = (index, patch) => {
         onChange(slots.map((slot, slotIndex) => (slotIndex === index ? { ...slot, ...patch } : slot)));
     };
@@ -26,17 +35,15 @@ const AvailabilityEditor = ({ slots, onChange, errors = {} }) => {
         onChange([...slots, createEmptyAvailabilitySlot()]);
     };
 
-    return (
-        <section className="availability-card availability-editor">
+    const body = (
+        <>
             <div className="availability-card__header">
-                <h2>Khung giờ rảnh của bạn (Có thể chỉnh sửa)</h2>
+                <h2>{title}</h2>
             </div>
 
             <div className="availability-editor__list">
                 {slots.length === 0 ? (
-                    <div className="availability-editor__empty">
-                        Chưa có khung giờ rảnh. Hãy thêm thủ công hoặc tải thời khóa biểu để AI gợi ý.
-                    </div>
+                    <div className="availability-editor__empty">{emptyText}</div>
                 ) : (
                     slots.map((slot, index) => (
                         <div key={slot.clientId || slot.id || index} className="availability-slot">
@@ -51,9 +58,10 @@ const AvailabilityEditor = ({ slots, onChange, errors = {} }) => {
                                                 ? ' availability-day--active'
                                                 : '')
                                         }
-                                        onClick={() => toggleDay(index, day.value)}
+                                        onClick={() => !readOnly && toggleDay(index, day.value)}
                                         aria-label={day.label}
                                         aria-pressed={(slot.days || []).includes(day.value)}
+                                        disabled={readOnly}
                                     >
                                         {getWeekdayShort(day.value)}
                                     </button>
@@ -67,6 +75,8 @@ const AvailabilityEditor = ({ slots, onChange, errors = {} }) => {
                                         type="time"
                                         value={slot.start || ''}
                                         onChange={(e) => updateSlot(index, { start: e.target.value })}
+                                        readOnly={readOnly}
+                                        disabled={readOnly}
                                     />
                                 </label>
                                 <label>
@@ -75,16 +85,20 @@ const AvailabilityEditor = ({ slots, onChange, errors = {} }) => {
                                         type="time"
                                         value={slot.end || ''}
                                         onChange={(e) => updateSlot(index, { end: e.target.value })}
+                                        readOnly={readOnly}
+                                        disabled={readOnly}
                                     />
                                 </label>
-                                <button
-                                    type="button"
-                                    className="availability-slot__delete"
-                                    onClick={() => removeSlot(index)}
-                                    aria-label="Xóa khung giờ"
-                                >
-                                    <TrashIcon width={18} height={18} />
-                                </button>
+                                {!readOnly ? (
+                                    <button
+                                        type="button"
+                                        className="availability-slot__delete"
+                                        onClick={() => removeSlot(index)}
+                                        aria-label="Xóa khung giờ"
+                                    >
+                                        <TrashIcon width={18} height={18} />
+                                    </button>
+                                ) : null}
                             </div>
 
                             {errors[index] && <p className="availability-slot__error">{errors[index]}</p>}
@@ -93,11 +107,19 @@ const AvailabilityEditor = ({ slots, onChange, errors = {} }) => {
                 )}
             </div>
 
-            <button type="button" className="availability-add-btn" onClick={addSlot}>
-                <PlusIcon width={18} height={18} />
-                Thêm khung giờ rảnh thủ công
-            </button>
-        </section>
+            {!readOnly ? (
+                <button type="button" className="availability-add-btn" onClick={addSlot}>
+                    <PlusIcon width={18} height={18} />
+                    {addButtonLabel}
+                </button>
+            ) : null}
+        </>
+    );
+
+    return embedded ? (
+        <div className="availability-editor availability-editor--embedded">{body}</div>
+    ) : (
+        <section className="availability-card availability-editor">{body}</section>
     );
 };
 

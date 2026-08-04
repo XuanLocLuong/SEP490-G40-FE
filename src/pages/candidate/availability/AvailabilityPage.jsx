@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     createAvailability,
@@ -7,81 +7,223 @@ import {
     updateAvailability,
     uploadTimetable,
 } from '../../../apis/AvailabilityApi.jsx';
+import {
+    applyTimetable,
+    createTimetable,
+    getTimetable,
+    unapplyTimetable,
+    updateTimetable,
+} from '../../../apis/CandidateTimetableApi.jsx';
+import {
+    applyHiredJobSchedule,
+    getHiredJobSchedules,
+    unapplyHiredJobSchedule,
+} from '../../../apis/CandidateJobScheduleApi.jsx';
+import {
+    getScheduleSummary,
+    switchScheduleMode,
+} from '../../../apis/CandidateScheduleApi.jsx';
 import UploadTimetable from '../../../components/candidate/UploadTimetable.jsx';
 import AvailabilityEditor from '../../../components/candidate/AvailabilityEditor.jsx';
 import OCRPreview from '../../../components/candidate/OCRPreview.jsx';
+import ScheduleModeBanner from '../../../components/candidate/ScheduleModeBanner.jsx';
+import ScheduleDateRangeFields from '../../../components/candidate/ScheduleDateRangeFields.jsx';
+import TimetableSection from '../../../components/candidate/TimetableSection.jsx';
+import HiredJobsScheduleSection from '../../../components/candidate/HiredJobsScheduleSection.jsx';
 import { createEmptyAvailabilitySlot } from '../../../components/candidate/availabilityConstants.js';
 import {
     fetchAvailability,
-    normalizeAvailabilityResponse,
+    fetchScheduleSummary,
+    fetchTimetable,
+    getScheduleApiErrorMessage,
+    isCalculatedScheduleMode,
+    isTimetableEndDateExpired,
+    normalizeHiredJobSchedule,
+    normalizeScanResponse,
     normalizeSlot,
-    toAvailabilityPayload,
+    resolveScheduleMode,
+    SCHEDULE_MODES,
+    toSchedulePayload,
     validateAvailabilityRange,
     validateAvailabilitySlots,
 } from '../../../services/availabilityService.js';
 import { ROUTES } from '../../../routes/path.js';
 import '../../../assets/styles/AvailabilityPageStyle.css';
 
-const getApiMessage = (error, fallback) => (
-    error?.response?.data?.message ||
-    error?.response?.data?.error ||
-    error?.message ||
-    fallback
-);
+const TABS = {
+    SCAN: 'scan',
+    TIMETABLE: 'timetable',
+    JOBS: 'jobs',
+    AVAILABILITY: 'availability',
+};
+
+const TAB_ITEMS = [
+    { id: TABS.SCAN, label: 'Quét TKB' },
+    { id: TABS.TIMETABLE, label: 'Thời khóa biểu' },
+    { id: TABS.JOBS, label: 'Job đã nhận' },
+    { id: TABS.AVAILABILITY, label: 'Lịch rảnh' },
+];
 
 const AvailabilityPage = () => {
     const navigate = useNavigate();
-    const [slots, setSlots] = useState([]);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [hasActiveSchedule, setHasActiveSchedule] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const initialTab = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState(
+        Object.values(TABS).includes(initialTab) ? initialTab : TABS.TIMETABLE,
+    );
+
+    const [scheduleMode, setScheduleMode] = useState(null);
+    const [isTimetableExpired, setIsTimetableExpired] = useState(false);
+    const [appliedJobCount, setAppliedJobCount] = useState(0);
+    const [totalHiredJobCount, setTotalHiredJobCount] = useState(0);
+    const [availabilitySlots, setAvailabilitySlots] = useState([]);
+    const [availabilityStartDate, setAvailabilityStartDate] = useState('');
+    const [availabilityEndDate, setAvailabilityEndDate] = useState('');
+    const [hasActiveAvailability, setHasActiveAvailability] = useState(false);
+
+    const [timetable, setTimetable] = useState({
+        startDate: '',
+        endDate: '',
+        source: null,
+        isApplied: false,
+        slots: [],
+    });
+    const [timetableSlots, setTimetableSlots] = useState([]);
+    const [timetableStartDate, setTimetableStartDate] = useState('');
+    const [timetableEndDate, setTimetableEndDate] = useState('');
+
+    const [hiredJobs, setHiredJobs] = useState([]);
+
     const [ocrSlots, setOcrSlots] = useState(null);
     const [ocrStartDate, setOcrStartDate] = useState('');
     const [ocrEndDate, setOcrEndDate] = useState('');
-    const [slotErrors, setSlotErrors] = useState({});
     const [ocrErrors, setOcrErrors] = useState({});
-    const [rangeError, setRangeError] = useState('');
     const [ocrRangeError, setOcrRangeError] = useState('');
+
+    const [slotErrors, setSlotErrors] = useState({});
+    const [rangeError, setRangeError] = useState('');
+    const [timetableSlotErrors, setTimetableSlotErrors] = useState({});
+    const [timetableRangeError, setTimetableRangeError] = useState('');
+
     const [file, setFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [timetableToggling, setTimetableToggling] = useState(false);
+    const [jobTogglingId, setJobTogglingId] = useState(null);
+    const [modeSwitching, setModeSwitching] = useState(false);
 
-    const hasSlots = slots.length > 0;
-    const renderedSlots = useMemo(
-        () => (hasSlots ? slots : [createEmptyAvailabilitySlot()]),
-        [hasSlots, slots],
+    const isCalculated = isCalculatedScheduleMode(scheduleMode);
+    const hasAvailabilitySlots = availabilitySlots.length > 0;
+    const renderedAvailabilitySlots = useMemo(
+        () => (hasAvailabilitySlots ? availabilitySlots : [createEmptyAvailabilitySlot()]),
+        [hasAvailabilitySlots, availabilitySlots],
+    );
+    const renderedTimetableSlots = useMemo(
+        () =>
+            timetableSlots.length > 0 ? timetableSlots : [createEmptyAvailabilitySlot()],
+        [timetableSlots],
     );
 
-    const loadAvailability = useCallback(async () => {
+    const loadAll = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await fetchAvailability(getAvailability);
-            setSlots(data.slots);
-            setStartDate(data.startDate || '');
-            setEndDate(data.endDate || '');
-            setHasActiveSchedule(data.slots.length > 0);
+            const [summaryData, availabilityData, timetableData, jobsData] = await Promise.all([
+                fetchScheduleSummary(getScheduleSummary).catch(() => null),
+                fetchAvailability(getAvailability).catch(() => ({
+                    scheduleMode: null,
+                    startDate: '',
+                    endDate: '',
+                    slots: [],
+                })),
+                fetchTimetable(getTimetable).catch(() => ({
+                    startDate: '',
+                    endDate: '',
+                    source: null,
+                    isApplied: false,
+                    slots: [],
+                })),
+                getHiredJobSchedules()
+                    .then((res) => {
+                        const raw = res?.data?.data ?? res?.data ?? [];
+                        return Array.isArray(raw) ? raw.map(normalizeHiredJobSchedule) : [];
+                    })
+                    .catch(() => []),
+            ]);
+
+            const modeFromBe =
+                resolveScheduleMode(summaryData?.scheduleMode) ||
+                resolveScheduleMode(availabilityData.scheduleMode);
+            setScheduleMode(modeFromBe);
+
+            if (summaryData) {
+                setAppliedJobCount(summaryData.appliedJobCount);
+                setTotalHiredJobCount(summaryData.totalHiredJobCount);
+                setAvailabilitySlots(
+                    availabilityData.slots.length > 0
+                        ? availabilityData.slots
+                        : summaryData.freeSlots || [],
+                );
+                setAvailabilityStartDate(
+                    availabilityData.startDate || summaryData.availabilityStartDate || '',
+                );
+                setAvailabilityEndDate(
+                    availabilityData.endDate || summaryData.availabilityEndDate || '',
+                );
+                setHasActiveAvailability(
+                    availabilityData.slots.length > 0 || summaryData.freeSlots?.length > 0,
+                );
+            } else {
+                setAppliedJobCount(jobsData.filter((j) => j.isApplied).length);
+                setTotalHiredJobCount(jobsData.length);
+                setAvailabilitySlots(availabilityData.slots);
+                setAvailabilityStartDate(availabilityData.startDate || '');
+                setAvailabilityEndDate(availabilityData.endDate || '');
+                setHasActiveAvailability(availabilityData.slots.length > 0);
+            }
+
+            setTimetable({
+                ...timetableData,
+                isApplied:
+                    summaryData?.isTimetableApplied != null
+                        ? summaryData.isTimetableApplied
+                        : timetableData.isApplied,
+            });
+            setTimetableSlots(timetableData.slots);
+            setTimetableStartDate(timetableData.startDate || '');
+            setTimetableEndDate(timetableData.endDate || '');
+            setIsTimetableExpired(
+                Boolean(summaryData?.isTimetableExpired) ||
+                    isTimetableEndDateExpired(timetableData.endDate),
+            );
+            setHiredJobs(jobsData);
         } catch (error) {
-            toast.error(getApiMessage(error, 'Không tải được lịch rảnh.'));
+            toast.error(getScheduleApiErrorMessage(error, 'Không tải được dữ liệu lịch.'));
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        // Fetch dữ liệu khi mở page: effect này đồng bộ với backend, không phải derive state từ props.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadAvailability();
-    }, [loadAvailability]);
+        loadAll();
+    }, [loadAll]);
 
     useEffect(() => () => {
         if (previewUrl) URL.revokeObjectURL(previewUrl);
     }, [previewUrl]);
 
-    const handleSlotsChange = (nextSlots) => {
-        setSlots(nextSlots);
-        setSlotErrors({});
+    const switchTab = (tabId) => {
+        setActiveTab(tabId);
+        setSearchParams(tabId === TABS.TIMETABLE ? {} : { tab: tabId }, { replace: true });
+    };
+
+    const clearOcrPreview = () => {
+        setOcrSlots(null);
+        setOcrErrors({});
+        setOcrRangeError('');
+        setOcrStartDate('');
+        setOcrEndDate('');
     };
 
     const handleFileChange = (nextFile) => {
@@ -90,43 +232,89 @@ const AvailabilityPage = () => {
         setPreviewUrl(URL.createObjectURL(nextFile));
     };
 
-    const persistAvailability = async (nextSlots, range) => {
+    const persistTimetable = async (nextSlots, range, { fromOcr = false } = {}) => {
         const slotValidation = validateAvailabilitySlots(nextSlots);
         if (Object.keys(slotValidation).length > 0) {
-            return { slotErrors: slotValidation, rangeError: '' };
+            if (fromOcr) return { slotErrors: slotValidation, rangeError: '' };
+            setTimetableSlotErrors(slotValidation);
+            return false;
         }
 
-        const nextRangeError = validateAvailabilityRange(range);
+        const nextRangeError = validateAvailabilityRange(range, { disallowPastEnd: true });
         if (nextRangeError) {
-            return { slotErrors: {}, rangeError: nextRangeError };
+            if (fromOcr) return { slotErrors: {}, rangeError: nextRangeError };
+            setTimetableRangeError(nextRangeError);
+            return false;
         }
 
         setSaving(true);
         try {
-            const payload = toAvailabilityPayload(nextSlots, range);
-            if (hasActiveSchedule) {
-                await updateAvailability(payload);
+            const payload = toSchedulePayload(nextSlots, range);
+            const hasTimetable = timetable.slots.length > 0;
+            if (hasTimetable) {
+                await updateTimetable(payload);
             } else {
-                await createAvailability(payload);
+                try {
+                    await createTimetable(payload);
+                } catch (error) {
+                    if (error?.response?.status === 400) {
+                        await updateTimetable(payload);
+                    } else {
+                        throw error;
+                    }
+                }
             }
-            toast.success('Đã lưu lịch rảnh thành công.');
-            await loadAvailability();
-            navigate(ROUTES.CANDIDATE_PROFILE);
-            return { slotErrors: {}, rangeError: '' };
+            toast.success('Đã lưu thời khóa biểu.');
+            await loadAll();
+            if (fromOcr) {
+                setOcrSlots(null);
+                setOcrRangeError('');
+            }
+            return true;
         } catch (error) {
-            toast.error(getApiMessage(error, 'Lưu lịch rảnh thất bại.'));
-            return null;
+            toast.error(getScheduleApiErrorMessage(error, 'Lưu thời khóa biểu thất bại.'));
+            return false;
         } finally {
             setSaving(false);
         }
     };
 
-    const handleSave = async () => {
-        const source = hasSlots ? slots : renderedSlots;
-        const result = await persistAvailability(source, { startDate, endDate });
-        if (result) {
-            setSlotErrors(result.slotErrors);
-            setRangeError(result.rangeError);
+    const persistAvailability = async (nextSlots, range, { fromOcr = false } = {}) => {
+        const slotValidation = validateAvailabilitySlots(nextSlots);
+        if (Object.keys(slotValidation).length > 0) {
+            if (fromOcr) return { slotErrors: slotValidation, rangeError: '' };
+            setSlotErrors(slotValidation);
+            return false;
+        }
+
+        const nextRangeError = validateAvailabilityRange(range);
+        if (nextRangeError) {
+            if (fromOcr) return { slotErrors: {}, rangeError: nextRangeError };
+            setRangeError(nextRangeError);
+            return false;
+        }
+
+        setSaving(true);
+        try {
+            const payload = toSchedulePayload(nextSlots, range);
+            if (hasActiveAvailability) {
+                await updateAvailability(payload);
+            } else {
+                await createAvailability(payload);
+            }
+            toast.success('Đã lưu lịch rảnh. Hệ thống chuyển sang chế độ tự nhập.');
+            await loadAll();
+            if (fromOcr) {
+                setOcrSlots(null);
+                setOcrRangeError('');
+                switchTab(TABS.AVAILABILITY);
+            }
+            return true;
+        } catch (error) {
+            toast.error(getScheduleApiErrorMessage(error, 'Lưu lịch rảnh thất bại.'));
+            return false;
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -143,38 +331,170 @@ const AvailabilityPage = () => {
         try {
             const res = await uploadTimetable(file);
             const data = res?.data?.data ?? res?.data ?? null;
-            const parsed = normalizeAvailabilityResponse(data);
+            const parsed = normalizeScanResponse(data);
 
             if (parsed.isAutoSaved) {
-                toast.success('Đã quét và lưu lịch rảnh thành công.');
-                await loadAvailability();
+                const stillManual = resolveScheduleMode(scheduleMode) === SCHEDULE_MODES.MANUAL;
+                clearOcrPreview();
+                await loadAll();
+                if (stillManual) {
+                    toast.info(
+                        'Đã lưu thời khóa biểu. Đang ở chế độ tự nhập — bật chế độ tự động hoặc Apply TKB để tính lại lịch rảnh.',
+                    );
+                    switchTab(TABS.TIMETABLE);
+                } else {
+                    toast.success('Đã quét và lưu TKB. Lịch rảnh được cập nhật nếu đang chế độ tự động.');
+                    switchTab(TABS.AVAILABILITY);
+                }
                 return;
             }
 
             if (parsed.slots.length === 0) {
-                toast.info('Backend không trích xuất được khung giờ nào từ ảnh.');
+                toast.info('Không trích xuất được khung giờ rảnh từ ảnh.');
                 return;
             }
 
             setOcrSlots(parsed.slots.map(normalizeSlot));
-            setOcrStartDate(parsed.startDate || startDate || '');
-            setOcrEndDate(parsed.endDate || endDate || '');
-            toast.info('AI đã gợi ý khung giờ. Kiểm tra ngày áp dụng rồi lưu chính thức.');
+            setOcrStartDate(
+                parsed.startDate || availabilityStartDate || timetableStartDate || '',
+            );
+            setOcrEndDate(parsed.endDate || availabilityEndDate || timetableEndDate || '');
+            switchTab(TABS.AVAILABILITY);
+            toast.info(
+                'AI gợi ý khung rảnh (không phải ca bận). Lưu sẽ ghi lịch rảnh thủ công (MANUAL).',
+            );
         } catch (error) {
-            toast.error(getApiMessage(error, 'Quét thời khóa biểu thất bại.'));
+            toast.error(getScheduleApiErrorMessage(error, 'Quét thời khóa biểu thất bại.'));
         } finally {
             setUploading(false);
         }
     };
 
     const handleApplyOcr = async () => {
-        const result = await persistAvailability(ocrSlots || [], {
-            startDate: ocrStartDate,
-            endDate: ocrEndDate,
-        });
-        if (result) {
+        const result = await persistAvailability(
+            ocrSlots || [],
+            { startDate: ocrStartDate, endDate: ocrEndDate },
+            { fromOcr: true },
+        );
+        if (result && typeof result === 'object') {
             setOcrErrors(result.slotErrors);
             setOcrRangeError(result.rangeError);
+        }
+    };
+
+    const handleSaveTimetable = async () => {
+        setTimetableSlotErrors({});
+        setTimetableRangeError('');
+        const source = timetableSlots.length > 0 ? timetableSlots : renderedTimetableSlots;
+        await persistTimetable(source, {
+            startDate: timetableStartDate,
+            endDate: timetableEndDate,
+        });
+    };
+
+    const handleSaveAvailability = async () => {
+        setSlotErrors({});
+        setRangeError('');
+        const source = hasAvailabilitySlots ? availabilitySlots : renderedAvailabilitySlots;
+        await persistAvailability(source, {
+            startDate: availabilityStartDate,
+            endDate: availabilityEndDate,
+        });
+    };
+
+    const handleApplyTimetable = async () => {
+        if (isTimetableEndDateExpired(timetableEndDate) || isTimetableExpired) {
+            toast.error('Thời khóa biểu đã hết hạn. Cập nhật ngày kết thúc rồi lưu lại trước khi apply.');
+            switchTab(TABS.TIMETABLE);
+            return;
+        }
+        setTimetableToggling(true);
+        try {
+            await applyTimetable();
+            clearOcrPreview();
+            toast.success('Đã apply thời khóa biểu. Lịch rảnh được tính lại.');
+            await loadAll();
+            switchTab(TABS.AVAILABILITY);
+        } catch (error) {
+            toast.error(getScheduleApiErrorMessage(error, 'Không thể apply thời khóa biểu.'));
+        } finally {
+            setTimetableToggling(false);
+        }
+    };
+
+    const handleUnapplyTimetable = async () => {
+        setTimetableToggling(true);
+        try {
+            await unapplyTimetable();
+            clearOcrPreview();
+            toast.success('Đã tắt apply thời khóa biểu.');
+            await loadAll();
+        } catch (error) {
+            toast.error(getScheduleApiErrorMessage(error, 'Không thể tắt apply thời khóa biểu.'));
+        } finally {
+            setTimetableToggling(false);
+        }
+    };
+
+    const handleToggleJob = async (job) => {
+        if (!job.isApplied && !isCalculated) {
+            toast.info('Chuyển sang chế độ tự động trước khi apply lịch job.');
+            return;
+        }
+        setJobTogglingId(job.applicationId);
+        try {
+            if (job.isApplied) {
+                await unapplyHiredJobSchedule(job.applicationId);
+                toast.success('Đã tắt apply lịch job.');
+            } else {
+                await applyHiredJobSchedule(job.applicationId);
+                toast.success('Đã apply lịch job. Lịch rảnh được tính lại.');
+            }
+            clearOcrPreview();
+            await loadAll();
+        } catch (error) {
+            toast.error(
+                getScheduleApiErrorMessage(
+                    error,
+                    'Không thể đổi trạng thái apply. Có thể đang MANUAL hoặc xung đột TKB/job — tắt apply cái cũ hoặc đổi mode.',
+                ),
+            );
+        } finally {
+            setJobTogglingId(null);
+        }
+    };
+
+    const handleSwitchToManual = async () => {
+        setModeSwitching(true);
+        try {
+            await switchScheduleMode(SCHEDULE_MODES.MANUAL);
+            clearOcrPreview();
+            toast.success('Đã chuyển sang tự nhập. TKB và job đã được bỏ apply trên server.');
+            await loadAll();
+            switchTab(TABS.AVAILABILITY);
+        } catch (error) {
+            toast.error(getScheduleApiErrorMessage(error, 'Không thể chuyển sang chế độ tự nhập.'));
+        } finally {
+            setModeSwitching(false);
+        }
+    };
+
+    const handleSwitchToCalculated = async () => {
+        setModeSwitching(true);
+        try {
+            await switchScheduleMode(SCHEDULE_MODES.CALCULATED);
+            clearOcrPreview();
+            toast.success('Đã bật chế độ tự động. Apply TKB/job nếu chưa bật để tính lại lịch rảnh.');
+            await loadAll();
+            if (!timetable.isApplied) {
+                switchTab(TABS.TIMETABLE);
+            } else {
+                switchTab(TABS.AVAILABILITY);
+            }
+        } catch (error) {
+            toast.error(getScheduleApiErrorMessage(error, 'Không thể bật chế độ tự động.'));
+        } finally {
+            setModeSwitching(false);
         }
     };
 
@@ -182,113 +502,212 @@ const AvailabilityPage = () => {
         <div className="availability-page">
             <header className="availability-page__header">
                 <h1>Quản lý Lịch rảnh &amp; Thời khóa biểu</h1>
-                <p>Cập nhật thời gian rảnh để hệ thống đề xuất công việc phù hợp.</p>
+                <p>
+                    TKB và job hired là lịch bận; lịch rảnh dùng cho đề xuất việc. Chế độ tự động tính từ
+                    TKB + job đang apply.
+                </p>
             </header>
 
-            <UploadTimetable
-                file={file}
-                previewUrl={previewUrl}
-                uploading={uploading}
-                onFileChange={handleFileChange}
-                onUpload={handleUpload}
-            />
+            {!loading ? (
+                <ScheduleModeBanner
+                    scheduleMode={scheduleMode}
+                    timetableApplied={timetable.isApplied}
+                    isTimetableExpired={isTimetableExpired}
+                    appliedJobCount={appliedJobCount}
+                    totalHiredJobCount={totalHiredJobCount}
+                    modeSwitching={modeSwitching}
+                    onSwitchToManual={handleSwitchToManual}
+                    onSwitchToCalculated={handleSwitchToCalculated}
+                />
+            ) : null}
 
-            {ocrSlots && (
-                <OCRPreview
-                    slots={ocrSlots}
-                    startDate={ocrStartDate}
-                    endDate={ocrEndDate}
-                    rangeError={ocrRangeError}
-                    errors={ocrErrors}
-                    onChange={(nextSlots) => {
-                        setOcrSlots(nextSlots);
-                        setOcrErrors({});
+            <nav className="schedule-tabs" aria-label="Quản lý lịch">
+                {TAB_ITEMS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        className={`schedule-tabs__btn${activeTab === tab.id ? ' schedule-tabs__btn--active' : ''}`}
+                        onClick={() => switchTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </nav>
+
+            {activeTab === TABS.SCAN ? (
+                <>
+                    <UploadTimetable
+                        file={file}
+                        previewUrl={previewUrl}
+                        uploading={uploading}
+                        onFileChange={handleFileChange}
+                        onUpload={handleUpload}
+                    />
+                    {ocrSlots ? (
+                        <div className="availability-card scan-pending-hint">
+                            <p>
+                                Đã có gợi ý lịch rảnh từ lần quét gần nhất. Mở tab{' '}
+                                <strong>Lịch rảnh</strong> để xem và lưu.
+                            </p>
+                            <button
+                                type="button"
+                                className="availability-btn availability-btn--primary"
+                                onClick={() => switchTab(TABS.AVAILABILITY)}
+                            >
+                                Xem gợi ý lịch rảnh
+                            </button>
+                        </div>
+                    ) : null}
+                </>
+            ) : null}
+
+            {activeTab === TABS.TIMETABLE ? (
+                <TimetableSection
+                    timetable={timetable}
+                    loading={loading}
+                    saving={saving}
+                    toggling={timetableToggling}
+                    slots={renderedTimetableSlots}
+                    startDate={timetableStartDate}
+                    endDate={timetableEndDate}
+                    rangeError={timetableRangeError}
+                    slotErrors={timetableSlotErrors}
+                    onSlotsChange={(next) => {
+                        setTimetableSlots(next);
+                        setTimetableSlotErrors({});
                     }}
                     onRangeChange={({ startDate: nextStart, endDate: nextEnd }) => {
-                        setOcrStartDate(nextStart);
-                        setOcrEndDate(nextEnd);
-                        setOcrRangeError('');
+                        setTimetableStartDate(nextStart);
+                        setTimetableEndDate(nextEnd);
+                        setTimetableRangeError('');
                     }}
-                    onApply={handleApplyOcr}
-                    onCancel={() => {
-                        setOcrSlots(null);
-                        setOcrRangeError('');
-                    }}
-                    saving={saving}
+                    onSave={handleSaveTimetable}
+                    onApply={handleApplyTimetable}
+                    onUnapply={handleUnapplyTimetable}
                 />
-            )}
+            ) : null}
 
-            {loading ? (
-                <section className="availability-card">
-                    <div className="availability-skeleton availability-skeleton--title" />
-                    <div className="availability-skeleton availability-skeleton--line" />
-                    <div className="availability-skeleton availability-skeleton--line" />
-                </section>
-            ) : (
-                <>
-                    <section className="availability-card availability-range">
-                        <div className="availability-card__header">
-                            <div>
-                                <h2>Khoảng áp dụng lịch</h2>
-                                <p>Bắt buộc khi lưu. Lịch hết hạn sẽ được hệ thống nhắc cập nhật.</p>
-                            </div>
-                        </div>
-                        <div className="availability-range__fields">
-                            <label className="availability-range__field">
-                                <span>Ngày bắt đầu</span>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => {
-                                        setStartDate(e.target.value);
-                                        setRangeError('');
-                                    }}
-                                />
-                            </label>
-                            <label className="availability-range__field">
-                                <span>Ngày kết thúc</span>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    min={startDate || undefined}
-                                    onChange={(e) => {
-                                        setEndDate(e.target.value);
-                                        setRangeError('');
-                                    }}
-                                />
-                            </label>
-                        </div>
-                        {rangeError ? (
-                            <p className="availability-range__error">{rangeError}</p>
-                        ) : null}
+            {activeTab === TABS.JOBS ? (
+                <HiredJobsScheduleSection
+                    jobs={hiredJobs}
+                    loading={loading}
+                    togglingId={jobTogglingId}
+                    isCalculatedMode={isCalculated}
+                    onToggle={handleToggleJob}
+                />
+            ) : null}
+
+            {activeTab === TABS.AVAILABILITY ? (
+                loading ? (
+                    <section className="availability-card">
+                        <div className="availability-skeleton availability-skeleton--title" />
+                        <div className="availability-skeleton availability-skeleton--line" />
                     </section>
-
-                    <AvailabilityEditor
-                        slots={renderedSlots}
-                        onChange={handleSlotsChange}
-                        errors={slotErrors}
+                ) : ocrSlots ? (
+                    <OCRPreview
+                        slots={ocrSlots}
+                        startDate={ocrStartDate}
+                        endDate={ocrEndDate}
+                        rangeError={ocrRangeError}
+                        errors={ocrErrors}
+                        onChange={(nextSlots) => {
+                            setOcrSlots(nextSlots);
+                            setOcrErrors({});
+                        }}
+                        onRangeChange={({ startDate: nextStart, endDate: nextEnd }) => {
+                            setOcrStartDate(nextStart);
+                            setOcrEndDate(nextEnd);
+                            setOcrRangeError('');
+                        }}
+                        onApply={handleApplyOcr}
+                        onCancel={() => {
+                            clearOcrPreview();
+                        }}
+                        saving={saving}
                     />
-                </>
-            )}
+                ) : (
+                    <>
+                        <section className="availability-card availability-range">
+                            <div className="availability-card__header">
+                                <div>
+                                    <h2>Lịch rảnh (kết quả cuối)</h2>
+                                    <p>
+                                        {isCalculated
+                                            ? 'Đang ở chế độ tự động — chỉ xem. Muốn sửa tay: chuyển sang tự nhập và lưu lại.'
+                                            : 'Chế độ tự nhập — bạn có thể chỉnh sửa và lưu trực tiếp.'}
+                                    </p>
+                                </div>
+                            </div>
+                            <ScheduleDateRangeFields
+                                startDate={availabilityStartDate}
+                                endDate={availabilityEndDate}
+                                disabled={isCalculated}
+                                onChange={({ startDate: nextStart, endDate: nextEnd }) => {
+                                    setAvailabilityStartDate(nextStart);
+                                    setAvailabilityEndDate(nextEnd);
+                                    setRangeError('');
+                                }}
+                                error={rangeError}
+                            />
+                        </section>
 
-            <div className="availability-page__footer">
-                <button
-                    type="button"
-                    className="availability-btn availability-btn--ghost"
-                    onClick={() => navigate(ROUTES.CANDIDATE_PROFILE)}
-                    disabled={saving}
-                >
-                    Hủy
-                </button>
-                <button
-                    type="button"
-                    className="availability-btn availability-btn--primary"
-                    onClick={handleSave}
-                    disabled={saving || loading}
-                >
-                    {saving ? 'Đang lưu...' : hasActiveSchedule ? 'Cập nhật lịch rảnh' : 'Tạo lịch rảnh'}
-                </button>
-            </div>
+                        <AvailabilityEditor
+                            slots={isCalculated ? availabilitySlots : renderedAvailabilitySlots}
+                            onChange={(next) => {
+                                setAvailabilitySlots(next);
+                                setSlotErrors({});
+                            }}
+                            errors={slotErrors}
+                            readOnly={isCalculated}
+                            title={
+                                isCalculated
+                                    ? 'Khung giờ rảnh (tự động tính)'
+                                    : 'Khung giờ rảnh (tự nhập)'
+                            }
+                            emptyText={
+                                isCalculated
+                                    ? 'Chưa có lịch rảnh. Hãy apply TKB và/hoặc job hired.'
+                                    : 'Chưa có khung giờ. Thêm thủ công hoặc quét ảnh ở tab Quét TKB.'
+                            }
+                        />
+
+                        {!isCalculated ? (
+                            <div className="availability-page__footer">
+                                <button
+                                    type="button"
+                                    className="availability-btn availability-btn--ghost"
+                                    onClick={() => navigate(ROUTES.CANDIDATE_PROFILE)}
+                                    disabled={saving}
+                                >
+                                    Quay lại hồ sơ
+                                </button>
+                                <button
+                                    type="button"
+                                    className="availability-btn availability-btn--primary"
+                                    onClick={handleSaveAvailability}
+                                    disabled={saving}
+                                >
+                                    {saving
+                                        ? 'Đang lưu...'
+                                        : hasActiveAvailability
+                                          ? 'Cập nhật lịch rảnh'
+                                          : 'Lưu lịch rảnh (tự nhập)'}
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="availability-page__footer">
+                                <button
+                                    type="button"
+                                    className="availability-btn availability-btn--ghost"
+                                    onClick={() => navigate(ROUTES.CANDIDATE_PROFILE)}
+                                >
+                                    Quay lại hồ sơ
+                                </button>
+                            </div>
+                        )}
+                    </>
+                )
+            ) : null}
         </div>
     );
 };

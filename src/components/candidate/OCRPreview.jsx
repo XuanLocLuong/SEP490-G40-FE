@@ -18,13 +18,15 @@ const OCRPreview = ({
         <section className="availability-ocr">
             <div className="availability-ocr__header">
                 <div>
-                    <h2>Gợi ý từ thời khóa biểu</h2>
+                    <h2>Gợi ý lịch rảnh từ thời khóa biểu</h2>
                     <p>
-                        AI chỉ gợi ý khung giờ. Chọn khoảng ngày áp dụng, chỉnh sửa nếu cần, rồi lưu chính thức.
+                        AI đọc lịch học bận trên ảnh và tính các khung giờ <strong>rảnh</strong> (trong
+                        06:00–22:00). Chọn khoảng ngày, chỉnh sửa nếu cần, rồi lưu vào lịch rảnh (chế độ
+                        tự nhập trên app).
                     </p>
                 </div>
                 <button type="button" className="availability-btn availability-btn--ghost" onClick={onCancel}>
-                    Bỏ kết quả OCR
+                    Bỏ gợi ý
                 </button>
             </div>
 
@@ -53,7 +55,14 @@ const OCRPreview = ({
                 ) : null}
             </div>
 
-            <AvailabilityEditor slots={slots} onChange={onChange} errors={errors} />
+            <AvailabilityEditor
+                slots={slots}
+                onChange={onChange}
+                errors={errors}
+                title="Khung giờ rảnh gợi ý"
+                emptyText="Không có khung giờ rảnh nào được trích xuất."
+                addButtonLabel="Thêm khung giờ rảnh"
+            />
 
             <div className="availability-ocr__footer">
                 <button type="button" className="availability-btn availability-btn--secondary" onClick={onCancel}>
@@ -65,7 +74,7 @@ const OCRPreview = ({
                     onClick={onApply}
                     disabled={saving}
                 >
-                    {saving ? 'Đang lưu...' : 'Áp dụng & lưu lịch'}
+                    {saving ? 'Đang lưu...' : 'Lưu lịch rảnh'}
                 </button>
             </div>
         </section>

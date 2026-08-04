@@ -62,22 +62,34 @@ const AvailabilityCard = ({
     slots = [],
     startDate = '',
     endDate = '',
+    scheduleMode = null,
     loading = false,
     onSetup,
 }) => {
     const hasSchedule = slots.length > 0;
     const dateRangeLabel = formatDateRange(startDate, endDate);
+    const modeLabel =
+        scheduleMode === 'MANUAL'
+            ? 'Tự nhập'
+            : scheduleMode === 'CALCULATED' || !scheduleMode
+              ? 'Tự động'
+              : null;
 
     return (
         <section className="cp-card cp-availability-card">
             <div className="cp-card__head">
                 <h2 className="cp-card__title">Lịch rảnh &amp; Thời khóa biểu</h2>
-                {hasSchedule && (
-                    <button type="button" className="cp-text-btn" onClick={onSetup}>
-                        <PencilIcon width={15} height={15} />
-                        Chỉnh sửa
-                    </button>
-                )}
+                <div className="cp-availability-card__head-actions">
+                    {modeLabel && hasSchedule ? (
+                        <span className="cp-availability-card__mode">{modeLabel}</span>
+                    ) : null}
+                    {hasSchedule && (
+                        <button type="button" className="cp-text-btn" onClick={onSetup}>
+                            <PencilIcon width={15} height={15} />
+                            Chỉnh sửa
+                        </button>
+                    )}
+                </div>
             </div>
 
             {loading ? (
