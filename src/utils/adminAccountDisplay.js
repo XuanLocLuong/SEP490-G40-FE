@@ -60,18 +60,17 @@ export const DASHBOARD_STAFF_ROLE_FILTER_OPTIONS = [
     ...DASHBOARD_STAFF_ROLE_OPTIONS,
 ];
 
-/** Role có thể gán khi đổi role (hạn chế CANDIDATE ↔ RECRUITER: không hiện 2 role public nếu đang là staff, và ngược lại giữ đủ nhưng warn). */
+/** Role được phép dùng thao tác Đổi role (không áp dụng Candidate/Recruiter). */
+export const canChangeAccountRole = (currentRole) =>
+    INTERNAL_STAFF_ROLES.includes(currentRole);
+
+/**
+ * Dropdown đổi role: chỉ internal staff hợp lệ.
+ * Candidate/Recruiter → [] (UI ẩn/disable nút Đổi role).
+ */
 export const getChangeRoleOptions = (currentRole) => {
-    const all = Object.entries(USER_ROLE_LABELS).map(([value, label]) => ({ value, label }));
-    // Product: cho đổi sang staff / admin; hạn chế đổi thẳng CANDIDATE ↔ RECRUITER
-    if (currentRole === USER_ROLES.CANDIDATE || currentRole === USER_ROLES.RECRUITER) {
-        return all.filter(
-            (opt) =>
-                opt.value === currentRole ||
-                INTERNAL_STAFF_ROLES.includes(opt.value)
-        );
-    }
-    return all.filter((opt) => opt.value !== USER_ROLES.CANDIDATE && opt.value !== USER_ROLES.RECRUITER);
+    if (!canChangeAccountRole(currentRole)) return [];
+    return INTERNAL_STAFF_ROLE_OPTIONS.filter((opt) => opt.value !== currentRole);
 };
 
 export const getAccountStatusLabel = (status) => ACCOUNT_STATUS_LABELS[status] || status || '—';
