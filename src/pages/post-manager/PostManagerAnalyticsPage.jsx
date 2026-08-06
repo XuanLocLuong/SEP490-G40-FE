@@ -30,6 +30,7 @@ import {
     getJobStatusTone,
     getModerationStatusTone,
     getReportStatusTone,
+    getReviewDecisionTone,
     getSuspiciousIndicatorLabel,
 } from '../../utils/jobPostMetricsDisplay.js';
 import '../../assets/styles/JobPostMetricsStyle.css';
@@ -378,7 +379,10 @@ const PostManagerAnalyticsPage = () => {
 
                 {listError ? <p className="jpm-error">{listError}</p> : null}
 
-                <div className="jpm-table-wrap" aria-busy={listLoading}>
+                <div
+                    className={`jpm-table-wrap${listLoading ? ' jpm-table-wrap--loading' : ''}`}
+                    aria-busy={listLoading}
+                >
                     <table className="jpm-table">
                         <thead>
                             <tr>
@@ -389,24 +393,24 @@ const PostManagerAnalyticsPage = () => {
                                 <th>Ứng tuyển</th>
                                 <th>Báo cáo</th>
                                 <th>Rủi ro AI</th>
-                                <th>Kiểm duyệt</th>
+                                <th>Trạng thái kiểm duyệt</th>
+                                <th>Quyết định</th>
                                 <th>Cảnh báo</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {listLoading ? (
+                            {listLoading && jobs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={10}>Đang tải danh sách…</td>
+                                    <td colSpan={11}>Đang tải danh sách…</td>
                                 </tr>
                             ) : null}
                             {!listLoading && jobs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={10}>Không có job phù hợp bộ lọc.</td>
+                                    <td colSpan={11}>Không có job phù hợp bộ lọc.</td>
                                 </tr>
                             ) : null}
-                            {!listLoading &&
-                                jobs.map((job) => {
+                            {jobs.map((job) => {
                                     const indicators = Array.isArray(job.suspiciousIndicators)
                                         ? job.suspiciousIndicators
                                         : [];
@@ -462,16 +466,22 @@ const PostManagerAnalyticsPage = () => {
                                                 </span>
                                             </td>
                                             <td>
-                                                <div className="jpm-ai-mod">
+                                                <span
+                                                    className={`jpm-badge jpm-badge--${getModerationStatusTone(job.moderationStatus)}`}
+                                                >
+                                                    {formatModerationStatusLabel(job.moderationStatus)}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {decisionLabel ? (
                                                     <span
-                                                        className={`jpm-badge jpm-badge--${getModerationStatusTone(job.moderationStatus)}`}
+                                                        className={`jpm-badge jpm-badge--${getReviewDecisionTone(job.reviewDecision)}`}
                                                     >
-                                                        {formatModerationStatusLabel(job.moderationStatus)}
+                                                        {decisionLabel}
                                                     </span>
-                                                    {decisionLabel ? (
-                                                        <span className="jpm-muted">{decisionLabel}</span>
-                                                    ) : null}
-                                                </div>
+                                                ) : (
+                                                    '—'
+                                                )}
                                             </td>
                                             <td>
                                                 {indicators.length > 0 ? (

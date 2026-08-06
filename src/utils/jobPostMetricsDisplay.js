@@ -232,6 +232,14 @@ export const getModerationStatusTone = (status) => {
     return 'muted';
 };
 
+export const getReviewDecisionTone = (decision) => {
+    const value = String(decision || '').toUpperCase();
+    if (value === 'APPROVED') return 'success';
+    if (value === 'REVISION_REQUESTED') return 'warning';
+    if (value === 'REJECTED') return 'danger';
+    return 'muted';
+};
+
 export const getAiRiskTone = (level) => {
     const value = String(level || '').toUpperCase();
     if (value === 'HIGH' || value === 'FAILED') return 'danger';
