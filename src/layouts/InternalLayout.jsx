@@ -30,7 +30,7 @@ const CONFIG_BY_ROLE = {
         variant: 'dark',
         roleLabel: 'Super Admin',
         items: [
-            { path: ROUTES.ADMIN_HOME, label: 'Bảng điều khiển', icon: GridIcon },
+            { path: ROUTES.ADMIN_HOME, label: 'Thống kê toàn hệ thống', icon: ChartIcon },
             {
                 id: 'system-config',
                 label: 'Cấu hình hệ thống',
@@ -50,11 +50,8 @@ const CONFIG_BY_ROLE = {
                     { path: ROUTES.ADMIN_AUDIT_LOG, label: 'Nhật ký hoạt động', icon: ClipboardIcon },
                 ],
             },
-            { path: ROUTES.ADMIN_ESCALATIONS, label: 'Sự cố leo thang', icon: AlertIcon },
-            { path: ROUTES.ADMIN_ANALYTICS, label: 'Thống kê toàn hệ thống', icon: ChartIcon },
             { path: ROUTES.ADMIN_SETTINGS, label: 'Cài đặt', icon: SettingsIcon },
         ],
-        actionButton: { label: '📊  Xuất báo cáo' },
     },
     [USER_ROLES.POST_MANAGER]: {
         title: 'JobLink',

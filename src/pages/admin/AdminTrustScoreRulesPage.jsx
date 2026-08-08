@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import {
     activateTrustScoreRule,
@@ -20,11 +20,15 @@ import {
     getAppliesToLabel,
     getRuleTypeLabel,
     isSystemRuleType,
+    sortRulesForAdminList,
 } from '../../utils/trustScoreRuleDisplay.js';
 import '../../assets/styles/AdminSkillsPageStyle.css';
 import '../../assets/styles/AdminTrustScoreRulesPageStyle.css';
 
-const PAGE_SIZE = 20;
+/** Page size hiển thị phía FE. */
+const PAGE_SIZE = 10;
+/** Fetch theo batch từ BE rồi gom về FE. */
+const FETCH_SIZE = 200;
 
 const STATUS_OPTIONS = [
     { value: '', label: 'Tất cả trạng thái' },
@@ -40,9 +44,7 @@ const AdminTrustScoreRulesPage = () => {
     const [active, setActive] = useState('');
     const [page, setPage] = useState(0);
 
-    const [items, setItems] = useState([]);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
+    const [allItems, setAllItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -58,35 +60,66 @@ const AdminTrustScoreRulesPage = () => {
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailData, setDetailData] = useState(null);
 
+    const totalElements = allItems.length;
+    const totalPages = totalElements === 0 ? 0 : Math.ceil(totalElements / PAGE_SIZE);
+
+    const pageItems = useMemo(() => {
+        const start = page * PAGE_SIZE;
+        return allItems.slice(start, start + PAGE_SIZE);
+    }, [allItems, page]);
+
     const loadRules = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
-            const params = { page, size: PAGE_SIZE };
-            if (keyword.trim()) params.keyword = keyword.trim();
-            if (ruleType) params.ruleType = ruleType;
-            if (appliesTo) params.appliesTo = appliesTo;
-            if (active === 'true' || active === 'false') params.active = active === 'true';
+            const filters = {};
+            if (keyword.trim()) filters.keyword = keyword.trim();
+            if (ruleType) filters.ruleType = ruleType;
+            if (appliesTo) filters.appliesTo = appliesTo;
+            if (active === 'true' || active === 'false') filters.active = active === 'true';
 
-            const pageData = await searchTrustScoreRules(params);
-            setItems(pageData?.content ?? []);
-            setTotalPages(pageData?.totalPages ?? 0);
-            setTotalElements(pageData?.totalElements ?? 0);
+            const collected = [];
+            let apiPage = 0;
+            let totalFromApi = Infinity;
+
+            while (collected.length < totalFromApi && apiPage < 50) {
+                const pageData = await searchTrustScoreRules({
+                    ...filters,
+                    page: apiPage,
+                    size: FETCH_SIZE,
+                });
+                const content = pageData?.content ?? [];
+                totalFromApi =
+                    typeof pageData?.totalElements === 'number'
+                        ? pageData.totalElements
+                        : collected.length + content.length;
+                collected.push(...content);
+                if (content.length === 0 || content.length < FETCH_SIZE) break;
+                apiPage += 1;
+            }
+
+            setAllItems(sortRulesForAdminList(collected));
         } catch (err) {
             setError(
                 getTrustScoreRuleApiErrorMessage(err, 'Không thể tải danh sách quy tắc điểm uy tín.')
             );
-            setItems([]);
-            setTotalPages(0);
-            setTotalElements(0);
+            setAllItems([]);
         } finally {
             setLoading(false);
         }
-    }, [page, keyword, ruleType, appliesTo, active]);
+    }, [keyword, ruleType, appliesTo, active]);
 
     useEffect(() => {
         loadRules();
     }, [loadRules]);
+
+    useEffect(() => {
+        if (totalPages === 0) {
+            if (page !== 0) setPage(0);
+            return;
+        }
+        if (page > totalPages - 1) setPage(totalPages - 1);
+    }, [page, totalPages]);
 
     const openCreate = () => {
         setFormMode('create');
@@ -143,8 +176,8 @@ const AdminTrustScoreRulesPage = () => {
             }
             setFormOpen(false);
             setEditingRule(null);
-            if (page !== 0 && formMode === 'create') setPage(0);
-            else await loadRules();
+            if (formMode === 'create') setPage(0);
+            await loadRules();
         } catch (err) {
             const status = err?.response?.status;
             const message = getTrustScoreRuleApiErrorMessage(err, 'Không thể lưu quy tắc.');
@@ -293,21 +326,21 @@ const AdminTrustScoreRulesPage = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {loading && items.length === 0 ? (
+                        {loading && allItems.length === 0 ? (
                             <tr>
                                 <td colSpan={9} className="admin-skills-table__empty">
                                     Đang tải...
                                 </td>
                             </tr>
                         ) : null}
-                        {!loading && items.length === 0 ? (
+                        {!loading && allItems.length === 0 ? (
                             <tr>
                                 <td colSpan={9} className="admin-skills-table__empty">
                                     Chưa có quy tắc điểm uy tín phù hợp bộ lọc.
                                 </td>
                             </tr>
                         ) : null}
-                        {items.map((rule) => {
+                        {pageItems.map((rule) => {
                             const system = isSystemRuleType(rule.ruleType);
                             return (
                                 <tr key={rule.id}>
@@ -390,7 +423,7 @@ const AdminTrustScoreRulesPage = () => {
             <div className="admin-skills-pagination">
                 <span>
                     {totalElements} quy tắc · Trang {totalPages === 0 ? 0 : page + 1}/
-                    {totalPages || 0}
+                    {totalPages || 0} · {PAGE_SIZE}/trang
                 </span>
                 <div className="admin-skills-pagination__controls">
                     <button
