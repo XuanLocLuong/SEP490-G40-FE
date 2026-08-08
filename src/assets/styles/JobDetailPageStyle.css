@@ -544,6 +544,16 @@
     font-weight: 700;
 }
 
+/* Link “Xem lời mời” dùng cùng class apply — căn chữ như button */
+a.job-detail-panel__apply {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    text-align: center;
+    text-decoration: none;
+}
+
 .job-detail-panel__actions {
     display: flex;
     flex-direction: column;
