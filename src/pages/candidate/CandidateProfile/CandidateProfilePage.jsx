@@ -189,7 +189,14 @@ const CandidateProfilePage = () => {
     const handleAvatar = (file) => uploadAvatar(file);
 
     const handleScheduleSetup = () => {
-        navigate(ROUTES.CANDIDATE_AVAILABILITY);
+        navigate(ROUTES.CANDIDATE_AVAILABILITY, {
+            state: {
+                from: {
+                    path: ROUTES.CANDIDATE_PROFILE,
+                    label: 'Hồ sơ',
+                },
+            },
+        });
     };
 
     const handleReturnToJob = () => {

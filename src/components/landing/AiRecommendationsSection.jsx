@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import JobCard from '../job/JobCard.jsx';
+import ScheduleSoftWarningBanner from '../candidate/ScheduleSoftWarningBanner.jsx';
 import { SparklesIcon } from '../common/icons.jsx';
 import { fetchRecommendedJobs } from '../../apis/RecommendationApi.jsx';
+import { useScheduleSummary } from '../../hooks/useScheduleSummary.js';
 import { ROUTES } from '../../routes/path.js';
 import { mapRecommendationToJob } from '../../utils/formatters.js';
 import { HOME_SECTION_IDS } from '../../utils/homeSections.js';
@@ -18,6 +20,9 @@ const AiRecommendationsSection = () => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const { summary: scheduleSummary, loading: scheduleSummaryLoading } = useScheduleSummary({
+        enabled: true,
+    });
 
     useEffect(() => {
         let cancelled = false;
@@ -62,6 +67,12 @@ const AiRecommendationsSection = () => {
                     </Link>
                 </div>
             </div>
+
+            <ScheduleSoftWarningBanner
+                summary={scheduleSummary}
+                loading={scheduleSummaryLoading}
+                className="schedule-soft-banner--ai-section"
+            />
 
             {loading && jobs.length === 0 && (
                 <div className="landing-jobs__grid landing-jobs__grid--compact landing-jobs__grid--loading">
