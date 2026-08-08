@@ -19,6 +19,9 @@ import PublicBusinessProfilePage from '../pages/guest/PublicBusinessProfilePage.
 import TopRecruitersPage from '../pages/guest/TopRecruitersPage.jsx';
 import Login from '../pages/auth/Login.jsx';
 import Register from '../pages/auth/Register.jsx';
+import VerifyEmail from '../pages/auth/VerifyEmail.jsx';
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage.jsx';
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage.jsx';
 import CandidateHomePage from '../pages/candidate/CandidateHomePage.jsx';
 import CandidateSettingsPage from '../pages/candidate/CandidateSettingsPage.jsx';
 import CandidateProfilePage from '../pages/candidate/CandidateProfile/CandidateProfilePage.jsx';
@@ -40,6 +43,7 @@ import JobAnalyticsDetailPage from '../pages/recruiter/analytics/JobAnalyticsDet
 import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import PostManagerReportQueuePage from '../pages/post-manager/PostManagerReportQueuePage.jsx';
+import PostManagerAnalyticsPage from '../pages/post-manager/PostManagerAnalyticsPage.jsx';
 import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import ManualVerificationQueuePage from '../pages/manual-check/ManualVerificationQueuePage.jsx';
 import ManualCheckReviewModerationPage from '../pages/manual-check/ManualCheckReviewModerationPage.jsx';
@@ -49,7 +53,6 @@ import AdminTrustScoreRulesPage from '../pages/admin/AdminTrustScoreRulesPage.js
 import AdminAccountsPage from '../pages/admin/AdminAccountsPage.jsx';
 import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage.jsx';
 import AdminSystemConfigPage from '../pages/admin/AdminSystemConfigPage.jsx';
-import VerifyEmail from "../pages/auth/VerifyEmail.jsx";
 import CandidatePublicProfilePage from '../pages/shared/CandidatePublicProfilePage.jsx';
 import RoleBasedShellLayout from '../layouts/RoleBasedShellLayout.jsx';
 
@@ -85,7 +88,9 @@ const AppRouter = () => {
                  tự đứng độc lập full-page theo đúng ảnh thiết kế ---- */}
             <Route path={ROUTES.LOGIN} element={<Login />} />
             <Route path={ROUTES.REGISTER} element={<Register />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmail />} />
+            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+            <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
 
             {/* Hồ sơ public candidate — 1 route dùng chung, layout theo role đang login.
                 Tránh đăng ký trùng path dưới nhiều ProtectedRoute (recruiter bị đá về home). */}
@@ -187,6 +192,8 @@ const AppRouter = () => {
                 <Route path={ROUTES.POST_MANAGER_HOME} element={<PostManagerDashboard />} />
                 <Route path={ROUTES.POST_MANAGER_QUEUE} element={<PostManagerReviewQueuePage />} />
                 <Route path={ROUTES.POST_MANAGER_REPORTS} element={<PostManagerReportQueuePage />} />
+                <Route path={ROUTES.POST_MANAGER_ANALYTICS} element={<PostManagerAnalyticsPage />} />
+                <Route path={ROUTES.POST_MANAGER_SETTINGS} element={<CandidateSettingsPage />} />
             </Route>
 
             {/* ---- Manual Verification Team ---- */}
@@ -203,6 +210,7 @@ const AppRouter = () => {
                     path={ROUTES.MANUAL_CHECK_REPORTS}
                     element={<ManualCheckReviewModerationPage />}
                 />
+                <Route path={ROUTES.MANUAL_CHECK_SETTINGS} element={<CandidateSettingsPage />} />
             </Route>
 
             {/* ---- Admin ---- */}
@@ -220,6 +228,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.ADMIN_ACCOUNTS} element={<AdminAccountsPage />} />
                 <Route path={ROUTES.ADMIN_SYSTEM_CONFIG} element={<AdminSystemConfigPage />} />
                 <Route path={ROUTES.ADMIN_AUDIT_LOG} element={<AdminAuditLogsPage />} />
+                <Route path={ROUTES.ADMIN_SETTINGS} element={<CandidateSettingsPage />} />
             </Route>
 
             {/* Route không tồn tại -> về trang chủ đúng role (hoặc Landing nếu chưa login) */}

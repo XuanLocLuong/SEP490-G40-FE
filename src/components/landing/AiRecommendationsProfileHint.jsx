@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { ROUTES } from '../../routes/path.js';
+import { buildAvailabilityFromCurrentLocation } from '../../utils/availabilityNavReturn.js';
 import {
     EMPTY_RECOMMENDATION_GAPS,
     fetchRecommendationProfileGaps,
@@ -10,6 +11,11 @@ import {
 
 /** Banner ngắn trên homepage khi AI vẫn trả job nhưng hồ sơ chưa đủ (cold start). */
 const AiRecommendationsProfileHint = () => {
+    const location = useLocation();
+    const availabilityState = useMemo(
+        () => buildAvailabilityFromCurrentLocation(location),
+        [location],
+    );
     const [gaps, setGaps] = useState(EMPTY_RECOMMENDATION_GAPS);
     const [ready, setReady] = useState(false);
 
@@ -43,13 +49,15 @@ const AiRecommendationsProfileHint = () => {
             : ROUTES.CANDIDATE_PROFILE;
     const linkText =
         summary.primaryHref === 'availability' ? 'Thiết lập lịch rảnh' : 'Cập nhật hồ sơ';
+    const linkState =
+        summary.primaryHref === 'availability' ? availabilityState : undefined;
 
     return (
         <p className="ai-profile-hint">
             <span>
                 Đang ở chế độ khám phá — {summary.label.toLowerCase()}. Bổ sung để gợi ý chính xác hơn.
             </span>{' '}
-            <Link to={href} className="ai-profile-hint__link">
+            <Link to={href} state={linkState} className="ai-profile-hint__link">
                 {linkText} →
             </Link>
         </p>

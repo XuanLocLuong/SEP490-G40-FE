@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     getVerificationApiErrorMessage,
+    isVerificationRetryWithoutRequestError,
     submitVerification,
 } from '../../apis/VerificationApi.jsx';
 import recruiterProfileApi from '../../apis/RecruiterProfileApi.jsx';
@@ -93,6 +94,90 @@ const FileDropzone = ({
     );
 };
 
+const CertificateImagesField = ({
+    files = [],
+    onChange,
+    disabled = false,
+}) => {
+    const inputId = 'drop-certificate-images';
+    const [previews, setPreviews] = useState([]);
+
+    useEffect(() => {
+        const next = (files || []).map((file) => {
+            if (file && String(file.type || '').startsWith('image/')) {
+                return { name: file.name, url: URL.createObjectURL(file), isImage: true };
+            }
+            return { name: file?.name || 'file', url: '', isImage: false };
+        });
+        setPreviews(next);
+        return () => {
+            next.forEach((item) => {
+                if (item.url) URL.revokeObjectURL(item.url);
+            });
+        };
+    }, [files]);
+
+    const appendFiles = (list) => {
+        const incoming = Array.from(list || []).filter(Boolean);
+        if (!incoming.length) return;
+        onChange([...(files || []), ...incoming]);
+    };
+
+    const removeAt = (index) => {
+        onChange((files || []).filter((_, i) => i !== index));
+    };
+
+    return (
+        <div className={`rv-multi-upload${disabled ? ' is-disabled' : ''}`}>
+            <label htmlFor={inputId} className="rv-dropzone rv-dropzone--multi">
+                <input
+                    id={inputId}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    multiple
+                    hidden
+                    disabled={disabled}
+                    onChange={(e) => {
+                        appendFiles(e.target.files);
+                        e.target.value = '';
+                    }}
+                />
+                <strong>GPKD / đăng ký hộ KD</strong>
+                <span className="rv-dropzone__meta">
+                    {files.length > 0
+                        ? `${files.length} trang đã chọn — click để thêm`
+                        : 'Chọn nhiều ảnh/PDF các trang giấy phép'}
+                </span>
+            </label>
+
+            {previews.length > 0 ? (
+                <ul className="rv-multi-upload__list">
+                    {previews.map((item, index) => (
+                        <li key={`${item.name}-${index}`} className="rv-multi-upload__item">
+                            {item.isImage && item.url ? (
+                                <img src={item.url} alt={`Xem trước ${item.name}`} />
+                            ) : (
+                                <span className="rv-multi-upload__pdf">PDF</span>
+                            )}
+                            <span className="rv-multi-upload__name" title={item.name}>
+                                {item.name}
+                            </span>
+                            <button
+                                type="button"
+                                className="rv-multi-upload__remove"
+                                disabled={disabled}
+                                onClick={() => removeAt(index)}
+                            >
+                                Xóa
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            ) : null}
+        </div>
+    );
+};
+
 const RecruiterVerificationPage = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -104,8 +189,7 @@ const RecruiterVerificationPage = () => {
     const [frontImage, setFrontImage] = useState(null);
     const [backImage, setBackImage] = useState(null);
     const [taxCode, setTaxCode] = useState('');
-    const [certificateImage, setCertificateImage] = useState(null);
-    const [businessImages, setBusinessImages] = useState([]);
+    const [certificateImages, setCertificateImages] = useState([]);
     const [submitting, setSubmitting] = useState(false);
     const [lastResponse, setLastResponse] = useState(null);
 
@@ -117,13 +201,30 @@ const RecruiterVerificationPage = () => {
     const isIndividual = isIndividualBusinessType(profile?.businessType);
     const needsLicense = requiresBusinessLicenseVerification(profile?.businessType);
 
+    // ?retry=1 chỉ mở form khi đang chờ duyệt — KHÔNG tự chọn API.
+    // /retry chỉ khi BE đã có request (reject / manual).
+    const hasExistingVerificationRequest =
+        isVerificationRejected(profile?.verificationStatus) ||
+        isVerificationPendingManual(profile?.verificationStatus);
+
+    const useRetryApi = hasExistingVerificationRequest;
+
     const isPendingLocked =
         isVerificationPendingManual(profile?.verificationStatus) && !retryMode;
 
-    const useRetryApi =
-        retryMode ||
-        isVerificationRejected(profile?.verificationStatus) ||
-        isVerificationPendingManual(profile?.verificationStatus);
+    // URL ?retry=1 nhưng chưa từng nộp → bỏ query để khớp /submit.
+    useEffect(() => {
+        if (loadingProfile || !profile) return;
+        if (retryMode && !hasExistingVerificationRequest) {
+            setSearchParams({}, { replace: true });
+        }
+    }, [
+        loadingProfile,
+        profile,
+        retryMode,
+        hasExistingVerificationRequest,
+        setSearchParams,
+    ]);
 
     const applyUiFromProfile = useCallback(
         (data) => {
@@ -238,24 +339,35 @@ const RecruiterVerificationPage = () => {
         }
 
         const trimmedTax = taxCode.trim();
-        if (needsLicense && !trimmedTax && !certificateImage) {
+        if (needsLicense && !trimmedTax && certificateImages.length === 0) {
             toast.error('Doanh nghiệp thường cần mã số thuế hoặc ảnh giấy phép (ít nhất một trong hai).');
             return;
         }
 
         setSubmitting(true);
         try {
-            const data = await submitVerification(
-                {
-                    businessId,
-                    frontImage,
-                    backImage,
-                    taxCode: needsLicense ? trimmedTax || undefined : undefined,
-                    certificateImage: needsLicense ? certificateImage || undefined : undefined,
-                    businessImages: needsLicense ? businessImages : [],
-                },
-                { retry: useRetryApi }
-            );
+            const payload = {
+                businessId,
+                frontImage,
+                backImage,
+                taxCode: needsLicense ? trimmedTax || undefined : undefined,
+                certificateImages: needsLicense ? certificateImages : [],
+            };
+
+            let usedRetry = useRetryApi;
+            let data;
+            try {
+                data = await submitVerification(payload, { retry: usedRetry });
+            } catch (firstErr) {
+                // Race / status lệch: BE chưa có request → fallback /submit một lần.
+                if (usedRetry && isVerificationRetryWithoutRequestError(firstErr)) {
+                    usedRetry = false;
+                    data = await submitVerification(payload, { retry: false });
+                } else {
+                    throw firstErr;
+                }
+            }
+
             setLastResponse(data);
 
             const refreshed = await recruiterProfileApi.getProfile().catch(() => null);
@@ -290,8 +402,7 @@ const RecruiterVerificationPage = () => {
         setLastResponse(null);
         setFrontImage(null);
         setBackImage(null);
-        setCertificateImage(null);
-        setBusinessImages([]);
+        setCertificateImages([]);
         setSearchParams({ retry: '1' }, { replace: true });
     };
 
@@ -419,31 +530,15 @@ const RecruiterVerificationPage = () => {
                             </label>
 
                             <div className="rv-field">
-                                <span>Ảnh giấy phép (nếu không có MST)</span>
-                                <FileDropzone
-                                    label="GPKD / đăng ký hộ KD"
-                                    hint="PDF, JPG, PNG"
-                                    accept="image/*,application/pdf"
-                                    file={certificateImage}
-                                    onFileChange={setCertificateImage}
+                                <span>Ảnh giấy phép (nhiều trang — nếu không có MST)</span>
+                                <CertificateImagesField
+                                    files={certificateImages}
+                                    onChange={setCertificateImages}
                                     disabled={submitting}
                                 />
-                            </div>
-
-                            <div className="rv-field">
-                                <span>Ảnh mặt bằng / cửa hàng (tuỳ chọn)</span>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    disabled={submitting}
-                                    onChange={(e) => setBusinessImages(Array.from(e.target.files || []))}
-                                />
-                                {businessImages.length > 0 ? (
-                                    <small className="rv-field__hint">
-                                        {businessImages.length} ảnh đã chọn
-                                    </small>
-                                ) : null}
+                                <small className="rv-field__hint">
+                                    Có thể chọn nhiều trang giấy phép. Có MST thì không bắt buộc kèm ảnh.
+                                </small>
                             </div>
                         </>
                     ) : null}

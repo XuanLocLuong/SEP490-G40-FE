@@ -119,7 +119,9 @@ export const getFormattedFailedReasons = (response) => {
     if (!response) return [];
     const formatted = response.formattedFailedReasons;
     if (Array.isArray(formatted) && formatted.length) {
-        return formatted.map((item) => String(item || '').trim()).filter(Boolean);
+        return formatted
+            .map((item) => formatFailedReasonCode(String(item || '').trim()))
+            .filter(Boolean);
     }
     return [];
 };
@@ -130,9 +132,11 @@ export const getVerificationRejectionReason = (response) => {
     const formatted = getFormattedFailedReasons(response);
     if (formatted.length) return formatted.join('; ');
 
-    if (typeof response.reason === 'string' && response.reason.trim()) return response.reason.trim();
+    if (typeof response.reason === 'string' && response.reason.trim()) {
+        return formatFailedReasonCode(response.reason.trim());
+    }
     if (typeof response.rejectReason === 'string' && response.rejectReason.trim()) {
-        return response.rejectReason.trim();
+        return formatFailedReasonCode(response.rejectReason.trim());
     }
     if (typeof response.adminNote === 'string' && response.adminNote.trim()) {
         return response.adminNote.trim();
@@ -142,13 +146,15 @@ export const getVerificationRejectionReason = (response) => {
     if (failed && typeof failed === 'object' && !Array.isArray(failed)) {
         const parts = [];
         const pushMsg = (label, msg) => {
-            const text = unwrapOcrField(msg);
+            const text = formatFailedReasonCode(unwrapOcrField(msg));
             if (text) parts.push(label ? `${label}: ${text}` : text);
         };
         Object.entries(failed).forEach(([group, value]) => {
             if (!value) return;
             if (typeof value === 'string') {
-                pushMsg(group, value);
+                // value thường là code DecisionEngine — dịch, không cần prefix group EN.
+                const translated = formatFailedReasonCode(value);
+                if (translated) parts.push(translated);
                 return;
             }
             if (typeof value === 'object') {
@@ -160,17 +166,8 @@ export const getVerificationRejectionReason = (response) => {
         if (parts.length) return parts.join('; ');
     }
 
-    const reasons = response.reasons || response.failedReasons;
-    if (Array.isArray(reasons) && reasons.length) {
-        return reasons
-            .map((item) =>
-                typeof item === 'string'
-                    ? item
-                    : unwrapOcrField(item?.message ?? item?.code ?? item)
-            )
-            .filter(Boolean)
-            .join('; ');
-    }
+    const fromList = toReasonList(response.reasons || response.failedReasons);
+    if (fromList.length) return fromList.join('; ');
     return '';
 };
 
@@ -216,16 +213,117 @@ export const toLabelValueEntries = (data) => {
     return [];
 };
 
+/** Label field OCR trong code kiểu MISSING_IMPORTANT_FIELDS:idNumber,fullName */
+const OCR_FIELD_LABELS_VN = {
+    idNumber: 'Số CCCD',
+    cccd: 'Số CCCD',
+    citizenId: 'Số CCCD',
+    soCCCD: 'Số CCCD',
+    fullName: 'Họ và tên',
+    name: 'Họ và tên',
+    hoTen: 'Họ và tên',
+    dateOfBirth: 'Ngày sinh',
+    dob: 'Ngày sinh',
+    ngaySinh: 'Ngày sinh',
+    address: 'Địa chỉ',
+    permanentAddress: 'Địa chỉ thường trú',
+    diaChi: 'Địa chỉ',
+    dateOfExpiry: 'Ngày hết hạn',
+    expiryDate: 'Ngày hết hạn',
+    ngayHetHan: 'Ngày hết hạn',
+    issueDate: 'Ngày cấp',
+    ngayCap: 'Ngày cấp',
+    nationality: 'Quốc tịch',
+    sex: 'Giới tính',
+    gender: 'Giới tính',
+    placeOfOrigin: 'Quê quán',
+    placeOfResidence: 'Nơi thường trú',
+    taxCode: 'Mã số thuế',
+    businessName: 'Tên doanh nghiệp',
+    companyName: 'Tên doanh nghiệp',
+};
+
+/** Code DecisionEngine → tiếng Việt (Manual + fallback recruiter). */
+const FAILED_CRITERIA_LABELS_VN = {
+    MISSING_FRONT_OR_BACK: 'Thiếu ảnh mặt trước hoặc mặt sau CCCD',
+    NOT_VIETNAM_CITIZEN_ID: 'Không phải CCCD/CMND Việt Nam',
+    AGE_UNDER_MINIMUM: 'Tuổi dưới mức tối thiểu cho phép',
+    CCCD_EXPIRED: 'CCCD đã hết hạn',
+    EXPIRY_DATE_UNREADABLE: 'Không đọc được ngày hết hạn CCCD',
+    HIGH_TAMPERING_RISK: 'Nguy cơ chỉnh sửa / giả mạo ảnh cao',
+    LOW_IMAGE_QUALITY: 'Chất lượng ảnh thấp (mờ, tối, chói…)',
+    LOW_OVERALL_SCORE: 'Điểm kiểm tra tổng thể thấp',
+    DOCUMENT_NOT_DETECTED: 'Không nhận diện được giấy phép / giấy tờ DN',
+};
+
+const translateOcrFieldList = (fieldsCsv) => {
+    if (!fieldsCsv) return '';
+    return String(fieldsCsv)
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((field) => OCR_FIELD_LABELS_VN[field] || OCR_FIELD_LABELS_VN[field.toLowerCase()] || field)
+        .join(', ');
+};
+
+/**
+ * Dịch 1 mã/chuỗi failedCriteria hoặc failedReasons sang tiếng Việt.
+ * Giữ nguyên nếu đã là câu tiếng Việt / warning AI (`- …`).
+ */
+export const formatFailedReasonCode = (raw) => {
+    if (raw == null) return '';
+    let text = String(raw).trim();
+    if (!text) return '';
+
+    // Warning AI: "- Ảnh bị cắt góc"
+    if (text.startsWith('- ')) {
+        return text.slice(2).trim() || text;
+    }
+
+    const missingMatch = text.match(/^MISSING_IMPORTANT_FIELDS:(.+)$/i);
+    if (missingMatch) {
+        const fields = translateOcrFieldList(missingMatch[1]);
+        return fields
+            ? `Thiếu trường quan trọng: ${fields}`
+            : 'Thiếu trường quan trọng trên giấy tờ';
+    }
+
+    const lowConfMatch = text.match(/^LOW_CONFIDENCE_IMPORTANT_FIELDS:(.+)$/i);
+    if (lowConfMatch) {
+        const fields = translateOcrFieldList(lowConfMatch[1]);
+        return fields
+            ? `Độ tin cậy thấp ở trường: ${fields}`
+            : 'Độ tin cậy thấp ở các trường quan trọng';
+    }
+
+    const upper = text.toUpperCase();
+    if (FAILED_CRITERIA_LABELS_VN[upper]) {
+        return FAILED_CRITERIA_LABELS_VN[upper];
+    }
+
+    // Prefix code chưa có trong map nhưng vẫn dạng CODE:...
+    const prefixMatch = text.match(/^([A-Z][A-Z0-9_]+):(.*)$/);
+    if (prefixMatch && FAILED_CRITERIA_LABELS_VN[prefixMatch[1]]) {
+        const rest = prefixMatch[2].trim();
+        const base = FAILED_CRITERIA_LABELS_VN[prefixMatch[1]];
+        return rest ? `${base}: ${translateOcrFieldList(rest) || rest}` : base;
+    }
+
+    return text;
+};
+
 /** Lý do fail dạng list (Manual / toast) — hỗ trợ array mới + string JSON cũ. */
 export const toReasonList = (reasons) => {
     if (!reasons) return [];
     if (Array.isArray(reasons)) {
         return reasons
-            .map((item) =>
-                typeof item === 'string'
-                    ? item.trim()
-                    : unwrapOcrField(item?.message ?? item?.code ?? item)
-            )
+            .map((item) => {
+                const raw =
+                    typeof item === 'string'
+                        ? item.trim()
+                        : unwrapOcrField(item?.message ?? item?.code ?? item);
+                return formatFailedReasonCode(raw);
+            })
             .filter(Boolean);
     }
     if (typeof reasons === 'string') {
@@ -235,14 +333,20 @@ export const toReasonList = (reasons) => {
             const parsed = JSON.parse(trimmed);
             return toReasonList(parsed);
         } catch {
-            return [trimmed];
+            return [formatFailedReasonCode(trimmed)];
         }
     }
     if (typeof reasons === 'object') {
         return Object.entries(reasons)
             .map(([key, value]) => {
                 const text = unwrapOcrField(value);
-                return text ? `${key}: ${text}` : '';
+                if (!text) return '';
+                // value đã là code → dịch; key là nhóm (cccd / license)
+                const translated = formatFailedReasonCode(text);
+                if (translated !== text) return translated;
+                return formatFailedReasonCode(key) !== key
+                    ? `${formatFailedReasonCode(key)}: ${translated}`
+                    : `${key}: ${translated}`;
             })
             .filter(Boolean);
     }

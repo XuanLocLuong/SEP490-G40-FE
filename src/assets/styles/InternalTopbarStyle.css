@@ -24,11 +24,19 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    text-decoration: none;
 }
 
 .internal-topbar__icon-btn:hover {
     background: var(--color-bg);
     color: var(--color-text);
+}
+
+a.internal-topbar__icon-btn.internal-topbar__icon-btn--active,
+a.internal-topbar__icon-btn[aria-current='page'] {
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-color: #c9d8ff;
 }
 
 .internal-topbar__dot {

@@ -114,7 +114,13 @@ const Login = () => {
                     <div className="form-field">
                         <label className="form-field__label">
                             Mật khẩu
-                            <a href="#" className="form-field__link">Quên mật khẩu?</a>
+                            <button
+                                type="button"
+                                className="form-field__link"
+                                onClick={() => navigate(ROUTES.FORGOT_PASSWORD)}
+                            >
+                                Quên mật khẩu?
+                            </button>
                         </label>
                         <div className="form-field__input-wrap">
                             <LockIcon className="form-field__icon" />
