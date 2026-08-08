@@ -312,6 +312,14 @@
     outline: none;
 }
 
+.job-search-form__field-error {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-danger, #dc2626);
+}
+
 .job-search-form__select-field select:focus,
 .job-search-form__select-field input:focus {
     border-color: var(--color-primary);

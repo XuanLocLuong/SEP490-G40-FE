@@ -103,6 +103,7 @@ const ProfileMenu = ({
                             <NavLink
                                 key={item.label}
                                 to={item.path}
+                                state={item.state}
                                 className="profile-menu__item"
                                 onClick={() => setOpen(false)}
                             >

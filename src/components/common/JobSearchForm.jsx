@@ -41,6 +41,8 @@ const toTimeInputValue = (value) => {
     return String(value).slice(0, 5);
 };
 
+const SALARY_RANGE_ERROR = 'Lương tối thiểu không được lớn hơn lương tối đa.';
+
 const resolveInitialLocationIds = (initialCity, initialWard) => {
     const province = findProvinceByName(initialCity);
     if (!province) {
@@ -91,6 +93,7 @@ const JobSearchForm = ({
     const [salaryMax, setSalaryMax] = useState(
         initialSalaryMax != null ? String(initialSalaryMax) : ''
     );
+    const [salaryRangeError, setSalaryRangeError] = useState('');
     const [skillIds, setSkillIds] = useState(initialSkillIds || []);
     const [scheduleDays, setScheduleDays] = useState(
         (initialSchedules || []).map((item) => String(item.dayOfWeek))
@@ -138,6 +141,7 @@ const JobSearchForm = ({
         setJobType(initialJobType || '');
         setSalaryMin(initialSalaryMin != null ? String(initialSalaryMin) : '');
         setSalaryMax(initialSalaryMax != null ? String(initialSalaryMax) : '');
+        setSalaryRangeError('');
         setSkillIds(skillIdsNext);
         setScheduleDays(schedulesNext.map((item) => String(item.dayOfWeek)));
         setScheduleStart(toTimeInputValue(schedulesNext[0]?.startTime) || '');
@@ -328,6 +332,16 @@ const JobSearchForm = ({
         setKeywordFocused(false);
         const base = buildBasePayload();
 
+        if (
+            base.salaryMin != null &&
+            base.salaryMax != null &&
+            base.salaryMin > base.salaryMax
+        ) {
+            setSalaryRangeError(SALARY_RANGE_ERROR);
+            return;
+        }
+        setSalaryRangeError('');
+
         if (!base.nearMe) {
             onSearch(base);
             return;
@@ -467,7 +481,11 @@ const JobSearchForm = ({
                                     step="1000"
                                     placeholder="VD: 20000"
                                     value={salaryMin}
-                                    onChange={(e) => setSalaryMin(e.target.value)}
+                                    onChange={(e) => {
+                                        setSalaryMin(e.target.value);
+                                        setSalaryRangeError('');
+                                    }}
+                                    aria-invalid={Boolean(salaryRangeError)}
                                 />
                             </label>
 
@@ -479,9 +497,19 @@ const JobSearchForm = ({
                                     step="1000"
                                     placeholder="VD: 35000"
                                     value={salaryMax}
-                                    onChange={(e) => setSalaryMax(e.target.value)}
+                                    onChange={(e) => {
+                                        setSalaryMax(e.target.value);
+                                        setSalaryRangeError('');
+                                    }}
+                                    aria-invalid={Boolean(salaryRangeError)}
                                 />
                             </label>
+
+                            {salaryRangeError ? (
+                                <p className="job-search-form__field-error" role="alert">
+                                    {salaryRangeError}
+                                </p>
+                            ) : null}
                         </div>
 
                         <fieldset className="job-search-form__fieldset">

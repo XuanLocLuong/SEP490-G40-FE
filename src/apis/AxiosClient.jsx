@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { getAuth, setAuth, clearAuth } from '../utils/Auth.jsx';
+import { markSessionExpired } from '../utils/sessionExpiredStorage.js';
+import { ROUTES } from '../routes/path.js';
 
 // Backend chạy tất cả API dưới prefix /api/v1 (xem SecurityConfig / *Controller.java).
 // VITE_API_URL chỉ nên chứa domain gốc (vd: http://localhost:8080), KHÔNG kèm /api/v1.
@@ -23,6 +25,15 @@ const AUTH_ENDPOINTS_NEEDING_BEARER = [
 const authEndpointNeedsBearer = (url = '') =>
     AUTH_ENDPOINTS_NEEDING_BEARER.some((path) => url.includes(path));
 
+const redirectToLoginAfterSessionExpired = () => {
+    markSessionExpired();
+    clearAuth();
+    const path = window.location.pathname || '';
+    if (path !== ROUTES.LOGIN && !path.startsWith(`${ROUTES.LOGIN}/`)) {
+        window.location.href = ROUTES.LOGIN;
+    }
+};
+
 axiosClient.interceptors.request.use((config) => {
     const url = config.url || '';
     const isAuthEndpoint = url.includes('/auth/');
@@ -37,7 +48,7 @@ axiosClient.interceptors.request.use((config) => {
 });
 
 // Tự động refresh access token khi bị 401, retry lại request gốc 1 lần.
-// Nếu refresh cũng fail thì clear auth và đá về /login.
+// Nếu refresh cũng fail thì clear auth, báo hết phiên và đá về /login.
 let isRefreshing = false;
 let pendingQueue = [];
 
@@ -63,7 +74,7 @@ axiosClient.interceptors.response.use(
 
         const auth = getAuth();
         if (!auth?.refreshToken) {
-            clearAuth();
+            redirectToLoginAfterSessionExpired();
             return Promise.reject(error);
         }
 
@@ -91,8 +102,7 @@ axiosClient.interceptors.response.use(
             return axiosClient(originalRequest);
         } catch (refreshError) {
             processQueue(refreshError, null);
-            clearAuth();
-            window.location.href = '/login';
+            redirectToLoginAfterSessionExpired();
             return Promise.reject(refreshError);
         } finally {
             isRefreshing = false;

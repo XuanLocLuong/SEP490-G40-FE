@@ -10,6 +10,11 @@ import BookmarkLoginRedirect from '../job/BookmarkLoginRedirect.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { applyCandidateScheduleAccess, isSearchQuery } from '../../utils/jobQuery.js';
+import {
+    clearHomeSearchQuery,
+    peekHomeSearchQuery,
+    setHomeSearchQuery,
+} from '../../utils/homeSearchStorage.js';
 import '../../assets/styles/LandingPageStyle.css';
 
 /**
@@ -28,26 +33,42 @@ const JobDiscoveryHome = ({
 }) => {
     const { auth } = useAuth();
     const isCandidate = auth?.role === USER_ROLES.CANDIDATE;
-    const [searchQuery, setSearchQuery] = useState(null);
+    const [searchQuery, setSearchQuery] = useState(() => {
+        const saved = peekHomeSearchQuery();
+        return saved ? applyCandidateScheduleAccess(saved, isCandidate) : null;
+    });
     const [searchFormResetKey, setSearchFormResetKey] = useState(0);
     const searchResultsRef = useRef(null);
+    const skipNextScrollRef = useRef(Boolean(searchQuery));
 
     const handleSearch = useCallback(
         (payload) => {
             const nextQuery = applyCandidateScheduleAccess(payload, isCandidate);
             if (isSearchQuery(nextQuery)) {
+                skipNextScrollRef.current = false;
                 setSearchQuery(nextQuery);
+                setHomeSearchQuery(nextQuery);
             } else {
                 setSearchQuery(null);
+                clearHomeSearchQuery();
             }
         },
         [isCandidate]
     );
 
+    const handleClearSearch = useCallback(() => {
+        setSearchQuery(null);
+        clearHomeSearchQuery();
+        setSearchFormResetKey((key) => key + 1);
+    }, []);
+
     useEffect(() => {
-        if (searchQuery) {
-            searchResultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!searchQuery) return;
+        if (skipNextScrollRef.current) {
+            skipNextScrollRef.current = false;
+            return;
         }
+        searchResultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, [searchQuery]);
 
     return (
@@ -58,17 +79,22 @@ const JobDiscoveryHome = ({
                 formResetKey={searchFormResetKey}
                 title={heroTitle}
                 subtitle={heroSubtitle}
+                initialKeyword={searchQuery?.keyword || ''}
+                initialCity={searchQuery?.city || ''}
+                initialWard={searchQuery?.ward || ''}
+                initialJobType={searchQuery?.jobType || ''}
+                initialSalaryMin={searchQuery?.salaryMin ?? null}
+                initialSalaryMax={searchQuery?.salaryMax ?? null}
+                initialSkillIds={searchQuery?.skillIds || []}
+                initialSchedules={searchQuery?.schedules || []}
+                initialNearMe={Boolean(searchQuery?.nearMe)}
+                initialLatitude={searchQuery?.latitude ?? null}
+                initialLongitude={searchQuery?.longitude ?? null}
             />
 
             {searchQuery && (
                 <div ref={searchResultsRef}>
-                    <SearchResultsSection
-                        query={searchQuery}
-                        onClear={() => {
-                            setSearchQuery(null);
-                            setSearchFormResetKey((key) => key + 1);
-                        }}
-                    />
+                    <SearchResultsSection query={searchQuery} onClear={handleClearSearch} />
                 </div>
             )}
 

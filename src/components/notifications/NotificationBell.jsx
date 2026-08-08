@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { BellIcon } from '../common/icons.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useNotifications } from '../../hooks/useNotifications.js';
 import { getNotificationTargetPath } from '../../utils/notificationNavigation.js';
 import { tryOpenChatFromNotification } from '../../utils/notificationChat.js';
 import { elevateOverlay, OVERLAY_CSS } from '../../utils/overlayLayer.js';
+import { invitationsNavigateOptions } from '../../utils/invitationNavReturn.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import NotificationDropdown from './NotificationDropdown.jsx';
@@ -20,6 +21,7 @@ const getNotificationsListPath = (role) => {
 
 const NotificationBell = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { auth } = useAuth();
     const rootRef = useRef(null);
     const [open, setOpen] = useState(false);
@@ -71,7 +73,9 @@ const NotificationBell = () => {
         await tryOpenChatFromNotification(notification, auth?.role);
         const path = getNotificationTargetPath(notification, auth?.role);
         setOpen(false);
-        if (path) navigate(path);
+        if (path) {
+            navigate(path, invitationsNavigateOptions(path, location));
+        }
     };
 
     const handleViewAll = () => {

@@ -34,7 +34,7 @@ const CandidateHomePage = () => {
         <JobDiscoveryHome
             className="landing-page--candidate"
             showWhySection={false}
-            showBookmarkRedirect={false}
+            showBookmarkRedirect
             heroTitle={`Xin chào, ${displayName}`}
             heroSubtitle=""
             featuredSize={4}

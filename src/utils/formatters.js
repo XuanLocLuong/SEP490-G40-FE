@@ -15,6 +15,9 @@ export const formatJobType = (jobType) => {
 /** BE summary: `isApply`; detail: `applied`. */
 export const hasAppliedToJob = (job) => Boolean(job?.isApply || job?.applied);
 
+/** BE summary: `isInvited` (lời mời SENT). */
+export const hasInvitedToJob = (job) => Boolean(job?.isInvited || job?.invited);
+
 const DAY_LABELS = {
     '2': 'T2',
     '3': 'T3',

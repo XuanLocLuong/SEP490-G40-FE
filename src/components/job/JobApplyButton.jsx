@@ -19,6 +19,7 @@ const JobApplyButton = ({
     disabled = false,
     disabledTitle = 'Tin tuyển dụng đã hết vị trí.',
     onApplied,
+    initialApplied = false,
 }) => {
     const { auth } = useAuth();
     const navigate = useNavigate();
@@ -27,7 +28,7 @@ const JobApplyButton = ({
     const [preview, setPreview] = useState(null);
     const [previewLoading, setPreviewLoading] = useState(false);
     const [applying, setApplying] = useState(false);
-    const [applied, setApplied] = useState(false);
+    const [applied, setApplied] = useState(() => Boolean(initialApplied));
 
     const buttonLabel = label ?? (auth ? 'Ứng tuyển ngay' : guestLabel);
 
@@ -36,12 +37,12 @@ const JobApplyButton = ({
     }
 
     useEffect(() => {
-        setApplied(false);
+        setApplied(Boolean(initialApplied));
         setModalOpen(false);
         setPreview(null);
         setPreviewLoading(false);
         setApplying(false);
-    }, [jobId]);
+    }, [jobId, initialApplied]);
 
     const closeModal = () => {
         if (applying) return;

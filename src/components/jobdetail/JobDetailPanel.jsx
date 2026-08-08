@@ -13,12 +13,11 @@ import {
     formatShiftGroupLine,
     groupShiftsForDisplay,
     getBusinessInitial,
-    hasAppliedToJob,
     isPrimarySkill,
 } from '../../utils/formatters.js';
 import { CheckCircleIcon, MapPinIcon, ClockIcon, UsersIcon } from '../common/icons.jsx';
 import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
-import JobApplyButton from '../job/JobApplyButton.jsx';
+import JobPrimaryCta from '../job/JobPrimaryCta.jsx';
 import JobBookmarkButton from '../job/JobBookmarkButton.jsx';
 import JobReportButton from '../job/JobReportButton.jsx';
 import JobChatButton from '../job/JobChatButton.jsx';
@@ -258,26 +257,16 @@ const JobDetailPanel = ({
                             className="btn btn--ghost job-detail-panel__chat"
                         />
                     </div>
-                    {hasAppliedToJob(job) ? (
-                        <button
-                            type="button"
-                            className="btn btn--primary job-detail-panel__apply"
-                            disabled
-                        >
-                            Đã ứng tuyển
-                        </button>
-                    ) : (
-                        <JobApplyButton
-                            jobId={job.id}
-                            className="btn btn--primary job-detail-panel__apply"
-                            guestLabel="Đăng nhập để ứng tuyển"
-                            scheduleSummary={scheduleSummary}
-                            shiftGroups={shiftGroups}
-                            disabled={isVacancyFull}
-                            disabledTitle={APPLY_DISABLED_TITLE}
-                            onApplied={onApplied}
-                        />
-                    )}
+                    <JobPrimaryCta
+                        job={job}
+                        className="btn btn--primary job-detail-panel__apply"
+                        guestLabel="Đăng nhập để ứng tuyển"
+                        scheduleSummary={scheduleSummary}
+                        shiftGroups={shiftGroups}
+                        disabled={isVacancyFull}
+                        disabledTitle={APPLY_DISABLED_TITLE}
+                        onApplied={onApplied}
+                    />
                 </div>
             )}
 
