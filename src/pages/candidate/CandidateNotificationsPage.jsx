@@ -1,10 +1,11 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import NotificationItem from '../../components/notifications/NotificationItem.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useNotifications } from '../../hooks/useNotifications.js';
 import { getNotificationTargetPath } from '../../utils/notificationNavigation.js';
 import { tryOpenChatFromNotification } from '../../utils/notificationChat.js';
+import { invitationsNavigateOptions } from '../../utils/invitationNavReturn.js';
 import '../../assets/styles/NotificationDropdownStyle.css';
 import '../../assets/styles/CandidateNotificationsPageStyle.css';
 
@@ -18,6 +19,7 @@ const FILTERS = [
 
 const CandidateNotificationsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { auth } = useAuth();
     const [filterId, setFilterId] = useState('all');
     const activeFilter = FILTERS.find((f) => f.id === filterId) ?? FILTERS[0];
@@ -46,7 +48,7 @@ const CandidateNotificationsPage = () => {
         await tryOpenChatFromNotification(notification, auth?.role);
         const path = getNotificationTargetPath(notification, auth?.role);
         if (path) {
-            navigate(path);
+            navigate(path, invitationsNavigateOptions(path, location));
         }
     };
 

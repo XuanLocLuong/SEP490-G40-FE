@@ -8,6 +8,19 @@
     margin-bottom: 20px;
 }
 
+.ci-page__back {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.ci-page__back:hover {
+    text-decoration: underline;
+}
+
 .ci-page__title {
     margin: 0;
     font-size: 1.6rem;

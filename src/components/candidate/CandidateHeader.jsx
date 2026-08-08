@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { getProfile } from '../../apis/CandidateProfileApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
@@ -21,9 +21,10 @@ import {
     HOME_SCROLL_STATE_KEY,
     scrollToHomeSection,
 } from '../../utils/homeSections.js';
+import { buildInvitationsFromCurrentLocation } from '../../utils/invitationNavReturn.js';
 import '../../assets/styles/HeaderStyle.css';
 
-const DROPDOWN_ITEMS = [
+const BASE_DROPDOWN_ITEMS = [
     { label: 'Hồ sơ của tôi', path: ROUTES.CANDIDATE_PROFILE, icon: FileTextIcon },
     { label: 'Tổng điểm Trust Score', path: ROUTES.CANDIDATE_TRUST_SCORE, icon: StarIcon },
     { label: 'Tài khoản và bảo mật', path: ROUTES.CANDIDATE_SETTINGS, icon: SettingsIcon },
@@ -57,6 +58,16 @@ const CandidateHeader = () => {
     const headerHidden = useAutoHideHeader();
     const isOnHome = location.pathname === ROUTES.CANDIDATE_HOME;
     const [activeHomeSection, setActiveHomeSection] = useState(null);
+
+    const dropdownItems = useMemo(
+        () =>
+            BASE_DROPDOWN_ITEMS.map((item) => {
+                if (item.path !== ROUTES.CANDIDATE_INVITATIONS) return item;
+                const state = buildInvitationsFromCurrentLocation(location);
+                return state ? { ...item, state } : item;
+            }),
+        [location],
+    );
 
     // Sync avatar từ /candidate/profile vào auth (login thường không có profilePicture).
     useEffect(() => {
@@ -142,7 +153,7 @@ const CandidateHeader = () => {
                         name={auth?.fullName}
                         roleLabel="Ứng viên"
                         avatarUrl={auth?.profilePicture || null}
-                        items={DROPDOWN_ITEMS}
+                        items={dropdownItems}
                         onLogout={() => {
                             handleLogout();
                             navigate(ROUTES.LANDING);

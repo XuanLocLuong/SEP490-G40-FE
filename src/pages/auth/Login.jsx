@@ -1,28 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { login as LoginApi, loginWithGoogle } from '../../apis/AuthApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
-import { getHomePathByRole, ROUTES } from '../../routes/path.js';
+import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
-import { consumeBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
+import { resolvePostLoginPath } from '../../utils/authRedirect.js';
+import {
+    clearSessionExpiredFlag,
+    peekSessionExpiredMessage,
+} from '../../utils/sessionExpiredStorage.js';
 import AuthCard from '../../components/common/AuthCard.jsx';
 import { MailIcon, LockIcon, EyeIcon, EyeOffIcon } from '../../components/common/icons.jsx';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-const resolvePostLoginPath = (role, locationState) => {
-    const saved = consumeBookmarkReturnPath();
-    if (saved && saved.startsWith('/')) return saved;
-
-    const from = locationState?.from;
-    if (typeof from === 'string' && from.startsWith('/')) return from;
-    if (from?.pathname) {
-        return `${from.pathname}${from.search || ''}`;
-    }
-
-    return getHomePathByRole(role);
-};
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -35,9 +26,21 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    useEffect(() => {
+        const message = peekSessionExpiredMessage();
+        if (!message) return undefined;
+
+        setError(message);
+
+        // Delay clear so React StrictMode remount vẫn còn flag để gắn lại lỗi trên form.
+        const timer = window.setTimeout(() => clearSessionExpiredFlag(), 800);
+        return () => window.clearTimeout(timer);
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        clearSessionExpiredFlag();
         try {
             const res = await LoginApi({ email, password });
             const authData = res.data.data;
@@ -50,6 +53,7 @@ const Login = () => {
 
     const handleGoogleSuccess = async (credentialResponse) => {
         setError('');
+        clearSessionExpiredFlag();
         try {
             const res = await loginWithGoogle({
                 idToken: credentialResponse.credential,

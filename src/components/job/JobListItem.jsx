@@ -7,6 +7,7 @@ import {
     formatVacancyLabel,
     getBusinessInitial,
     hasAppliedToJob,
+    hasInvitedToJob,
 } from '../../utils/formatters.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
 import {
@@ -18,7 +19,7 @@ import {
     UsersIcon,
 } from '../common/icons.jsx';
 import JobBookmarkButton from './JobBookmarkButton.jsx';
-import JobApplyButton from './JobApplyButton.jsx';
+import JobPrimaryCta from './JobPrimaryCta.jsx';
 import JobDetailLink from './JobDetailLink.jsx';
 import '../../assets/styles/JobListItemStyle.css';
 
@@ -27,6 +28,7 @@ const JobListItem = ({ job, nearMe = false }) => {
     const tagLabel = formatJobType(job.jobType);
     const distance = getJobDistanceDisplay(job.distanceKm, nearMe);
     const applied = hasAppliedToJob(job);
+    const invited = hasInvitedToJob(job);
     const matchLabel = job.matchPercentLabel;
     const scheduleMatchLabel = job.scheduleMatchLabel;
     const interactionLabel = job.interactionLabel;
@@ -40,7 +42,8 @@ const JobListItem = ({ job, nearMe = false }) => {
         interactionLabel ||
         job.urgent ||
         distance ||
-        applied;
+        applied ||
+        invited;
 
     return (
         <article className="job-list-item">
@@ -98,6 +101,11 @@ const JobListItem = ({ job, nearMe = false }) => {
                             Đã ứng tuyển
                         </span>
                     )}
+                    {invited && !applied && (
+                        <span className="job-list-item__tag job-list-item__tag--invited">
+                            Đã được mời
+                        </span>
+                    )}
                     {distance && (
                         <span
                             className={`job-list-item__tag job-list-item__tag--distance${
@@ -146,16 +154,12 @@ const JobListItem = ({ job, nearMe = false }) => {
 
             <div className="job-list-item__actions">
                 <JobDetailLink jobId={job.id} className="job-list-item__link-btn" />
-                {applied ? (
-                    <button type="button" className="btn btn--primary job-list-item__apply" disabled>
-                        Đã ứng tuyển
-                    </button>
-                ) : (
-                    <JobApplyButton
-                        jobId={job.id}
-                        className="btn btn--primary job-list-item__apply"
-                    />
-                )}
+                <JobPrimaryCta
+                    job={job}
+                    className="btn btn--primary job-list-item__apply"
+                    disabled={isVacancyFull}
+                    disabledTitle="Tin tuyển dụng đã hết vị trí."
+                />
             </div>
         </article>
     );

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     acceptInvitation,
@@ -21,6 +22,11 @@ import {
     INACTIVE_STATUSES,
     INVITATION_TABS,
 } from '../../utils/invitationDisplay.js';
+import {
+    buildInvitationsLeaveNavigate,
+    clearInvitationsReturn,
+    resolveInvitationsBack,
+} from '../../utils/invitationNavReturn.js';
 import '../../assets/styles/CandidateInvitationsPageStyle.css';
 
 const PAGE_SIZE = 10;
@@ -59,7 +65,12 @@ const BusinessLogo = ({ name, logoUrl }) => {
 
 const CandidateInvitationsPage = () => {
     const { auth } = useAuth();
+    const location = useLocation();
     const isCandidate = auth?.role === USER_ROLES.CANDIDATE;
+    const back = useMemo(
+        () => resolveInvitationsBack(location.state),
+        [location.state],
+    );
 
     const [activeTab, setActiveTab] = useState('SENT');
     const [items, setItems] = useState([]);
@@ -228,6 +239,16 @@ const CandidateInvitationsPage = () => {
     return (
         <div className="ci-page">
             <header className="ci-page__header">
+                {back ? (
+                    <Link
+                        to={back.path}
+                        state={buildInvitationsLeaveNavigate(back)?.state}
+                        className="ci-page__back"
+                        onClick={() => clearInvitationsReturn()}
+                    >
+                        ← {back.label}
+                    </Link>
+                ) : null}
                 <h1 className="ci-page__title">Lời mời ứng tuyển</h1>
                 <p className="ci-page__subtitle">Quản lý các lời mời từ nhà tuyển dụng</p>
             </header>

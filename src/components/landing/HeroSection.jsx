@@ -2,12 +2,24 @@ import JobSearchForm from '../common/JobSearchForm.jsx';
 
 const DEFAULT_TITLE = 'Tìm việc part-time dễ dàng cho ứng viên';
 const DEFAULT_SUBTITLE = 'Nền tảng kết nối sinh viên với cơ hội việc làm linh hoạt, uy tín và phù hợp với lịch học của bạn.';
+
 const HeroSection = ({
     onSearch,
     loading,
     formResetKey = 0,
     title = DEFAULT_TITLE,
     subtitle = DEFAULT_SUBTITLE,
+    initialKeyword = '',
+    initialCity = '',
+    initialWard = '',
+    initialJobType = '',
+    initialSalaryMin = null,
+    initialSalaryMax = null,
+    initialSkillIds = [],
+    initialSchedules = [],
+    initialNearMe = false,
+    initialLatitude = null,
+    initialLongitude = null,
 }) => (
     <section className="landing-hero">
         <div className="landing-hero__inner">
@@ -21,6 +33,17 @@ const HeroSection = ({
                     nearMeLabel="Tìm việc gần tôi"
                     className="landing-hero__search"
                     resetKey={formResetKey}
+                    initialKeyword={initialKeyword}
+                    initialCity={initialCity}
+                    initialWard={initialWard}
+                    initialJobType={initialJobType}
+                    initialSalaryMin={initialSalaryMin}
+                    initialSalaryMax={initialSalaryMax}
+                    initialSkillIds={initialSkillIds}
+                    initialSchedules={initialSchedules}
+                    initialNearMe={initialNearMe}
+                    initialLatitude={initialLatitude}
+                    initialLongitude={initialLongitude}
                 />
             </div>
 

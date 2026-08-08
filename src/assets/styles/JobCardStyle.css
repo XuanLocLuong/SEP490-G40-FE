@@ -210,6 +210,15 @@
     font-weight: 700;
 }
 
+.job-card__meta-item--invited {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid color-mix(in srgb, #b45309 32%, transparent);
+    font-weight: 700;
+}
+
 .job-card__meta-item--match {
     padding: 3px 10px;
     border-radius: 999px;
@@ -419,6 +428,7 @@
 .job-card--compact .job-card__meta-item--urgent,
 .job-card--compact .job-card__meta-item--closed,
 .job-card--compact .job-card__meta-item--applied,
+.job-card--compact .job-card__meta-item--invited,
 .job-card--compact .job-card__meta-item--match,
 .job-card--compact .job-card__meta-item--schedule-match,
 .job-card--compact .job-card__meta-item--interaction,
@@ -426,6 +436,7 @@
 .landing-page .job-card__meta-item--urgent,
 .landing-page .job-card__meta-item--closed,
 .landing-page .job-card__meta-item--applied,
+.landing-page .job-card__meta-item--invited,
 .landing-page .job-card__meta-item--match,
 .landing-page .job-card__meta-item--schedule-match,
 .landing-page .job-card__meta-item--interaction,
@@ -434,7 +445,8 @@
     max-width: 100%;
 }
 
-.job-card--compact .job-card__meta-item--applied {
+.job-card--compact .job-card__meta-item--applied,
+.job-card--compact .job-card__meta-item--invited {
     padding: 2px 8px;
     font-size: 11px;
 }

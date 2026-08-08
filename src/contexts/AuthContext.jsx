@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { getAuth, setAuth, clearAuth } from '../utils/Auth.jsx';
 import { logout as logoutApi } from '../apis/AuthApi.jsx';
 import { AuthContext } from './authContext.js';
+import { clearHomeSearchQuery } from '../utils/homeSearchStorage.js';
 
 export const AuthProvider = ({ children }) => {
     const [auth, setAuthState] = useState(getAuth());
@@ -28,6 +29,7 @@ export const AuthProvider = ({ children }) => {
         } catch (err) {
             console.warn('Logout API failed, clearing local session anyway.', err);
         } finally {
+            clearHomeSearchQuery();
             clearAuth();
             setAuthState(null);
         }
