@@ -54,6 +54,7 @@ const CONFIG_BY_ROLE = {
             { path: ROUTES.ADMIN_ANALYTICS, label: 'Thống kê toàn hệ thống', icon: ChartIcon },
             { path: ROUTES.ADMIN_SETTINGS, label: 'Cài đặt', icon: SettingsIcon },
         ],
+        actionButton: { label: '📊  Xuất báo cáo' },
     },
     [USER_ROLES.POST_MANAGER]: {
         title: 'JobLink',

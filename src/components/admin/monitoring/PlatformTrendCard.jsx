@@ -9,7 +9,7 @@ const PlatformTrendCard = ({ trends, trendRows }) => {
                 <div>
                     <h2>Xu hướng hoạt động nền tảng</h2>
                     <p className="admin-monitor-hint">
-                        Người dùng · Tin tuyển · Đơn ứng tuyển · Tuyển thành công
+                        Người dùng mới · Tin tuyển · Đơn ứng tuyển · Tuyển thành công
                     </p>
                 </div>
                 <span
@@ -22,7 +22,7 @@ const PlatformTrendCard = ({ trends, trendRows }) => {
             </header>
             <div className="admin-monitor-trends__body">
                 {available ? (
-                    <MonitorTrendChart rows={trendRows} height={280} includeReports={false} />
+                    <MonitorTrendChart rows={trendRows} height={260} includeReports={false} />
                 ) : (
                     <p className="admin-monitor-card__empty">Tạm không có dữ liệu xu hướng.</p>
                 )}

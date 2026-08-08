@@ -89,9 +89,9 @@ export const NAV_ACTION_LABELS = {
     MANAGE_ACCOUNTS: 'Quản lý tài khoản',
     MONITOR_JOB_POST_METRICS: 'Chỉ số tin đăng',
     REVIEW_JOB_MODERATION: 'Duyệt tin tuyển',
-    REVIEW_CONTENT_MODERATION: 'Duyệt nội dung',
+    REVIEW_CONTENT_MODERATION: 'Duyệt đánh giá',
     REVIEW_REPORTED_JOB_POSTS: 'Báo cáo tin đăng',
-    REVIEW_MODERATION_QUEUE: 'Hàng chờ kiểm duyệt',
+    REVIEW_MODERATION_QUEUE: 'Hàng chờ duyệt tin & đánh giá',
     PROCESS_VERIFICATIONS: 'Xử lý xác minh',
     REVIEW_AUDIT_LOGS: 'Nhật ký hệ thống',
     MANAGE_SYSTEM_CONFIGURATIONS: 'Cấu hình hệ thống',
@@ -109,14 +109,72 @@ export const SECTION_LABELS = {
     applications: 'Đơn ứng tuyển',
     reports: 'Báo cáo',
     verification: 'Xác minh',
-    moderation: 'Kiểm duyệt',
-    communications: 'Thông báo & email',
+    moderation: 'Duyệt tin & đánh giá',
+    aiModeration: 'Duyệt AI',
+    communications: 'Email hệ thống',
     trends: 'Xu hướng',
     operationalHealth: 'Sức khỏe hệ thống',
 };
 
 export const HIRE_RATE_TOOLTIP =
     'Tỷ lệ tuyển = số lượt chuyển HIRED trong kỳ ÷ số đơn nộp trong kỳ × 100. Không tự tính lại trên dashboard nếu Backend đã trả.';
+
+export const RECOMMENDATION_HIRE_RATE_TOOLTIP =
+    'Tỷ lệ tuyển từ gợi ý = số lượt tuyển thành công có nguồn gợi ý trong kỳ ÷ số đơn từ gợi ý trong kỳ.';
+
+export const AI_AUTO_APPROVE_TOOLTIP =
+    'Tỷ lệ duyệt tự động = số quyết định duyệt tự động trong kỳ ÷ tổng yêu cầu kiểm duyệt tin trong kỳ (hệ thống tính).';
+
+export const AI_HUMAN_AGREEMENT_TOOLTIP =
+    'Mức khớp AI–người: tỷ lệ quyết định tay thống nhất với gợi ý/rủi ro AI trong kỳ (hệ thống tính).';
+
+export const LABEL_MAPS_AI = {
+    queueType: {
+        AUTO_APPROVE: 'Duyệt tự động',
+        GREEN: 'Hàng xanh',
+        RED: 'Hàng đỏ',
+        YELLOW: 'Hàng vàng',
+    },
+    aiRisk: {
+        LOW: 'Rủi ro thấp',
+        MEDIUM: 'Rủi ro trung bình',
+        HIGH: 'Rủi ro cao',
+        FAILED: 'AI chưa chấm được',
+    },
+    manualDecision: {
+        APPROVE: 'Duyệt',
+        APPROVED: 'Duyệt',
+        REJECT: 'Từ chối',
+        REJECTED: 'Từ chối',
+        REVISION_REQUESTED: 'Yêu cầu sửa',
+    },
+    applicationSource: {
+        UNKNOWN: 'Chưa rõ',
+        ORGANIC: 'Tự nhiên',
+        SEARCH: 'Tìm kiếm',
+        RECOMMENDATION: 'Gợi ý',
+        INVITATION: 'Lời mời',
+    },
+};
+
+/** Stable colors for AI risk donut + caption. */
+export const AI_RISK_COLORS = {
+    LOW: '#16a34a',
+    MEDIUM: '#d97706',
+    HIGH: '#dc2626',
+    FAILED: '#64748b',
+};
+
+export const AI_RISK_LEGEND = [
+    { key: 'LOW', label: 'Rủi ro thấp — tin ổn hơn', color: AI_RISK_COLORS.LOW },
+    { key: 'MEDIUM', label: 'Rủi ro trung bình', color: AI_RISK_COLORS.MEDIUM },
+    { key: 'HIGH', label: 'Rủi ro cao — cần người xem kỹ', color: AI_RISK_COLORS.HIGH },
+    {
+        key: 'FAILED',
+        label: 'AI chưa chấm được — lỗi / không có kết quả',
+        color: AI_RISK_COLORS.FAILED,
+    },
+];
 
 export const WARNING_META = {
     USER_INACTIVITY_SIGNAL: {
@@ -132,8 +190,8 @@ export const WARNING_META = {
         detail: 'Có yêu cầu xác minh cần duyệt thủ công (Manual Check).',
     },
     PENDING_MODERATION: {
-        title: 'Kiểm duyệt đang chờ',
-        detail: 'Có tin/nội dung trong hàng chờ. Thường do Post Manager xử lý — Admin chỉ theo dõi.',
+        title: 'Duyệt tin & đánh giá đang chờ',
+        detail: 'Có tin tuyển hoặc đánh giá trong hàng chờ. Thường do Post Manager xử lý — Admin chỉ theo dõi.',
     },
     FAILED_EMAILS: {
         title: 'Email gửi thất bại',
@@ -148,6 +206,17 @@ export const WARNING_META = {
         detail: 'Kiểm tra kết nối dữ liệu không đạt — cần kỹ thuật hỗ trợ.',
     },
 };
+
+/** Cảnh báo hạ tầng / meta dashboard — dành engineering, ẩn trên UI Admin. */
+export const ADMIN_HIDDEN_WARNING_CODES = new Set([
+    'MONITORING_DATA_PARTIALLY_UNAVAILABLE',
+    'DATABASE_HEALTH_DOWN',
+]);
+
+export const filterAdminFacingWarnings = (warnings) =>
+    (Array.isArray(warnings) ? warnings : []).filter(
+        (w) => w?.code && !ADMIN_HIDDEN_WARNING_CODES.has(w.code)
+    );
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MAX_REPORTING_DAYS = 366;

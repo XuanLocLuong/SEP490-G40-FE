@@ -4,16 +4,16 @@ import {
     getApiErrorMessage,
     getPlatformMonitoring,
 } from '../../apis/AdminPlatformMonitoringApi.jsx';
-import DashboardDataHealth from '../../components/admin/monitoring/DashboardDataHealth.jsx';
+import AiModerationEffectivenessCard from '../../components/admin/monitoring/AiModerationEffectivenessCard.jsx';
 import DashboardKpiGrid from '../../components/admin/monitoring/DashboardKpiGrid.jsx';
 import GovernanceQueuesCard from '../../components/admin/monitoring/GovernanceQueuesCard.jsx';
-import JobsApplicationsSummary from '../../components/admin/monitoring/JobsApplicationsSummary.jsx';
-import NotificationEmailHealth from '../../components/admin/monitoring/NotificationEmailHealth.jsx';
+import JobsOverviewCard from '../../components/admin/monitoring/JobsOverviewCard.jsx';
 import OperationalAlertsCard from '../../components/admin/monitoring/OperationalAlertsCard.jsx';
+import PlatformOpsHealthCard from '../../components/admin/monitoring/PlatformOpsHealthCard.jsx';
 import PlatformTrendCard from '../../components/admin/monitoring/PlatformTrendCard.jsx';
+import RecommendationEffectivenessCard from '../../components/admin/monitoring/RecommendationEffectivenessCard.jsx';
 import UsersOverviewCard from '../../components/admin/monitoring/UsersOverviewCard.jsx';
 import {
-    ACCOUNT_STATUS_OPTIONS,
     dateInputToExclusiveToInstant,
     dateInputToFromInstant,
     exclusiveToInclusiveDateInput,
@@ -21,8 +21,6 @@ import {
     formatRatePercent,
     instantToDateInput,
     isSectionAvailable,
-    JOB_STATUS_OPTIONS,
-    USER_ROLE_OPTIONS,
     validateMonitoringPeriod,
 } from '../../utils/platformMonitoringDisplay.js';
 import '../../assets/styles/AdminPlatformMonitoringStyle.css';
@@ -30,9 +28,6 @@ import '../../assets/styles/AdminPlatformMonitoringStyle.css';
 const EMPTY_FILTERS = {
     fromDate: '',
     toDate: '',
-    userRole: '',
-    accountStatus: '',
-    jobStatus: '',
 };
 
 const AdminDashboard = () => {
@@ -64,9 +59,6 @@ const AdminDashboard = () => {
             const toInstant = dateInputToExclusiveToInstant(filters.toDate);
             if (fromInstant) params.fromDate = fromInstant;
             if (toInstant) params.toDate = toInstant;
-            if (filters.userRole) params.userRole = filters.userRole;
-            if (filters.accountStatus) params.accountStatus = filters.accountStatus;
-            if (filters.jobStatus) params.jobStatus = filters.jobStatus;
 
             const res = await getPlatformMonitoring(params);
             const payload = res?.data?.data ?? res?.data ?? null;
@@ -129,12 +121,14 @@ const AdminDashboard = () => {
         const to = new Date();
         const from = new Date();
         from.setUTCDate(from.getUTCDate() - (days - 1));
-        setDraft((prev) => ({
-            ...prev,
+        const next = {
             fromDate: from.toISOString().slice(0, 10),
             toDate: to.toISOString().slice(0, 10),
-        }));
+        };
+        setDraft(next);
+        setApplied(next);
         setPresetDays(days);
+        loadDashboard(next);
     };
 
     const patchDraft = (field, value) => {
@@ -167,27 +161,7 @@ const AdminDashboard = () => {
                 <div>
                     <div className="admin-monitor-page__title-row">
                         <h1 className="admin-monitor-page__title">Giám sát nền tảng</h1>
-                        {data?.availability ? (
-                            <span
-                                className={`admin-monitor-pill ${
-                                    data.availability === 'AVAILABLE'
-                                        ? 'admin-monitor-pill--ok'
-                                        : 'admin-monitor-pill--warn'
-                                }`}
-                                title={
-                                    data.availability === 'AVAILABLE'
-                                        ? 'Tất cả nhóm số liệu truy xuất được'
-                                        : 'Một hoặc nhiều nhóm số liệu tạm thiếu'
-                                }
-                            >
-                                {data.availability === 'AVAILABLE' ? 'Đầy đủ' : 'Thiếu một phần'}
-                            </span>
-                        ) : null}
                     </div>
-                    <p className="admin-monitor-page__subtitle">
-                        Tổng quan users, jobs, ứng tuyển, báo cáo, xác minh, kiểm duyệt và sức khỏe vận
-                        hành theo UC-47 — chỉ giám sát, không chỉnh sửa dữ liệu tại đây.
-                    </p>
                     {data ? (
                         <p className="admin-monitor-page__meta">
                             Kỳ {formatInstantVi(data.periodStart)} – {formatInstantVi(data.periodEnd)} ·
@@ -219,7 +193,7 @@ const AdminDashboard = () => {
                             onClick={() => applyPresetDays(days)}
                             aria-pressed={presetDays === days}
                         >
-                            {days} ngày
+                            {days} ngày gần nhất
                         </button>
                     ))}
                 </div>
@@ -238,45 +212,6 @@ const AdminDashboard = () => {
                         value={draft.toDate}
                         onChange={(e) => patchDraft('toDate', e.target.value)}
                     />
-                </label>
-                <label className="admin-monitor-field">
-                    <span>Vai trò</span>
-                    <select
-                        value={draft.userRole}
-                        onChange={(e) => patchDraft('userRole', e.target.value)}
-                    >
-                        {USER_ROLE_OPTIONS.map((opt) => (
-                            <option key={opt.value || 'all-roles'} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="admin-monitor-field">
-                    <span>Trạng thái TK</span>
-                    <select
-                        value={draft.accountStatus}
-                        onChange={(e) => patchDraft('accountStatus', e.target.value)}
-                    >
-                        {ACCOUNT_STATUS_OPTIONS.map((opt) => (
-                            <option key={opt.value || 'all-account'} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="admin-monitor-field">
-                    <span>Trạng thái tin</span>
-                    <select
-                        value={draft.jobStatus}
-                        onChange={(e) => patchDraft('jobStatus', e.target.value)}
-                    >
-                        {JOB_STATUS_OPTIONS.map((opt) => (
-                            <option key={opt.value || 'all-job'} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
                 </label>
                 <div className="admin-monitor-filters__actions">
                     <button
@@ -324,7 +259,7 @@ const AdminDashboard = () => {
 
                     <div className="admin-monitor-row admin-monitor-row--2">
                         <UsersOverviewCard users={data?.users} />
-                        <NotificationEmailHealth communications={communications} />
+                        <JobsOverviewCard jobs={jobs} />
                     </div>
 
                     <GovernanceQueuesCard
@@ -333,18 +268,12 @@ const AdminDashboard = () => {
                         moderation={data?.moderation}
                     />
 
-                    {data ? (
-                        <JobsApplicationsSummary
-                            jobs={jobs}
-                            applications={applications}
-                            trends={trends}
-                            trendRows={trendRows}
-                        />
-                    ) : null}
-
-                    <div className="admin-monitor-row admin-monitor-row--2">
-                        <DashboardDataHealth data={data} />
+                    <div className="admin-monitor-row admin-monitor-row--2 admin-monitor-row--algo">
+                        <RecommendationEffectivenessCard applications={applications} />
+                        <AiModerationEffectivenessCard aiModeration={data?.aiModeration} />
                     </div>
+
+                    <PlatformOpsHealthCard communications={communications} />
                 </>
             ) : null}
 

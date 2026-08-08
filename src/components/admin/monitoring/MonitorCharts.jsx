@@ -30,10 +30,11 @@ export const CHART_COLORS = [
     '#7c3aed',
 ];
 
-export const mapToChartData = (map, { hideZero = false, labelMap } = {}) => {
+export const mapToChartData = (map, { hideZero = false, labelMap, colorMap } = {}) => {
     const rows = entriesFromMap(map).map(([name, value]) => ({
         name: localizeKey(name, labelMap),
         value: Number(value) || 0,
+        fill: colorMap?.[name] || colorMap?.[String(name).toUpperCase()] || undefined,
     }));
     return hideZero ? rows.filter((r) => r.value > 0) : rows;
 };
@@ -44,7 +45,7 @@ const tooltipStyle = {
     fontSize: 12,
 };
 
-export const MonitorDonut = ({ data, height = 180 }) => {
+export const MonitorDonut = ({ data, height = 180, showLegend = true }) => {
     const chartData = Array.isArray(data) ? data : [];
     const hasValue = chartData.some((d) => d.value > 0);
     if (!hasValue) {
@@ -67,7 +68,7 @@ export const MonitorDonut = ({ data, height = 180 }) => {
                         {chartData.map((entry, index) => (
                             <Cell
                                 key={`${entry.name}-${index}`}
-                                fill={CHART_COLORS[index % CHART_COLORS.length]}
+                                fill={entry.fill || CHART_COLORS[index % CHART_COLORS.length]}
                             />
                         ))}
                     </Pie>
@@ -75,11 +76,12 @@ export const MonitorDonut = ({ data, height = 180 }) => {
                         contentStyle={tooltipStyle}
                         formatter={(value) => formatCount(value)}
                     />
-                    <Legend
-                        verticalAlign="bottom"
-                        height={36}
-                        wrapperStyle={{ fontSize: 11 }}
-                    />
+                    {showLegend ? (
+                        <Legend
+                            verticalAlign="bottom"
+                            wrapperStyle={{ fontSize: 11 }}
+                        />
+                    ) : null}
                 </PieChart>
             </ResponsiveContainer>
         </div>
@@ -137,6 +139,78 @@ export const MonitorBar = ({ data, height = 200, layout = 'horizontal' }) => {
                             />
                         ))}
                     </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+};
+
+/** Grouped bars: rows with shared category name + numeric series keys. */
+const GroupedBarTooltip = ({ active, payload, seriesDefs }) => {
+    if (!active || !payload?.length) return null;
+    const row = payload[0]?.payload;
+    if (!row) return null;
+    const defs = Array.isArray(seriesDefs) ? seriesDefs : [];
+
+    return (
+        <div className="admin-monitor-grouped-tooltip" style={tooltipStyle}>
+            <p className="admin-monitor-grouped-tooltip__title">{row.name}</p>
+            <ul className="admin-monitor-grouped-tooltip__list">
+                {defs.map((s) => (
+                    <li key={s.dataKey}>
+                        <span
+                            className="admin-monitor-grouped-tooltip__swatch"
+                            style={{ background: s.color || '#2f5fdb' }}
+                        />
+                        <span className="admin-monitor-grouped-tooltip__label">{s.name}</span>
+                        <strong>{formatCount(row[s.dataKey])}</strong>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
+export const MonitorGroupedBar = ({
+    data,
+    series,
+    height = 200,
+}) => {
+    const chartData = Array.isArray(data) ? data : [];
+    const seriesDefs = Array.isArray(series) ? series : [];
+    const hasValue = chartData.some((row) =>
+        seriesDefs.some((s) => Number(row[s.dataKey]) > 0)
+    );
+    if (!hasValue || seriesDefs.length === 0) {
+        return <p className="admin-monitor-chart-empty">Chưa có dữ liệu biểu đồ.</p>;
+    }
+
+    return (
+        <div className="admin-monitor-chart" style={{ height }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ left: 0, right: 88, top: 4, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e6e9f0" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={36} />
+                    <Tooltip
+                        content={<GroupedBarTooltip seriesDefs={seriesDefs} />}
+                        cursor={{ fill: 'rgba(47, 95, 219, 0.06)' }}
+                    />
+                    <Legend
+                        wrapperStyle={{ fontSize: 11 }}
+                        layout="vertical"
+                        align="right"
+                        verticalAlign="middle"
+                    />
+                    {seriesDefs.map((s, index) => (
+                        <Bar
+                            key={s.dataKey}
+                            dataKey={s.dataKey}
+                            name={s.name}
+                            fill={s.color || CHART_COLORS[index % CHART_COLORS.length]}
+                            radius={[6, 6, 0, 0]}
+                        />
+                    ))}
                 </BarChart>
             </ResponsiveContainer>
         </div>

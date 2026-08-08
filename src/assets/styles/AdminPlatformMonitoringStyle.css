@@ -184,7 +184,7 @@
 }
 
 .admin-monitor-row--trend-alerts {
-    grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 1fr);
 }
 
 .admin-monitor-row--2 {
@@ -198,6 +198,15 @@
     min-width: 0;
 }
 
+.admin-monitor-page > .admin-monitor-alerts-panel,
+.admin-monitor-page > .admin-monitor-trends {
+    margin-bottom: 14px;
+}
+
+.admin-monitor-card--algo {
+    border-top: 3px solid color-mix(in srgb, var(--color-primary, #2f5fdb) 70%, transparent);
+}
+
 /* ---- Alerts panel (warnings) ---- */
 .admin-monitor-alerts-panel {
     background: color-mix(in srgb, var(--color-danger) 5%, var(--color-surface));
@@ -209,18 +218,33 @@
     max-height: none;
 }
 
+.admin-monitor-alerts-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
 .admin-monitor-alerts-panel__header h2 {
-    margin: 0 0 4px;
+    margin: 0;
     font-size: 15px;
     font-weight: 850;
     color: var(--color-text);
 }
 
-.admin-monitor-alerts-panel__header p {
-    margin: 0;
+.admin-monitor-alerts-panel__count {
+    flex-shrink: 0;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 6px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 12px;
-    line-height: 1.45;
-    color: var(--color-text-muted);
+    font-weight: 700;
+    color: var(--color-danger);
+    background: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));
 }
 
 .admin-monitor-alerts-panel__list {
@@ -331,6 +355,160 @@
     font-size: 14px;
     font-weight: 800;
     color: var(--color-text);
+}
+
+.admin-monitor-ops-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-monitor-ops-block {
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--color-bg) 55%, var(--color-surface));
+    min-width: 0;
+}
+
+.admin-monitor-ops-block__title {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--color-text);
+}
+
+@media (max-width: 900px) {
+    .admin-monitor-ops-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.admin-monitor-queue-hero {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.admin-monitor-queue-hero span {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--color-text-muted);
+}
+
+.admin-monitor-queue-hero strong {
+    font-size: 20px;
+    font-weight: 850;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.admin-monitor-queue-hero.is-warn strong {
+    color: var(--color-danger);
+}
+
+.admin-monitor-metric-tree {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-monitor-metric-tree__summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.admin-monitor-metric-tree__summary span {
+    font-size: 12px;
+    font-weight: 650;
+    color: var(--color-text-muted);
+}
+
+.admin-monitor-metric-tree__summary strong {
+    font-size: 20px;
+    font-weight: 850;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.admin-monitor-metric-tree__summary.is-warn strong {
+    color: var(--color-danger);
+}
+
+.admin-monitor-metric-tree__node {
+    margin: 0;
+    padding: 0;
+}
+
+.admin-monitor-metric-tree__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.admin-monitor-metric-tree__node.is-root > .admin-monitor-metric-tree__row {
+    padding: 8px 10px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+}
+
+.admin-monitor-metric-tree__label {
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--color-text-muted);
+}
+
+.admin-monitor-metric-tree__node.is-root > .admin-monitor-metric-tree__row .admin-monitor-metric-tree__label {
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.admin-monitor-metric-tree__row strong {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.admin-monitor-metric-tree__row strong.is-warn {
+    color: var(--color-danger);
+}
+
+.admin-monitor-metric-tree__children {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0 0 0 12px;
+    border-left: 2px solid color-mix(in srgb, var(--color-primary, #2f5fdb) 35%, var(--color-border));
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-monitor-metric-tree__children .admin-monitor-metric-tree__row {
+    padding: 2px 0 2px 4px;
+}
+
+.admin-monitor-metric-tree__children .admin-monitor-metric-tree__row strong {
+    font-size: 14px;
 }
 
 .admin-monitor-alert__action--link {
@@ -754,6 +932,60 @@
     color: var(--color-text-muted);
 }
 
+.admin-monitor-chart-caption--stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 650;
+    margin-bottom: 8px;
+}
+
+.admin-monitor-grouped-tooltip {
+    padding: 10px 12px;
+    background: #fff;
+}
+
+.admin-monitor-grouped-tooltip__title {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 750;
+    color: #1e2433;
+}
+
+.admin-monitor-grouped-tooltip__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-monitor-grouped-tooltip__list li {
+    display: grid;
+    grid-template-columns: 10px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    font-size: 12px;
+}
+
+.admin-monitor-grouped-tooltip__swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.admin-monitor-grouped-tooltip__label {
+    color: #5b6475;
+}
+
+.admin-monitor-grouped-tooltip__list strong {
+    font-variant-numeric: tabular-nums;
+    color: #1e2433;
+}
+
 .admin-monitor-chart {
     width: 100%;
     min-height: 160px;
@@ -772,14 +1004,103 @@
     color: var(--color-text-soft);
 }
 
+.admin-monitor-hint--tight {
+    margin: 0 0 6px;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.admin-monitor-color-legend {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-monitor-color-legend li {
+    display: grid;
+    grid-template-columns: 12px 1fr;
+    gap: 8px;
+    align-items: start;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--color-text-muted);
+}
+
+.admin-monitor-color-legend__swatch {
+    width: 12px;
+    height: 12px;
+    margin-top: 2px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.admin-monitor-compare-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.admin-monitor-compare-pair__col {
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    min-width: 0;
+}
+
+.admin-monitor-compare-pair__col h3 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 750;
+    color: var(--color-text-muted);
+}
+
+.admin-monitor-compare-pair__value {
+    display: block;
+    font-size: 22px;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+    line-height: 1.1;
+}
+
+.admin-monitor-compare-pair__sub,
+.admin-monitor-compare-pair__meta {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--color-text-muted);
+}
+
+.admin-monitor-compare-pair__meta {
+    margin-top: 8px;
+    font-weight: 650;
+    color: var(--color-text);
+}
+
+@media (max-width: 720px) {
+    .admin-monitor-compare-pair {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ---- Trends ---- */
 .admin-monitor-trends {
-    margin-bottom: 0;
+    margin-bottom: 14px;
     overflow: hidden;
 }
 
 .admin-monitor-trends__body {
     padding: 0 8px 12px;
+}
+
+.admin-monitor-trends__relation {
+    margin: 0 4px 10px;
 }
 
 /* ---- Nav ---- */

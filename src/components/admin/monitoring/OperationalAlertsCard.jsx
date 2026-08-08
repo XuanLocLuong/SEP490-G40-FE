@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ROUTES } from '../../../routes/path.js';
 import {
     formatCount,
+    filterAdminFacingWarnings,
     NAV_ACTION_LABELS,
     SEVERITY_LABELS,
     WARNING_META,
@@ -53,16 +54,14 @@ const OperationalAlertItem = ({ warning }) => {
 };
 
 const OperationalAlertsCard = ({ warnings }) => {
-    const list = Array.isArray(warnings) ? warnings : [];
+    const list = filterAdminFacingWarnings(warnings);
     return (
         <section className="admin-monitor-alerts-panel" aria-labelledby="monitor-alerts-title">
             <header className="admin-monitor-alerts-panel__header">
                 <h2 id="monitor-alerts-title">Vấn đề cần chú ý</h2>
-                <p>
-                    Theo dõi thôi — không tự xử lý. Pending chưa quá SLA không đồng nghĩa sự cố nghiêm
-                    trọng.
-                    {list.length > 0 ? ` · ${list.length} mục` : ''}
-                </p>
+                {list.length > 0 ? (
+                    <span className="admin-monitor-alerts-panel__count">{list.length}</span>
+                ) : null}
             </header>
             {list.length > 0 ? (
                 <div className="admin-monitor-alerts-panel__list">

@@ -1,12 +1,5 @@
-import {
-    MonitorDonut,
-    mapToChartData,
-} from './MonitorCharts.jsx';
-import {
-    formatCount,
-    isSectionAvailable,
-    LABEL_MAPS,
-} from '../../../utils/platformMonitoringDisplay.js';
+import { MonitorDonut, MonitorGroupedBar } from './MonitorCharts.jsx';
+import { formatCount, isSectionAvailable } from '../../../utils/platformMonitoringDisplay.js';
 
 const SectionPill = ({ available }) => (
     <span
@@ -18,30 +11,79 @@ const SectionPill = ({ available }) => (
     </span>
 );
 
+const HeroTotal = ({ label, value, warn = false }) => (
+    <div className={`admin-monitor-queue-hero${warn ? ' is-warn' : ''}`}>
+        <span>{label}</span>
+        <strong>{formatCount(value)}</strong>
+    </div>
+);
+
+const MODERATION_SERIES = [
+    { dataKey: 'trongKy', name: 'Trong kỳ', color: '#2f5fdb' },
+    { dataKey: 'choDuyet', name: 'Đang chờ', color: '#dc2626' },
+];
+
 const GovernanceQueuesCard = ({ reports, verification, moderation }) => {
     const reportsOk = isSectionAvailable(reports);
     const verificationOk = isSectionAvailable(verification);
     const moderationOk = isSectionAvailable(moderation);
     const anyOk = reportsOk || verificationOk || moderationOk;
 
-    const reportRows = reportsOk
-        ? mapToChartData(reports.data.byStatus, { labelMap: LABEL_MAPS.reportStatus })
-        : [];
-    const verificationRows = verificationOk
-        ? mapToChartData(verification.data.byStatus, {
-              labelMap: LABEL_MAPS.verificationStatus,
-              hideZero: true,
-          })
-        : [];
+    const reportsCreated = reportsOk ? Number(reports.data.createdReports) || 0 : 0;
+    const reportsPending = reportsOk ? Number(reports.data.pendingReports) || 0 : 0;
+    const reportsDoneOther = Math.max(0, reportsCreated - reportsPending);
+
+    const verificationCreated = verificationOk ? Number(verification.data.createdRequests) || 0 : 0;
+    const verificationPending = verificationOk
+        ? Number(verification.data.pendingManualRequests) || 0
+        : 0;
+    const verificationCompleted = verificationOk
+        ? Number(verification.data.completedRequests) || 0
+        : 0;
+    const verificationRejected = verificationOk
+        ? Number(verification.data.rejectedRequests) || 0
+        : 0;
+    const verificationOther = Math.max(
+        0,
+        verificationCreated - verificationPending - verificationCompleted - verificationRejected
+    );
+
+    const jobReviews = moderationOk ? Number(moderation.data.jobReviewRequests) || 0 : 0;
+    const pendingJobs = moderationOk ? Number(moderation.data.pendingJobReviews) || 0 : 0;
+    const contentReviews = moderationOk
+        ? Number(moderation.data.contentValidationRequests) || 0
+        : 0;
+    const pendingContent = moderationOk
+        ? Number(moderation.data.pendingContentReviews) || 0
+        : 0;
+    const totalBacklog = moderationOk
+        ? Number(moderation.data.totalPendingWorkload) || 0
+        : 0;
+
+    const reportsChart = [
+        { name: 'Chưa xử lý', value: reportsPending },
+        { name: 'Đã xong / khác', value: reportsDoneOther },
+    ];
+
+    const verificationChart = [
+        { name: 'Chờ duyệt thủ công', value: verificationPending },
+        { name: 'Đã duyệt / đạt', value: verificationCompleted },
+        { name: 'Bị từ chối', value: verificationRejected },
+        ...(verificationOther > 0
+            ? [{ name: 'Trạng thái khác', value: verificationOther }]
+            : []),
+    ];
+
+    const moderationChart = [
+        { name: 'Duyệt tin', trongKy: jobReviews, choDuyet: pendingJobs },
+        { name: 'Duyệt đánh giá', trongKy: contentReviews, choDuyet: pendingContent },
+    ];
 
     return (
         <section className="admin-monitor-card admin-monitor-card--wide">
             <header className="admin-monitor-card__header">
                 <div>
-                    <h2>Báo cáo · Xác minh · Kiểm duyệt</h2>
-                    <p className="admin-monitor-hint">
-                        Hàng đợi vận hành từ API UC-47 — chỉ giám sát, không tự xử lý tại đây.
-                    </p>
+                    <h2>Hàng chờ báo cáo, xác minh &amp; duyệt tin tuyển</h2>
                 </div>
                 <SectionPill available={anyOk} />
             </header>
@@ -55,142 +97,71 @@ const GovernanceQueuesCard = ({ reports, verification, moderation }) => {
                     <div className="admin-monitor-governance-grid">
                         <article className="admin-monitor-governance-block">
                             <header className="admin-monitor-governance-block__head">
-                                <h3>Báo cáo</h3>
+                                <h3>Báo cáo tin đăng</h3>
                                 <SectionPill available={reportsOk} />
                             </header>
                             {reportsOk ? (
                                 <>
-                                    <div className="admin-monitor-compact-metrics">
-                                        <div>
-                                            <span>Tạo trong kỳ</span>
-                                            <strong>{formatCount(reports.data.createdReports)}</strong>
-                                        </div>
-                                        <div>
-                                            <span>Đang chờ</span>
-                                            <strong className={reports.data.pendingReports > 0 ? 'is-warn' : ''}>
-                                                {formatCount(reports.data.pendingReports)}
-                                            </strong>
-                                        </div>
-                                        <div>
-                                            <span>Chờ chưa đọc</span>
-                                            <strong
-                                                className={
-                                                    reports.data.unreadPendingReports > 0 ? 'is-warn' : ''
-                                                }
-                                            >
-                                                {formatCount(reports.data.unreadPendingReports)}
-                                            </strong>
-                                        </div>
-                                    </div>
-                                    <p className="admin-monitor-chart-caption">Theo trạng thái</p>
-                                    <MonitorDonut data={reportRows} height={150} />
+                                    <HeroTotal
+                                        label="Báo cáo mới trong kỳ"
+                                        value={reportsCreated}
+                                    />
+                                    <p className="admin-monitor-chart-caption">
+                                        Phân bố xử lý trong kỳ
+                                    </p>
+                                    <MonitorDonut data={reportsChart} height={170} />
                                 </>
                             ) : (
-                                <p className="admin-monitor-card__empty">Tạm không có dữ liệu báo cáo.</p>
+                                <p className="admin-monitor-card__empty">
+                                    Tạm không có dữ liệu báo cáo.
+                                </p>
                             )}
                         </article>
 
                         <article className="admin-monitor-governance-block">
                             <header className="admin-monitor-governance-block__head">
-                                <h3>Xác minh</h3>
+                                <h3>Xác minh tài khoản</h3>
                                 <SectionPill available={verificationOk} />
                             </header>
                             {verificationOk ? (
                                 <>
-                                    <div className="admin-monitor-compact-metrics">
-                                        <div>
-                                            <span>Yêu cầu trong kỳ</span>
-                                            <strong>
-                                                {formatCount(verification.data.createdRequests)}
-                                            </strong>
-                                        </div>
-                                        <div>
-                                            <span>Chờ duyệt tay</span>
-                                            <strong
-                                                className={
-                                                    verification.data.pendingManualRequests > 0
-                                                        ? 'is-warn'
-                                                        : ''
-                                                }
-                                            >
-                                                {formatCount(verification.data.pendingManualRequests)}
-                                            </strong>
-                                        </div>
-                                        <div>
-                                            <span>Hoàn tất</span>
-                                            <strong>
-                                                {formatCount(verification.data.completedRequests)}
-                                            </strong>
-                                        </div>
-                                        <div>
-                                            <span>Từ chối</span>
-                                            <strong>
-                                                {formatCount(verification.data.rejectedRequests)}
-                                            </strong>
-                                        </div>
-                                    </div>
-                                    <p className="admin-monitor-chart-caption">Theo trạng thái</p>
-                                    <MonitorDonut data={verificationRows} height={150} />
+                                    <HeroTotal
+                                        label="Yêu cầu xác minh trong kỳ"
+                                        value={verificationCreated}
+                                    />
+                                    <p className="admin-monitor-chart-caption">
+                                        Phân bố kết quả trong kỳ
+                                    </p>
+                                    <MonitorDonut data={verificationChart} height={170} />
                                 </>
                             ) : (
-                                <p className="admin-monitor-card__empty">Tạm không có dữ liệu xác minh.</p>
+                                <p className="admin-monitor-card__empty">
+                                    Tạm không có dữ liệu xác minh.
+                                </p>
                             )}
                         </article>
 
                         <article className="admin-monitor-governance-block">
                             <header className="admin-monitor-governance-block__head">
-                                <h3>Kiểm duyệt</h3>
+                                <h3>Duyệt tin tuyển &amp; đánh giá</h3>
                                 <SectionPill available={moderationOk} />
                             </header>
                             {moderationOk ? (
-                                <div className="admin-monitor-compact-metrics">
-                                    <div>
-                                        <span>Duyệt tin (kỳ)</span>
-                                        <strong>
-                                            {formatCount(moderation.data.jobReviewRequests)}
-                                        </strong>
-                                    </div>
-                                    <div>
-                                        <span>Tin đang chờ</span>
-                                        <strong
-                                            className={
-                                                moderation.data.pendingJobReviews > 0 ? 'is-warn' : ''
-                                            }
-                                        >
-                                            {formatCount(moderation.data.pendingJobReviews)}
-                                        </strong>
-                                    </div>
-                                    <div>
-                                        <span>Duyệt nội dung (kỳ)</span>
-                                        <strong>
-                                            {formatCount(moderation.data.contentValidationRequests)}
-                                        </strong>
-                                    </div>
-                                    <div>
-                                        <span>Nội dung đang chờ</span>
-                                        <strong
-                                            className={
-                                                moderation.data.pendingContentReviews > 0
-                                                    ? 'is-warn'
-                                                    : ''
-                                            }
-                                        >
-                                            {formatCount(moderation.data.pendingContentReviews)}
-                                        </strong>
-                                    </div>
-                                    <div>
-                                        <span>Tổng backlog</span>
-                                        <strong
-                                            className={
-                                                moderation.data.totalPendingWorkload > 0
-                                                    ? 'is-warn'
-                                                    : ''
-                                            }
-                                        >
-                                            {formatCount(moderation.data.totalPendingWorkload)}
-                                        </strong>
-                                    </div>
-                                </div>
+                                <>
+                                    <HeroTotal
+                                        label="Tổng việc chờ duyệt"
+                                        value={totalBacklog}
+                                        warn={totalBacklog > 0}
+                                    />
+                                    <p className="admin-monitor-chart-caption">
+                                        Trong kỳ so với đang chờ
+                                    </p>
+                                    <MonitorGroupedBar
+                                        data={moderationChart}
+                                        series={MODERATION_SERIES}
+                                        height={190}
+                                    />
+                                </>
                             ) : (
                                 <p className="admin-monitor-card__empty">
                                     Tạm không có dữ liệu kiểm duyệt.
