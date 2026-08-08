@@ -40,17 +40,88 @@ export const normalizeChatAction = (actionName) => {
     return actionName;
 };
 
+/**
+ * Normalize GET /actions item (legacy string or ActionTarget object).
+ * @returns {{ action: string, applicationId?: number|null, invitationId?: number|null, candidateProfileId?: number|null } | null}
+ */
+export const normalizeActionTarget = (item) => {
+    if (item == null) return null;
+
+    if (typeof item === 'string') {
+        const action = normalizeChatAction(item);
+        if (!CHAT_UI_ACTIONS.has(action)) return null;
+        return {
+            action,
+            applicationId: null,
+            invitationId: null,
+            candidateProfileId: null,
+        };
+    }
+
+    if (typeof item !== 'object') return null;
+
+    const raw = item.action ?? item.actionName ?? item.name;
+    if (typeof raw !== 'string') return null;
+    const action = normalizeChatAction(raw);
+    if (!CHAT_UI_ACTIONS.has(action)) return null;
+
+    return {
+        action,
+        applicationId: item.applicationId ?? item.application_id ?? null,
+        invitationId: item.invitationId ?? item.invitation_id ?? null,
+        candidateProfileId:
+            item.candidateProfileId ?? item.candidate_profile_id ?? null,
+    };
+};
+
+/** @returns {ReturnType<typeof normalizeActionTarget>[]} */
 export const filterChatUiActions = (actions = []) =>
     (Array.isArray(actions) ? actions : [])
-        .map(normalizeChatAction)
-        .filter((name) => CHAT_UI_ACTIONS.has(name));
+        .map(normalizeActionTarget)
+        .filter(Boolean);
+
+export const findActionTarget = (actions, actionName) => {
+    const want = normalizeChatAction(actionName);
+    if (!want) return null;
+    return (
+        (Array.isArray(actions) ? actions : []).find((item) => {
+            const target = normalizeActionTarget(item);
+            return target?.action === want;
+        }) ?? null
+    );
+};
+
+export const getActionApplicationId = (actions, ...actionNames) => {
+    for (const name of actionNames) {
+        const id = findActionTarget(actions, name)?.applicationId;
+        if (id != null) return id;
+    }
+    return null;
+};
+
+export const getActionInvitationId = (actions, ...actionNames) => {
+    for (const name of actionNames) {
+        const id = findActionTarget(actions, name)?.invitationId;
+        if (id != null) return id;
+    }
+    return null;
+};
+
+export const getActionCandidateProfileId = (actions, ...actionNames) => {
+    for (const name of actionNames) {
+        const id = findActionTarget(actions, name)?.candidateProfileId;
+        if (id != null) return id;
+    }
+    return null;
+};
 
 /**
  * Collapse paired decision actions into one sticky card descriptor.
  * @returns {{ key: string, kind: string, actions: string[] }[]}
  */
 export const groupStickyActions = (actions = []) => {
-    const set = new Set(filterChatUiActions(actions));
+    const targets = filterChatUiActions(actions);
+    const set = new Set(targets.map((t) => t.action));
     const groups = [];
 
     const takePair = (kind, accept, reject) => {
@@ -211,6 +282,20 @@ export const formatMessageTime = (isoString) => {
         hour12: false,
     });
 };
+
+/** Matches BE `app.chat.edit-window-minutes` default. */
+export const CHAT_EDIT_WINDOW_MINUTES = 15;
+
+export const canEditChatMessage = (message, { now = Date.now() } = {}) => {
+    if (!message || message.deleted || message.messageType !== 'TEXT') return false;
+    if (!message.createdAt) return false;
+    const created = new Date(message.createdAt).getTime();
+    if (Number.isNaN(created)) return false;
+    return now - created <= CHAT_EDIT_WINDOW_MINUTES * 60 * 1000;
+};
+
+export const canRecallChatMessage = (message) =>
+    Boolean(message && !message.deleted && message.id != null);
 
 export const getInitials = (name = '') => {
     const parts = String(name).trim().split(/\s+/).filter(Boolean);

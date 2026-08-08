@@ -10,7 +10,7 @@ const getWsUrl = () => {
 /** @type {import('@stomp/stompjs').Client | null} */
 let client = null;
 
-/** @type {Map<string, { onMessage?: Function, onActionsUpdated?: Function, messageSub?: { unsubscribe: Function }, actionsSub?: { unsubscribe: Function } }>} */
+/** @type {Map<string, { onMessage?: Function, onActionsUpdated?: Function, onSeen?: Function, onTyping?: Function, messageSub?: { unsubscribe: Function }, actionsSub?: { unsubscribe: Function }, seenSub?: { unsubscribe: Function }, typingSub?: { unsubscribe: Function } }>} */
 const conversationHandlers = new Map();
 
 /** @type {Map<string, { listeners: Set<(summary: object) => void>, sub?: { unsubscribe: Function } }>} */
@@ -49,6 +49,8 @@ const subscribeHandlers = (convId, entry) => {
     const id = String(convId);
     entry.messageSub?.unsubscribe?.();
     entry.actionsSub?.unsubscribe?.();
+    entry.seenSub?.unsubscribe?.();
+    entry.typingSub?.unsubscribe?.();
 
     entry.messageSub = client.subscribe(`/topic/conversation/${id}`, (frame) => {
         const data = parseBody(frame);
@@ -61,6 +63,16 @@ const subscribeHandlers = (convId, entry) => {
             entry.onActionsUpdated?.();
         }
     );
+
+    entry.seenSub = client.subscribe(`/topic/conversation/${id}/seen`, (frame) => {
+        const data = parseBody(frame);
+        if (data) entry.onSeen?.(data);
+    });
+
+    entry.typingSub = client.subscribe(`/topic/conversation/${id}/typing`, (frame) => {
+        const data = parseBody(frame);
+        if (data) entry.onTyping?.(data);
+    });
 };
 
 const fanOut = (entry, data) => {
@@ -154,7 +166,7 @@ export const onChatSocketConnectionChange = (listener) => {
 };
 
 /**
- * Subscribe to message + actions-updated topics for a conversation.
+ * Subscribe to message + actions-updated + seen + typing topics for a conversation.
  * @returns {() => void} unsubscribe
  */
 export const subscribeConversationRealtime = (conversationId, handlers = {}) => {
@@ -166,8 +178,12 @@ export const subscribeConversationRealtime = (conversationId, handlers = {}) => 
     const entry = {
         onMessage: handlers.onMessage,
         onActionsUpdated: handlers.onActionsUpdated,
+        onSeen: handlers.onSeen,
+        onTyping: handlers.onTyping,
         messageSub: null,
         actionsSub: null,
+        seenSub: null,
+        typingSub: null,
     };
     conversationHandlers.set(id, entry);
 
@@ -180,8 +196,66 @@ export const subscribeConversationRealtime = (conversationId, handlers = {}) => 
         if (current !== entry) return;
         current.messageSub?.unsubscribe?.();
         current.actionsSub?.unsubscribe?.();
+        current.seenSub?.unsubscribe?.();
+        current.typingSub?.unsubscribe?.();
         conversationHandlers.delete(id);
     };
+};
+
+/**
+ * Publish typing indicator. Body: `{ typing: boolean }`.
+ * Destination: `/app/chat/{convId}/typing`
+ */
+export const publishTyping = (conversationId, typing) => {
+    if (conversationId == null) return false;
+    ensureChatSocket();
+    if (!client?.connected) return false;
+    try {
+        client.publish({
+            destination: `/app/chat/${conversationId}/typing`,
+            body: JSON.stringify({ typing: Boolean(typing) }),
+        });
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+/**
+ * Send message over STOMP. Destination: `/app/chat/{convId}/send`
+ * Body: `{ content, messageType, actionName? }` — BE broadcasts MessageDTO on topic.
+ */
+export const publishChatSend = (conversationId, body) => {
+    if (conversationId == null || body == null) return false;
+    ensureChatSocket();
+    if (!client?.connected) return false;
+    try {
+        client.publish({
+            destination: `/app/chat/${conversationId}/send`,
+            body: JSON.stringify(body),
+        });
+        return true;
+    } catch {
+        return false;
+    }
+};
+
+/**
+ * Mark conversation read over STOMP. Destination: `/app/chat/{convId}/seen`
+ */
+export const publishSeen = (conversationId) => {
+    if (conversationId == null) return false;
+    ensureChatSocket();
+    if (!client?.connected) return false;
+    try {
+        client.publish({
+            destination: `/app/chat/${conversationId}/seen`,
+            body: JSON.stringify({}),
+        });
+        return true;
+    } catch {
+        return false;
+    }
 };
 
 /**

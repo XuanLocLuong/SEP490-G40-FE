@@ -262,7 +262,7 @@ const MyJobsPage = () => {
         if (tab && VALID_STATUS_TABS.has(tab)) {
             setActiveTab(tab);
         } else if (rawJobId) {
-            setActiveTab('open');
+            setActiveTab('all');
         }
 
         if (rawJobId) {
@@ -311,15 +311,35 @@ const MyJobsPage = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    /** Deep-link (?jobId=): đưa tin đó lên đầu list đang hiện để dễ chú ý. */
+    const displayJobs = useMemo(() => {
+        if (highlightJobId == null || !Array.isArray(jobs) || jobs.length === 0) {
+            return jobs;
+        }
+        const pinned = [];
+        const rest = [];
+        for (const job of jobs) {
+            if (String(job.id) === String(highlightJobId)) pinned.push(job);
+            else rest.push(job);
+        }
+        return pinned.length ? [...pinned, ...rest] : jobs;
+    }, [jobs, highlightJobId]);
+
     useEffect(() => {
         if (highlightJobId == null || loading) return undefined;
+
         const el = document.getElementById(`my-job-card-${highlightJobId}`);
         if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Prefer keeping the card near the top of the viewport.
+            const top = el.getBoundingClientRect().top + window.scrollY - 96;
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-        const timer = window.setTimeout(() => setHighlightJobId(null), 2800);
+
+        const timer = window.setTimeout(() => setHighlightJobId(null), 4500);
         return () => window.clearTimeout(timer);
-    }, [highlightJobId, loading, jobs]);
+    }, [highlightJobId, loading, displayJobs]);
 
     const openConfirm = (type, job, nextStatus = null) => {
         setConfirmDialog({ type, job, nextStatus });
@@ -664,7 +684,7 @@ const MyJobsPage = () => {
             ) : (
                 <>
                     <div className="my-jobs-page__list">
-                        {jobs.map((job) =>
+                        {displayJobs.map((job) =>
                             hasRecruitingMetricsCard(job)
                                 ? renderMetricsCard(job)
                                 : renderDefaultCard(job)

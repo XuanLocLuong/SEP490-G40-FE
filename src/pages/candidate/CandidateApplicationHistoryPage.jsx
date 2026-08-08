@@ -17,7 +17,7 @@ import {
 } from '../../apis/ReviewApi.jsx';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useAuth } from '../../contexts/authContext.js';
-import { openChatPanel } from '../../utils/chatEvents.js';
+import { openChatPanel, RECRUITMENT_CHANGED_EVENT } from '../../utils/chatEvents.js';
 import { formatJobShiftsLabel, getBusinessInitial } from '../../utils/formatters.js';
 import BusinessProfileLink from '../../components/common/BusinessProfileLink.jsx';
 import '../../assets/styles/CandidateApplicationHistoryPageStyle.css';
@@ -160,6 +160,28 @@ const CandidateApplicationHistoryPage = () => {
         if (!isCandidate) return;
         loadPage(0, activeStatus);
     }, [activeStatus, isCandidate, loadPage]);
+
+    // Refresh when application / invite-accept (→ HIRED) happens via chat float.
+    useEffect(() => {
+        if (!isCandidate) return undefined;
+
+        const onRecruitmentChanged = (event) => {
+            const detail = event?.detail || {};
+            if (
+                detail.kind &&
+                detail.kind !== 'application' &&
+                detail.kind !== 'invitation'
+            ) {
+                return;
+            }
+            void loadCounts().catch(() => {});
+            void loadPage(0, activeStatus);
+        };
+
+        window.addEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+        return () =>
+            window.removeEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+    }, [isCandidate, activeStatus, loadCounts, loadPage]);
 
     const canLoadMore = totalPages > 1 && page + 1 < totalPages;
     const loadMore = async () => {
