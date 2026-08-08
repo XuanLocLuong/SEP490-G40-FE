@@ -592,6 +592,22 @@
 }
 
 /* ---- Availability empty ---- */
+.cp-availability-card__head-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cp-availability-card__mode {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e8f1ff;
+    color: var(--color-primary);
+    font-size: 12px;
+    font-weight: 700;
+}
+
 .cp-availability-empty {
     display: flex;
     flex-direction: column;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getHiredJobShifts, getScheduleSummary } from '../apis/AvailabilityApi.jsx';
+import { getHiredJobSchedules } from '../apis/CandidateJobScheduleApi.jsx';
+import { getScheduleSummary } from '../apis/CandidateScheduleApi.jsx';
 import {
     fetchHiredJobShifts,
     fetchScheduleSummary,
@@ -8,9 +9,7 @@ import {
 } from '../services/availabilityService.js';
 
 /**
- * Load schedule attention signals for soft banner.
- * Chỉ dùng summary + /jobs/hired — khớp panel Availability (có gì để gỡ/áp).
- * Không dùng applications?status=HIRED (tránh banner hiện khi chưa có record lịch).
+ * Soft banner signals — summary + /jobs/hired (khớp panel Availability master).
  */
 export const useScheduleSummary = ({ enabled = true } = {}) => {
     const [summary, setSummary] = useState(null);
@@ -26,7 +25,7 @@ export const useScheduleSummary = ({ enabled = true } = {}) => {
         try {
             const [summaryResult, hiredResult] = await Promise.allSettled([
                 fetchScheduleSummary(getScheduleSummary),
-                fetchHiredJobShifts(getHiredJobShifts),
+                fetchHiredJobShifts(getHiredJobSchedules),
             ]);
 
             const base =

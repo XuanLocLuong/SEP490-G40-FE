@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
-import { register as RegisterApi, loginWithGoogle } from '../../apis/AuthApi.jsx';
+import { toast } from 'react-toastify';
+import {
+    register as RegisterApi,
+    loginWithGoogle,
+    resendVerificationEmail,
+} from '../../apis/AuthApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { getHomePathByRole, ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
@@ -39,15 +44,34 @@ const Register = () => {
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [result, setResult] = useState(null); // { homePath, isNewAccount }
+    const [result, setResult] = useState(null); // { homePath, needsEmailVerification, email, isNewAccount }
     const [secondsLeft, setSecondsLeft] = useState(AUTO_REDIRECT_SECONDS);
+    const [resending, setResending] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
 
     const { login } = useAuth();
     const navigate = useNavigate();
 
+    const buildAuthResult = (authData, fallbackEmail = '', { fromGoogle = false } = {}) => {
+        const isNewAccount = Boolean(authData.newAccount);
+        // Google response thường không có emailVerified dù BE đã verified.
+        // Chỉ bắt màn verify khi BE ghi rõ emailVerified === false.
+        // Register email/password: thiếu field hoặc false → vẫn bắt verify nếu newAccount.
+        const needsEmailVerification = fromGoogle
+            ? isNewAccount && authData.emailVerified === false
+            : isNewAccount && authData.emailVerified !== true;
+
+        return {
+            homePath: getHomePathByRole(authData.role),
+            isNewAccount,
+            needsEmailVerification,
+            email: authData.email || fallbackEmail || '',
+        };
+    };
+
 
     useEffect(() => {
-        if (!result || result.isNewAccount) return; // tài khoản mới: không auto-chuyển, chờ xác thực email
+        if (!result || result.needsEmailVerification) return;
 
         if (secondsLeft <= 0) {
             navigate(result.homePath);
@@ -57,6 +81,34 @@ const Register = () => {
         const timer = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
         return () => clearTimeout(timer);
     }, [result, secondsLeft, navigate]);
+
+    useEffect(() => {
+        if (resendCooldown <= 0) return undefined;
+        const timer = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [resendCooldown]);
+
+    const handleResendVerification = async () => {
+        if (resending || resendCooldown > 0) return;
+        setResending(true);
+        setError('');
+        try {
+            await resendVerificationEmail();
+            toast.success('Đã gửi lại email xác thực. Kiểm tra hộp thư (kể cả Spam) — liên kết khoảng 24 giờ.');
+            setResendCooldown(60);
+        } catch (err) {
+            const code = err?.response?.data?.message || err?.response?.data?.code;
+            if (code === 'EMAIL_ALREADY_VERIFIED') {
+                toast.info('Email đã được xác thực. Bạn có thể đăng nhập.');
+                navigate(ROUTES.LOGIN);
+                return;
+            }
+            setError(getAuthErrorMessage(err));
+            toast.error(getAuthErrorMessage(err));
+        } finally {
+            setResending(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -83,7 +135,7 @@ const Register = () => {
             });
             const authData = res.data.data;
             login(authData);
-            setResult({ homePath: getHomePathByRole(authData.role), isNewAccount: authData.newAccount });
+            setResult(buildAuthResult(authData, email));
         } catch (err) {
             setError(getAuthErrorMessage(err));
         } finally {
@@ -97,25 +149,37 @@ const Register = () => {
             const res = await loginWithGoogle({ idToken: credentialResponse.credential, role });
             const authData = res.data.data;
             login(authData);
-            setResult({ homePath: getHomePathByRole(authData.role), isNewAccount: authData.newAccount });
+            setResult(buildAuthResult(authData, authData.email || '', { fromGoogle: true }));
         } catch (err) {
             setError(getAuthErrorMessage(err));
         }
     };
 
     if (result) {
-        const isNew = result.isNewAccount;
-
-        // Tài khoản mới: BẮT BUỘC xác thực email trước, không cho chuyển trang
-        // chủ ngay — không có nút/đếm ngược tự chuyển ở màn này nữa.
-        if (isNew) {
+        // Chỉ bắt xác thực email khi cần (password chưa verify). Google thường bỏ qua.
+        if (result.needsEmailVerification) {
             return (
-                <AuthCard title="Kiểm tra email của bạn 📩" subtitle="Chỉ còn 1 bước nữa thôi!">
+                <AuthCard title="Kiểm tra email của bạn" subtitle="Chỉ còn 1 bước nữa thôi!">
+                    {error ? <div className="auth-card__error">{error}</div> : null}
                     <p className="auth-card__notice">
-                        Chúng tôi đã gửi email xác thực tới <strong>{email}</strong>.
+                        Chúng tôi đã gửi email xác thực tới{' '}
+                        <strong>{result.email || 'địa chỉ email của bạn'}</strong>.
                         Vui lòng mở hộp thư (kể cả mục Spam) và bấm vào liên kết xác thực
                         để hoàn tất đăng ký trước khi tiếp tục sử dụng JobLink.
                     </p>
+
+                    <button
+                        type="button"
+                        className="btn btn--primary btn--block"
+                        onClick={handleResendVerification}
+                        disabled={resending || resendCooldown > 0}
+                    >
+                        {resending
+                            ? 'Đang gửi lại...'
+                            : resendCooldown > 0
+                              ? `Gửi lại sau ${resendCooldown}s`
+                              : 'Gửi lại email xác thực'}
+                    </button>
 
                     <div className="auth-card__footer">
                         Đã xác thực xong?{' '}
@@ -128,10 +192,16 @@ const Register = () => {
         }
 
 
-        // Tài khoản đã tồn tại từ trước (VD Google login trùng tài khoản) — email
-        // đã verified sẵn rồi nên cho chuyển trang chủ bình thường.
+        // Google / tài khoản đã verified — cho vào app luôn.
         return (
-            <AuthCard title="Tài khoản đã tồn tại" subtitle="Bạn đã từng đăng ký tài khoản này trước đó — mình đăng nhập luôn cho bạn.">
+            <AuthCard
+                title={result.isNewAccount ? 'Đăng ký thành công' : 'Tài khoản đã tồn tại'}
+                subtitle={
+                    result.isNewAccount
+                        ? 'Email của bạn đã được xác thực. Bạn có thể bắt đầu sử dụng JobLink.'
+                        : 'Bạn đã từng đăng ký tài khoản này trước đó — mình đăng nhập luôn cho bạn.'
+                }
+            >
                 <button
                     className="btn btn--primary btn--block"
                     onClick={() => navigate(result.homePath)}

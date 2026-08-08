@@ -36,6 +36,13 @@ export const getNotificationTargetPath = (notification, role) => {
             if (role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_PROFILE;
             return null;
 
+        case 'VIEW_SCHEDULE':
+        case 'SCHEDULE_UPDATED_BY_JOB':
+        case 'SCHEDULE_EXPIRED':
+        case 'SCHEDULE_UPDATE_REMINDER':
+            if (role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_AVAILABILITY;
+            return null;
+
         default:
             return null;
     }

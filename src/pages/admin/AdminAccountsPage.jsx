@@ -18,6 +18,7 @@ import {
     getAccountStatusLabel,
     getAccountStatusTone,
     getChangeRoleOptions,
+    canChangeAccountRole,
     getStatusActionsForAccount,
     getUserRoleLabel,
 } from '../../utils/adminAccountDisplay.js';
@@ -102,10 +103,12 @@ const AdminAccountsPage = () => {
     }, []);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch account list on mount/filter
         loadList(0);
     }, [loadList]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch detail when selection changes
         loadDetail(selectedId);
     }, [selectedId, loadDetail]);
 
@@ -115,9 +118,11 @@ const AdminAccountsPage = () => {
     );
 
     const roleOptions = useMemo(
-        () => getChangeRoleOptions(detail?.role).filter((opt) => opt.value !== detail?.role),
+        () => getChangeRoleOptions(detail?.role),
         [detail?.role]
     );
+
+    const canChangeRole = canChangeAccountRole(detail?.role);
 
     const handleSearch = (e) => {
         e?.preventDefault?.();
@@ -398,7 +403,14 @@ const AdminAccountsPage = () => {
                                 <button
                                     type="button"
                                     className="admin-accounts-btn admin-accounts-btn--ghost"
-                                    disabled={roleOptions.length === 0}
+                                    disabled={!canChangeRole || roleOptions.length === 0}
+                                    title={
+                                        !canChangeRole
+                                            ? 'Không được đổi role tài khoản Candidate / Recruiter'
+                                            : roleOptions.length === 0
+                                              ? 'Không còn role nội bộ khác để đổi'
+                                              : 'Đổi role nội bộ'
+                                    }
                                     onClick={() =>
                                         setActionModal({
                                             mode: 'role',

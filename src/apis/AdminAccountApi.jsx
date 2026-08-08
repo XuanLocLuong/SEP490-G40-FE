@@ -5,7 +5,10 @@ const BASE = `${API_PREFIX}/admin/accounts`;
 const unwrap = (res) => res?.data?.data ?? res?.data ?? null;
 
 export const getAdminAccountApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') => {
-    const code = error?.response?.data?.message || error?.response?.data?.error;
+    const code =
+        error?.response?.data?.code ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error;
     const map = {
         ACCOUNT_NOT_FOUND: 'Không tìm thấy tài khoản.',
         CANNOT_RESTRICT_SELF: 'Không thể khóa / hạn chế chính tài khoản của bạn.',
@@ -14,9 +17,13 @@ export const getAdminAccountApiErrorMessage = (error, fallback = 'Có lỗi xả
         CANNOT_CHANGE_LAST_ADMIN_ROLE: 'Không thể đổi role của Admin active cuối cùng.',
         EMAIL_ALREADY_EXISTS: 'Email đã tồn tại.',
         INVALID_INTERNAL_ROLE: 'Role không hợp lệ cho tài khoản nội bộ.',
+        PUBLIC_ROLE_CHANGE_NOT_ALLOWED:
+            'Không được đổi role của tài khoản Candidate / Recruiter. Chỉ đổi được giữa các role nội bộ.',
     };
     if (typeof code === 'string' && map[code]) return map[code];
-    if (typeof code === 'string' && code.trim() && !code.startsWith('{')) return code;
+    if (typeof code === 'string' && code.trim() && !code.startsWith('{') && Number.isNaN(Number(code))) {
+        return code;
+    }
     return error?.message || fallback;
 };
 

@@ -46,6 +46,7 @@ const CandidateProfilePage = () => {
         slots: availabilitySlots,
         startDate: availabilityStartDate,
         endDate: availabilityEndDate,
+        scheduleMode: availabilityScheduleMode,
         loading: availabilityLoading,
     } = useCandidateAvailability();
 
@@ -268,6 +269,7 @@ const CandidateProfilePage = () => {
                 slots={availabilitySlots}
                 startDate={availabilityStartDate}
                 endDate={availabilityEndDate}
+                scheduleMode={availabilityScheduleMode}
                 loading={availabilityLoading}
                 onSetup={handleScheduleSetup}
             />

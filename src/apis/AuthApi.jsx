@@ -23,3 +23,7 @@ export const forgotPassword = (data) =>
 /** data: { token, newPassword } — min password 6 ký tự (BE). */
 export const resetPassword = (data) =>
     axiosClient.post(`${AUTH_BASE}/reset-password`, data);
+
+/** POST /auth/resend-verification-email — Bearer bắt buộc, không body, không gửi email. */
+export const resendVerificationEmail = () =>
+    axiosClient.post(`${AUTH_BASE}/resend-verification-email`);

@@ -12,13 +12,25 @@ const axiosClient = axios.create({
     }
 });
 
+// /auth/* public không gắn token (tránh token cũ làm BE chặn login/register).
+// Một số /auth/* vẫn cần Bearer theo contract BE.
+const AUTH_ENDPOINTS_NEEDING_BEARER = [
+    '/auth/resend-verification-email',
+    '/auth/change-email',
+    '/auth/logout',
+];
+
+const authEndpointNeedsBearer = (url = '') =>
+    AUTH_ENDPOINTS_NEEDING_BEARER.some((path) => url.includes(path));
+
 axiosClient.interceptors.request.use((config) => {
-    // Các endpoint /auth/* (login, register, refresh, verify-email...) không
-    // cần token — và nếu localStorage đang giữ token cũ/hỏng, gắn vào sẽ khiến
-    // TokenAuthenticationFilter bên BE chặn cứng cả request public (bug đã báo BE).
-    const isAuthEndpoint = config.url?.includes('/auth/');
+    const url = config.url || '';
+    const isAuthEndpoint = url.includes('/auth/');
     const auth = getAuth();
-    if (auth?.token && !isAuthEndpoint) {
+    const shouldAttachToken =
+        Boolean(auth?.token) && (!isAuthEndpoint || authEndpointNeedsBearer(url));
+
+    if (shouldAttachToken) {
         config.headers.Authorization = `Bearer ${auth.token}`;
     }
     return config;
@@ -42,9 +54,10 @@ axiosClient.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
         const status = error.response?.status;
-        const isAuthEndpoint = originalRequest?.url?.includes('/auth/');
+        const url = originalRequest?.url || '';
+        const isPublicAuthEndpoint = url.includes('/auth/') && !authEndpointNeedsBearer(url);
 
-        if (status !== 401 || isAuthEndpoint || originalRequest._retry) {
+        if (status !== 401 || isPublicAuthEndpoint || originalRequest._retry) {
             return Promise.reject(error);
         }
 

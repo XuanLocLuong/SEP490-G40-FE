@@ -1,12 +1,16 @@
 // Map mã lỗi/thông điệp thô từ backend -> tiếng Việt dễ hiểu cho người dùng.
 const AUTH_ERROR_MESSAGES = {
     EMAIL_ALREADY_USED: 'Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.',
+    EMAIL_ALREADY_VERIFIED: 'Email đã được xác thực. Bạn có thể đăng nhập.',
+    INVALID_EMAIL_VERIFICATION_TOKEN: 'Liên kết xác thực không hợp lệ.',
+    EMAIL_VERIFICATION_TOKEN_EXPIRED: 'Liên kết xác thực đã hết hạn. Vui lòng gửi lại email.',
     ROLE_REQUIRED: 'Vui lòng chọn vai trò (Ứng viên hoặc Nhà tuyển dụng).',
     ROLE_MUST_BE_CANDIDATE_OR_RECRUITER: 'Vai trò không hợp lệ. Vui lòng chọn Ứng viên hoặc Nhà tuyển dụng.',
     USERNAME_OR_EMAIL_REQUIRED: 'Vui lòng nhập email.',
     'Incorrect username/email or password!': 'Email hoặc mật khẩu không đúng.',
     'User is disabled': 'Tài khoản của bạn đang bị khoá hoặc chưa được kích hoạt. Vui lòng liên hệ hỗ trợ.',
     'Invalid refresh token': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+    'Refresh token is expired': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
     'Refresh token is invalid or expired': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
 };
 

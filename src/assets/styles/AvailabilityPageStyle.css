@@ -286,8 +286,41 @@
     margin-top: 24px;
 }
 
-.upload-timetable__preview {
-    margin-top: 20px;
+.upload-timetable__preview.upload-timetable__preview--compact {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: min(100%, 420px);
+    gap: 10px;
+}
+
+.upload-timetable__preview--compact img {
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+}
+
+.scan-pending-hint {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.scan-pending-hint p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .scan-pending-hint {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.upload-timetable__preview {    margin-top: 20px;
     width: min(100%, 420px);
     display: flex;
     flex-direction: column;
@@ -692,5 +725,176 @@
     .availability-btn,
     .availability-add-btn {
         width: 100%;
+    }
+}
+
+.schedule-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.schedule-tabs__btn {
+    min-height: 40px;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.schedule-tabs__btn--active {
+    background: var(--color-primary-light, #e8f1ff);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.schedule-mode-banner {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.schedule-mode-banner__badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e8f1ff;
+    color: var(--color-primary);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.schedule-mode-banner__badge--manual {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.schedule-mode-banner__content p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+.schedule-mode-banner__meta {
+    margin-top: 6px !important;
+    font-weight: 650;
+    color: var(--color-text) !important;
+}
+
+.schedule-mode-banner__warn {
+    margin-top: 8px !important;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #fff7ed;
+    color: #c2410c !important;
+    font-weight: 650;
+}
+
+.schedule-mode-banner__actions {
+    flex-shrink: 0;
+}
+
+.timetable-section__toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.timetable-section__badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.timetable-section__badge--on {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.timetable-section__footer {
+    margin-top: 18px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.hired-jobs-schedule__empty {
+    margin: 0;
+    color: var(--color-text-muted);
+}
+
+.hired-jobs-schedule__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+}
+
+.hired-jobs-schedule__item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fafafa;
+}
+
+.hired-jobs-schedule__main {
+    display: grid;
+    gap: 6px;
+}
+
+.hired-jobs-schedule__status {
+    display: inline-flex;
+    width: fit-content;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.hired-jobs-schedule__status--on {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.hired-jobs-schedule__shifts {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+.hired-jobs-schedule__no-shifts {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 14px;
+}
+
+.availability-editor--embedded .availability-card__header {
+    margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+    .schedule-mode-banner,
+    .hired-jobs-schedule__item {
+        flex-direction: column;
     }
 }
