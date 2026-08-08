@@ -78,7 +78,7 @@ export const formatBusinessTypeLabel = (input, options = []) => {
     return String(input);
 };
 
-/** Map response BE → options select { value: code, label: name } */
+/** Map response BE → options select { value: code, label: name, requiresBusinessLicense? } */
 export const mapBusinessTypeOptions = (list) => {
     if (!Array.isArray(list)) return [];
     return list
@@ -88,5 +88,9 @@ export const mapBusinessTypeOptions = (list) => {
             label: item.name || item.code,
             description: item.description || '',
             id: item.id,
+            requiresBusinessLicense:
+                typeof item.requiresBusinessLicense === 'boolean'
+                    ? item.requiresBusinessLicense
+                    : undefined,
         }));
 };

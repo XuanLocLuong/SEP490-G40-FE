@@ -43,6 +43,10 @@ export const getNotificationTargetPath = (notification, role) => {
             if (role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_AVAILABILITY;
             return null;
 
+        case 'VIEW_VERIFICATION':
+            if (isRecruiter) return ROUTES.RECRUITER_VERIFICATION;
+            return null;
+
         default:
             return null;
     }

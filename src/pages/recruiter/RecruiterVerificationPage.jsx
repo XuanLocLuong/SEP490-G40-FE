@@ -4,21 +4,26 @@ import { toast } from 'react-toastify';
 import {
     getVerificationApiErrorMessage,
     isVerificationRetryWithoutRequestError,
+    submitBusinessLicense,
     submitVerification,
 } from '../../apis/VerificationApi.jsx';
 import recruiterProfileApi from '../../apis/RecruiterProfileApi.jsx';
 import { ROUTES } from '../../routes/path.js';
+import { mapBusinessTypeOptions } from '../../utils/businessTypeDisplay.js';
 import {
+    VERIFICATION_STATUS,
     getDisplayExtractedEntries,
     getFormattedFailedReasons,
     getVerificationOutcome,
     getVerificationRejectionReason,
+    isBusinessLicenseOnlyFlow,
     isBusinessVerifiedBadge,
-    isIndividualBusinessType,
+    isFullyBusinessVerified,
     isUnverifiedBadge,
+    isVerificationExpired,
     isVerificationPendingManual,
     isVerificationRejected,
-    requiresBusinessLicenseVerification,
+    resolveRequiresBusinessLicense,
 } from '../../utils/verificationDisplay.js';
 import '../../assets/styles/RecruiterVerificationPageStyle.css';
 
@@ -184,6 +189,7 @@ const RecruiterVerificationPage = () => {
     const retryMode = searchParams.get('retry') === '1';
 
     const [profile, setProfile] = useState(null);
+    const [businessTypeOptions, setBusinessTypeOptions] = useState([]);
     const [loadingProfile, setLoadingProfile] = useState(true);
 
     const [frontImage, setFrontImage] = useState(null);
@@ -198,16 +204,28 @@ const RecruiterVerificationPage = () => {
 
     const businessId = profile?.businessId;
     const businessName = profile?.businessName || 'Doanh nghiệp của bạn';
-    const isIndividual = isIndividualBusinessType(profile?.businessType);
-    const needsLicense = requiresBusinessLicenseVerification(profile?.businessType);
+    const needsLicense = resolveRequiresBusinessLicense({
+        businessType: profile?.businessType,
+        typeOptions: businessTypeOptions,
+        profileRequiresBusinessLicense: profile?.requiresBusinessLicense,
+    });
+    const licenseOnlyFlow = isBusinessLicenseOnlyFlow({
+        verificationStatus: profile?.verificationStatus,
+        needsLicense,
+        badge: profile?.badge,
+    });
 
     // ?retry=1 chỉ mở form khi đang chờ duyệt — KHÔNG tự chọn API.
     // /retry chỉ khi BE đã có request (reject / manual).
     const hasExistingVerificationRequest =
         isVerificationRejected(profile?.verificationStatus) ||
-        isVerificationPendingManual(profile?.verificationStatus);
+        isVerificationPendingManual(profile?.verificationStatus) ||
+        isVerificationExpired(profile?.verificationStatus);
 
     const useRetryApi = hasExistingVerificationRequest;
+    const useLicenseRetryApi =
+        licenseOnlyFlow &&
+        profile?.verificationStatus === VERIFICATION_STATUS.BUSINESS_REJECTED;
 
     const isPendingLocked =
         isVerificationPendingManual(profile?.verificationStatus) && !retryMode;
@@ -215,7 +233,7 @@ const RecruiterVerificationPage = () => {
     // URL ?retry=1 nhưng chưa từng nộp → bỏ query để khớp /submit.
     useEffect(() => {
         if (loadingProfile || !profile) return;
-        if (retryMode && !hasExistingVerificationRequest) {
+        if (retryMode && !hasExistingVerificationRequest && !licenseOnlyFlow) {
             setSearchParams({}, { replace: true });
         }
     }, [
@@ -223,54 +241,94 @@ const RecruiterVerificationPage = () => {
         profile,
         retryMode,
         hasExistingVerificationRequest,
+        licenseOnlyFlow,
         setSearchParams,
     ]);
 
-    const applyUiFromProfile = useCallback(
-        (data) => {
-            setProfile(data);
-            if (data?.taxCode) {
-                setTaxCode((prev) => prev || String(data.taxCode));
-            }
+    const applyUiFromProfile = useCallback((data, typeOptions = []) => {
+        setProfile(data);
+        if (data?.taxCode) {
+            setTaxCode((prev) => prev || String(data.taxCode));
+        }
 
-            const outcome = getVerificationOutcome(null, { profile: data });
+        const needsGpkd = resolveRequiresBusinessLicense({
+            businessType: data?.businessType,
+            typeOptions,
+            profileRequiresBusinessLicense: data?.requiresBusinessLicense,
+        });
+        const licenseOnly = isBusinessLicenseOnlyFlow({
+            verificationStatus: data?.verificationStatus,
+            needsLicense: needsGpkd,
+            badge: data?.badge,
+        });
 
-            if (outcome === 'success' || isBusinessVerifiedBadge(data?.badge)) {
-                setResultKind('success');
-                setResultPayload(data);
-                return;
-            }
-
-            if (outcome === 'pending' || isVerificationPendingManual(data?.verificationStatus)) {
-                if (retryMode) {
-                    setResultKind(null);
-                    return;
-                }
-                setResultKind('pending');
-                setResultPayload(data);
-                return;
-            }
-
-            if (outcome === 'rejected' || isVerificationRejected(data?.verificationStatus)) {
-                if (retryMode) {
-                    setResultKind(null);
-                    return;
-                }
-                setResultKind('rejected');
-                setResultPayload(data);
-                return;
-            }
-
+        // Đã CCCD_PASSED nhưng loại cần GPKD → mở form bổ sung (kể cả BE còn badge).
+        if (licenseOnly && data?.verificationStatus === VERIFICATION_STATUS.CCCD_PASSED) {
             setResultKind(null);
-        },
-        [retryMode]
-    );
+            return;
+        }
+
+        if (isFullyBusinessVerified({
+            badge: data?.badge,
+            verificationStatus: data?.verificationStatus,
+            needsLicense: needsGpkd,
+        })) {
+            setResultKind('success');
+            setResultPayload(data);
+            return;
+        }
+
+        const outcome = getVerificationOutcome(null, { profile: data });
+
+        if (outcome === 'success') {
+            setResultKind('success');
+            setResultPayload(data);
+            return;
+        }
+
+        if (outcome === 'pending' || isVerificationPendingManual(data?.verificationStatus)) {
+            if (retryMode) {
+                setResultKind(null);
+                return;
+            }
+            setResultKind('pending');
+            setResultPayload(data);
+            return;
+        }
+
+        if (outcome === 'rejected' || isVerificationRejected(data?.verificationStatus)) {
+            if (retryMode || licenseOnly) {
+                setResultKind(null);
+                return;
+            }
+            setResultKind('rejected');
+            setResultPayload(data);
+            return;
+        }
+
+        if (isVerificationExpired(data?.verificationStatus)) {
+            if (retryMode) {
+                setResultKind(null);
+                return;
+            }
+            setResultKind('expired');
+            setResultPayload(data);
+            return;
+        }
+
+        setResultKind(null);
+    }, [retryMode]);
 
     const loadProfile = useCallback(async () => {
         setLoadingProfile(true);
         try {
-            const data = await recruiterProfileApi.getProfile();
-            applyUiFromProfile(data);
+            const [data, types] = await Promise.all([
+                recruiterProfileApi.getProfile(),
+                recruiterProfileApi.getBusinessTypes().catch(() => []),
+            ]);
+            const options = mapBusinessTypeOptions(types);
+            setBusinessTypeOptions(options);
+            applyUiFromProfile(data, options);
             return data;
         } catch (err) {
             toast.error(getVerificationApiErrorMessage(err, 'Không tải được hồ sơ doanh nghiệp.'));
@@ -320,7 +378,13 @@ const RecruiterVerificationPage = () => {
             toast.error('Thiếu businessId. Vui lòng hoàn thiện hồ sơ trước.');
             return;
         }
-        if (isBusinessVerifiedBadge(profile?.badge)) {
+        if (
+            isFullyBusinessVerified({
+                badge: profile?.badge,
+                verificationStatus: profile?.verificationStatus,
+                needsLicense,
+            })
+        ) {
             toast.info('Doanh nghiệp đã xác minh.');
             showResult('success', profile);
             return;
@@ -329,42 +393,64 @@ const RecruiterVerificationPage = () => {
             toast.info('Hồ sơ đang chờ duyệt. Dùng “Nộp lại” nếu muốn gửi bản mới.');
             return;
         }
-        if (!isUnverifiedBadge(profile?.badge) && !useRetryApi) {
+        if (
+            !licenseOnlyFlow &&
+            !isUnverifiedBadge(profile?.badge) &&
+            !useRetryApi
+        ) {
             toast.info('Không thể nộp mới khi badge không còn UNVERIFIED. Dùng nộp lại nếu được phép.');
-            return;
-        }
-        if (!frontImage || !backImage) {
-            toast.error('Vui lòng tải đủ mặt trước và mặt sau CCCD.');
             return;
         }
 
         const trimmedTax = taxCode.trim();
         if (needsLicense && !trimmedTax && certificateImages.length === 0) {
-            toast.error('Doanh nghiệp thường cần mã số thuế hoặc ảnh giấy phép (ít nhất một trong hai).');
+            toast.error('Loại hình này cần mã số thuế hoặc ảnh giấy phép (ít nhất một trong hai).');
+            return;
+        }
+
+        if (!licenseOnlyFlow && (!frontImage || !backImage)) {
+            toast.error('Vui lòng tải đủ mặt trước và mặt sau CCCD.');
             return;
         }
 
         setSubmitting(true);
         try {
-            const payload = {
-                businessId,
-                frontImage,
-                backImage,
-                taxCode: needsLicense ? trimmedTax || undefined : undefined,
-                certificateImages: needsLicense ? certificateImages : [],
-            };
-
-            let usedRetry = useRetryApi;
+            let usedRetry = licenseOnlyFlow ? useLicenseRetryApi : useRetryApi;
             let data;
-            try {
-                data = await submitVerification(payload, { retry: usedRetry });
-            } catch (firstErr) {
-                // Race / status lệch: BE chưa có request → fallback /submit một lần.
-                if (usedRetry && isVerificationRetryWithoutRequestError(firstErr)) {
-                    usedRetry = false;
-                    data = await submitVerification(payload, { retry: false });
-                } else {
-                    throw firstErr;
+
+            if (licenseOnlyFlow) {
+                const licensePayload = {
+                    businessId,
+                    taxCode: trimmedTax || undefined,
+                    certificateImages,
+                };
+                try {
+                    data = await submitBusinessLicense(licensePayload, { retry: usedRetry });
+                } catch (firstErr) {
+                    if (usedRetry && isVerificationRetryWithoutRequestError(firstErr)) {
+                        usedRetry = false;
+                        data = await submitBusinessLicense(licensePayload, { retry: false });
+                    } else {
+                        throw firstErr;
+                    }
+                }
+            } else {
+                const payload = {
+                    businessId,
+                    frontImage,
+                    backImage,
+                    taxCode: needsLicense ? trimmedTax || undefined : undefined,
+                    certificateImages: needsLicense ? certificateImages : [],
+                };
+                try {
+                    data = await submitVerification(payload, { retry: usedRetry });
+                } catch (firstErr) {
+                    if (usedRetry && isVerificationRetryWithoutRequestError(firstErr)) {
+                        usedRetry = false;
+                        data = await submitVerification(payload, { retry: false });
+                    } else {
+                        throw firstErr;
+                    }
                 }
             }
 
@@ -375,8 +461,18 @@ const RecruiterVerificationPage = () => {
 
             const outcome = getVerificationOutcome(data, { profile: refreshed || profile });
 
-            // Giữ submit/retry body (formatted*) làm payload kết quả; profile chỉ để map outcome.
-            if (outcome === 'success' || isBusinessVerifiedBadge(refreshed?.badge)) {
+            const refreshedNeedsLicense = resolveRequiresBusinessLicense({
+                businessType: refreshed?.businessType || profile?.businessType,
+                typeOptions: businessTypeOptions,
+                profileRequiresBusinessLicense: refreshed?.requiresBusinessLicense,
+            });
+            const fullyVerified = isFullyBusinessVerified({
+                badge: refreshed?.badge,
+                verificationStatus: refreshed?.verificationStatus,
+                needsLicense: refreshedNeedsLicense,
+            });
+
+            if (outcome === 'success' || fullyVerified) {
                 showResult('success', data);
             } else if (outcome === 'pending') {
                 showResult('pending', data);
@@ -384,7 +480,7 @@ const RecruiterVerificationPage = () => {
                 showResult('rejected', data);
             } else {
                 const fromProfile = getVerificationOutcome(null, { profile: refreshed || profile });
-                if (fromProfile === 'success') showResult('success', data);
+                if (fromProfile === 'success' && fullyVerified) showResult('success', data);
                 else if (fromProfile === 'pending') showResult('pending', data);
                 else if (fromProfile === 'rejected') showResult('rejected', data);
                 else showResult('pending', data);
@@ -440,9 +536,11 @@ const RecruiterVerificationPage = () => {
                 </Link>
                 <h1>Xác minh doanh nghiệp</h1>
                 <p>
-                    {isIndividual
-                        ? 'Loại Cá nhân (INDIVIDUAL): nộp CCCD mặt trước và mặt sau trong một lần.'
-                        : 'Doanh nghiệp (FNB / Retail / Services): nộp CCCD + MST hoặc giấy phép trong một lần.'}
+                    {licenseOnlyFlow
+                        ? 'Bạn đã xác minh CCCD. Bổ sung mã số thuế hoặc ảnh GPKD cho loại hình hiện tại.'
+                        : needsLicense
+                          ? 'Loại hình này cần CCCD cùng MST hoặc giấy phép kinh doanh trong một lần nộp.'
+                          : 'Loại hình này chỉ cần nộp CCCD mặt trước và mặt sau.'}
                 </p>
             </header>
 
@@ -469,29 +567,32 @@ const RecruiterVerificationPage = () => {
 
             {resultKind == null && !isPendingLocked && (
                 <section className="rv-card">
-                    <h2>Nộp hồ sơ xác minh</h2>
+                    <h2>{licenseOnlyFlow ? 'Bổ sung giấy phép / MST' : 'Nộp hồ sơ xác minh'}</h2>
                     <p className="rv-card__sub">
-                        Hệ thống xử lý CCCD
-                        {needsLicense ? ' và MST/giấy phép' : ''} trong cùng một lần nộp.
-                        {useRetryApi ? ' Bạn đang ở chế độ nộp lại (retry).' : ''}
+                        {licenseOnlyFlow
+                            ? 'Không cần upload lại CCCD. Gửi MST và/hoặc ảnh GPKD qua API bổ sung giấy phép.'
+                            : `Hệ thống xử lý CCCD${needsLicense ? ' và MST/giấy phép' : ''} trong cùng một lần nộp.`}
+                        {useRetryApi || useLicenseRetryApi ? ' Bạn đang ở chế độ nộp lại (retry).' : ''}
                     </p>
 
-                    <div className="rv-upload-grid">
-                        <FileDropzone
-                            label="Mặt trước CCCD"
-                            hint="Kéo thả hoặc click để tải lên"
-                            file={frontImage}
-                            onFileChange={setFrontImage}
-                            disabled={submitting}
-                        />
-                        <FileDropzone
-                            label="Mặt sau CCCD"
-                            hint="Kéo thả hoặc click để tải lên"
-                            file={backImage}
-                            onFileChange={setBackImage}
-                            disabled={submitting}
-                        />
-                    </div>
+                    {!licenseOnlyFlow ? (
+                        <div className="rv-upload-grid">
+                            <FileDropzone
+                                label="Mặt trước CCCD"
+                                hint="Kéo thả hoặc click để tải lên"
+                                file={frontImage}
+                                onFileChange={setFrontImage}
+                                disabled={submitting}
+                            />
+                            <FileDropzone
+                                label="Mặt sau CCCD"
+                                hint="Kéo thả hoặc click để tải lên"
+                                file={backImage}
+                                onFileChange={setBackImage}
+                                disabled={submitting}
+                            />
+                        </div>
+                    ) : null}
 
                     {extractedEntries.length > 0 && (
                         <div className="rv-ocr">
@@ -507,16 +608,20 @@ const RecruiterVerificationPage = () => {
                         </div>
                     )}
 
-                    {needsLicense ? (
+                    {needsLicense || licenseOnlyFlow ? (
                         <>
-                            <span className="rv-pill">Bắt buộc với doanh nghiệp thường</span>
+                            <span className="rv-pill">
+                                {licenseOnlyFlow
+                                    ? 'Bổ sung theo loại hình hiện tại'
+                                    : 'Bắt buộc với loại hình cần GPKD'}
+                            </span>
                             <label className="rv-field">
                                 <span>Tên doanh nghiệp</span>
                                 <input type="text" value={businessName} readOnly />
                             </label>
 
                             <label className="rv-field">
-                                <span>Mã số thuế (khuyến nghị)</span>
+                                <span>Mã số thuế (Nếu có)</span>
                                 <input
                                     type="text"
                                     value={taxCode}
@@ -555,9 +660,11 @@ const RecruiterVerificationPage = () => {
                         >
                             {submitting
                                 ? 'Đang gửi…'
-                                : useRetryApi
+                                : useRetryApi || useLicenseRetryApi
                                   ? 'Nộp lại hồ sơ'
-                                  : 'Gửi hồ sơ xác minh'}
+                                  : licenseOnlyFlow
+                                    ? 'Gửi xác thực Giấy phép kinh doanh'
+                                    : 'Gửi hồ sơ xác minh'}
                         </button>
                     </div>
                 </section>
@@ -570,9 +677,9 @@ const RecruiterVerificationPage = () => {
                     </div>
                     <h2>Xác minh thành công!</h2>
                     <p>
-                        {isIndividual
-                            ? 'Tài khoản cá nhân đã được xác minh qua CCCD.'
-                            : 'Doanh nghiệp đã được xác minh. Bạn có thể đăng tin tuyển dụng.'}
+                        {needsLicense
+                            ? 'Doanh nghiệp đã được xác minh. Bạn có thể đăng tin tuyển dụng.'
+                            : 'Hồ sơ đã được xác minh qua CCCD. Bạn có thể đăng tin tuyển dụng.'}
                     </p>
                     <div className="rv-card__actions rv-card__actions--center">
                         <Link to={ROUTES.RECRUITER_CREATE_JOB} className="rv-btn rv-btn--primary">
@@ -639,6 +746,27 @@ const RecruiterVerificationPage = () => {
                     <div className="rv-card__actions rv-card__actions--center">
                         <button type="button" className="rv-btn rv-btn--primary" onClick={handleRetry}>
                             Thử lại
+                        </button>
+                        <Link to={ROUTES.RECRUITER_PROFILE} className="rv-btn rv-btn--ghost">
+                            Về hồ sơ
+                        </Link>
+                    </div>
+                </section>
+            )}
+
+            {resultKind === 'expired' && (
+                <section className="rv-card rv-card--center">
+                    <div className="rv-result-icon rv-result-icon--danger" aria-hidden>
+                        !
+                    </div>
+                    <h2>Hồ sơ xác minh đã hết hạn</h2>
+                    <p>
+                        Yêu cầu xác minh trước đó đã hết hạn lưu trữ. Vui lòng nộp lại giấy tờ để tiếp
+                        tục.
+                    </p>
+                    <div className="rv-card__actions rv-card__actions--center">
+                        <button type="button" className="rv-btn rv-btn--primary" onClick={handleRetry}>
+                            Nộp lại xác minh
                         </button>
                         <Link to={ROUTES.RECRUITER_PROFILE} className="rv-btn rv-btn--ghost">
                             Về hồ sơ

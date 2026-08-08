@@ -29,6 +29,11 @@ import {
     loadRecruiterProfileDraft,
     saveRecruiterProfileDraft,
 } from '../../utils/recruiterProfileDraftStorage.js';
+import {
+    clearPendingMedia,
+    loadPendingMedia,
+    savePendingMedia,
+} from '../../utils/recruiterPendingMediaStorage.js';
 import RequiredMark from '../../components/common/RequiredMark.jsx';
 import RichTextEditor from '../../components/common/RichTextEditor.jsx';
 import RecruiterAddressModal from '../../components/recruiter/RecruiterAddressModal.jsx';
@@ -41,6 +46,13 @@ import {
     mapBusinessTypeOptions,
     toBusinessTypeCode,
 } from '../../utils/businessTypeDisplay.js';
+import {
+    VERIFICATION_STATUS,
+    getBusinessTypeChangeVerifyFeedback,
+    isFullyBusinessVerified,
+    needsBusinessLicenseTopUp,
+    resolveRequiresBusinessLicense,
+} from '../../utils/verificationDisplay.js';
 import '../../assets/styles/AccountSettingsStyle.css';
 import '../../assets/styles/RecruiterProfileStyle.css';
 
@@ -78,6 +90,7 @@ const emptyProfile = () => ({
     badge: null,
     taxCode: '',
     totalActiveJobs: 0,
+    requiresBusinessLicense: undefined,
 });
 
 const emptyForm = () => ({
@@ -113,6 +126,10 @@ const mapProfileFromApi = (data) => ({
     badge: data?.badge || null,
     taxCode: data?.taxCode || '',
     totalActiveJobs: data?.totalActiveJobs ?? 0,
+    requiresBusinessLicense:
+        typeof data?.requiresBusinessLicense === 'boolean'
+            ? data.requiresBusinessLicense
+            : undefined,
 });
 
 const buildUpdatePayload = (form, businessId) => ({
@@ -217,6 +234,9 @@ const RecruiterProfilePage = () => {
     const [pendingLogoFile, setPendingLogoFile] = useState(null);
     const [pendingLogoPreview, setPendingLogoPreview] = useState(null);
     const pendingLogoPreviewRef = useRef(null);
+    /** @type {[{ id: string, file: File, previewUrl: string }[], Function]} */
+    const [pendingGallery, setPendingGallery] = useState([]);
+    const pendingGalleryRef = useRef([]);
     const [galleryLoading, setGalleryLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('info');
 
@@ -364,6 +384,8 @@ const RecruiterProfilePage = () => {
     const loadProfile = async () => {
         setLoading(true);
         const accountContact = await getAccountContact();
+        let profileExists = false;
+        let loadedBusinessId = null;
 
         try {
             try {
@@ -378,6 +400,8 @@ const RecruiterProfilePage = () => {
             const mapped = mapProfileFromApi(data);
             setProfile(mapped);
             setNoProfile(false);
+            profileExists = true;
+            loadedBusinessId = mapped.businessId;
             setAccountContact(accountContact);
             syncFormFromProfile(mapped);
             await loadLocation(mapped.businessId, mapped.businessName);
@@ -394,6 +418,40 @@ const RecruiterProfilePage = () => {
             }
         } finally {
             applyStoredRecruiterDraft(getRecruiterProfileDraftKey(auth), setForm, setCoords);
+
+            const key = getRecruiterProfileDraftKey(auth);
+            if (key) {
+                const pending = await loadPendingMedia(key);
+                if (profileExists && loadedBusinessId) {
+                    // Hồ sơ đã có nhưng còn file pending (upload lỗi lần trước) → đẩy lên BE.
+                    if (pending.logoFile || pending.galleryFiles.length > 0) {
+                        try {
+                            if (pending.logoFile) {
+                                await recruiterProfileApi.uploadLogo(
+                                    loadedBusinessId,
+                                    pending.logoFile
+                                );
+                            }
+                            if (pending.galleryFiles.length > 0) {
+                                await recruiterProfileApi.uploadGallery(
+                                    loadedBusinessId,
+                                    pending.galleryFiles
+                                );
+                            }
+                            await clearPendingMedia(key);
+                            const fresh = await recruiterProfileApi.getProfile(loadedBusinessId);
+                            const mappedFresh = mapProfileFromApi(fresh);
+                            setProfile(mappedFresh);
+                            syncFormFromProfile(mappedFresh);
+                        } catch {
+                            applyPendingFilesToState(pending.logoFile, pending.galleryFiles);
+                        }
+                    }
+                } else if (!profileExists) {
+                    applyPendingFilesToState(pending.logoFile, pending.galleryFiles);
+                }
+            }
+
             setLoading(false);
         }
     };
@@ -460,6 +518,13 @@ const RecruiterProfilePage = () => {
         setSaving(true);
         const isCreate = noProfile || !profile.businessId;
         let businessId = profile.businessId;
+        let mappedAfterSave = null;
+        const prevRequiresLicense = resolveRequiresBusinessLicense({
+            businessType: profile.businessType,
+            typeOptions: businessTypeOptions,
+            profileRequiresBusinessLicense: profile.requiresBusinessLicense,
+        });
+        const prevBadge = profile.badge;
 
         try {
             if (isCreate) {
@@ -471,15 +536,32 @@ const RecruiterProfilePage = () => {
                     email: form.email?.trim() || null,
                     phone: form.phone?.trim() || null,
                 });
-                const mapped = mapProfileFromApi(created);
-                setProfile(mapped);
+                mappedAfterSave = mapProfileFromApi(created);
+                setProfile(mappedAfterSave);
                 setNoProfile(false);
-                businessId = mapped.businessId;
+                businessId = mappedAfterSave.businessId;
             } else {
                 const updated = await recruiterProfileApi.updateProfile(
                     buildUpdatePayload(form, businessId)
                 );
-                setProfile(mapProfileFromApi(updated));
+                mappedAfterSave = mapProfileFromApi(updated);
+
+                // Luôn ưu tiên badge/status mới từ BE; thiếu thì GET lại profile.
+                const missingVerifyFields =
+                    mappedAfterSave.badge == null && mappedAfterSave.verificationStatus == null;
+                if (missingVerifyFields || businessTypeCode !== profile.businessType) {
+                    try {
+                        const fresh = await recruiterProfileApi.getProfile(businessId);
+                        mappedAfterSave = {
+                            ...mappedAfterSave,
+                            ...mapProfileFromApi(fresh),
+                        };
+                    } catch {
+                        // giữ response update nếu GET thất bại
+                    }
+                }
+
+                setProfile(mappedAfterSave);
             }
         } catch (err) {
             toast.error(
@@ -494,14 +576,28 @@ const RecruiterProfilePage = () => {
             return;
         }
 
-        if (pendingLogoFile) {
+        const logoPendingUpload = pendingLogoFile;
+        const galleryPendingUpload = [...pendingGalleryRef.current];
+        let logoUploadDone = !logoPendingUpload;
+        let galleryUploadDone = galleryPendingUpload.length === 0;
+
+        if (logoPendingUpload) {
             try {
-                const result = await recruiterProfileApi.uploadLogo(businessId, pendingLogoFile);
+                const result = await recruiterProfileApi.uploadLogo(
+                    businessId,
+                    logoPendingUpload
+                );
                 setProfile((prev) => ({
                     ...prev,
                     logoUrl: result?.url || result?.logoUrl || prev.logoUrl,
                 }));
-                clearPendingLogo();
+                if (pendingLogoPreviewRef.current) {
+                    URL.revokeObjectURL(pendingLogoPreviewRef.current);
+                    pendingLogoPreviewRef.current = null;
+                }
+                setPendingLogoFile(null);
+                setPendingLogoPreview(null);
+                logoUploadDone = true;
             } catch (err) {
                 toast.error(
                     getApiErrorMessage(
@@ -509,6 +605,43 @@ const RecruiterProfilePage = () => {
                         'Đã lưu hồ sơ nhưng không thể tải logo lên. Vui lòng thử lại.'
                     )
                 );
+            }
+        }
+
+        if (galleryPendingUpload.length > 0) {
+            try {
+                await recruiterProfileApi.uploadGallery(
+                    businessId,
+                    galleryPendingUpload.map((item) => item.file)
+                );
+                clearPendingGallery();
+                galleryUploadDone = true;
+                toast.success('Đã tải ảnh cửa hàng lên hồ sơ.');
+            } catch (err) {
+                toast.error(
+                    getApiErrorMessage(
+                        err,
+                        'Đã lưu hồ sơ nhưng không thể tải ảnh cửa hàng. Vui lòng thử lại.'
+                    )
+                );
+            }
+        }
+
+        if (logoUploadDone && galleryUploadDone && draftKey) {
+            await clearPendingMedia(draftKey);
+        } else if (draftKey) {
+            await persistPendingToIdb(
+                logoUploadDone ? null : logoPendingUpload,
+                galleryUploadDone ? [] : galleryPendingUpload
+            );
+        }
+
+        if (logoPendingUpload || galleryPendingUpload.length > 0) {
+            try {
+                const fresh = await recruiterProfileApi.getProfile(businessId);
+                setProfile(mapProfileFromApi(fresh));
+            } catch {
+                // giữ state hiện tại
             }
         }
 
@@ -534,8 +667,32 @@ const RecruiterProfilePage = () => {
                 setSavedLocation(created);
             }
 
-            toast.success(isCreate ? 'Đã tạo hồ sơ doanh nghiệp.' : 'Đã lưu thay đổi.');
             clearRecruiterProfileDraft(draftKey);
+
+            if (isCreate) {
+                toast.success('Đã tạo hồ sơ doanh nghiệp.');
+            } else {
+                const nextRequiresLicense = resolveRequiresBusinessLicense({
+                    businessType: mappedAfterSave?.businessType || businessTypeCode,
+                    typeOptions: businessTypeOptions,
+                    profileRequiresBusinessLicense: mappedAfterSave?.requiresBusinessLicense,
+                });
+                const verifyFeedback = getBusinessTypeChangeVerifyFeedback({
+                    prevRequiresLicense,
+                    nextRequiresLicense,
+                    prevBadge,
+                    nextBadge: mappedAfterSave?.badge,
+                    nextVerificationStatus: mappedAfterSave?.verificationStatus,
+                });
+
+                if (verifyFeedback?.kind === 'license_required') {
+                    toast.warning(verifyFeedback.message);
+                } else if (verifyFeedback?.kind === 'badge_restored') {
+                    toast.info(verifyFeedback.message);
+                } else {
+                    toast.success('Đã lưu thay đổi.');
+                }
+            }
         } catch (err) {
             toast.error(getLocationApiErrorMessage(err, 'Không thể lưu địa chỉ cơ sở.'));
         } finally {
@@ -566,6 +723,7 @@ const RecruiterProfilePage = () => {
             pendingLogoPreviewRef.current = previewUrl;
             setPendingLogoFile(file);
             setPendingLogoPreview(previewUrl);
+            void persistPendingToIdb(file, pendingGalleryRef.current);
             return;
         }
 
@@ -613,8 +771,9 @@ const RecruiterProfilePage = () => {
         e.target.value = '';
         if (!files.length) return;
 
-        const currentCount = profile.galleryImages?.length || 0;
-        if (currentCount + files.length > MAX_GALLERY) {
+        const savedCount = profile.galleryImages?.length || 0;
+        const pendingCount = pendingGalleryRef.current.length;
+        if (savedCount + pendingCount + files.length > MAX_GALLERY) {
             toast.error(`Bộ sưu tập tối đa ${MAX_GALLERY} ảnh.`);
             return;
         }
@@ -630,14 +789,21 @@ const RecruiterProfilePage = () => {
             }
         }
 
+        // Chưa có businessId: giữ pending + IndexedDB, upload sau khi tạo hồ sơ.
+        if (!profile.businessId) {
+            const additions = files.map((file, index) => ({
+                id: `pending-${Date.now()}-${index}-${file.name}`,
+                file,
+                previewUrl: URL.createObjectURL(file),
+            }));
+            const next = setPendingGallerySafe([...pendingGalleryRef.current, ...additions]);
+            void persistPendingToIdb(pendingLogoFile, next);
+            return;
+        }
+
         setGalleryLoading(true);
 
         try {
-            if (!profile.businessId) {
-                toast.error('Chưa có hồ sơ doanh nghiệp.');
-                return;
-            }
-
             await recruiterProfileApi.uploadGallery(profile.businessId, files);
             toast.success('Đã thêm ảnh vào bộ sưu tập.');
             await loadProfile();
@@ -648,7 +814,21 @@ const RecruiterProfilePage = () => {
         }
     };
 
+    const handleDeletePendingGalleryImage = (pendingId) => {
+        const target = pendingGalleryRef.current.find((item) => item.id === pendingId);
+        if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+        const next = setPendingGallerySafe(
+            pendingGalleryRef.current.filter((item) => item.id !== pendingId)
+        );
+        void persistPendingToIdb(pendingLogoFile, next);
+    };
+
     const handleDeleteGalleryImage = async (imageId) => {
+        if (String(imageId).startsWith('pending-')) {
+            handleDeletePendingGalleryImage(imageId);
+            return;
+        }
+
         setGalleryLoading(true);
 
         try {
@@ -665,7 +845,7 @@ const RecruiterProfilePage = () => {
         }
     };
 
-    const galleryCount = profile.galleryImages?.length || 0;
+    const galleryCount = (profile.galleryImages?.length || 0) + pendingGallery.length;
     const canAddGallery = galleryCount < MAX_GALLERY;
     const profileReadyForJob = !noProfile && Boolean(savedLocation);
     /** Cần hồ sơ đã lưu (businessId + tên + địa chỉ) trước khi mở wizard xác minh. */
@@ -673,8 +853,23 @@ const RecruiterProfilePage = () => {
         Boolean(profile.businessId) &&
         Boolean(profile.businessName?.trim()) &&
         Boolean(savedLocation);
+    const needsBusinessLicense = resolveRequiresBusinessLicense({
+        businessType: profile.businessType,
+        typeOptions: businessTypeOptions,
+        profileRequiresBusinessLicense: profile.requiresBusinessLicense,
+    });
+    const showVerifiedBadge = isFullyBusinessVerified({
+        badge: profile.badge,
+        verificationStatus: profile.verificationStatus,
+        needsLicense: needsBusinessLicense,
+    });
+    const needsLicenseTopUp = needsBusinessLicenseTopUp({
+        verificationStatus: profile.verificationStatus,
+        needsLicense: needsBusinessLicense,
+        badge: profile.badge,
+    });
     const verificationGateHint = (() => {
-        if (canStartVerification || isBusinessVerifiedBadge(profile.badge)) return '';
+        if (canStartVerification || showVerifiedBadge) return '';
         const missing = [];
         if (!profile.businessId || !profile.businessName?.trim()) missing.push('tên doanh nghiệp');
         if (!savedLocation) missing.push('địa chỉ trụ sở');
@@ -693,16 +888,75 @@ const RecruiterProfilePage = () => {
         }
         setPendingLogoFile(null);
         setPendingLogoPreview(null);
+        void savePendingMedia(draftKey, {
+            logoFile: null,
+            galleryFiles: pendingGalleryRef.current.map((item) => item.file).filter(Boolean),
+        });
+    }, [draftKey]);
+
+    const revokePendingGalleryPreviews = useCallback((items) => {
+        (items || []).forEach((item) => {
+            if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl);
+        });
     }, []);
+
+    const setPendingGallerySafe = useCallback((next) => {
+        const resolved = typeof next === 'function' ? next(pendingGalleryRef.current) : next;
+        pendingGalleryRef.current = resolved;
+        setPendingGallery(resolved);
+        return resolved;
+    }, []);
+
+    const clearPendingGallery = useCallback(() => {
+        revokePendingGalleryPreviews(pendingGalleryRef.current);
+        setPendingGallerySafe([]);
+    }, [revokePendingGalleryPreviews, setPendingGallerySafe]);
+
+    const persistPendingToIdb = useCallback(
+        async (logoFile, galleryItems) => {
+            if (!draftKey) return;
+            await savePendingMedia(draftKey, {
+                logoFile: logoFile || null,
+                galleryFiles: (galleryItems || []).map((item) => item.file).filter(Boolean),
+            });
+        },
+        [draftKey]
+    );
+
+    const applyPendingFilesToState = useCallback(
+        (logoFile, galleryFiles) => {
+            if (logoFile) {
+                if (pendingLogoPreviewRef.current) {
+                    URL.revokeObjectURL(pendingLogoPreviewRef.current);
+                }
+                const previewUrl = URL.createObjectURL(logoFile);
+                pendingLogoPreviewRef.current = previewUrl;
+                setPendingLogoFile(logoFile);
+                setPendingLogoPreview(previewUrl);
+            }
+            if (Array.isArray(galleryFiles) && galleryFiles.length > 0) {
+                revokePendingGalleryPreviews(pendingGalleryRef.current);
+                const items = galleryFiles.map((file, index) => ({
+                    id: `pending-${file.name}-${file.lastModified}-${index}`,
+                    file,
+                    previewUrl: URL.createObjectURL(file),
+                }));
+                setPendingGallerySafe(items);
+            }
+        },
+        [revokePendingGalleryPreviews, setPendingGallerySafe]
+    );
 
     useEffect(
         () => () => {
             if (pendingLogoPreviewRef.current) {
                 URL.revokeObjectURL(pendingLogoPreviewRef.current);
             }
+            revokePendingGalleryPreviews(pendingGalleryRef.current);
         },
-        []
+        [revokePendingGalleryPreviews]
     );
+
     const completionPercent = clampPercent(profile.completionRate);
     const memberSinceDisplay = formatMemberSince(profile.memberSince);
     const heroTitle = getHeroTitle(noProfile, form, profile);
@@ -713,10 +967,7 @@ const RecruiterProfilePage = () => {
         savedLocation,
         completionPercent
     );
-    const showHeroMeta =
-        !noProfile ||
-        (profile.badge &&
-            profile.badge === 'BUSINESS_VERIFIED');
+    const showHeroMeta = !noProfile || showVerifiedBadge;
 
     return (
         <div className="recruiter-profile-page">
@@ -822,7 +1073,7 @@ const RecruiterProfilePage = () => {
                                         )}
                                     </span>
                                 )}
-                                {isBusinessVerifiedBadge(profile.badge) ? (
+                                {showVerifiedBadge ? (
                                     <span className="recruiter-profile__badge recruiter-profile__badge--verified">
                                         <CheckCircleIcon width={14} height={14} />
                                         Đã xác thực
@@ -839,6 +1090,14 @@ const RecruiterProfilePage = () => {
                                                 <span className="recruiter-profile__badge recruiter-profile__badge--muted">
                                                     Xác minh chưa đạt
                                                 </span>
+                                            ) : needsLicenseTopUp ? (
+                                                <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                    Cần xác thực GPKD
+                                                </span>
+                                            ) : profile.verificationStatus === VERIFICATION_STATUS.EXPIRED ? (
+                                                <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                    Hồ sơ xác minh hết hạn
+                                                </span>
                                             ) : (
                                                 <span className="recruiter-profile__badge recruiter-profile__badge--muted">
                                                     Chưa xác thực
@@ -848,7 +1107,8 @@ const RecruiterProfilePage = () => {
                                                 <Link
                                                     to={
                                                         isRejectedVerification(profile.verificationStatus) ||
-                                                        isPendingManualVerification(profile.verificationStatus)
+                                                        isPendingManualVerification(profile.verificationStatus) ||
+                                                        profile.verificationStatus === VERIFICATION_STATUS.EXPIRED
                                                             ? `${ROUTES.RECRUITER_VERIFICATION}?retry=1`
                                                             : ROUTES.RECRUITER_VERIFICATION
                                                     }
@@ -858,7 +1118,12 @@ const RecruiterProfilePage = () => {
                                                         ? 'Xem / nộp lại'
                                                         : isRejectedVerification(profile.verificationStatus)
                                                           ? 'Thử lại ngay'
-                                                          : 'Xác minh ngay'}
+                                                          : profile.verificationStatus ===
+                                                              VERIFICATION_STATUS.EXPIRED
+                                                            ? 'Nộp lại xác minh'
+                                                          : needsLicenseTopUp
+                                                            ? 'Xác thực Giấy phép kinh doanh'
+                                                            : 'Xác minh ngay'}
                                                 </Link>
                                             ) : (
                                                 <button
@@ -890,8 +1155,7 @@ const RecruiterProfilePage = () => {
                                         </span>
                                     )}
 
-                                    {profile.badge &&
-                                        profile.badge === 'BUSINESS_VERIFIED' && (
+                                    {showVerifiedBadge && (
                                         <span className="recruiter-profile__trust-badge">
                                             <MapPinIcon width={14} height={14} />
                                             Nhà tuyển dụng uy tín
@@ -1233,7 +1497,6 @@ const RecruiterProfilePage = () => {
                                 </div>
                             </div>
 
-                            {!noProfile && (
                             <section className="recruiter-profile__gallery-panel">
                                 <div className="recruiter-profile__gallery-header">
                                     <h2>
@@ -1244,6 +1507,12 @@ const RecruiterProfilePage = () => {
                                         {galleryCount} / {MAX_GALLERY} ảnh tối đa
                                     </span>
                                 </div>
+                                {noProfile || !profile.businessId ? (
+                                    <p className="recruiter-profile__verify-gate-hint">
+                                        Ảnh chọn trước sẽ được tải lên sau khi bạn tạo hồ sơ. Có thể
+                                        sang Cài đặt rồi quay lại mà không mất ảnh đã chọn.
+                                    </p>
+                                ) : null}
 
                                 <div className="recruiter-profile__gallery-grid">
                                     {profile.galleryImages.map((img) => (
@@ -1261,6 +1530,29 @@ const RecruiterProfilePage = () => {
                                                 disabled={galleryLoading}
                                                 aria-label="Xóa ảnh"
                                                 onClick={() => handleDeleteGalleryImage(img.id)}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    {pendingGallery.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className="recruiter-profile__gallery-item recruiter-profile__gallery-item--deletable"
+                                        >
+                                            <img
+                                                src={item.previewUrl}
+                                                alt="Ảnh chưa tải lên"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="account-settings__avatar-delete"
+                                                disabled={galleryLoading}
+                                                aria-label="Xóa ảnh chờ tải"
+                                                onClick={() =>
+                                                    handleDeletePendingGalleryImage(item.id)
+                                                }
                                             >
                                                 ×
                                             </button>
@@ -1288,7 +1580,6 @@ const RecruiterProfilePage = () => {
                                     )}
                                 </div>
                             </section>
-                            )}
                         </>
                     )}
 

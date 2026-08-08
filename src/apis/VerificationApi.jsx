@@ -26,7 +26,7 @@ const appendIfPresent = (formData, key, value) => {
 };
 
 /**
- * Nộp xác minh gộp CCCD + MST/GPKD.
+ * Nộp xác minh gộp CCCD + MST/GPKD (lần đầu / retry kèm CCCD).
  * POST /verifications/submit | /retry
  *
  * @param {{
@@ -66,10 +66,43 @@ export const submitVerification = (
         .then(unwrap);
 };
 
-/** @deprecated Dùng submitVerification — giữ alias tạm nếu còn chỗ import cũ. */
+/**
+ * Nộp bổ sung chỉ GPKD/MST (đã CCCD_PASSED hoặc BUSINESS_REJECTED — không upload lại CCCD).
+ * POST /verifications/business-license/submit | /retry
+ *
+ * @param {{
+ *   businessId: number|string,
+ *   taxCode?: string,
+ *   certificateImages?: File[],
+ * }} payload
+ * @param {{ retry?: boolean }} options
+ */
+export const submitBusinessLicense = (
+    { businessId, taxCode, certificateImages = [] },
+    { retry = false } = {}
+) => {
+    const formData = new FormData();
+    appendIfPresent(formData, 'businessId', businessId);
+
+    const trimmedTax = typeof taxCode === 'string' ? taxCode.trim() : taxCode;
+    appendIfPresent(formData, 'taxCode', trimmedTax);
+
+    (certificateImages || []).forEach((file) => {
+        if (file) formData.append('certificateImages', file);
+    });
+
+    const path = retry
+        ? `${BASE}/business-license/retry`
+        : `${BASE}/business-license/submit`;
+    return axiosClient
+        .post(path, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+        .then(unwrap);
+};
+
+/** @deprecated Dùng submitVerification */
 export const submitCccdVerification = (payload, options) =>
     submitVerification(payload, options);
 
-/** @deprecated Dùng submitVerification */
+/** @deprecated Dùng submitBusinessLicense */
 export const submitBusinessLicenseVerification = (payload, options) =>
-    submitVerification(payload, options);
+    submitBusinessLicense(payload, options);

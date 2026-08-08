@@ -7,8 +7,10 @@ export const VERIFICATION_STATUS = {
     CCCD_MANUALLY: 'CCCD_MANUALLY',
     CCCD_REJECTED: 'CCCD_REJECTED',
     CANCELLED_BY_RETRY: 'CANCELLED_BY_RETRY',
+    EXPIRED: 'EXPIRED',
 };
 
+/** Đủ verify đầy đủ (DN cần GPKD). CCCD_PASSED chỉ pass khi loại không cần GPKD + badge. */
 export const isVerificationPassed = (status) =>
     status === VERIFICATION_STATUS.BUSINESS_PASSED;
 
@@ -25,7 +27,45 @@ export const isBusinessVerifiedBadge = (badge) => badge === 'BUSINESS_VERIFIED';
 export const isUnverifiedBadge = (badge) =>
     !badge || badge === 'UNVERIFIED';
 
-/** INDIVIDUAL chỉ cần CCCD; FNB/RETAIL/SERVICES cần giấy/MST. */
+/**
+ * Đủ để hiện “Đã xác thực” trên UI.
+ * Defensive: loại cần GPKD mà mới CCCD_PASSED → chưa đủ dù BE vẫn trả BUSINESS_VERIFIED.
+ */
+export const isFullyBusinessVerified = ({
+    badge,
+    verificationStatus,
+    needsLicense,
+} = {}) => {
+    if (!isBusinessVerifiedBadge(badge)) return false;
+    if (
+        needsLicense &&
+        String(verificationStatus || '').toUpperCase() === VERIFICATION_STATUS.CCCD_PASSED
+    ) {
+        return false;
+    }
+    return true;
+};
+
+/**
+ * Cần CTA / form bổ sung GPKD (đã CCCD, loại đang yêu cầu giấy phép).
+ */
+export const needsBusinessLicenseTopUp = ({
+    verificationStatus,
+    needsLicense,
+    badge,
+} = {}) => {
+    if (!needsLicense) return false;
+    if (String(verificationStatus || '').toUpperCase() !== VERIFICATION_STATUS.CCCD_PASSED) {
+        return false;
+    }
+    // Chưa fully verified (kể cả khi BE chưa gỡ badge).
+    return !isFullyBusinessVerified({ badge, verificationStatus, needsLicense });
+};
+
+/**
+ * Fallback legacy khi catalog chưa có `requiresBusinessLicense`.
+ * Ưu tiên dùng resolveRequiresBusinessLicense với flag từ business type.
+ */
 export const isIndividualBusinessType = (businessType) => {
     const raw = String(businessType || '').trim();
     if (!raw) return false;
@@ -38,8 +78,145 @@ export const isIndividualBusinessType = (businessType) => {
     return normalized === 'ca nhan' || normalized.includes('ca nhan');
 };
 
-export const requiresBusinessLicenseVerification = (businessType) =>
-    !isIndividualBusinessType(businessType);
+/**
+ * Có cần MST/GPKD không — theo `requiresBusinessLicense` của business type (BE).
+ * Ưu tiên: profile flag → option catalog → default true (BE entity default), trừ cá nhân rõ ràng.
+ */
+export const resolveRequiresBusinessLicense = ({
+    businessType,
+    typeOptions = [],
+    profileRequiresBusinessLicense,
+} = {}) => {
+    if (typeof profileRequiresBusinessLicense === 'boolean') {
+        return profileRequiresBusinessLicense;
+    }
+
+    const code = String(businessType || '').trim().toUpperCase();
+    if (code && Array.isArray(typeOptions) && typeOptions.length > 0) {
+        const match = typeOptions.find(
+            (item) => String(item?.value || item?.code || '').toUpperCase() === code
+        );
+        if (match && typeof match.requiresBusinessLicense === 'boolean') {
+            return match.requiresBusinessLicense;
+        }
+    }
+
+    // BE: requiresBusinessLicense default true; chỉ cá nhân seed = false.
+    if (isIndividualBusinessType(businessType)) return false;
+    return true;
+};
+
+/** @deprecated Dùng resolveRequiresBusinessLicense */
+export const requiresBusinessLicenseVerification = (businessType, typeOptions = []) =>
+    resolveRequiresBusinessLicense({ businessType, typeOptions });
+
+/**
+ * Luồng chỉ nộp GPKD/MST — theo gate BE: CCCD_PASSED hoặc BUSINESS_REJECTED.
+ * Không gồm BUSINESS_MANUALLY (dùng /verifications/retry).
+ */
+export const isBusinessLicenseOnlyFlow = ({
+    verificationStatus,
+    needsLicense,
+    badge,
+} = {}) => {
+    if (!needsLicense) return false;
+    const status = String(verificationStatus || '').toUpperCase();
+    if (status === VERIFICATION_STATUS.CCCD_PASSED) {
+        return !isFullyBusinessVerified({ badge, verificationStatus: status, needsLicense });
+    }
+    return status === VERIFICATION_STATUS.BUSINESS_REJECTED;
+};
+
+export const isVerificationExpired = (status) =>
+    String(status || '').toUpperCase() === VERIFICATION_STATUS.EXPIRED;
+
+/**
+ * Notify đổi type reuse VERIFICATION_REJECTED + “từ chối” dù thực chất là gỡ badge.
+ */
+export const isBusinessTypeChangeVerificationNotice = (notification) => {
+    const action = String(notification?.action || '');
+    const type = String(notification?.type || notification?.notificationType || '');
+    if (action !== 'VIEW_VERIFICATION') return false;
+    if (type && type !== 'VERIFICATION_REJECTED') return false;
+
+    const blob = `${notification?.title || ''} ${notification?.content || ''}`.toLowerCase();
+    return (
+        blob.includes('đổi sang loại hình') ||
+        blob.includes('doi sang loai hinh') ||
+        blob.includes('huy hiệu xác thực tạm thời bị gỡ') ||
+        blob.includes('xác thực bổ sung') ||
+        blob.includes('xac thuc bo sung')
+    );
+};
+
+/** Title/content hiển thị — tách notify gỡ badge đổi type khỏi reject thật. */
+export const getVerificationNotificationDisplay = (notification) => {
+    if (!notification) {
+        return { title: '', content: '' };
+    }
+    if (isBusinessTypeChangeVerificationNotice(notification)) {
+        return {
+            title: 'Cần xác thực bổ sung',
+            content:
+                'Bạn đã đổi sang loại hình cần Giấy phép kinh doanh. Huy hiệu tạm gỡ — hãy nộp MST hoặc ảnh GPKD để lấy lại huy hiệu (không cần nộp lại CCCD).',
+        };
+    }
+    return {
+        title: notification.title?.trim() || '',
+        content: notification.content?.trim() || '',
+    };
+};
+
+/**
+ * Phản hồi UI sau khi đổi businessType (BE chỉ recalc badge khi requiresBusinessLicense cũ≠mới).
+ * @returns {{ kind: 'license_required'|'badge_restored', message: string } | null}
+ */
+export const getBusinessTypeChangeVerifyFeedback = ({
+    prevRequiresLicense,
+    nextRequiresLicense,
+    prevBadge,
+    nextBadge,
+    nextVerificationStatus,
+} = {}) => {
+    if (typeof prevRequiresLicense !== 'boolean' || typeof nextRequiresLicense !== 'boolean') {
+        return null;
+    }
+    if (prevRequiresLicense === nextRequiresLicense) return null;
+
+    const hadVerifiedBadge = isBusinessVerifiedBadge(prevBadge);
+    const hasVerifiedBadge = isBusinessVerifiedBadge(nextBadge);
+    const status = String(nextVerificationStatus || '').toUpperCase();
+    const hasCccdOrBusinessPassed =
+        status === VERIFICATION_STATUS.CCCD_PASSED ||
+        status === VERIFICATION_STATUS.BUSINESS_PASSED;
+
+    // Cá nhân → loại cần GPKD
+    if (!prevRequiresLicense && nextRequiresLicense) {
+        if (status === VERIFICATION_STATUS.CCCD_PASSED) {
+            return {
+                kind: 'license_required',
+                message: hasVerifiedBadge
+                    ? 'Bạn đã đổi sang loại hình cần GPKD. Vui lòng bổ sung MST hoặc ảnh giấy phép để giữ huy hiệu xác thực (không cần nộp lại CCCD).'
+                    : 'Loại hình mới cần giấy phép kinh doanh. Huy hiệu xác thực đã tạm gỡ — hãy bổ sung MST hoặc ảnh GPKD để lấy lại huy hiệu (không cần nộp lại CCCD).',
+            };
+        }
+        return null;
+    }
+
+    // Loại cần GPKD → cá nhân: gắn lại badge khi đã có CCCD trở lên và trước đó chưa có badge
+    if (prevRequiresLicense && !nextRequiresLicense) {
+        if (hasCccdOrBusinessPassed && hasVerifiedBadge && !hadVerifiedBadge) {
+            return {
+                kind: 'badge_restored',
+                message:
+                    'Loại hình mới không cần GPKD. Huy hiệu xác thực đã được khôi phục dựa trên CCCD đã duyệt.',
+            };
+        }
+        return null;
+    }
+
+    return null;
+};
 
 /**
  * Outcome từ response submit/retry (+ optional profile sau refresh).
@@ -88,7 +265,10 @@ export const getVerificationOutcome = (response, { profile = null } = {}) => {
         decision === 'APPROVE' ||
         decision === 'APPROVED' ||
         decision === 'PASSED' ||
-        status === VERIFICATION_STATUS.BUSINESS_PASSED
+        status === VERIFICATION_STATUS.BUSINESS_PASSED ||
+        // Cá nhân / loại không cần GPKD: CCCD_PASSED + badge đã map ở trên; body có thể chỉ trả status.
+        (status === VERIFICATION_STATUS.CCCD_PASSED &&
+            isBusinessVerifiedBadge(response.badge || profile?.badge))
     ) {
         return 'success';
     }
@@ -413,30 +593,67 @@ export const formatAiRiskLevel = (level) => {
     return raw;
 };
 
+const MEDIA_FILE_TYPE_LABELS = {
+    CCCD_FRONT: 'CCCD mặt trước',
+    CCCD_BACK: 'CCCD mặt sau',
+    BUSINESS_LICENSE: 'Giấy phép / GPKD',
+    TAX_DOCUMENT: 'Giấy tờ thuế',
+};
+
+const mediaTypeLabel = (type, index = 0, total = 1) => {
+    const base = MEDIA_FILE_TYPE_LABELS[type] || type || 'Ảnh';
+    if (total > 1) return `${base} (${index + 1}/${total})`;
+    return base;
+};
+
+/**
+ * Chuẩn hoá mediaFiles từ manual-verification detail.
+ * Hỗ trợ:
+ * - Array of string | { type, url }
+ * - Map { CCCD_FRONT: url | [url...] , BUSINESS_LICENSE: [...] }
+ */
 export const mediaFilesToEntries = (mediaFiles) => {
     if (!mediaFiles) return [];
+
     if (Array.isArray(mediaFiles)) {
         return mediaFiles
             .map((item, index) => {
                 if (typeof item === 'string') {
                     return { key: `file-${index}`, url: item, label: `Ảnh ${index + 1}` };
                 }
+                const type = item?.type || item?.mediaFileType || `file-${index}`;
                 return {
-                    key: item?.type || item?.mediaFileType || `file-${index}`,
+                    key: `${type}-${index}`,
                     url: item?.url || item?.fileUrl || '',
-                    label: item?.type || item?.mediaFileType || `Ảnh ${index + 1}`,
+                    label: mediaTypeLabel(type),
                 };
             })
             .filter((item) => item.url);
     }
+
     if (typeof mediaFiles === 'object') {
-        return Object.entries(mediaFiles)
-            .map(([key, value]) => ({
-                key,
-                url: typeof value === 'string' ? value : value?.url || '',
-                label: key,
-            }))
-            .filter((item) => item.url);
+        const entries = [];
+        Object.entries(mediaFiles).forEach(([type, value]) => {
+            const urls = Array.isArray(value)
+                ? value
+                : typeof value === 'string'
+                  ? [value]
+                  : value?.url || value?.fileUrl
+                    ? [value.url || value.fileUrl]
+                    : [];
+
+            urls.forEach((url, index) => {
+                const resolved = typeof url === 'string' ? url : url?.url || url?.fileUrl || '';
+                if (!resolved) return;
+                entries.push({
+                    key: `${type}-${index}`,
+                    url: resolved,
+                    label: mediaTypeLabel(type, index, urls.length),
+                });
+            });
+        });
+        return entries;
     }
+
     return [];
 };

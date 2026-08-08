@@ -22,6 +22,11 @@ import {
     getRecruitmentAnalyticsApiErrorMessage,
     loadRecruiterAnalyticsDashboard,
 } from '../../services/recruitmentAnalyticsService.js';
+import {
+    isFullyBusinessVerified,
+    needsBusinessLicenseTopUp,
+    resolveRequiresBusinessLicense,
+} from '../../utils/verificationDisplay.js';
 import '../../assets/styles/RecruiterDashboardStyle.css';
 
 const withOverviewFrom = (path) => {
@@ -65,10 +70,11 @@ const QUICK_ACTIONS = [
     },
 ];
 
-const isBusinessVerifiedBadge = (badge) => badge === 'BUSINESS_VERIFIED';
-
 const isPendingManualVerification = (status) =>
     status === 'BUSINESS_MANUALLY' || status === 'CCCD_MANUALLY';
+
+const isRejectedVerification = (status) =>
+    status === 'BUSINESS_REJECTED' || status === 'CCCD_REJECTED';
 
 const JOBS_PREVIEW_LIMIT = 5;
 
@@ -129,6 +135,8 @@ const RecruiterHomePage = () => {
     const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
     const [badge, setBadge] = useState(null);
     const [verificationStatus, setVerificationStatus] = useState(null);
+    const [businessType, setBusinessType] = useState(null);
+    const [requiresBusinessLicense, setRequiresBusinessLicense] = useState(undefined);
 
     useEffect(() => {
         let cancelled = false;
@@ -147,6 +155,12 @@ const RecruiterHomePage = () => {
                 setLastUpdatedAt(data?.lastUpdatedAt ?? null);
                 setBadge(profile?.badge ?? null);
                 setVerificationStatus(profile?.verificationStatus ?? null);
+                setBusinessType(profile?.businessType ?? null);
+                setRequiresBusinessLicense(
+                    typeof profile?.requiresBusinessLicense === 'boolean'
+                        ? profile.requiresBusinessLicense
+                        : undefined
+                );
             } catch (err) {
                 if (cancelled) return;
                 const message = getRecruitmentAnalyticsApiErrorMessage(
@@ -159,6 +173,8 @@ const RecruiterHomePage = () => {
                 setLastUpdatedAt(null);
                 setBadge(null);
                 setVerificationStatus(null);
+                setBusinessType(null);
+                setRequiresBusinessLicense(undefined);
                 toast.error(message);
             } finally {
                 if (!cancelled) setLoading(false);
@@ -171,7 +187,20 @@ const RecruiterHomePage = () => {
         };
     }, []);
 
-    const isVerified = isBusinessVerifiedBadge(badge);
+    const needsLicense = resolveRequiresBusinessLicense({
+        businessType,
+        profileRequiresBusinessLicense: requiresBusinessLicense,
+    });
+    const isVerified = isFullyBusinessVerified({
+        badge,
+        verificationStatus,
+        needsLicense,
+    });
+    const needsLicenseTopUp = needsBusinessLicenseTopUp({
+        verificationStatus,
+        needsLicense,
+        badge,
+    });
     const previewJobs = getPreviewJobs(jobs);
 
     const kpis = [
@@ -234,14 +263,18 @@ const RecruiterHomePage = () => {
                             <span className="recruiter-dashboard__badge recruiter-dashboard__badge--muted">
                                 {isPendingManualVerification(verificationStatus)
                                     ? 'Đang chờ duyệt'
-                                    : 'Chưa xác thực'}
+                                    : isRejectedVerification(verificationStatus)
+                                      ? 'Xác minh chưa đạt'
+                                      : needsLicenseTopUp
+                                        ? 'Cần xác thực GPKD'
+                                        : 'Chưa xác thực'}
                             </span>
-                            <span
+                            <Link
+                                to={ROUTES.RECRUITER_VERIFICATION}
                                 className="recruiter-dashboard__badge recruiter-dashboard__badge--verify-cta"
-                                role="note"
                             >
-                                Đề xuất: Xác minh ngay
-                            </span>
+                                {needsLicenseTopUp ? 'Xác thực Giấy phép kinh doanh' : 'Đề xuất: Xác minh ngay'}
+                            </Link>
                         </>
                     )}
                 </h1>

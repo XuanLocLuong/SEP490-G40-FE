@@ -1,9 +1,9 @@
 import { formatNotificationCalendarTime } from '../../utils/notificationNavigation.js';
+import { getVerificationNotificationDisplay } from '../../utils/verificationDisplay.js';
 
 const NotificationItem = ({ notification, onSelect, onMarkRead }) => {
     const unread = !notification.read;
-    const title = notification.title?.trim() || '';
-    const content = notification.content?.trim() || '';
+    const { title, content } = getVerificationNotificationDisplay(notification);
     const readLabel = unread ? 'Chưa đọc' : 'Đã đọc';
     const calendar = formatNotificationCalendarTime(notification.createdAt);
 
