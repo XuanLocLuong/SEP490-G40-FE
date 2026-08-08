@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'react-toastify';
-import { createOrGetConversation } from '../apis/ChatApi.jsx';
+import { createOrGetConversation, fetchConversations } from '../apis/ChatApi.jsx';
 import { ChatFloat, ChatPicker } from '../components/chat/ChatPanel.jsx';
 import { useChatInbox } from '../hooks/useChatInbox.js';
 import { OPEN_CHAT_PANEL_EVENT } from '../utils/chatEvents.js';
 import { elevateOverlay, OVERLAY_CSS } from '../utils/overlayLayer.js';
-import { unwrapData } from '../utils/chatDisplay.js';
+import { unwrapData, unwrapPageContent } from '../utils/chatDisplay.js';
 import { USER_ROLES } from '../utils/Constants.jsx';
 import '../assets/styles/ChatPanelStyle.css';
 import { useAuth } from './authContext.js';
@@ -130,6 +130,10 @@ export const ChatProvider = ({ children }) => {
 
     const floatOpen = openFloats.length > 0;
     const activeConv = openFloats[openFloats.length - 1] ?? null;
+    const conversationsRef = useRef(conversations);
+    conversationsRef.current = conversations;
+    const openFloatsRef = useRef(openFloats);
+    openFloatsRef.current = openFloats;
 
     const bringPickerToFront = useCallback(() => {
         setFrontKey(PICKER_FRONT);
@@ -286,6 +290,76 @@ export const ChatProvider = ({ children }) => {
         [chatEnabled, openingChat, pushFloat, reloadInbox]
     );
 
+    /**
+     * Open an existing conversation float by id (inbox lookup, then API refresh).
+     * Falls back to a minimal { id } float so messages can still load.
+     * @param {number|string} conversationId
+     */
+    const openConversationById = useCallback(
+        async (conversationId) => {
+            if (!chatEnabled || conversationId == null) return null;
+            if (openingChat) return null;
+
+            const idStr = String(conversationId);
+
+            const alreadyOpen = openFloatsRef.current.find(
+                (c) => String(c.id) === idStr
+            );
+            if (alreadyOpen) {
+                bringFloatToFront(alreadyOpen.id);
+                if (maxFloatsRef.current <= 1) {
+                    setPickerOpen(false);
+                }
+                return alreadyOpen;
+            }
+
+            const fromInbox = conversationsRef.current.find(
+                (c) => String(c.id) === idStr
+            );
+            if (fromInbox) {
+                selectConversation(fromInbox);
+                return fromInbox;
+            }
+
+            setOpeningChat(true);
+            try {
+                const res = await fetchConversations({ page: 0, size: 50 });
+                const found = unwrapPageContent(res).find(
+                    (c) => String(c.id) === idStr
+                );
+                if (found) {
+                    selectConversation(found);
+                    reloadInbox();
+                    return found;
+                }
+
+                // No GET-by-id API; open thread by id so messages still load.
+                const minimal = {
+                    id:
+                        typeof conversationId === 'number'
+                            ? conversationId
+                            : Number(conversationId) || conversationId,
+                };
+                selectConversation(minimal);
+                reloadInbox();
+                return minimal;
+            } catch (err) {
+                const msg = err?.response?.data?.message;
+                toast.error(msg || 'Không mở được cuộc trò chuyện.');
+                return null;
+            } finally {
+                setOpeningChat(false);
+            }
+        },
+        [
+            bringFloatToFront,
+            chatEnabled,
+            openingChat,
+            reloadInbox,
+            selectConversation,
+        ]
+    );
+
     useEffect(() => {
         if (!chatEnabled) closeAll();
     }, [chatEnabled, closeAll]);
@@ -303,7 +377,7 @@ export const ChatProvider = ({ children }) => {
                 return;
             }
             if (detail.conversationId != null) {
-                openPicker();
+                void openConversationById(detail.conversationId);
                 return;
             }
             openPicker();
@@ -311,7 +385,7 @@ export const ChatProvider = ({ children }) => {
 
         window.addEventListener(OPEN_CHAT_PANEL_EVENT, handleOpenEvent);
         return () => window.removeEventListener(OPEN_CHAT_PANEL_EVENT, handleOpenEvent);
-    }, [chatEnabled, openConversationWith, openPicker]);
+    }, [chatEnabled, openConversationById, openConversationWith, openPicker]);
 
     const value = useMemo(
         () => ({
@@ -325,6 +399,7 @@ export const ChatProvider = ({ children }) => {
             reloadInbox,
             openPicker,
             openConversationWith,
+            openConversationById,
             openingChat,
             selectConversation,
             closeFloat,
@@ -345,6 +420,7 @@ export const ChatProvider = ({ children }) => {
             reloadInbox,
             openPicker,
             openConversationWith,
+            openConversationById,
             openingChat,
             selectConversation,
             closeFloat,

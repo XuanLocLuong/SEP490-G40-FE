@@ -13,7 +13,7 @@ import {
 import CandidateRecommendationCard from '../../../components/recruiter/recommendations/CandidateRecommendationCard.jsx';
 import SendInvitationModal from '../../../components/recruiter/recommendations/SendInvitationModal.jsx';
 import { ROUTES } from '../../../routes/path.js';
-import { openChatPanel } from '../../../utils/chatEvents.js';
+import { openChatPanel, RECRUITMENT_CHANGED_EVENT } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/RecruiterRecommendationsStyle.css';
 
 const PAGE_SIZE = 10;
@@ -131,6 +131,26 @@ const RecruiterRecommendationsPage = () => {
             active = false;
         };
     }, [loadRecommendations]);
+
+    // Refresh recommendations when invite is sent/accepted via chat float.
+    useEffect(() => {
+        const onRecruitmentChanged = (event) => {
+            const detail = event?.detail || {};
+            if (detail.kind && detail.kind !== 'invitation') return;
+            if (!selectedJobId) return;
+            if (
+                detail.jobId != null &&
+                String(detail.jobId) !== String(selectedJobId)
+            ) {
+                return;
+            }
+            void loadRecommendations(selectedJobId, currentPage);
+        };
+
+        window.addEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+        return () =>
+            window.removeEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+    }, [selectedJobId, currentPage, loadRecommendations]);
 
     const handleJobChange = (event) => {
         const jobId = event.target.value;

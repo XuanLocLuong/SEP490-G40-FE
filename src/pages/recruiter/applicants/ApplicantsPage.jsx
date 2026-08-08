@@ -316,7 +316,8 @@ const ApplicantsPage = () => {
     useEffect(() => {
         const onRecruitmentChanged = (event) => {
             const detail = event?.detail || {};
-            if (detail.kind && detail.kind !== 'application') return;
+            if (detail.kind && detail.kind !== 'application' && detail.kind !== 'invitation')
+                return;
             if (
                 detail.jobId != null &&
                 selectedJobId != null &&

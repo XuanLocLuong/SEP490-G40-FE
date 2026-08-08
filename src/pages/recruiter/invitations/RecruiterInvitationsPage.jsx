@@ -14,7 +14,7 @@ import {
     getRecruiterJobAnalyticsPath,
     ROUTES,
 } from '../../../routes/path.js';
-import { openChatPanel } from '../../../utils/chatEvents.js';
+import { openChatPanel, RECRUITMENT_CHANGED_EVENT } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 import '../../../assets/styles/RecruiterInvitationsStyle.css';
 
@@ -239,6 +239,26 @@ const RecruiterInvitationsPage = () => {
     useEffect(() => {
         loadInvitations();
     }, [loadInvitations]);
+
+    // Refresh when invite / accept-reject invite happens via chat float.
+    useEffect(() => {
+        const onRecruitmentChanged = (event) => {
+            const detail = event?.detail || {};
+            if (detail.kind && detail.kind !== 'invitation') return;
+            if (
+                detail.jobId != null &&
+                selectedJobId != null &&
+                String(detail.jobId) !== String(selectedJobId)
+            ) {
+                return;
+            }
+            void loadInvitations();
+        };
+
+        window.addEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+        return () =>
+            window.removeEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+    }, [loadInvitations, selectedJobId]);
 
     const handleJobChange = (event) => {
         updateParams({

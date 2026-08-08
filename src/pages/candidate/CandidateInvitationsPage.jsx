@@ -12,7 +12,7 @@ import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 import { CheckCircleIcon, ChatIcon, ClockIcon, XIcon } from '../../components/common/icons.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
-import { openChatPanel } from '../../utils/chatEvents.js';
+import { openChatPanel, RECRUITMENT_CHANGED_EVENT } from '../../utils/chatEvents.js';
 import { formatJobType, getBusinessInitial } from '../../utils/formatters.js';
 import {
     formatInvitationSentAt,
@@ -167,6 +167,22 @@ const CandidateInvitationsPage = () => {
         if (!isCandidate) return;
         loadPage(0, activeTab);
     }, [activeTab, isCandidate, loadPage]);
+
+    // Refresh when invite actions happen via chat float.
+    useEffect(() => {
+        if (!isCandidate) return undefined;
+
+        const onRecruitmentChanged = (event) => {
+            const detail = event?.detail || {};
+            if (detail.kind && detail.kind !== 'invitation') return;
+            void loadCounts().catch(() => {});
+            void loadPage(0, activeTab);
+        };
+
+        window.addEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+        return () =>
+            window.removeEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
+    }, [isCandidate, activeTab, loadCounts, loadPage]);
 
     const canLoadMore = activeTab !== 'INACTIVE' && totalPages > 1 && page + 1 < totalPages;
 

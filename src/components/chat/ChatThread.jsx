@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getChatApiErrorMessage } from '../../apis/ChatApi.jsx';
 import {
     confirmOffer,
     declineOffer,
@@ -26,21 +27,32 @@ import {
 import { submitApplicationReview, getReviewApiErrorMessage } from '../../apis/ReviewApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useChatThread } from '../../hooks/useChatThread.js';
+import { fetchJobDetail } from '../../apis/JobApi.jsx';
 import {
     getCandidatePublicProfilePath,
     getJobDetailPath,
+    getRecruiterMyJobsPath,
 } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import {
+    getActionApplicationId,
+    getActionCandidateProfileId,
+    getActionInvitationId,
     getInitials,
     groupStickyActions,
     normalizeChatAction,
+    unwrapData,
 } from '../../utils/chatDisplay.js';
 import { notifyRecruitmentChanged } from '../../utils/chatEvents.js';
 import ReviewSubmitModal from '../review/ReviewSubmitModal.jsx';
+import ConfirmModal from '../common/ConfirmModal.jsx';
+import ApplicationRejectModal from '../recruiter/applicants/ApplicationRejectModal.jsx';
+import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import ChatActionCard from './ChatActionCard.jsx';
 import ChatMessageBubble from './ChatMessageBubble.jsx';
 
+/** Cache jobId → businessId so reopening the same thread skips a detail fetch. */
+const businessIdByJobId = new Map();
 const pageContent = (res) => {
     const page = res?.data?.data ?? res?.data;
     return Array.isArray(page?.content) ? page.content : Array.isArray(page) ? page : [];
@@ -99,6 +111,10 @@ const findHiredApplicationIdForChat = async ({ jobId, role, conversation }) => {
 const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
     const { auth } = useAuth();
     const scrollerRef = useRef(null);
+    const stickToBottomRef = useRef(true);
+    const restoreScrollRef = useRef(null);
+    const prevConvIdRef = useRef(conversation?.id);
+    const prevFirstMsgIdRef = useRef(null);
     const [draft, setDraft] = useState('');
     const [actionBusy, setActionBusy] = useState(false);
     const [reviewOpen, setReviewOpen] = useState(false);
@@ -113,9 +129,19 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         error,
         loadOlder,
         sendText,
+        editTextMessage,
+        recallMessageById,
         reloadActions,
         reloadThread,
+        peerTyping,
+        notifyTyping,
+        stopTyping,
     } = useChatThread(conversation?.id);
+
+    const [mutatingMessageId, setMutatingMessageId] = useState(null);
+    const [recallTargetId, setRecallTargetId] = useState(null);
+    const [rejectTarget, setRejectTarget] = useState(null);
+    const [businessId, setBusinessId] = useState(null);
 
     const stickyGroups = useMemo(() => groupStickyActions(actions), [actions]);
 
@@ -123,13 +149,95 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         setDraft('');
         setReviewOpen(false);
         setReviewAppId(null);
+        setRecallTargetId(null);
+        setRejectTarget(null);
+        stickToBottomRef.current = true;
+        restoreScrollRef.current = null;
+        prevFirstMsgIdRef.current = null;
     }, [conversation?.id]);
 
+    // Candidate: resolve businessId from job detail (conversation summary only has businessName).
     useEffect(() => {
+        if (auth?.role !== USER_ROLES.CANDIDATE || conversation?.jobId == null) {
+            setBusinessId(null);
+            return undefined;
+        }
+
+        const jobId = conversation.jobId;
+        const cached = businessIdByJobId.get(String(jobId));
+        if (cached != null) {
+            setBusinessId(cached);
+            return undefined;
+        }
+
+        let cancelled = false;
+        setBusinessId(null);
+
+        (async () => {
+            try {
+                const res = await fetchJobDetail(jobId);
+                const job = unwrapData(res) ?? res?.data?.data;
+                const id = job?.business?.id ?? job?.businessId ?? null;
+                if (id != null) {
+                    businessIdByJobId.set(String(jobId), id);
+                }
+                if (!cancelled) setBusinessId(id);
+            } catch {
+                if (!cancelled) setBusinessId(null);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [auth?.role, conversation?.jobId]);
+
+    const handleMessagesScroll = () => {
         const el = scrollerRef.current;
         if (!el) return;
-        el.scrollTop = el.scrollHeight;
-    }, [messages.length, conversation?.id]);
+        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+        stickToBottomRef.current = distanceFromBottom < 80;
+    };
+
+    const handleLoadOlder = async () => {
+        const el = scrollerRef.current;
+        if (el) {
+            restoreScrollRef.current = {
+                height: el.scrollHeight,
+                top: el.scrollTop,
+            };
+            stickToBottomRef.current = false;
+        }
+        await loadOlder();
+    };
+
+    useLayoutEffect(() => {
+        const el = scrollerRef.current;
+        if (!el) return;
+
+        const convChanged = prevConvIdRef.current !== conversation?.id;
+        prevConvIdRef.current = conversation?.id;
+
+        const firstId = messages[0]?.id ?? null;
+        const prepended =
+            restoreScrollRef.current != null &&
+            firstId != null &&
+            prevFirstMsgIdRef.current != null &&
+            firstId !== prevFirstMsgIdRef.current;
+
+        if (convChanged) {
+            stickToBottomRef.current = true;
+            el.scrollTop = el.scrollHeight;
+        } else if (prepended) {
+            const { height, top } = restoreScrollRef.current;
+            el.scrollTop = top + (el.scrollHeight - height);
+            restoreScrollRef.current = null;
+        } else if (stickToBottomRef.current) {
+            el.scrollTop = el.scrollHeight;
+        }
+
+        prevFirstMsgIdRef.current = firstId;
+    }, [messages, conversation?.id, peerTyping]);
 
     const refreshAfterAction = async (recruitmentDetail = null) => {
         await reloadThread?.();
@@ -152,13 +260,81 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         return true;
     };
 
+    const resolveApplicationId = async (status, ...actionNames) => {
+        const fromActions = getActionApplicationId(actions, ...actionNames);
+        if (fromActions != null) return fromActions;
+
+        if (conversation?.jobId == null) return null;
+
+        if (auth?.role === USER_ROLES.CANDIDATE) {
+            return findMyApplicationId(conversation.jobId, status);
+        }
+        if (auth?.role === USER_ROLES.RECRUITER) {
+            return findRecruiterApplicationId(
+                conversation.jobId,
+                conversation,
+                status
+            );
+        }
+        return null;
+    };
+
+    const resolveInvitationId = async (...actionNames) => {
+        const fromActions = getActionInvitationId(actions, ...actionNames);
+        if (fromActions != null) return fromActions;
+        if (conversation?.jobId == null) return null;
+        return findSentInvitationId(conversation.jobId);
+    };
+
+    const resolveInviteCandidateProfileId = () =>
+        getActionCandidateProfileId(actions, 'INVITE') ??
+        conversation?.candidateProfileId ??
+        null;
+
     const handleSend = async (event) => {
         event.preventDefault();
+        stickToBottomRef.current = true;
         const ok = await sendText(draft);
         if (ok) {
             setDraft('');
             onThreadChanged?.();
         }
+    };
+
+    const handleEditMessage = async (messageId, content) => {
+        if (mutatingMessageId != null) return false;
+        setMutatingMessageId(messageId);
+        try {
+            await editTextMessage(messageId, content);
+            onThreadChanged?.();
+            return true;
+        } catch (err) {
+            toast.error(getChatApiErrorMessage(err, 'Không thể sửa tin nhắn.'));
+            return false;
+        } finally {
+            setMutatingMessageId(null);
+        }
+    };
+
+    const handleRecallMessage = async (messageId) => {
+        if (mutatingMessageId != null) return false;
+        setMutatingMessageId(messageId);
+        try {
+            await recallMessageById(messageId);
+            setRecallTargetId(null);
+            onThreadChanged?.();
+            return true;
+        } catch (err) {
+            toast.error(getChatApiErrorMessage(err, 'Không thể thu hồi tin nhắn.'));
+            return false;
+        } finally {
+            setMutatingMessageId(null);
+        }
+    };
+
+    const requestRecallMessage = (messageId) => {
+        if (mutatingMessageId != null || messageId == null) return;
+        setRecallTargetId(messageId);
     };
 
     const handleAcceptWork = async () => {
@@ -170,7 +346,11 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
         setActionBusy(true);
         try {
-            const applicationId = await findMyApplicationId(conversation.jobId, 'ACCEPTED');
+            const applicationId = await resolveApplicationId(
+                'ACCEPTED',
+                'ACCEPT_WORK',
+                'REJECT_WORK'
+            );
             if (applicationId == null) {
                 toast.error('Không tìm thấy đơn ACCEPTED để xác nhận.');
                 return;
@@ -194,7 +374,11 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
         setActionBusy(true);
         try {
-            const applicationId = await findMyApplicationId(conversation.jobId, 'ACCEPTED');
+            const applicationId = await resolveApplicationId(
+                'ACCEPTED',
+                'ACCEPT_WORK',
+                'REJECT_WORK'
+            );
             if (applicationId == null) {
                 toast.error('Không tìm thấy đơn ACCEPTED để từ chối.');
                 return;
@@ -218,7 +402,10 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
         setActionBusy(true);
         try {
-            const invitationId = await findSentInvitationId(conversation.jobId);
+            const invitationId = await resolveInvitationId(
+                'ACCEPT_INVITE',
+                'REJECT_INVITE'
+            );
             if (invitationId == null) {
                 toast.error('Không tìm thấy lời mời đang chờ phản hồi.');
                 return;
@@ -242,7 +429,10 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
         setActionBusy(true);
         try {
-            const invitationId = await findSentInvitationId(conversation.jobId);
+            const invitationId = await resolveInvitationId(
+                'ACCEPT_INVITE',
+                'REJECT_INVITE'
+            );
             if (invitationId == null) {
                 toast.error('Không tìm thấy lời mời đang chờ phản hồi.');
                 return;
@@ -266,10 +456,10 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
         setActionBusy(true);
         try {
-            const applicationId = await findRecruiterApplicationId(
-                conversation.jobId,
-                conversation,
-                'PENDING'
+            const applicationId = await resolveApplicationId(
+                'PENDING',
+                'ACCEPT_APPLICATION',
+                'REJECT_APPLICATION'
             );
             if (applicationId == null) {
                 toast.error('Không tìm thấy đơn PENDING của ứng viên này.');
@@ -299,20 +489,38 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
         setActionBusy(true);
         try {
-            const applicationId = await findRecruiterApplicationId(
-                conversation.jobId,
-                conversation,
-                'PENDING'
+            const applicationId = await resolveApplicationId(
+                'PENDING',
+                'ACCEPT_APPLICATION',
+                'REJECT_APPLICATION'
             );
             if (applicationId == null) {
                 toast.error('Không tìm thấy đơn PENDING của ứng viên này.');
                 return;
             }
-            await rejectApplication(applicationId, {
-                reason: 'OTHER',
-                note: 'Từ chối qua chat',
+            setRejectTarget({
+                id: applicationId,
+                candidateName: conversation.otherPartyName || 'Ứng viên',
+            });
+        } catch (err) {
+            toast.error(
+                getRecruiterApplicationApiErrorMessage(err, 'Không thể tải đơn để từ chối.')
+            );
+        } finally {
+            setActionBusy(false);
+        }
+    };
+
+    const handleRejectApplicationConfirm = async ({ reason, note }) => {
+        if (!rejectTarget?.id || actionBusy) return;
+        setActionBusy(true);
+        try {
+            await rejectApplication(rejectTarget.id, {
+                reason,
+                note: note?.trim() ? note.trim() : null,
             });
             toast.success('Đã từ chối đơn ứng tuyển.');
+            setRejectTarget(null);
             await refreshAfterAction({
                 kind: 'application',
                 action: 'REJECT_APPLICATION',
@@ -333,7 +541,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         }
         if (!requireJob()) return;
 
-        const candidateId = conversation?.candidateProfileId;
+        const candidateId = resolveInviteCandidateProfileId();
         if (candidateId == null) {
             toast.error(
                 'Không tìm được hồ sơ ứng viên để mời. Hãy tải lại hội thoại hoặc thử mời từ trang Gợi ý ứng viên.'
@@ -354,7 +562,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             );
             if (result?.status === 'SENT' || response?.sentCount > 0) {
                 toast.success('Đã gửi lời mời ứng tuyển.');
-                await refreshAfterAction();
+                await refreshAfterAction({ kind: 'invitation', action: 'INVITE' });
             } else {
                 toast.info(
                     getInvitationSkipReasonMessage(
@@ -377,11 +585,13 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
         setActionBusy(true);
         try {
-            const applicationId = await findHiredApplicationIdForChat({
-                jobId: conversation.jobId,
-                role: auth?.role,
-                conversation,
-            });
+            const applicationId =
+                getActionApplicationId(actions, 'REQUEST_REVIEW') ??
+                (await findHiredApplicationIdForChat({
+                    jobId: conversation.jobId,
+                    role: auth?.role,
+                    conversation,
+                }));
             if (applicationId == null) {
                 toast.error('Không tìm thấy đơn HIRED để đánh giá.');
                 return;
@@ -406,7 +616,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             toast.success('Đã gửi đánh giá.');
             setReviewOpen(false);
             setReviewAppId(null);
-            await refreshAfterAction();
+            await refreshAfterAction({ kind: 'review', action: 'REQUEST_REVIEW' });
         } catch (err) {
             toast.error(getReviewApiErrorMessage(err, 'Không gửi được đánh giá. Vui lòng thử lại.'));
         } finally {
@@ -460,6 +670,17 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         auth?.role === USER_ROLES.CANDIDATE ? 'Nhà tuyển dụng' : 'Ứng viên';
     const canViewCandidateProfile =
         auth?.role === USER_ROLES.RECRUITER && conversation.candidateProfileId != null;
+    const canViewBusinessProfile =
+        auth?.role === USER_ROLES.CANDIDATE && businessId != null;
+    const jobLinkPath =
+        conversation.jobId == null
+            ? null
+            : auth?.role === USER_ROLES.RECRUITER
+              ? getRecruiterMyJobsPath({
+                    tab: 'all',
+                    jobId: conversation.jobId,
+                })
+              : getJobDetailPath(conversation.jobId);
 
     return (
         <section className={`chat-panel__thread${compact ? ' chat-panel__thread--compact' : ''}`}>
@@ -483,8 +704,17 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                             to={getCandidatePublicProfilePath(conversation.candidateProfileId)}
                             className="chat-panel__profile-link"
                         >
-                            Xem hồ sơ →
+                            Xem ứng viên →
                         </Link>
+                    ) : null}
+                    {canViewBusinessProfile ? (
+                        <BusinessProfileLink
+                            businessId={businessId}
+                            className="chat-panel__profile-link"
+                            label="Quay lại chat"
+                        >
+                            Xem doanh nghiệp →
+                        </BusinessProfileLink>
                     ) : null}
                 </div>
             </header>
@@ -499,23 +729,24 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                                 : ''}
                         </strong>
                     </div>
-                    {conversation.jobId ? (
-                        <Link
-                            to={getJobDetailPath(conversation.jobId)}
-                            className="chat-panel__job-link"
-                        >
+                    {jobLinkPath ? (
+                        <Link to={jobLinkPath} className="chat-panel__job-link">
                             Xem tin →
                         </Link>
                     ) : null}
                 </div>
             )}
 
-            <div className="chat-panel__messages" ref={scrollerRef}>
+            <div
+                className="chat-panel__messages"
+                ref={scrollerRef}
+                onScroll={handleMessagesScroll}
+            >
                 {hasMore && (
                     <button
                         type="button"
                         className="chat-panel__load-older"
-                        onClick={loadOlder}
+                        onClick={handleLoadOlder}
                         disabled={loadingMore}
                     >
                         {loadingMore ? 'Đang tải...' : 'Xem tin nhắn cũ hơn'}
@@ -530,8 +761,25 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 )}
 
                 {messages.map((msg) => (
-                    <ChatMessageBubble key={msg.id} message={msg} />
+                    <ChatMessageBubble
+                        key={msg.id}
+                        message={msg}
+                        mutating={mutatingMessageId === msg.id}
+                        onEdit={handleEditMessage}
+                        onRecall={requestRecallMessage}
+                    />
                 ))}
+
+                {peerTyping ? (
+                    <p className="chat-panel__typing" aria-live="polite">
+                        Đang nhập
+                        <span className="chat-panel__typing-dots" aria-hidden="true">
+                            <span />
+                            <span />
+                            <span />
+                        </span>
+                    </p>
+                ) : null}
             </div>
 
             {stickyGroups.length > 0 && (
@@ -552,7 +800,12 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 <input
                     type="text"
                     value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
+                    onChange={(e) => {
+                        setDraft(e.target.value);
+                        if (e.target.value.trim()) notifyTyping();
+                        else stopTyping();
+                    }}
+                    onBlur={stopTyping}
                     placeholder="Nhập tin nhắn..."
                     disabled={sending}
                     autoComplete="off"
@@ -566,6 +819,36 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                     ➤
                 </button>
             </form>
+
+            <ConfirmModal
+                open={recallTargetId != null}
+                title="Thu hồi tin nhắn"
+                confirmLabel="Thu hồi"
+                cancelLabel="Hủy"
+                variant="danger"
+                loading={mutatingMessageId === recallTargetId}
+                onCancel={() => {
+                    if (mutatingMessageId != null) return;
+                    setRecallTargetId(null);
+                }}
+                onConfirm={() => handleRecallMessage(recallTargetId)}
+            >
+                <p className="confirm-modal__message">
+                    Tin nhắn sẽ bị ẩn nội dung và không thể hoàn tác từ đây. Bạn có chắc muốn thu hồi?
+                </p>
+            </ConfirmModal>
+
+            <ApplicationRejectModal
+                open={Boolean(rejectTarget)}
+                application={rejectTarget}
+                jobTitle={conversation?.jobTitle}
+                loading={actionBusy}
+                onCancel={() => {
+                    if (actionBusy) return;
+                    setRejectTarget(null);
+                }}
+                onConfirm={handleRejectApplicationConfirm}
+            />
 
             <ReviewSubmitModal
                 open={reviewOpen}
