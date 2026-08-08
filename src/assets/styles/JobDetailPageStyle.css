@@ -265,6 +265,17 @@
     font-weight: 700;
 }
 
+.job-compact-card__invited {
+    align-self: flex-start;
+    width: fit-content;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid color-mix(in srgb, #b45309 32%, transparent);
+    font-weight: 700;
+}
+
 .job-compact-card--skeleton {
     min-height: 108px;
     background: linear-gradient(90deg, #eef1f6 25%, #f8f9fc 50%, #eef1f6 75%);

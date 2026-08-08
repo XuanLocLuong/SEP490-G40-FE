@@ -8,6 +8,7 @@ import {
     formatJobShiftsLabel,
     getBusinessInitial,
     hasAppliedToJob,
+    hasInvitedToJob,
 } from '../../utils/formatters.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
 import { MapPinIcon, BriefcaseIcon, UsersIcon, ClockIcon } from '../common/icons.jsx';
@@ -40,6 +41,7 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
     const businessLogoUrl = job.business?.logoUrl || null;
     const distance = getJobDistanceDisplay(job.distanceKm, nearMe);
     const applied = hasAppliedToJob(job);
+    const invited = hasInvitedToJob(job);
     const vacancyLabel = formatVacancyLabel(job);
     const isVacancyFull = vacancyLabel === 'Đã hết vị trí';
     const shiftsLabel = formatJobShiftsLabel(job.shifts);
@@ -86,6 +88,11 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
                     {applied && (
                         <span className="job-compact-card__meta-item job-compact-card__applied">
                             Đã ứng tuyển
+                        </span>
+                    )}
+                    {invited && !applied && (
+                        <span className="job-compact-card__meta-item job-compact-card__invited">
+                            Đã được mời
                         </span>
                     )}
                     <span className="job-compact-card__meta-item job-compact-card__salary">
