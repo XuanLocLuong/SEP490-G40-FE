@@ -222,6 +222,7 @@ const AppRouter = () => {
                 }
             >
                 <Route path={ROUTES.ADMIN_HOME} element={<AdminDashboard />} />
+                <Route path={ROUTES.ADMIN_ANALYTICS} element={<AdminDashboard />} />
                 <Route path={ROUTES.ADMIN_SKILLS} element={<AdminSkillsPage />} />
                 <Route path={ROUTES.ADMIN_TRUST_SCORE_RULES} element={<AdminTrustScoreRulesPage />} />
                 <Route path={ROUTES.ADMIN_ACCOUNTS} element={<AdminAccountsPage />} />
