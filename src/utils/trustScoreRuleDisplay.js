@@ -82,6 +82,49 @@ export const isConfigurableRuleType = (ruleType) =>
 export const getRuleTypeLabel = (ruleType) =>
     RULE_TYPE_OPTIONS.find((opt) => opt.value === ruleType)?.label || ruleType || '—';
 
+/** Thứ tự hiển thị list admin: 4 loại cấu hình được, SYSTEM cuối. */
+export const RULE_TYPE_LIST_ORDER = [
+    ...CONFIGURABLE_RULE_TYPES,
+    TRUST_SCORE_RULE_TYPES.SYSTEM_ADJUSTMENT,
+];
+
+const ruleTypeRank = (ruleType) => {
+    const idx = RULE_TYPE_LIST_ORDER.indexOf(ruleType);
+    return idx >= 0 ? idx : RULE_TYPE_LIST_ORDER.length;
+};
+
+/** Configurable trước, SYSTEM cuối; trong mỗi loại: updatedAt mới hơn trước, rồi ruleCode. */
+export const sortRulesForAdminList = (rules = []) =>
+    [...rules].sort((a, b) => {
+        const typeDiff = ruleTypeRank(a?.ruleType) - ruleTypeRank(b?.ruleType);
+        if (typeDiff !== 0) return typeDiff;
+        const aTime = a?.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+        const bTime = b?.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+        if (bTime !== aTime) return bTime - aTime;
+        return String(a?.ruleCode || '').localeCompare(String(b?.ruleCode || ''), 'vi');
+    });
+
+/**
+ * Gom theo loại (đã sort sẵn). Trả về [{ ruleType, label, rules }].
+ */
+export const groupRulesByType = (rules = []) => {
+    const groups = [];
+    for (const rule of rules) {
+        const type = rule?.ruleType || '';
+        const last = groups[groups.length - 1];
+        if (last && last.ruleType === type) {
+            last.rules.push(rule);
+        } else {
+            groups.push({
+                ruleType: type,
+                label: getRuleTypeLabel(type),
+                rules: [rule],
+            });
+        }
+    }
+    return groups;
+};
+
 export const getAppliesToLabel = (appliesTo) =>
     APPLIES_TO_OPTIONS.find((opt) => opt.value === appliesTo)?.label || appliesTo || '—';
 
