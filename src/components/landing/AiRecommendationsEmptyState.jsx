@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ROUTES } from '../../routes/path.js';
+import { buildAvailabilityFromCurrentLocation } from '../../utils/availabilityNavReturn.js';
 import {
     EMPTY_RECOMMENDATION_GAPS,
     fetchRecommendationProfileGaps,
@@ -8,6 +9,11 @@ import {
 } from '../../utils/recommendationProfileGaps.js';
 
 const AiRecommendationsEmptyState = () => {
+    const location = useLocation();
+    const availabilityState = useMemo(
+        () => buildAvailabilityFromCurrentLocation(location),
+        [location],
+    );
     const [loading, setLoading] = useState(true);
     const [missing, setMissing] = useState(EMPTY_RECOMMENDATION_GAPS);
 
@@ -48,7 +54,11 @@ const AiRecommendationsEmptyState = () => {
                     <Link to={ROUTES.JOB_LIST} className="btn btn--ghost">
                         Xem tất cả việc làm
                     </Link>
-                    <Link to={ROUTES.CANDIDATE_AVAILABILITY} className="btn btn--primary">
+                    <Link
+                        to={ROUTES.CANDIDATE_AVAILABILITY}
+                        state={availabilityState}
+                        className="btn btn--primary"
+                    >
                         Cập nhật lịch rảnh
                     </Link>
                 </div>
@@ -73,7 +83,11 @@ const AiRecommendationsEmptyState = () => {
                     </Link>
                 )}
                 {missing.availability && (
-                    <Link to={ROUTES.CANDIDATE_AVAILABILITY} className="btn btn--primary">
+                    <Link
+                        to={ROUTES.CANDIDATE_AVAILABILITY}
+                        state={availabilityState}
+                        className="btn btn--primary"
+                    >
                         Thiết lập lịch rảnh
                     </Link>
                 )}

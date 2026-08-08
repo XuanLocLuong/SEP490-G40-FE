@@ -56,8 +56,8 @@ export const normalizeScheduleSummary = (data) => {
     const root = data && !Array.isArray(data) ? data : {};
     return {
         scheduleMode: resolveScheduleMode(root.scheduleMode),
-        isTimetableApplied: Boolean(root.isTimetableApplied),
-        isTimetableExpired: Boolean(root.isTimetableExpired),
+        isTimetableApplied: Boolean(root.isTimetableApplied ?? root.timetableApplied),
+        isTimetableExpired: Boolean(root.isTimetableExpired ?? root.timetableExpired),
         appliedJobCount: Number(root.appliedJobCount) || 0,
         totalHiredJobCount: Number(root.totalHiredJobCount) || 0,
         availabilityStartDate: normalizeDate(root.availabilityStartDate),
@@ -228,4 +228,37 @@ export const validateAvailabilitySlots = (slots) => {
     }
 
     return errors;
+};
+
+export const SCHEDULE_BANNER_DISMISS_KEY = 'joblink.scheduleSoftBanner.v2.dismissed';
+
+/** Soft banner — khớp data summary /jobs/hired (không dùng applications HIRED đơn). */
+export const shouldShowScheduleSoftBanner = (summary) => {
+    if (!summary) return false;
+    return (
+        summary.appliedJobCount > 0 ||
+        summary.totalHiredJobCount > 0 ||
+        summary.isTimetableExpired
+    );
+};
+
+/** Dọn dismiss cũ; banner “Để sau” chỉ dùng React state. */
+export const clearScheduleBannerDismissPersist = () => {
+    try {
+        sessionStorage.removeItem(SCHEDULE_BANNER_DISMISS_KEY);
+        localStorage.removeItem('joblink.scheduleSoftBanner.v2.dismissUntil');
+        localStorage.removeItem('joblink.scheduleSoftBanner.dismissUntil');
+        localStorage.removeItem(SCHEDULE_BANNER_DISMISS_KEY);
+    } catch {
+        /* ignore */
+    }
+};
+
+/** Alias tương thích soft-banner hook. */
+export const normalizeHiredJob = normalizeHiredJobSchedule;
+export const normalizeHiredJobs = (data) => toArray(data).map(normalizeHiredJobSchedule);
+
+export const fetchHiredJobShifts = async (getHired) => {
+    const data = unwrap(await getHired());
+    return normalizeHiredJobs(data);
 };

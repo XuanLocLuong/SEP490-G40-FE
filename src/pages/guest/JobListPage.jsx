@@ -6,7 +6,9 @@ import BookmarkLoginRedirect from '../../components/job/BookmarkLoginRedirect.js
 import AiRecommendationsEmptyState from '../../components/landing/AiRecommendationsEmptyState.jsx';
 import AiRecommendationsPendingOfferHint from '../../components/landing/AiRecommendationsPendingOfferHint.jsx';
 import AiRecommendationsProfileHint from '../../components/landing/AiRecommendationsProfileHint.jsx';
+import ScheduleSoftWarningBanner from '../../components/candidate/ScheduleSoftWarningBanner.jsx';
 import { useAuth } from '../../contexts/authContext.js';
+import { useScheduleSummary } from '../../hooks/useScheduleSummary.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import {
     applyCandidateScheduleAccess,
@@ -38,6 +40,10 @@ const JobListPage = () => {
 
     const section = useMemo(() => parseJobListSection(searchParams), [searchParams]);
     const sectionMeta = section ? JOB_LIST_SECTION_META[section] : null;
+    const isAiSection = section === JOB_LIST_SECTIONS.AI;
+    const { summary: scheduleSummary, loading: scheduleSummaryLoading } = useScheduleSummary({
+        enabled: isCandidate && isAiSection,
+    });
     const listBack = useMemo(
         () => resolveJobListBack(auth?.role, section),
         [auth?.role, section]
@@ -229,7 +235,14 @@ const JobListPage = () => {
 
             {!loading && !error && jobs.length === 0 && (
                 section === JOB_LIST_SECTIONS.AI ? (
-                    <AiRecommendationsEmptyState />
+                    <>
+                        <ScheduleSoftWarningBanner
+                            summary={scheduleSummary}
+                            loading={scheduleSummaryLoading}
+                            className="schedule-soft-banner--job-list"
+                        />
+                        <AiRecommendationsEmptyState />
+                    </>
                 ) : (
                     <div className="job-list-page__empty">
                         <p>
@@ -246,6 +259,11 @@ const JobListPage = () => {
                 <>
                     {section === JOB_LIST_SECTIONS.AI && (
                         <>
+                            <ScheduleSoftWarningBanner
+                                summary={scheduleSummary}
+                                loading={scheduleSummaryLoading}
+                                className="schedule-soft-banner--job-list"
+                            />
                             <AiRecommendationsPendingOfferHint />
                             <AiRecommendationsProfileHint />
                         </>

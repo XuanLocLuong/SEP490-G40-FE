@@ -8,6 +8,19 @@
     margin-bottom: 28px;
 }
 
+.availability-page__back {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.availability-page__back:hover {
+    text-decoration: underline;
+}
+
 .availability-page__header h1 {
     margin: 0 0 8px;
     font-size: 28px;
@@ -89,6 +102,136 @@
 .availability-btn--secondary:hover:not(:disabled),
 .availability-btn--ghost:hover:not(:disabled) {
     background: var(--color-primary-light);
+}
+
+.schedule-mode-card__toggle {
+    display: inline-flex;
+    padding: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: #f5f8fb;
+    flex-shrink: 0;
+}
+
+.schedule-mode-card__btn {
+    min-height: 36px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: calc(var(--radius-md) - 2px);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.schedule-mode-card__btn--active {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.schedule-mode-card__btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.schedule-mode-card__hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.schedule-mode-card__hint--warn {
+    color: #9a6700;
+    background: #fff8eb;
+    border: 1px solid #e8d4a8;
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+}
+
+.hired-jobs-panel__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.hired-jobs-panel__item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fbfdff;
+}
+
+.hired-jobs-panel__meta {
+    min-width: 0;
+    flex: 1;
+}
+
+.hired-jobs-panel__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.hired-jobs-panel__title-row h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.hired-jobs-panel__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #eef2f6;
+    color: var(--color-text-muted);
+}
+
+.hired-jobs-panel__badge--applied {
+    background: #e7f6ee;
+    color: #1b7a45;
+}
+
+.hired-jobs-panel__badge--closed {
+    background: #fdecec;
+    color: #b42318;
+}
+
+.hired-jobs-panel__badge--muted {
+    background: #f0f2f5;
+}
+
+.hired-jobs-panel__shifts {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    line-height: 1.4;
+}
+
+.hired-jobs-panel__actions {
+    flex-shrink: 0;
+}
+
+.hired-jobs-panel__leave {
+    border-color: #d92d20;
+    color: #d92d20;
+}
+
+.hired-jobs-panel__leave:hover:not(:disabled) {
+    background: #fef3f2;
 }
 
 .upload-timetable__dropzone {
@@ -531,6 +674,23 @@
 }
 
 @media (max-width: 640px) {
+    .hired-jobs-panel__item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hired-jobs-panel__actions .availability-btn {
+        width: 100%;
+    }
+
+    .schedule-mode-card__toggle {
+        width: 100%;
+    }
+
+    .schedule-mode-card__btn {
+        flex: 1;
+    }
+
     .availability-card,
     .availability-editor {
         padding: 20px;

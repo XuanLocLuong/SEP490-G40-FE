@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     createAvailability,
@@ -47,7 +47,11 @@ import {
     validateAvailabilityRange,
     validateAvailabilitySlots,
 } from '../../../services/availabilityService.js';
-import { ROUTES } from '../../../routes/path.js';
+import {
+    buildAvailabilityLeaveNavigate,
+    clearAvailabilityReturn,
+    resolveAvailabilityBack,
+} from '../../../utils/availabilityNavReturn.js';
 import '../../../assets/styles/AvailabilityPageStyle.css';
 
 const TABS = {
@@ -66,6 +70,16 @@ const TAB_ITEMS = [
 
 const AvailabilityPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const back = useMemo(
+        () => resolveAvailabilityBack(location.state),
+        [location.state],
+    );
+    const leaveToBack = useCallback(() => {
+        const options = buildAvailabilityLeaveNavigate(back);
+        clearAvailabilityReturn();
+        navigate(back.path, options);
+    }, [navigate, back]);
     const [searchParams, setSearchParams] = useSearchParams();
     const initialTab = searchParams.get('tab');
     const [activeTab, setActiveTab] = useState(
@@ -501,6 +515,14 @@ const AvailabilityPage = () => {
     return (
         <div className="availability-page">
             <header className="availability-page__header">
+                <Link
+                    to={back.path}
+                    state={buildAvailabilityLeaveNavigate(back)?.state}
+                    className="availability-page__back"
+                    onClick={() => clearAvailabilityReturn()}
+                >
+                    ← {back.label}
+                </Link>
                 <h1>Quản lý Lịch rảnh &amp; Thời khóa biểu</h1>
                 <p>
                     TKB và job hired là lịch bận; lịch rảnh dùng cho đề xuất việc. Chế độ tự động tính từ
@@ -676,10 +698,10 @@ const AvailabilityPage = () => {
                                 <button
                                     type="button"
                                     className="availability-btn availability-btn--ghost"
-                                    onClick={() => navigate(ROUTES.CANDIDATE_PROFILE)}
+                                    onClick={leaveToBack}
                                     disabled={saving}
                                 >
-                                    Quay lại hồ sơ
+                                    ← {back.label}
                                 </button>
                                 <button
                                     type="button"
@@ -699,9 +721,9 @@ const AvailabilityPage = () => {
                                 <button
                                     type="button"
                                     className="availability-btn availability-btn--ghost"
-                                    onClick={() => navigate(ROUTES.CANDIDATE_PROFILE)}
+                                    onClick={leaveToBack}
                                 >
-                                    Quay lại hồ sơ
+                                    ← {back.label}
                                 </button>
                             </div>
                         )}
