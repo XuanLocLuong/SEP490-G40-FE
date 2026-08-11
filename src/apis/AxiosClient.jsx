@@ -84,6 +84,14 @@ axiosClient.interceptors.request.use((config) => {
 
     if (shouldAttachToken) {
         config.headers.Authorization = `Bearer ${auth.token}`;
+    } else {
+        // Giữ Bearer truyền tay cho logout/resend sau clearAuth; còn lại bỏ Bearer cũ (retry).
+        const keepManualBearer =
+            authEndpointNeedsBearer(url) && Boolean(config.headers?.Authorization);
+        if (!keepManualBearer && config.headers) {
+            delete config.headers.Authorization;
+            delete config.headers.authorization;
+        }
     }
     return config;
 });

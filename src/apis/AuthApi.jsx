@@ -13,8 +13,18 @@ export const loginWithGoogle = (data) => axiosClient.post(`${AUTH_BASE}/google`,
 
 export const refreshToken = (data) => axiosClient.post(`${AUTH_BASE}/refresh`, data);
 
-// Cần gọi trước khi clear localStorage để backend revoke refresh token.
-export const logout = () => axiosClient.post(`${AUTH_BASE}/logout`);
+/**
+ * Revoke session trên BE. Có thể truyền accessToken khi local auth đã clear
+ * (tránh race: landing refetch gắn Bearer đã revoke → 401 trên API public).
+ */
+export const logout = (accessToken) =>
+    axiosClient.post(
+        `${AUTH_BASE}/logout`,
+        null,
+        accessToken
+            ? { headers: { Authorization: `Bearer ${accessToken}` } }
+            : undefined
+    );
 
 /** data: { email } — luôn 200 nếu hợp lệ; không lộ email có/không tồn tại. */
 export const forgotPassword = (data) =>

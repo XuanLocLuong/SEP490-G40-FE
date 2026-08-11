@@ -26,14 +26,18 @@ export const AuthProvider = ({ children }) => {
 
     const logout = useCallback(async () => {
         setSuppressSessionExpiredRedirect(true);
+        // Clear local trước để request landing tiếp theo không mang Bearer đã revoke.
+        const accessToken = getAuth()?.token;
+        clearHomeSearchQuery();
+        clearAuth();
+        setAuthState(null);
         try {
-            await logoutApi();
+            if (accessToken) {
+                await logoutApi(accessToken);
+            }
         } catch (err) {
-            console.warn('Logout API failed, clearing local session anyway.', err);
+            console.warn('Logout API failed, local session already cleared.', err);
         } finally {
-            clearHomeSearchQuery();
-            clearAuth();
-            setAuthState(null);
             // Giữ suppress thêm chút để in-flight 401 không đá về /login.
             window.setTimeout(() => setSuppressSessionExpiredRedirect(false), 1500);
         }
