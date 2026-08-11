@@ -107,7 +107,7 @@ const JobPostForm = ({
 
                 <div className="job-post-form__row">
                     <div className="job-post-form__field">
-                        <label htmlFor="salary-min">Lương tối thiểu</label>
+                        <label htmlFor="salary-min">Lương tối thiểu (/giờ)</label>
                         <input
                             id="salary-min"
                             type="text"
@@ -121,7 +121,7 @@ const JobPostForm = ({
                         />
                     </div>
                     <div className="job-post-form__field">
-                        <label htmlFor="salary-max">Lương tối đa</label>
+                        <label htmlFor="salary-max">Lương tối đa (/giờ)</label>
                         <input
                             id="salary-max"
                             type="text"
@@ -146,13 +146,14 @@ const JobPostForm = ({
                             onBlur={blur('requiredCandidates')}
                         />
                         {errors.requiredCandidates && (
-                            <p className="job-post-form__error">{errors.requiredCandidates}</p>
+                            <p className="job-post-form__error job-post-form__error--candidates">
+                                {errors.requiredCandidates}
+                            </p>
                         )}
                     </div>
                 </div>
                 <p className="job-post-form__hint job-post-form__hint--row">
-                    Có thể chỉ điền một mức (VD: 22.000 ₫/giờ). Dưới 1 triệu tính theo giờ, từ 1
-                    triệu tính theo tháng.
+                    Lương theo giờ (₫/giờ). Có thể chỉ điền một mức (VD: 22.000 ₫/giờ).
                 </p>
                 {errors.salaryMax && (
                     <p className="job-post-form__error">{errors.salaryMax}</p>

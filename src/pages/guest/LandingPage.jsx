@@ -2,11 +2,17 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import JobDiscoveryHome from '../../components/landing/JobDiscoveryHome.jsx';
 import { consumeHomeSectionScrollState } from '../../utils/homeSections.js';
+import { clearSessionExpiredFlag } from '../../utils/sessionExpiredStorage.js';
 import { ROUTES } from '../../routes/path.js';
 
 const LandingPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Không để flag “hết hạn” từ lần trước bám khi vào Landing.
+        clearSessionExpiredFlag();
+    }, []);
 
     useEffect(() => {
         if (
