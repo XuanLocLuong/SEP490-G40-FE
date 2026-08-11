@@ -111,7 +111,7 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
             jobTypes: form.jobTypes || [],
             salaryMin: form.salaryMin === '' ? null : form.salaryMin,
             salaryMax: form.salaryMax === '' ? null : form.salaryMax,
-            salaryUnit: form.salaryUnit || 'giờ',
+            salaryUnit: 'giờ',
             locationRadiusKm:
                 form.locationRadiusKm === ''
                     ? null
@@ -217,7 +217,7 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
 
                 <div className="cp-form-row">
                     <div className="cp-form-group">
-                        <label className="cp-form-label">Lương tối thiểu</label>
+                        <label className="cp-form-label">Lương tối thiểu (/giờ)</label>
                         <input
                             type="number"
                             min="0"
@@ -228,7 +228,7 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                         />
                     </div>
                     <div className="cp-form-group">
-                        <label className="cp-form-label">Lương tối đa</label>
+                        <label className="cp-form-label">Lương tối đa (/giờ)</label>
                         <input
                             type="number"
                             min="0"
@@ -240,15 +240,13 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                     </div>
                     <div className="cp-form-group cp-form-group--sm">
                         <label className="cp-form-label">Đơn vị</label>
-                        <select
+                        <input
                             className="cp-input"
-                            value={form.salaryUnit || 'giờ'}
-                            onChange={(e) => setForm((p) => ({ ...p, salaryUnit: e.target.value }))}
-                        >
-                            <option value="giờ">/giờ</option>
-                            <option value="ca">/ca</option>
-                            <option value="tháng">/tháng</option>
-                        </select>
+                            value="/giờ"
+                            disabled
+                            readOnly
+                            aria-label="Đơn vị lương theo giờ"
+                        />
                     </div>
                 </div>
 

@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext.js';
 import { getHomePathByRole } from './path.js';
 
@@ -10,7 +10,7 @@ const GuestOnlyRoute = ({ children }) => {
         return <Navigate to={getHomePathByRole(auth.role)} replace />;
     }
 
-    return children;
+    return children ?? <Outlet />;
 };
 
 export default GuestOnlyRoute;
