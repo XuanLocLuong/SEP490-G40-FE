@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { getAuth, setAuth, clearAuth } from '../utils/Auth.jsx';
 import { logout as logoutApi } from '../apis/AuthApi.jsx';
+import { setSuppressSessionExpiredRedirect } from '../apis/AxiosClient.jsx';
 import { AuthContext } from './authContext.js';
 import { clearHomeSearchQuery } from '../utils/homeSearchStorage.js';
 
@@ -24,6 +25,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const logout = useCallback(async () => {
+        setSuppressSessionExpiredRedirect(true);
         try {
             await logoutApi();
         } catch (err) {
@@ -32,6 +34,8 @@ export const AuthProvider = ({ children }) => {
             clearHomeSearchQuery();
             clearAuth();
             setAuthState(null);
+            // Giữ suppress thêm chút để in-flight 401 không đá về /login.
+            window.setTimeout(() => setSuppressSessionExpiredRedirect(false), 1500);
         }
     }, []);
 

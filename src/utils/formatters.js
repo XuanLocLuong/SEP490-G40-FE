@@ -145,7 +145,8 @@ export const mapInteractionsToJobs = (rows) =>
 
 /**
  * Format salary range for job cards / detail.
- * Null or ≤ 0 counts as missing. Examples:
+ * Null or ≤ 0 counts as missing. Đơn vị luôn /giờ (BE chỉ lưu lương theo giờ).
+ * Examples:
  * - both: `22K - 30K/giờ`
  * - max only: `Lên đến 30K/giờ`
  * - min only: `Từ 22K/giờ`
@@ -177,16 +178,14 @@ export const formatSalary = (salaryMin, salaryMax) => {
 
     if (!min && !max) return 'Thỏa thuận';
 
-    const isMonthly =
-        (minNum != null && minNum >= 1_000_000) || (maxNum != null && maxNum >= 1_000_000);
-    const suffix = isMonthly ? '/tháng' : '/giờ';
+    const suffix = '/giờ';
 
     if (min && max) return `${min} - ${max}${suffix}`;
     if (min) return `Từ ${min}${suffix}`;
     return `Lên đến ${max}${suffix}`;
 };
 
-/** Định dạng tiền Việt — dưới 1tr: ₫/giờ, từ 1tr: triệu ₫/tháng */
+/** Định dạng tiền Việt theo giờ (₫/giờ). Số ≥ 1tr hiển thị dạng “triệu ₫/giờ”. */
 export const formatVndSalary = (value) => {
     if (value == null || value === '') return null;
     const n = Number(value);
@@ -198,7 +197,7 @@ export const formatVndSalary = (value) => {
             millions % 1 === 0
                 ? millions.toLocaleString('vi-VN')
                 : millions.toLocaleString('vi-VN', { maximumFractionDigits: 1 });
-        return `${text} triệu ₫/tháng`;
+        return `${text} triệu ₫/giờ`;
     }
 
     return `${n.toLocaleString('vi-VN')} ₫/giờ`;
