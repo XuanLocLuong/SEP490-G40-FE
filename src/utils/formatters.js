@@ -1,15 +1,9 @@
-const JOB_TYPE_LABELS = {
-    PART_TIME: 'Part-time',
-    FULL_TIME: 'Full-time',
-    INTERNSHIP: 'Thực tập',
-    INTERN: 'Thực tập', // legacy FE
-    FREELANCE: 'Freelance',
-    SEASONAL: 'Thời vụ',
-};
+import { JOB_TYPE_OPTIONS } from '../constants/jobPost.js';
 
 export const formatJobType = (jobType) => {
     if (!jobType) return '';
-    return JOB_TYPE_LABELS[jobType] || jobType.replace(/_/g, ' ');
+    const found = JOB_TYPE_OPTIONS.find((o) => o.value === jobType);
+    return found ? found.label : jobType.replace(/_/g, ' ');
 };
 
 /** BE summary: `isApply`; detail: `applied`. */

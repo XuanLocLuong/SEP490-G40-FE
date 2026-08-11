@@ -1,4 +1,6 @@
 // Helper format hiển thị cho Candidate Profile.
+export { JOB_TYPE_OPTIONS } from '../constants/jobPost.js';
+import { JOB_TYPE_OPTIONS } from '../constants/jobPost.js';
 
 export const GENDER_OPTIONS = [
     { value: 'MALE', label: 'Nam' },
@@ -18,14 +20,6 @@ export const getEducationLevelLabel = (value) => {
     const found = EDUCATION_LEVEL_OPTIONS.find((e) => e.value === value);
     return found ? found.label : value;
 };
-
-export const JOB_TYPE_OPTIONS = [
-    { value: 'PART_TIME', label: 'Part-time' },
-    { value: 'INTERNSHIP', label: 'Thực tập' },
-    { value: 'FULL_TIME', label: 'Full-time' },
-    { value: 'FREELANCE', label: 'Freelance' },
-    { value: 'SEASONAL', label: 'Thời vụ' },
-];
 
 export const getGenderLabel = (value) => {
     if (!value) return '';

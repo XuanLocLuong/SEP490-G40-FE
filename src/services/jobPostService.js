@@ -209,8 +209,7 @@ const hasValidShiftBlock = (blocks) =>
         (block) =>
             block.days?.length > 0 &&
             block.startTime &&
-            block.endTime &&
-            block.startTime < block.endTime
+            block.endTime 
     );
 
 const salaryRangeError = (form) => {
