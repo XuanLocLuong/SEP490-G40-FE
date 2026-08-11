@@ -8,7 +8,7 @@ import {
     findWardByName,
     matchProvinceAndWardFromNominatim,
 } from '../../modules/location/index.js';
-import { getSkills } from '../../apis/CandidateProfileApi.jsx';
+import recruiterJobApi from '../../apis/RecruiterJobApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
@@ -23,18 +23,6 @@ import {
     suggestJobKeywords,
 } from '../../utils/jobSearchSuggest.js';
 import '../../assets/styles/JobSearchForm.css';
-
-/** Catalog seed — dùng khi guest (API skills yêu cầu ROLE_CANDIDATE). */
-const FALLBACK_SKILLS = [
-    { id: 1, name: 'Pha chế' },
-    { id: 2, name: 'Thu ngân' },
-    { id: 3, name: 'Phục vụ' },
-    { id: 4, name: 'Giao tiếp' },
-    { id: 5, name: 'Tiếng Anh' },
-    { id: 6, name: 'Bán hàng' },
-    { id: 7, name: 'Quản lý kho' },
-    { id: 8, name: 'Tin học văn phòng' },
-];
 
 const toTimeInputValue = (value) => {
     if (!value) return '';
@@ -104,7 +92,7 @@ const JobSearchForm = ({
     const [scheduleEnd, setScheduleEnd] = useState(
         toTimeInputValue(initialSchedules?.[0]?.endTime) || ''
     );
-    const [skillsCatalog, setSkillsCatalog] = useState(FALLBACK_SKILLS);
+    const [skillsCatalog, setSkillsCatalog] = useState([]);
     const jobTypeOptions = useJobTypeOptions();
     const [keywordFocused, setKeywordFocused] = useState(false);
     const keywordInputRef = useRef(null);
@@ -173,30 +161,28 @@ const JobSearchForm = ({
         isCandidate,
     ]);
 
+    // Catalog public: GET /api/v1/jobs/skills (guest + mọi role).
     useEffect(() => {
-        if (auth?.role !== USER_ROLES.CANDIDATE) {
-            setSkillsCatalog(FALLBACK_SKILLS);
-            return undefined;
-        }
-
         let cancelled = false;
         (async () => {
             try {
-                const res = await getSkills();
-                const list = res?.data?.data ?? res?.data ?? [];
-                if (!cancelled && Array.isArray(list) && list.length > 0) {
-                    setSkillsCatalog(
-                        list.map((skill) => ({ id: skill.id, name: skill.name }))
-                    );
-                }
+                const list = await recruiterJobApi.getActiveSkills();
+                if (cancelled) return;
+                setSkillsCatalog(
+                    Array.isArray(list)
+                        ? list
+                              .filter((skill) => skill?.id != null && skill?.name)
+                              .map((skill) => ({ id: skill.id, name: skill.name }))
+                        : []
+                );
             } catch {
-                if (!cancelled) setSkillsCatalog(FALLBACK_SKILLS);
+                if (!cancelled) setSkillsCatalog([]);
             }
         })();
         return () => {
             cancelled = true;
         };
-    }, [auth?.role]);
+    }, []);
 
     const buildSchedules = () => {
         if (!isCandidate) return [];

@@ -23,7 +23,7 @@ const RoleBasedShellLayout = () => {
         case USER_ROLES.ADMIN:
             return <InternalLayout />;
         default:
-            return <Navigate to={ROUTES.LOGIN} replace />;
+            return <Navigate to={ROUTES.LANDING} replace />;
     }
 };
 

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getAuth, setAuth, clearAuth } from '../utils/Auth.jsx';
-import { markSessionExpired } from '../utils/sessionExpiredStorage.js';
+import { markSessionExpired, clearSessionExpiredFlag } from '../utils/sessionExpiredStorage.js';
 import { ROUTES } from '../routes/path.js';
 
 // Backend chạy tất cả API dưới prefix /api/v1 (xem SecurityConfig / *Controller.java).
@@ -25,10 +25,51 @@ const AUTH_ENDPOINTS_NEEDING_BEARER = [
 const authEndpointNeedsBearer = (url = '') =>
     AUTH_ENDPOINTS_NEEDING_BEARER.some((path) => url.includes(path));
 
+/** Chặn redirect /login khi đang logout chủ động (tránh race 401 in-flight). */
+let suppressSessionExpiredRedirect = false;
+
+export const setSuppressSessionExpiredRedirect = (value) => {
+    suppressSessionExpiredRedirect = Boolean(value);
+};
+
+const PROTECTED_PATH_PREFIXES = [
+    '/candidate',
+    '/recruiter',
+    '/admin',
+    '/post-manager',
+    '/manual-check',
+];
+
+const isProtectedAppPath = (path = '') =>
+    PROTECTED_PATH_PREFIXES.some(
+        (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+    );
+
+/**
+ * Session chết:
+ * - Logout chủ động / trang public: clear lặng, về Landing (không hiện “hết hạn”).
+ * - Đang ở trang nội bộ (đã login): mới mark flag + đá Login để hiện form lỗi.
+ */
 const redirectToLoginAfterSessionExpired = () => {
-    markSessionExpired();
+    if (suppressSessionExpiredRedirect) {
+        clearAuth();
+        clearSessionExpiredFlag();
+        return;
+    }
+
     clearAuth();
     const path = window.location.pathname || '';
+
+    if (!isProtectedAppPath(path)) {
+        // Guest / Landing / jobs public: không hiện “Phiên đăng nhập đã hết hạn”.
+        clearSessionExpiredFlag();
+        if (path !== ROUTES.LANDING && path !== ROUTES.LOGIN) {
+            window.location.href = ROUTES.LANDING;
+        }
+        return;
+    }
+
+    markSessionExpired();
     if (path !== ROUTES.LOGIN && !path.startsWith(`${ROUTES.LOGIN}/`)) {
         window.location.href = ROUTES.LOGIN;
     }
@@ -66,7 +107,13 @@ axiosClient.interceptors.response.use(
         const originalRequest = error.config;
         const status = error.response?.status;
         const url = originalRequest?.url || '';
+        const isLogoutCall = url.includes('/auth/logout');
         const isPublicAuthEndpoint = url.includes('/auth/') && !authEndpointNeedsBearer(url);
+
+        // Logout chủ động: không refresh / không đá /login — AuthContext tự clear rồi về Landing.
+        if (status === 401 && isLogoutCall) {
+            return Promise.reject(error);
+        }
 
         if (status !== 401 || isPublicAuthEndpoint || originalRequest._retry) {
             return Promise.reject(error);

@@ -241,7 +241,9 @@
 }
 
 .job-post-form__field--narrow {
-    max-width: 140px;
+    max-width: 200px;
+    min-width: 140px;
+    overflow: visible;
 }
 
 .job-post-form__field--deadline {
@@ -261,6 +263,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 14px;
+    overflow: visible;
 }
 
 .job-post-form__row--type-location {
@@ -344,6 +347,14 @@
     margin: 4px 0 0;
     font-size: 0.82rem;
     color: #dc2626;
+}
+
+/* Sát dưới input Số lượng tuyển, căn trái theo ô input */
+.job-post-form__error--candidates {
+    margin: 4px 0 0;
+    text-align: left;
+    white-space: normal;
+    width: 100%;
 }
 
 .job-post-form__chips {

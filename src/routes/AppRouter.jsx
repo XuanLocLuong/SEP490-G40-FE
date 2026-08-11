@@ -66,14 +66,8 @@ const AppRouter = () => {
 
     return (
         <Routes>
-            {/* ---- Guest / public (có Header + Footer) ---- */}
-            <Route
-                element={
-                    <GuestOnlyRoute>
-                        <GuestLayout />
-                    </GuestOnlyRoute>
-                }
-            >
+            {/* Landing luôn public — không GuestOnly (session cũ không đá / → role → login). */}
+            <Route element={<GuestLayout />}>
                 <Route path={ROUTES.LANDING} element={<LandingPage />} />
             </Route>
 
@@ -85,13 +79,14 @@ const AppRouter = () => {
                 <Route path={ROUTES.TOP_RECRUITERS} element={<TopRecruitersPage />} />
             </Route>
 
-            {/* ---- Auth (Login/Register/Verify) — KHÔNG có Header/Footer,
-                 tự đứng độc lập full-page theo đúng ảnh thiết kế ---- */}
-            <Route path={ROUTES.LOGIN} element={<Login />} />
-            <Route path={ROUTES.REGISTER} element={<Register />} />
-            <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmail />} />
-            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
-            <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
+            {/* ---- Auth — đã login thì đá về homepage role ---- */}
+            <Route element={<GuestOnlyRoute />}>
+                <Route path={ROUTES.LOGIN} element={<Login />} />
+                <Route path={ROUTES.REGISTER} element={<Register />} />
+                <Route path={ROUTES.VERIFY_EMAIL} element={<VerifyEmail />} />
+                <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+                <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
+            </Route>
 
             {/* Hồ sơ public candidate — 1 route dùng chung, layout theo role đang login.
                 Tránh đăng ký trùng path dưới nhiều ProtectedRoute (recruiter bị đá về home). */}

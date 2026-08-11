@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../contexts/authContext.js';
 import {
     canEditChatMessage,
@@ -9,6 +10,9 @@ import {
 } from '../../utils/chatDisplay.js';
 import ChatActionCard from './ChatActionCard.jsx';
 
+const MENU_GAP = 6;
+const MENU_EST_WIDTH = 120;
+
 const MessageMoreMenu = ({
     editable,
     recallable,
@@ -17,17 +21,67 @@ const MessageMoreMenu = ({
     onOpenChange,
     onEdit,
     onRecall,
-    align = 'end',
 }) => {
     const rootRef = useRef(null);
+    const buttonRef = useRef(null);
+    const menuRef = useRef(null);
+    const [menuStyle, setMenuStyle] = useState(null);
+
+    const updateMenuPosition = () => {
+        const btn = buttonRef.current;
+        if (!btn) return;
+        const rect = btn.getBoundingClientRect();
+        const menuEl = menuRef.current;
+        const menuWidth = menuEl?.offsetWidth || MENU_EST_WIDTH;
+        const menuHeight = menuEl?.offsetHeight || 72;
+
+        // Luôn bên trái nút ⋯; giữ trong viewport nếu sát mép.
+        let left = rect.left - menuWidth - MENU_GAP;
+        if (left < 8) left = 8;
+
+        let top = rect.top + rect.height / 2 - menuHeight / 2;
+        const maxTop = window.innerHeight - menuHeight - 8;
+        if (top < 8) top = 8;
+        if (top > maxTop) top = Math.max(8, maxTop);
+
+        setMenuStyle({
+            position: 'fixed',
+            top: `${Math.round(top)}px`,
+            left: `${Math.round(left)}px`,
+            right: 'auto',
+            transform: 'none',
+            zIndex: 10050,
+        });
+    };
+
+    useLayoutEffect(() => {
+        if (!open) {
+            setMenuStyle(null);
+            return undefined;
+        }
+        updateMenuPosition();
+        // Đo lại sau paint khi đã có kích thước menu thật.
+        const raf = window.requestAnimationFrame(updateMenuPosition);
+
+        const onReposition = () => updateMenuPosition();
+        window.addEventListener('resize', onReposition);
+        // Capture scroll from nested chat panel
+        window.addEventListener('scroll', onReposition, true);
+
+        return () => {
+            window.cancelAnimationFrame(raf);
+            window.removeEventListener('resize', onReposition);
+            window.removeEventListener('scroll', onReposition, true);
+        };
+    }, [open]);
 
     useEffect(() => {
         if (!open) return undefined;
 
         const onPointerDown = (event) => {
-            if (rootRef.current && !rootRef.current.contains(event.target)) {
-                onOpenChange(false);
-            }
+            const inTrigger = rootRef.current?.contains(event.target);
+            const inMenu = menuRef.current?.contains(event.target);
+            if (!inTrigger && !inMenu) onOpenChange(false);
         };
         const onKeyDown = (event) => {
             if (event.key === 'Escape') onOpenChange(false);
@@ -43,12 +97,51 @@ const MessageMoreMenu = ({
 
     if (!editable && !recallable) return null;
 
+    const menu = open
+        ? createPortal(
+              <div
+                  ref={menuRef}
+                  className="chat-msg__menu chat-msg__menu--portal"
+                  role="menu"
+                  style={menuStyle || { position: 'fixed', visibility: 'hidden', zIndex: 10050 }}
+              >
+                  {editable ? (
+                      <button
+                          type="button"
+                          role="menuitem"
+                          className="chat-msg__menu-item"
+                          disabled={busy}
+                          onClick={() => {
+                              onOpenChange(false);
+                              onEdit?.();
+                          }}
+                      >
+                          Sửa
+                      </button>
+                  ) : null}
+                  {recallable ? (
+                      <button
+                          type="button"
+                          role="menuitem"
+                          className="chat-msg__menu-item chat-msg__menu-item--danger"
+                          disabled={busy}
+                          onClick={() => {
+                              onOpenChange(false);
+                              onRecall?.();
+                          }}
+                      >
+                          Thu hồi
+                      </button>
+                  ) : null}
+              </div>,
+              document.body
+          )
+        : null;
+
     return (
-        <div
-            className={`chat-msg__more${align === 'start' ? ' chat-msg__more--start' : ''}`}
-            ref={rootRef}
-        >
+        <div className="chat-msg__more" ref={rootRef}>
             <button
+                ref={buttonRef}
                 type="button"
                 className="chat-msg__more-btn"
                 aria-label="Thêm thao tác"
@@ -59,38 +152,7 @@ const MessageMoreMenu = ({
             >
                 ⋯
             </button>
-            {open ? (
-                <div className="chat-msg__menu" role="menu">
-                    {editable ? (
-                        <button
-                            type="button"
-                            role="menuitem"
-                            className="chat-msg__menu-item"
-                            disabled={busy}
-                            onClick={() => {
-                                onOpenChange(false);
-                                onEdit?.();
-                            }}
-                        >
-                            Sửa
-                        </button>
-                    ) : null}
-                    {recallable ? (
-                        <button
-                            type="button"
-                            role="menuitem"
-                            className="chat-msg__menu-item chat-msg__menu-item--danger"
-                            disabled={busy}
-                            onClick={() => {
-                                onOpenChange(false);
-                                onRecall?.();
-                            }}
-                        >
-                            Thu hồi
-                        </button>
-                    ) : null}
-                </div>
-            ) : null}
+            {menu}
         </div>
     );
 };
@@ -153,7 +215,6 @@ const ChatMessageBubble = ({
             busy={busy}
             open={menuOpen}
             onOpenChange={setMenuOpen}
-            align="start"
             onEdit={() => setEditing(true)}
             onRecall={handleRecall}
         />

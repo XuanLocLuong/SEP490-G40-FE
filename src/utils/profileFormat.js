@@ -69,7 +69,8 @@ export const toMonthInputValue = (value) => {
 };
 
 // Định dạng lương "25k - 30k /giờ". Không có dữ liệu => ''.
-export const formatSalaryRange = ({ salaryMin, salaryMax, salaryUnit } = {}) => {
+// salaryUnit nếu còn trong data cũ sẽ bị bỏ qua — luôn hiển thị /giờ.
+export const formatSalaryRange = ({ salaryMin, salaryMax } = {}) => {
     const fmt = (n) => {
         if (n == null || n === '') return null;
         const num = Number(n);
@@ -78,7 +79,7 @@ export const formatSalaryRange = ({ salaryMin, salaryMax, salaryUnit } = {}) => 
     };
     const min = fmt(salaryMin);
     const max = fmt(salaryMax);
-    const unit = salaryUnit ? ` /${salaryUnit}` : '';
+    const unit = ' /giờ';
     if (min && max) return `${min} - ${max}${unit}`;
     if (min) return `Từ ${min}${unit}`;
     if (max) return `Đến ${max}${unit}`;

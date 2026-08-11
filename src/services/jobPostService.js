@@ -362,6 +362,10 @@ export const toPreviewJob = (
         location: detail.location,
         business: detail.business,
         shifts: detail.shifts,
+        // Preview chưa có apply → chỗ trống = số người cần tuyển recruiter nhập
+        requiredCandidates: detail.requiredCandidates,
+        remainingPositions: detail.remainingPositions,
+        vacancyAvailable: detail.vacancyAvailable,
     };
 };
 
