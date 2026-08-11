@@ -111,8 +111,9 @@ export const requiresBusinessLicenseVerification = (businessType, typeOptions = 
     resolveRequiresBusinessLicense({ businessType, typeOptions });
 
 /**
- * Luồng chỉ nộp GPKD/MST — theo gate BE: CCCD_PASSED hoặc BUSINESS_REJECTED.
- * Không gồm BUSINESS_MANUALLY (dùng /verifications/retry).
+ * Luồng chỉ nộp GPKD/MST (không upload lại CCCD).
+ * - CCCD_PASSED: bổ sung lần đầu sau đổi type / thiếu GPKD
+ * - BUSINESS_REJECTED | BUSINESS_MANUALLY: sửa/retry nhánh giấy phép
  */
 export const isBusinessLicenseOnlyFlow = ({
     verificationStatus,
@@ -124,7 +125,10 @@ export const isBusinessLicenseOnlyFlow = ({
     if (status === VERIFICATION_STATUS.CCCD_PASSED) {
         return !isFullyBusinessVerified({ badge, verificationStatus: status, needsLicense });
     }
-    return status === VERIFICATION_STATUS.BUSINESS_REJECTED;
+    return (
+        status === VERIFICATION_STATUS.BUSINESS_REJECTED ||
+        status === VERIFICATION_STATUS.BUSINESS_MANUALLY
+    );
 };
 
 export const isVerificationExpired = (status) =>

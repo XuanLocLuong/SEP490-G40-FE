@@ -10,6 +10,7 @@ import {
 import recruiterProfileApi from '../../apis/RecruiterProfileApi.jsx';
 import { ROUTES } from '../../routes/path.js';
 import { mapBusinessTypeOptions } from '../../utils/businessTypeDisplay.js';
+import RequiredMark from '../../components/common/RequiredMark.jsx';
 import {
     VERIFICATION_STATUS,
     getDisplayExtractedEntries,
@@ -196,6 +197,8 @@ const RecruiterVerificationPage = () => {
     const [backImage, setBackImage] = useState(null);
     const [taxCode, setTaxCode] = useState('');
     const [certificateImages, setCertificateImages] = useState([]);
+    /** Một trong hai: MST hoặc ảnh GPKD (khớp BE). */
+    const [licenseProofMode, setLicenseProofMode] = useState('tax'); // 'tax' | 'certificate'
     const [submitting, setSubmitting] = useState(false);
     const [lastResponse, setLastResponse] = useState(null);
 
@@ -225,7 +228,8 @@ const RecruiterVerificationPage = () => {
     const useRetryApi = hasExistingVerificationRequest;
     const useLicenseRetryApi =
         licenseOnlyFlow &&
-        profile?.verificationStatus === VERIFICATION_STATUS.BUSINESS_REJECTED;
+        (profile?.verificationStatus === VERIFICATION_STATUS.BUSINESS_REJECTED ||
+            profile?.verificationStatus === VERIFICATION_STATUS.BUSINESS_MANUALLY);
 
     const isPendingLocked =
         isVerificationPendingManual(profile?.verificationStatus) && !retryMode;
@@ -249,6 +253,7 @@ const RecruiterVerificationPage = () => {
         setProfile(data);
         if (data?.taxCode) {
             setTaxCode((prev) => prev || String(data.taxCode));
+            setLicenseProofMode('tax');
         }
 
         const needsGpkd = resolveRequiresBusinessLicense({
@@ -403,15 +408,31 @@ const RecruiterVerificationPage = () => {
         }
 
         const trimmedTax = taxCode.trim();
-        if (needsLicense && !trimmedTax && certificateImages.length === 0) {
-            toast.error('Loại hình này cần mã số thuế hoặc ảnh giấy phép (ít nhất một trong hai).');
-            return;
+        if (needsLicense || licenseOnlyFlow) {
+            if (licenseProofMode === 'tax') {
+                if (!trimmedTax) {
+                    toast.error('Vui lòng nhập mã số thuế.');
+                    return;
+                }
+            } else if (certificateImages.length === 0) {
+                toast.error('Vui lòng tải ít nhất một ảnh giấy phép kinh doanh.');
+                return;
+            }
         }
 
         if (!licenseOnlyFlow && (!frontImage || !backImage)) {
             toast.error('Vui lòng tải đủ mặt trước và mặt sau CCCD.');
             return;
         }
+
+        const licenseTax =
+            (needsLicense || licenseOnlyFlow) && licenseProofMode === 'tax'
+                ? trimmedTax
+                : undefined;
+        const licenseCertificates =
+            (needsLicense || licenseOnlyFlow) && licenseProofMode === 'certificate'
+                ? certificateImages
+                : [];
 
         setSubmitting(true);
         try {
@@ -421,8 +442,8 @@ const RecruiterVerificationPage = () => {
             if (licenseOnlyFlow) {
                 const licensePayload = {
                     businessId,
-                    taxCode: trimmedTax || undefined,
-                    certificateImages,
+                    taxCode: licenseTax,
+                    certificateImages: licenseCertificates,
                 };
                 try {
                     data = await submitBusinessLicense(licensePayload, { retry: usedRetry });
@@ -439,8 +460,8 @@ const RecruiterVerificationPage = () => {
                     businessId,
                     frontImage,
                     backImage,
-                    taxCode: needsLicense ? trimmedTax || undefined : undefined,
-                    certificateImages: needsLicense ? certificateImages : [],
+                    taxCode: needsLicense ? licenseTax : undefined,
+                    certificateImages: needsLicense ? licenseCertificates : [],
                 };
                 try {
                     data = await submitVerification(payload, { retry: usedRetry });
@@ -499,6 +520,7 @@ const RecruiterVerificationPage = () => {
         setFrontImage(null);
         setBackImage(null);
         setCertificateImages([]);
+        setLicenseProofMode('tax');
         setSearchParams({ retry: '1' }, { replace: true });
     };
 
@@ -570,8 +592,8 @@ const RecruiterVerificationPage = () => {
                     <h2>{licenseOnlyFlow ? 'Bổ sung giấy phép / MST' : 'Nộp hồ sơ xác minh'}</h2>
                     <p className="rv-card__sub">
                         {licenseOnlyFlow
-                            ? 'Không cần upload lại CCCD. Gửi MST và/hoặc ảnh GPKD qua API bổ sung giấy phép.'
-                            : `Hệ thống xử lý CCCD${needsLicense ? ' và MST/giấy phép' : ''} trong cùng một lần nộp.`}
+                            ? 'Không cần upload lại CCCD. Chọn MST hoặc upload ảnh GPKD (một trong hai).'
+                            : `Hệ thống xử lý CCCD${needsLicense ? ' và MST hoặc giấy phép' : ''} trong cùng một lần nộp.`}
                         {useRetryApi || useLicenseRetryApi ? ' Bạn đang ở chế độ nộp lại (retry).' : ''}
                     </p>
 
@@ -620,31 +642,80 @@ const RecruiterVerificationPage = () => {
                                 <input type="text" value={businessName} readOnly />
                             </label>
 
-                            <label className="rv-field">
-                                <span>Mã số thuế (Nếu có)</span>
-                                <input
-                                    type="text"
-                                    value={taxCode}
-                                    onChange={(e) => setTaxCode(e.target.value)}
-                                    placeholder="Mã số thuế 10 hoặc 13 số"
-                                    disabled={submitting}
-                                />
-                                <small className="rv-field__hint">
-                                    Có MST thì BE ưu tiên tra cứu thuế — kể cả khi kèm ảnh GPKD.
-                                </small>
-                            </label>
-
                             <div className="rv-field">
-                                <span>Ảnh giấy phép (nhiều trang — nếu không có MST)</span>
-                                <CertificateImagesField
-                                    files={certificateImages}
-                                    onChange={setCertificateImages}
-                                    disabled={submitting}
-                                />
+                                <span>Phương thức xác thực giấy phép</span>
+                                <div
+                                    className="rv-segment"
+                                    role="radiogroup"
+                                    aria-label="Chọn MST hoặc ảnh GPKD"
+                                >
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={licenseProofMode === 'tax'}
+                                        className={`rv-segment__btn${
+                                            licenseProofMode === 'tax' ? ' is-active' : ''
+                                        }`}
+                                        disabled={submitting}
+                                        onClick={() => {
+                                            setLicenseProofMode('tax');
+                                            setCertificateImages([]);
+                                        }}
+                                    >
+                                        Có mã số thuế
+                                    </button>
+                                    <button
+                                        type="button"
+                                        role="radio"
+                                        aria-checked={licenseProofMode === 'certificate'}
+                                        className={`rv-segment__btn${
+                                            licenseProofMode === 'certificate' ? ' is-active' : ''
+                                        }`}
+                                        disabled={submitting}
+                                        onClick={() => {
+                                            setLicenseProofMode('certificate');
+                                            setTaxCode('');
+                                        }}
+                                    >
+                                        Upload giấy phép
+                                    </button>
+                                </div>
                                 <small className="rv-field__hint">
-                                    Có thể chọn nhiều trang giấy phép. Có MST thì không bắt buộc kèm ảnh.
+                                    Chỉ cần một trong hai. Ưu tiên MST nếu doanh nghiệp đã có.
                                 </small>
                             </div>
+
+                            {licenseProofMode === 'tax' ? (
+                                <label className="rv-field">
+                                    <span>
+                                        Mã số thuế <RequiredMark />
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={taxCode}
+                                        onChange={(e) => setTaxCode(e.target.value)}
+                                        placeholder="Mã số thuế 10 hoặc 13 số"
+                                        disabled={submitting}
+                                    />
+                                    <small className="rv-field__hint">
+                                        Hệ thống sẽ tra cứu thuế theo MST.
+                                    </small>
+                                </label>
+                            ) : (
+                                <div className="rv-field">
+                                    <span>
+                                        Ảnh giấy phép (nhiều trang) <RequiredMark />
+                                    </span>
+                                    <CertificateImagesField
+                                        files={certificateImages}
+                                        onChange={setCertificateImages}
+                                        disabled={submitting}
+                                    />
+                                    <small className="rv-field__hint">
+                                        Dùng khi không có MST. Có thể chọn nhiều trang giấy phép.
+                                    </small>
+                                </div>
+                            )}
                         </>
                     ) : null}
 
@@ -699,8 +770,9 @@ const RecruiterVerificationPage = () => {
                     </div>
                     <h2>Hồ sơ đang chờ duyệt</h2>
                     <p>
-                        Manual Team đang xem xét. Không gửi lại bằng API nộp mới — nếu cần sửa, dùng
-                        nút nộp lại (retry).
+                        {licenseOnlyFlow
+                            ? 'Manual Team đang xem xét giấy phép / MST. Nếu cần sửa, dùng nút nộp lại — không cần upload lại CCCD.'
+                            : 'Manual Team đang xem xét. Không gửi lại bằng API nộp mới — nếu cần sửa, dùng nút nộp lại (retry).'}
                     </p>
                     <div className="rv-card__actions rv-card__actions--center">
                         <Link to={ROUTES.RECRUITER_HOME} className="rv-btn rv-btn--primary">
