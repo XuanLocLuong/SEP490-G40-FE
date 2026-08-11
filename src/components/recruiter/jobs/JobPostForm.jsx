@@ -1,4 +1,4 @@
-import { JOB_TYPE_OPTIONS } from '../../../constants/jobPost.js';
+import { useJobTypeOptions } from '../../../hooks/useJobTypeOptions.js';
 import {
     formatLocationDisplay,
     formatSalaryInputDisplay,
@@ -23,6 +23,7 @@ const JobPostForm = ({
     skillsLoading = false,
 }) => {
     const minApplicationDeadline = getMinApplicationDeadline();
+    const jobTypeOptions = useJobTypeOptions();
 
     const setField = (field, value) => {
         onChange({ ...form, [field]: value });
@@ -77,7 +78,7 @@ const JobPostForm = ({
                             onChange={(e) => setField('jobType', e.target.value)}
                             onBlur={blur('jobType')}
                         >
-                            {JOB_TYPE_OPTIONS.map((opt) => (
+                            {jobTypeOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
                                     {opt.label}
                                 </option>

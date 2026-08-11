@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
 import { PencilIcon, TargetIcon, WalletIcon, MapPinIcon } from './profileIcons.jsx';
-import { JOB_TYPE_OPTIONS, formatSalaryRange, getJobTypeLabel } from '../../utils/profileFormat.js';
+import { formatSalaryRange, getJobTypeLabel } from '../../utils/profileFormat.js';
+import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import LocationPicker from '../../modules/location/LocationPicker.jsx';
 
 // SECTION 2 — Job Preference: hình thức, lương mong đợi, địa điểm. Edit qua modal -> PUT Profile.
 const JobPreferenceCard = ({ preference, onSave, saving }) => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(preference);
+    const jobTypeOptions = useJobTypeOptions();
 
     const [showMap, setShowMap] = useState(false);
     const [formError, setFormError] = useState('');
@@ -199,7 +201,7 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                     {formError && <p className="cp-form-error">{formError}</p>}
                     <label className="cp-form-label">Hình thức mong muốn</label>
                     <div className="cp-choice-grid">
-                        {JOB_TYPE_OPTIONS.map((opt) => {
+                        {jobTypeOptions.map((opt) => {
                             const active = (form.jobTypes || []).includes(opt.value);
                             return (
                                 <button
