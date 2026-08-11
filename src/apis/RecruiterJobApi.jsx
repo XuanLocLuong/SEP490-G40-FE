@@ -57,6 +57,12 @@ const recruiterJobApi = {
         return unwrapData(res);
     },
 
+    /** GET /api/v1/jobs/types — danh sách JobType (enum BE) cho dropdown */
+    getJobTypes: async () => {
+        const res = await axiosClient.get(`${JOBS_BASE}/types`);
+        return unwrapData(res);
+    },
+
     /** OPEN ↔ CLOSED — BE: PATCH /api/v1/{jobId}/status */
     changeJobStatus: async (jobId, status) => {
         const res = await axiosClient.patch(`${API_PREFIX}/${jobId}/status`, { status });

@@ -36,6 +36,7 @@ const CONFIG_BY_ROLE = {
                 icon: SettingsIcon,
                 children: [
                     { path: ROUTES.ADMIN_SKILLS, label: 'Kỹ năng', icon: LayersIcon },
+                    { path: ROUTES.ADMIN_BUSINESS_TYPES, label: 'Loại hình DN', icon: ClipboardIcon },
                     { path: ROUTES.ADMIN_TRUST_SCORE_RULES, label: 'Điểm uy tín', icon: ShieldIcon },
                     { path: ROUTES.ADMIN_SYSTEM_CONFIG, label: 'Cấu hình trọng số', icon: SettingsIcon },
                 ],

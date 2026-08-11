@@ -10,7 +10,7 @@ import {
 } from '../../modules/location/index.js';
 import recruiterJobApi from '../../apis/RecruiterJobApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
-import { JOB_TYPE_OPTIONS } from '../../utils/profileFormat.js';
+import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import {
     geocodeAddress,
@@ -93,6 +93,7 @@ const JobSearchForm = ({
         toTimeInputValue(initialSchedules?.[0]?.endTime) || ''
     );
     const [skillsCatalog, setSkillsCatalog] = useState([]);
+    const jobTypeOptions = useJobTypeOptions();
     const [keywordFocused, setKeywordFocused] = useState(false);
     const keywordInputRef = useRef(null);
     const skipSuggestOpenRef = useRef(false);
@@ -451,7 +452,7 @@ const JobSearchForm = ({
                                     onChange={(e) => setJobType(e.target.value)}
                                 >
                                     <option value="">Tất cả</option>
-                                    {JOB_TYPE_OPTIONS.map((opt) => (
+                                    {jobTypeOptions.map((opt) => (
                                         <option key={opt.value} value={opt.value}>
                                             {opt.label}
                                         </option>

@@ -63,6 +63,7 @@ export const ROUTES = {
 
     ADMIN_SYSTEM_CONFIG: '/admin/system-config',
     ADMIN_SKILLS: '/admin/skills',
+    ADMIN_BUSINESS_TYPES: '/admin/business-types',
     ADMIN_TRUST_SCORE_RULES: '/admin/trust-score-rules',
     ADMIN_AUDIT_LOG: '/admin/audit-log',
     ADMIN_ESCALATIONS: '/admin/escalations',

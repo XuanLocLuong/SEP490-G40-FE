@@ -48,6 +48,7 @@ import ManualVerificationQueuePage from '../pages/manual-check/ManualVerificatio
 import ManualCheckReviewModerationPage from '../pages/manual-check/ManualCheckReviewModerationPage.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
 import AdminSkillsPage from '../pages/admin/AdminSkillsPage.jsx';
+import AdminBusinessTypesPage from '../pages/admin/AdminBusinessTypesPage.jsx';
 import AdminTrustScoreRulesPage from '../pages/admin/AdminTrustScoreRulesPage.jsx';
 import AdminAccountsPage from '../pages/admin/AdminAccountsPage.jsx';
 import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage.jsx';
@@ -221,6 +222,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.ADMIN_HOME} element={<AdminDashboard />} />
                 <Route path={ROUTES.ADMIN_ANALYTICS} element={<AdminDashboard />} />
                 <Route path={ROUTES.ADMIN_SKILLS} element={<AdminSkillsPage />} />
+                <Route path={ROUTES.ADMIN_BUSINESS_TYPES} element={<AdminBusinessTypesPage />} />
                 <Route path={ROUTES.ADMIN_TRUST_SCORE_RULES} element={<AdminTrustScoreRulesPage />} />
                 <Route path={ROUTES.ADMIN_ACCOUNTS} element={<AdminAccountsPage />} />
                 <Route path={ROUTES.ADMIN_SYSTEM_CONFIG} element={<AdminSystemConfigPage />} />
