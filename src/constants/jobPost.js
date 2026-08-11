@@ -10,7 +10,7 @@ export const JOB_POST_ACTION = {
 };
 
 /** Label FE cho JobType BE (không có API danh mục — enum cố định). */
-export const JOB_TYPES = [
+export const JOB_TYPE_OPTIONS = [
     { value: 'PART_TIME', label: 'Part-time' },
     { value: 'FULL_TIME', label: 'Full-time' },
     { value: 'INTERNSHIP', label: 'Thực tập' },

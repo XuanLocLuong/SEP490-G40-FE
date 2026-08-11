@@ -1,4 +1,4 @@
-import { JOB_TYPES } from '../../../constants/jobPost.js';
+import { JOB_TYPE_OPTIONS } from '../../../constants/jobPost.js';
 import {
     formatLocationDisplay,
     formatSalaryInputDisplay,
@@ -77,7 +77,7 @@ const JobPostForm = ({
                             onChange={(e) => setField('jobType', e.target.value)}
                             onBlur={blur('jobType')}
                         >
-                            {JOB_TYPES.map((opt) => (
+                            {JOB_TYPE_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
                                     {opt.label}
                                 </option>

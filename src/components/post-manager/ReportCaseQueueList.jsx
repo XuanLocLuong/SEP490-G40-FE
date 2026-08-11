@@ -1,3 +1,4 @@
+import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import { getBusinessInitial } from '../../utils/formatters.js';
 import {
     formatQueueTime,
@@ -39,15 +40,37 @@ const ReportCaseQueueList = ({
                 const categories = Array.isArray(item.categories) ? item.categories : [];
 
                 return (
-                    <button
+                    <div
                         key={item.jobId}
-                        type="button"
+                        role="button"
+                        tabIndex={0}
                         className={`pm-queue-card${isActive ? ' pm-queue-card--active' : ''}${
                             unread > 0 ? ' pm-report-card--unread' : ''
                         }`}
                         onClick={() => onSelect(item.jobId)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                onSelect(item.jobId);
+                            }
+                        }}
                     >
                         <div className="pm-queue-card__top pm-report-card__top">
+                            {item.businessId ? (
+                                <BusinessProfileLink
+                                    businessId={item.businessId}
+                                    className="pm-report-card__profile-link"
+                                    label="Báo cáo và khiếu nại"
+                                    title="Xem hồ sơ công khai nhà tuyển dụng"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    Xem hồ sơ NTĐ
+                                </BusinessProfileLink>
+                            ) : (
+                                <span className="pm-report-card__profile-link pm-report-card__profile-link--muted">
+                                    Xem hồ sơ NTĐ
+                                </span>
+                            )}
                             <span className="pm-queue-card__time">
                                 {formatQueueTime(item.latestReportAt)}
                             </span>
@@ -71,7 +94,7 @@ const ReportCaseQueueList = ({
                                 )}
                             </div>
                         </div>
-                    </button>
+                    </div>
                 );
             })}
         </div>
