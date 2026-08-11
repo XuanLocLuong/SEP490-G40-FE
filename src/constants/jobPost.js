@@ -1,7 +1,7 @@
 /**
  * Hằng số dùng chung cho màn đăng tin tuyển dụng (recruiter).
  * Skill catalog: GET /api/v1/jobs/skills (không hardcode FE).
- * JobType khớp BE enum com.project.sep490g40be.constant.JobType
+ * JobType catalog: GET /api/v1/jobs/types — JOB_TYPE_OPTIONS chỉ dùng fallback / format label.
  */
 
 export const JOB_POST_ACTION = {
@@ -9,7 +9,7 @@ export const JOB_POST_ACTION = {
     SUBMIT: 'SUBMIT',
 };
 
-/** Label FE cho JobType BE (không có API danh mục — enum cố định). */
+/** Fallback FE khi chưa load được GET /jobs/types (khớp enum JobType BE). */
 export const JOB_TYPE_OPTIONS = [
     { value: 'PART_TIME', label: 'Part-time' },
     { value: 'FULL_TIME', label: 'Full-time' },
