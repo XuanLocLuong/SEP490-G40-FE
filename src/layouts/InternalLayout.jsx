@@ -13,7 +13,6 @@ import {
     AlertIcon,
     ChartIcon,
     SettingsIcon,
-    TrendingIcon,
     LayersIcon,
 } from '../components/common/icons.jsx';
 
@@ -59,10 +58,8 @@ const CONFIG_BY_ROLE = {
         variant: 'dark',
         roleLabel: 'Post Manager',
         items: [
-            { path: ROUTES.POST_MANAGER_HOME, label: 'Dashboard', icon: GridIcon },
-            { path: ROUTES.POST_MANAGER_QUEUE, label: 'Hàng chờ kiểm duyệt', icon: ClipboardIcon },
-            { path: ROUTES.POST_MANAGER_URGENT_JOBS, label: 'Tin tuyển gấp', icon: TrendingIcon },
             { path: ROUTES.POST_MANAGER_ANALYTICS, label: 'Giám sát bài đăng', icon: ChartIcon },
+            { path: ROUTES.POST_MANAGER_QUEUE, label: 'Hàng chờ kiểm duyệt', icon: ClipboardIcon },
             { path: ROUTES.POST_MANAGER_REPORTS, label: 'Báo cáo và khiếu nại', icon: AlertIcon },
             { path: ROUTES.POST_MANAGER_SETTINGS, label: 'Cài đặt', icon: SettingsIcon },
         ],

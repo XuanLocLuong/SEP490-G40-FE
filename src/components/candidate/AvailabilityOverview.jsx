@@ -22,7 +22,7 @@ const AvailabilityOverview = ({ slots, loading, onEdit, onUploadFocus }) => {
                 <div className="availability-overview__actions">
                     <button type="button" className="availability-btn availability-btn--secondary" onClick={onUploadFocus}>
                         <UploadCloudIcon width={16} height={16} />
-                        Upload thời khóa biểu
+                        Tải ảnh lịch bận
                     </button>
                     <button type="button" className="availability-btn availability-btn--primary" onClick={onEdit}>
                         <PencilIcon width={16} height={16} />
@@ -35,7 +35,7 @@ const AvailabilityOverview = ({ slots, loading, onEdit, onUploadFocus }) => {
                 <div className="availability-empty-state">
                     <CalendarIcon width={34} height={34} />
                     <h3>Bạn chưa cập nhật lịch rảnh.</h3>
-                    <p>Cập nhật thời khóa biểu để hệ thống đề xuất công việc phù hợp với thời gian của bạn.</p>
+                    <p>Cập nhật lịch bận để hệ thống đề xuất công việc phù hợp với thời gian của bạn.</p>
                     <button type="button" className="availability-btn availability-btn--primary" onClick={onEdit}>
                         Thiết lập lịch rảnh
                     </button>

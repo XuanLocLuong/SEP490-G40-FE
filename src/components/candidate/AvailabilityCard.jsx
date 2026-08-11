@@ -78,7 +78,7 @@ const AvailabilityCard = ({
     return (
         <section className="cp-card cp-availability-card">
             <div className="cp-card__head">
-                <h2 className="cp-card__title">Lịch rảnh &amp; Thời khóa biểu</h2>
+                <h2 className="cp-card__title">Lịch rảnh &amp; Lịch bận</h2>
                 <div className="cp-availability-card__head-actions">
                     {modeLabel && hasSchedule ? (
                         <span className="cp-availability-card__mode">{modeLabel}</span>
@@ -112,7 +112,7 @@ const AvailabilityCard = ({
                 <div className="cp-availability-empty">
                     <CalendarIcon width={26} height={26} className="cp-availability-empty__icon" />
                     <p className="cp-availability-empty__text">
-                        Bạn chưa cập nhật lịch rảnh. Cập nhật thời khóa biểu để hệ thống đề xuất công việc
+                        Bạn chưa cập nhật lịch rảnh. Cập nhật lịch bận để hệ thống đề xuất công việc
                         phù hợp với thời gian của bạn.
                     </p>
                     <button type="button" className="cp-btn cp-btn--primary" onClick={onSetup}>

@@ -19,21 +19,23 @@ const ScheduleModeBanner = ({
                         isManual ? ' schedule-mode-banner__badge--manual' : ''
                     }`}
                 >
-                    {isManual ? 'Chế độ: Tự nhập lịch rảnh' : 'Chế độ: Tự động tính từ TKB + Job'}
+                    {isManual
+                        ? 'Chế độ: Tự nhập lịch rảnh'
+                        : 'Chế độ: Tự động tính từ lịch bận + việc đã nhận'}
                 </span>
                 <p>
                     {isManual
-                        ? 'Bạn đang chỉnh lịch rảnh trực tiếp. BE đã tắt apply TKB và job khi sang chế độ này. Muốn tính lại từ TKB/job: bật chế độ tự động rồi apply lại.'
-                        : 'Lịch rảnh được hệ thống tính từ TKB đang apply và các job đã nhận đang apply (06:00–22:00, gap ≥ 2h).'}
+                        ? 'Bạn đang chỉnh lịch rảnh trực tiếp. Hệ thống đã ngưng áp dụng lịch bận và việc đã nhận khi sang chế độ này. Muốn tính lại từ lịch bận / việc đã nhận: bật chế độ tự động rồi áp dụng lại.'
+                        : 'Lịch rảnh được hệ thống tính từ lịch bận đang áp dụng và các việc đã nhận đang áp dụng (06:00–22:00, khoảng trống ≥ 2 giờ).'}
                 </p>
                 {totalHiredJobCount > 0 ? (
                     <p className="schedule-mode-banner__meta">
-                        Job đang apply lịch: {appliedJobCount}/{totalHiredJobCount}
+                        Việc đã nhận đang áp dụng lịch: {appliedJobCount}/{totalHiredJobCount}
                     </p>
                 ) : null}
                 {isTimetableExpired ? (
                     <p className="schedule-mode-banner__warn" role="status">
-                        Thời khóa biểu đã hết hạn. Vui lòng cập nhật khoảng ngày / quét lại TKB.
+                        Lịch bận đã hết hạn. Vui lòng cập nhật khoảng ngày hoặc quét lại lịch bận.
                     </p>
                 ) : null}
             </div>
@@ -55,7 +57,7 @@ const ScheduleModeBanner = ({
                         disabled={modeSwitching}
                         title={
                             !timetableApplied
-                                ? 'Sau khi bật tự động, nhớ apply TKB (và job) để tính lại lịch rảnh'
+                                ? 'Sau khi bật tự động, nhớ áp dụng lịch bận (và việc đã nhận) để tính lại lịch rảnh'
                                 : undefined
                         }
                     >

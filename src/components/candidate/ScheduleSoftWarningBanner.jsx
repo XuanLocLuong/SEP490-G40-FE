@@ -22,7 +22,7 @@ const buildMessage = (summary) => {
             : `Bạn có ${n} việc đã nhận trong lịch rảnh. Kiểm tra và gỡ nếu không còn làm nữa.`;
     }
     if (summary?.isTimetableExpired) {
-        return 'Thời khóa biểu đang hết hạn nên lịch rảnh có thể không còn đúng. Hãy cập nhật lại để gợi ý chính xác hơn.';
+        return 'Lịch bận đang hết hạn nên lịch rảnh có thể không còn đúng. Hãy cập nhật lại để gợi ý chính xác hơn.';
     }
     return 'Lịch rảnh của bạn có thể cần được kiểm tra lại để gợi ý việc chính xác hơn.';
 };

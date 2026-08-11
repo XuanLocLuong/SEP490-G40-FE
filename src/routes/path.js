@@ -128,7 +128,7 @@ export const getHomePathByRole = (role) => {
         case USER_ROLES.RECRUITER:
             return ROUTES.RECRUITER_HOME;
         case USER_ROLES.POST_MANAGER:
-            return ROUTES.POST_MANAGER_HOME;
+            return ROUTES.POST_MANAGER_ANALYTICS;
         case USER_ROLES.MANUAL_CHECK_TEAM:
             return ROUTES.MANUAL_CHECK_HOME;
         case USER_ROLES.ADMIN:

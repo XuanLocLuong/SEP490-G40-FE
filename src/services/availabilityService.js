@@ -187,7 +187,7 @@ export const validateAvailabilityRange = ({ startDate, endDate }, { disallowPast
         return 'Ngày kết thúc phải từ ngày bắt đầu trở đi.';
     }
     if (disallowPastEnd && isTimetableEndDateExpired(endDate)) {
-        return 'Ngày kết thúc không được trước hôm nay. Vui lòng cập nhật khoảng ngày TKB.';
+        return 'Ngày kết thúc không được trước hôm nay. Vui lòng cập nhật khoảng ngày lịch bận.';
     }
     return null;
 };

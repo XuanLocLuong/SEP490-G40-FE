@@ -38,11 +38,11 @@ const TimetableSection = ({
         <section className="availability-card availability-range">
             <div className="availability-card__header">
                 <div>
-                    <h2>Thời khóa biểu (lịch học bận)</h2>
+                    <h2>Lịch bận</h2>
                     <p>
-                        Nhập tay các <strong>ca học bận</strong> (giờ có lớp). Apply TKB để hệ thống tính
-                        lịch rảnh (chế độ tự động). Muốn gợi ý lịch rảnh từ ảnh: dùng tab{' '}
-                        <strong>Quét TKB</strong>.
+                        Nhập tay các <strong>ca bận</strong> (học, việc cá nhân…).{' '}
+                        <strong>Áp dụng lịch bận</strong> để hệ thống tính lịch rảnh (chế độ tự động).
+                        Muốn gợi ý lịch rảnh từ ảnh: dùng tab <strong>Quét lịch bận</strong>.
                         {sourceLabel ? ` · ${sourceLabel}` : ''}
                     </p>
                 </div>
@@ -52,7 +52,7 @@ const TimetableSection = ({
                             timetable.isApplied ? ' timetable-section__badge--on' : ''
                         }`}
                     >
-                        {timetable.isApplied ? 'Đang apply' : 'Chưa apply'}
+                        {timetable.isApplied ? 'Đang áp dụng' : 'Chưa áp dụng'}
                     </span>
                     {hasTimetable ? (
                         timetable.isApplied ? (
@@ -62,7 +62,7 @@ const TimetableSection = ({
                                 disabled={toggling}
                                 onClick={onUnapply}
                             >
-                                {toggling ? 'Đang xử lý...' : 'Tắt apply TKB'}
+                                {toggling ? 'Đang xử lý...' : 'Ngưng áp dụng lịch bận'}
                             </button>
                         ) : (
                             <button
@@ -71,7 +71,7 @@ const TimetableSection = ({
                                 disabled={toggling}
                                 onClick={onApply}
                             >
-                                {toggling ? 'Đang xử lý...' : 'Apply TKB'}
+                                {toggling ? 'Đang xử lý...' : 'Áp dụng lịch bận'}
                             </button>
                         )
                     ) : null}
@@ -90,8 +90,8 @@ const TimetableSection = ({
                 onChange={onSlotsChange}
                 errors={slotErrors}
                 embedded
-                title="Khung giờ bận (thời khóa biểu)"
-                emptyText="Chưa có TKB. Thêm khung giờ bận thủ công hoặc quét ảnh ở tab Quét TKB để gợi ý lịch rảnh."
+                title="Khung giờ bận"
+                emptyText="Chưa có lịch bận. Thêm khung giờ thủ công hoặc quét ảnh ở tab Quét lịch bận để gợi ý lịch rảnh."
                 addButtonLabel="Thêm khung giờ bận"
             />
 
@@ -105,8 +105,8 @@ const TimetableSection = ({
                     {saving
                         ? 'Đang lưu...'
                         : hasTimetable
-                          ? 'Cập nhật thời khóa biểu'
-                          : 'Lưu thời khóa biểu'}
+                          ? 'Cập nhật lịch bận'
+                          : 'Lưu lịch bận'}
                 </button>
             </div>
         </section>

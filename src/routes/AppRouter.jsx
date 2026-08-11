@@ -40,7 +40,6 @@ import RecruiterInvitationsPage from '../pages/recruiter/invitations/RecruiterIn
 import RecruiterRecommendationsPage from '../pages/recruiter/recommendations/RecruiterRecommendationsPage.jsx';
 import RecruiterAnalyticsPage from '../pages/recruiter/analytics/RecruiterAnalyticsPage.jsx';
 import JobAnalyticsDetailPage from '../pages/recruiter/analytics/JobAnalyticsDetailPage.jsx';
-import PostManagerDashboard from '../pages/post-manager/PostManagerDashboard.jsx';
 import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import PostManagerReportQueuePage from '../pages/post-manager/PostManagerReportQueuePage.jsx';
 import PostManagerAnalyticsPage from '../pages/post-manager/PostManagerAnalyticsPage.jsx';
@@ -184,7 +183,10 @@ const AppRouter = () => {
                     </ProtectedRoute>
                 }
             >
-                <Route path={ROUTES.POST_MANAGER_HOME} element={<PostManagerDashboard />} />
+                <Route
+                    path={ROUTES.POST_MANAGER_HOME}
+                    element={<Navigate to={ROUTES.POST_MANAGER_ANALYTICS} replace />}
+                />
                 <Route path={ROUTES.POST_MANAGER_QUEUE} element={<PostManagerReviewQueuePage />} />
                 <Route path={ROUTES.POST_MANAGER_REPORTS} element={<PostManagerReportQueuePage />} />
                 <Route path={ROUTES.POST_MANAGER_ANALYTICS} element={<PostManagerAnalyticsPage />} />

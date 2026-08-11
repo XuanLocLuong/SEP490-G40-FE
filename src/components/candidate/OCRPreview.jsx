@@ -18,9 +18,9 @@ const OCRPreview = ({
         <section className="availability-ocr">
             <div className="availability-ocr__header">
                 <div>
-                    <h2>Gợi ý lịch rảnh từ thời khóa biểu</h2>
+                    <h2>Gợi ý lịch rảnh từ lịch bận</h2>
                     <p>
-                        AI đọc lịch học bận trên ảnh và tính các khung giờ <strong>rảnh</strong> (trong
+                        AI đọc các ca bận trên ảnh và tính các khung giờ <strong>rảnh</strong> (trong
                         06:00–22:00). Chọn khoảng ngày, chỉnh sửa nếu cần, rồi lưu vào lịch rảnh (chế độ
                         tự nhập trên app).
                     </p>

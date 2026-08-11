@@ -38,16 +38,16 @@ const UploadTimetable = ({ file, previewUrl, uploading, onFileChange, onUpload }
                 <div className="upload-timetable__icon">
                     <UploadCloudIcon width={34} height={34} />
                 </div>
-                <h2>Quét ảnh thời khóa biểu (JPG, PNG)</h2>
+                <h2>Quét ảnh lịch bận (JPG, PNG)</h2>
                 <p>
-                    AI đọc lịch học bận trên ảnh và gợi ý khung giờ <strong>rảnh</strong>. Sau khi quét,
-                    bạn sẽ chuyển sang tab <strong>Lịch rảnh</strong> để xem và lưu gợi ý. Ca học bận
-                    nhập tay ở tab <strong>Thời khóa biểu</strong>.
+                    AI đọc các ca bận trên ảnh và gợi ý khung giờ <strong>rảnh</strong>. Sau khi quét,
+                    bạn sẽ chuyển sang tab <strong>Lịch rảnh</strong> để xem và lưu gợi ý. Ca bận
+                    nhập tay ở tab <strong>Lịch bận</strong>.
                 </p>
 
                 {previewUrl && (
                     <div className="upload-timetable__preview upload-timetable__preview--compact">
-                        <img src={previewUrl} alt="Ảnh thời khóa biểu đã chọn" />
+                        <img src={previewUrl} alt="Ảnh lịch bận đã chọn" />
                         <span className="upload-timetable__preview-name">{file?.name}</span>
                         <span className="upload-timetable__preview-hint">
                             Kiểm tra lại ảnh trước khi quét — tránh chọn nhầm.
@@ -72,7 +72,7 @@ const UploadTimetable = ({ file, previewUrl, uploading, onFileChange, onUpload }
                         onClick={onUpload}
                         disabled={!file || uploading}
                     >
-                        {uploading ? 'Đang quét thời khóa biểu...' : 'Quét thời khóa biểu'}
+                        {uploading ? 'Đang quét lịch bận...' : 'Quét lịch bận'}
                     </button>
                 </div>
 

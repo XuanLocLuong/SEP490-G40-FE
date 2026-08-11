@@ -62,9 +62,9 @@ const TABS = {
 };
 
 const TAB_ITEMS = [
-    { id: TABS.SCAN, label: 'Quét TKB' },
-    { id: TABS.TIMETABLE, label: 'Thời khóa biểu' },
-    { id: TABS.JOBS, label: 'Job đã nhận' },
+    { id: TABS.SCAN, label: 'Quét lịch bận' },
+    { id: TABS.TIMETABLE, label: 'Lịch bận' },
+    { id: TABS.JOBS, label: 'Việc đã nhận' },
     { id: TABS.AVAILABILITY, label: 'Lịch rảnh' },
 ];
 
@@ -278,7 +278,7 @@ const AvailabilityPage = () => {
                     }
                 }
             }
-            toast.success('Đã lưu thời khóa biểu.');
+            toast.success('Đã lưu lịch bận.');
             await loadAll();
             if (fromOcr) {
                 setOcrSlots(null);
@@ -286,7 +286,7 @@ const AvailabilityPage = () => {
             }
             return true;
         } catch (error) {
-            toast.error(getScheduleApiErrorMessage(error, 'Lưu thời khóa biểu thất bại.'));
+            toast.error(getScheduleApiErrorMessage(error, 'Lưu lịch bận thất bại.'));
             return false;
         } finally {
             setSaving(false);
@@ -353,11 +353,13 @@ const AvailabilityPage = () => {
                 await loadAll();
                 if (stillManual) {
                     toast.info(
-                        'Đã lưu thời khóa biểu. Đang ở chế độ tự nhập — bật chế độ tự động hoặc Apply TKB để tính lại lịch rảnh.',
+                        'Đã lưu lịch bận. Đang ở chế độ tự nhập — bật chế độ tự động hoặc áp dụng lịch bận để tính lại lịch rảnh.',
                     );
                     switchTab(TABS.TIMETABLE);
                 } else {
-                    toast.success('Đã quét và lưu TKB. Lịch rảnh được cập nhật nếu đang chế độ tự động.');
+                    toast.success(
+                        'Đã quét và lưu lịch bận. Lịch rảnh được cập nhật nếu đang chế độ tự động.',
+                    );
                     switchTab(TABS.AVAILABILITY);
                 }
                 return;
@@ -375,10 +377,10 @@ const AvailabilityPage = () => {
             setOcrEndDate(parsed.endDate || availabilityEndDate || timetableEndDate || '');
             switchTab(TABS.AVAILABILITY);
             toast.info(
-                'AI gợi ý khung rảnh (không phải ca bận). Lưu sẽ ghi lịch rảnh thủ công (MANUAL).',
+                'AI gợi ý khung rảnh (không phải ca bận). Lưu sẽ ghi lịch rảnh thủ công (tự nhập).',
             );
         } catch (error) {
-            toast.error(getScheduleApiErrorMessage(error, 'Quét thời khóa biểu thất bại.'));
+            toast.error(getScheduleApiErrorMessage(error, 'Quét lịch bận thất bại.'));
         } finally {
             setUploading(false);
         }
@@ -418,7 +420,9 @@ const AvailabilityPage = () => {
 
     const handleApplyTimetable = async () => {
         if (isTimetableEndDateExpired(timetableEndDate) || isTimetableExpired) {
-            toast.error('Thời khóa biểu đã hết hạn. Cập nhật ngày kết thúc rồi lưu lại trước khi apply.');
+            toast.error(
+                'Lịch bận đã hết hạn. Cập nhật ngày kết thúc rồi lưu lại trước khi áp dụng.',
+            );
             switchTab(TABS.TIMETABLE);
             return;
         }
@@ -426,11 +430,11 @@ const AvailabilityPage = () => {
         try {
             await applyTimetable();
             clearOcrPreview();
-            toast.success('Đã apply thời khóa biểu. Lịch rảnh được tính lại.');
+            toast.success('Đã áp dụng lịch bận. Lịch rảnh được tính lại.');
             await loadAll();
             switchTab(TABS.AVAILABILITY);
         } catch (error) {
-            toast.error(getScheduleApiErrorMessage(error, 'Không thể apply thời khóa biểu.'));
+            toast.error(getScheduleApiErrorMessage(error, 'Không thể áp dụng lịch bận.'));
         } finally {
             setTimetableToggling(false);
         }
@@ -441,10 +445,10 @@ const AvailabilityPage = () => {
         try {
             await unapplyTimetable();
             clearOcrPreview();
-            toast.success('Đã tắt apply thời khóa biểu.');
+            toast.success('Đã ngưng áp dụng lịch bận.');
             await loadAll();
         } catch (error) {
-            toast.error(getScheduleApiErrorMessage(error, 'Không thể tắt apply thời khóa biểu.'));
+            toast.error(getScheduleApiErrorMessage(error, 'Không thể ngưng áp dụng lịch bận.'));
         } finally {
             setTimetableToggling(false);
         }
@@ -452,17 +456,17 @@ const AvailabilityPage = () => {
 
     const handleToggleJob = async (job) => {
         if (!job.isApplied && !isCalculated) {
-            toast.info('Chuyển sang chế độ tự động trước khi apply lịch job.');
+            toast.info('Chuyển sang chế độ tự động trước khi áp dụng lịch việc.');
             return;
         }
         setJobTogglingId(job.applicationId);
         try {
             if (job.isApplied) {
                 await unapplyHiredJobSchedule(job.applicationId);
-                toast.success('Đã tắt apply lịch job.');
+                toast.success('Đã ngưng áp dụng lịch việc.');
             } else {
                 await applyHiredJobSchedule(job.applicationId);
-                toast.success('Đã apply lịch job. Lịch rảnh được tính lại.');
+                toast.success('Đã áp dụng lịch việc. Lịch rảnh được tính lại.');
             }
             clearOcrPreview();
             await loadAll();
@@ -470,7 +474,7 @@ const AvailabilityPage = () => {
             toast.error(
                 getScheduleApiErrorMessage(
                     error,
-                    'Không thể đổi trạng thái apply. Có thể đang MANUAL hoặc xung đột TKB/job — tắt apply cái cũ hoặc đổi mode.',
+                    'Không thể đổi trạng thái áp dụng. Có thể đang chế độ tự nhập hoặc xung đột lịch bận / việc đã nhận — ngưng áp dụng cái cũ hoặc đổi chế độ.',
                 ),
             );
         } finally {
@@ -483,7 +487,9 @@ const AvailabilityPage = () => {
         try {
             await switchScheduleMode(SCHEDULE_MODES.MANUAL);
             clearOcrPreview();
-            toast.success('Đã chuyển sang tự nhập. TKB và job đã được bỏ apply trên server.');
+            toast.success(
+                'Đã chuyển sang tự nhập. Lịch bận và việc đã nhận đã được ngưng áp dụng.',
+            );
             await loadAll();
             switchTab(TABS.AVAILABILITY);
         } catch (error) {
@@ -498,7 +504,9 @@ const AvailabilityPage = () => {
         try {
             await switchScheduleMode(SCHEDULE_MODES.CALCULATED);
             clearOcrPreview();
-            toast.success('Đã bật chế độ tự động. Apply TKB/job nếu chưa bật để tính lại lịch rảnh.');
+            toast.success(
+                'Đã bật chế độ tự động. Áp dụng lịch bận / việc đã nhận nếu chưa bật để tính lại lịch rảnh.',
+            );
             await loadAll();
             if (!timetable.isApplied) {
                 switchTab(TABS.TIMETABLE);
@@ -523,10 +531,10 @@ const AvailabilityPage = () => {
                 >
                     ← {back.label}
                 </Link>
-                <h1>Quản lý Lịch rảnh &amp; Thời khóa biểu</h1>
+                <h1>Quản lý Lịch rảnh &amp; Lịch bận</h1>
                 <p>
-                    TKB và job hired là lịch bận; lịch rảnh dùng cho đề xuất việc. Chế độ tự động tính từ
-                    TKB + job đang apply.
+                    Lịch bận và việc đã nhận chiếm thời gian; lịch rảnh dùng cho đề xuất việc. Chế độ
+                    tự động tính từ lịch bận + việc đang áp dụng.
                 </p>
             </header>
 
@@ -688,8 +696,8 @@ const AvailabilityPage = () => {
                             }
                             emptyText={
                                 isCalculated
-                                    ? 'Chưa có lịch rảnh. Hãy apply TKB và/hoặc job hired.'
-                                    : 'Chưa có khung giờ. Thêm thủ công hoặc quét ảnh ở tab Quét TKB.'
+                                    ? 'Chưa có lịch rảnh. Hãy áp dụng lịch bận và/hoặc việc đã nhận.'
+                                    : 'Chưa có khung giờ. Thêm thủ công hoặc quét ảnh ở tab Quét lịch bận.'
                             }
                         />
 

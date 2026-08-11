@@ -12,7 +12,7 @@ const AvailabilityEditor = ({
     readOnly = false,
     embedded = false,
     title = 'Khung giờ rảnh của bạn (Có thể chỉnh sửa)',
-    emptyText = 'Chưa có khung giờ. Hãy thêm thủ công hoặc tải thời khóa biểu để AI gợi ý.',
+    emptyText = 'Chưa có khung giờ. Hãy thêm thủ công hoặc tải lịch bận để AI gợi ý.',
     addButtonLabel = 'Thêm khung giờ rảnh thủ công',
 }) => {
     const updateSlot = (index, patch) => {
