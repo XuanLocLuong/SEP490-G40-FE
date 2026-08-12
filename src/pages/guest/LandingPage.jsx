@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import JobDiscoveryHome from '../../components/landing/JobDiscoveryHome.jsx';
+import { useAuth } from '../../contexts/authContext.js';
 import { consumeHomeSectionScrollState } from '../../utils/homeSections.js';
 import { clearSessionExpiredFlag } from '../../utils/sessionExpiredStorage.js';
-import { ROUTES } from '../../routes/path.js';
+import { ROUTES, getHomePathByRole } from '../../routes/path.js';
 
 const LandingPage = () => {
+    const { auth } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -14,7 +16,15 @@ const LandingPage = () => {
         clearSessionExpiredFlag();
     }, []);
 
+    // Đã login mà vào `/` (vd. sau Google / link “Về trang chủ”) → đá về home đúng role.
     useEffect(() => {
+        if (!auth?.role) return;
+        navigate(getHomePathByRole(auth.role), { replace: true });
+    }, [auth?.role, navigate]);
+
+    useEffect(() => {
+        if (auth?.role) return;
+
         if (
             consumeHomeSectionScrollState({
                 location,
@@ -29,7 +39,12 @@ const LandingPage = () => {
             window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
         }
         // location.key: run once per navigation entry
-    }, [location.key, navigate]); // eslint-disable-next-line react-hooks/exhaustive-deps -- read state/hash from this entry only
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- read state/hash from this entry only
+    }, [location.key, navigate, auth?.role]);
+
+    if (auth?.role) {
+        return null;
+    }
 
     return <JobDiscoveryHome showWhySection showBookmarkRedirect />;
 };
