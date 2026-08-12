@@ -54,12 +54,12 @@ const Register = () => {
 
     const buildAuthResult = (authData, fallbackEmail = '', { fromGoogle = false } = {}) => {
         const isNewAccount = Boolean(authData.newAccount);
-        // Google response thường không có emailVerified dù BE đã verified.
-        // Chỉ bắt màn verify khi BE ghi rõ emailVerified === false.
-        // Register email/password: thiếu field hoặc false → vẫn bắt verify nếu newAccount.
+        // Google: chỉ bắt verify khi BE ghi rõ emailVerified === false.
+        // Email/password: mọi lần đăng ký mà email chưa verified đều hiện màn kiểm tra email
+        // (không phụ thuộc field newAccount — BE có thể bỏ/đổi tên field).
         const needsEmailVerification = fromGoogle
             ? isNewAccount && authData.emailVerified === false
-            : isNewAccount && authData.emailVerified !== true;
+            : authData.emailVerified !== true;
 
         return {
             homePath: getHomePathByRole(authData.role),
