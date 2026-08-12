@@ -33,6 +33,7 @@ export const ROUTES = {
     CANDIDATE_NOTIFICATIONS: '/candidate/notifications',
     CANDIDATE_SETTINGS: '/candidate/settings',
     CANDIDATE_APPLICATION_HISTORY: '/candidate/applications',
+    CANDIDATE_TRUST_SCORE: '/candidate/trust-score',
 
     RECRUITER_CREATE_JOB: '/recruiter/jobs/new',
     RECRUITER_EDIT_JOB: '/recruiter/jobs/:jobId/edit',
