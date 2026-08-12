@@ -1,12 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { hasAppliedToJob, hasInvitedToJob } from '../../utils/formatters.js';
+import { hasAppliedToJob, hasHiredJob, hasInvitedToJob } from '../../utils/formatters.js';
 import { buildInvitationsFromCurrentLocation } from '../../utils/invitationNavReturn.js';
 import { ROUTES } from '../../routes/path.js';
 import JobApplyButton from './JobApplyButton.jsx';
 
 /**
- * CTA discovery: isApply → Đã ứng tuyển; isInvited → Xem lời mời; else Ứng tuyển.
- * applied ưu tiên hơn invited.
+ * CTA discovery:
+ * HIRED → Đã nhận việc; applied → Đã ứng tuyển; invited → Xem lời mời; else Ứng tuyển.
  */
 const JobPrimaryCta = ({
     job,
@@ -19,6 +19,19 @@ const JobPrimaryCta = ({
     onApplied,
 }) => {
     const location = useLocation();
+
+    if (hasHiredJob(job)) {
+        return (
+            <button
+                type="button"
+                className={className}
+                disabled
+                title="Bạn đã nhận việc này rồi."
+            >
+                Đã nhận việc
+            </button>
+        );
+    }
 
     if (hasAppliedToJob(job)) {
         return (

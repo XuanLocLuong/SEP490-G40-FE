@@ -119,6 +119,12 @@
     border: 1px solid color-mix(in srgb, #059669 30%, transparent);
 }
 
+.job-list-item__tag--hired {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid color-mix(in srgb, #1d4ed8 30%, transparent);
+}
+
 .job-list-item__tag--invited {
     background: #fffbeb;
     color: #b45309;
