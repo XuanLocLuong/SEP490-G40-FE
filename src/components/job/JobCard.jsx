@@ -8,6 +8,7 @@ import {
     formatVacancyLabel,
     getBusinessInitial,
     hasAppliedToJob,
+    hasHiredJob,
     hasInvitedToJob,
 } from '../../utils/formatters.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
@@ -97,6 +98,7 @@ const JobCard = ({
     const businessLogoUrl = job.business?.logoUrl || null;
     const tagLabel = formatJobType(job.jobType);
     const distance = getJobDistanceDisplay(job.distanceKm, nearMe || showDistance);
+    const hired = hasHiredJob(job);
     const applied = hasAppliedToJob(job);
     const invited = hasInvitedToJob(job);
     const matchLabel = job.matchPercentLabel;
@@ -112,6 +114,7 @@ const JobCard = ({
         scheduleMatchLabel ||
         interactionLabel ||
         job.urgent ||
+        hired ||
         applied ||
         invited ||
         distance;
@@ -185,12 +188,17 @@ const JobCard = ({
                             Tuyển gấp
                         </span>
                     )}
-                    {applied && !interactionLabel && (
+                    {hired && !interactionLabel && (
+                        <span className="job-card__meta-item job-card__meta-item--hired">
+                            Đã nhận việc
+                        </span>
+                    )}
+                    {applied && !hired && !interactionLabel && (
                         <span className="job-card__meta-item job-card__meta-item--applied">
                             Đã ứng tuyển
                         </span>
                     )}
-                    {invited && !applied && (
+                    {invited && !hired && !applied && (
                         <span className="job-card__meta-item job-card__meta-item--invited">
                             Đã được mời
                         </span>

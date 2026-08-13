@@ -6,8 +6,23 @@ export const formatJobType = (jobType) => {
     return found ? found.label : jobType.replace(/_/g, ' ');
 };
 
-/** BE summary: `isApply`; detail: `applied`. */
-export const hasAppliedToJob = (job) => Boolean(job?.isApply || job?.applied);
+/** BE: `applicationStatus` trên JobSummary / JobDetail (PENDING | ACCEPTED | HIRED | …). */
+export const getApplicationStatus = (job) => job?.applicationStatus || null;
+
+/** Đã nhận việc (accept invitation / confirm hire). */
+export const hasHiredJob = (job) => getApplicationStatus(job) === 'HIRED';
+
+/**
+ * Đã có đơn nhưng chưa HIRED.
+ * Prefer `applicationStatus` khi BE có; fallback `isApply` / `applied` (trừ khi đã HIRED).
+ */
+export const hasAppliedToJob = (job) => {
+    if (hasHiredJob(job)) return false;
+    const status = getApplicationStatus(job);
+    if (status === 'PENDING' || status === 'ACCEPTED') return true;
+    if (status) return false;
+    return Boolean(job?.isApply || job?.applied);
+};
 
 /** BE summary: `isInvited` (lời mời SENT). */
 export const hasInvitedToJob = (job) => Boolean(job?.isInvited || job?.invited);
