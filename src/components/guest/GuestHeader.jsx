@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/authContext.js';
 import { useLogoutToLanding } from '../../hooks/useLogoutToLanding.js';
 import { useAutoHideHeader } from '../../hooks/useAutoHideHeader.js';
+import { useHomeSectionSpy } from '../../hooks/useHomeSectionSpy.js';
 import { ROUTES } from '../../routes/path.js';
 import {
     CANDIDATE_HOME_NAV_ITEMS,
@@ -38,7 +39,6 @@ const GuestHeader = () => {
     const headerHidden = useAutoHideHeader();
 
     const isOnHome = location.pathname === ROUTES.LANDING;
-    const [activeHomeSection, setActiveHomeSection] = useState(null);
 
     // Remove “JobLink gợi ý cho bạn” (requires login).
     const navItems = useMemo(
@@ -47,6 +47,11 @@ const GuestHeader = () => {
                 (item) => item.id !== HOME_SECTION_IDS.SUGGESTIONS
             ),
         []
+    );
+    const sectionIds = useMemo(() => navItems.map((item) => item.id), [navItems]);
+    const { activeSectionId, activateSection, clearActiveSection } = useHomeSectionSpy(
+        sectionIds,
+        { enabled: isOnHome }
     );
 
     const goLogin = () => {
@@ -66,14 +71,14 @@ const GuestHeader = () => {
 
         // On landing (`/`): behave like candidate header (scroll to section).
         if (isOnHome) {
-            setActiveHomeSection(item.id);
+            activateSection(item.id);
             scrollToHomeSection(item.id, { behavior: 'smooth' });
             return;
         }
 
         // On list pages: navigate directly to the list route.
         if (item.listPath) {
-            setActiveHomeSection(null);
+            clearActiveSection();
             navigate(item.listPath);
         }
     };
@@ -91,7 +96,11 @@ const GuestHeader = () => {
                         className="site-header__logo"
                         onClick={(e) => {
                             e.preventDefault();
-                            setActiveHomeSection(null);
+                            clearActiveSection();
+                            if (isOnHome) {
+                                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                                return;
+                            }
                             navigate(ROUTES.LANDING);
                         }}
                     >
@@ -104,7 +113,7 @@ const GuestHeader = () => {
                     >
                         {navItems.map((item) => {
                             const active = isOnHome
-                                ? activeHomeSection === item.id
+                                ? activeSectionId === item.id
                                 : isListPathActive(
                                       item.listPath,
                                       location.pathname,

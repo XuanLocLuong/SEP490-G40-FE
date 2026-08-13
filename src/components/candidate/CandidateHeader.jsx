@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { getProfile } from '../../apis/CandidateProfileApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useLogoutToLanding } from '../../hooks/useLogoutToLanding.js';
 import { useAutoHideHeader } from '../../hooks/useAutoHideHeader.js';
+import { useHomeSectionSpy } from '../../hooks/useHomeSectionSpy.js';
 import { ROUTES } from '../../routes/path.js';
 import ProfileMenu from '../common/ProfileMenu.jsx';
 import NotificationBell from '../notifications/NotificationBell.jsx';
@@ -23,6 +24,8 @@ import {
 } from '../../utils/homeSections.js';
 import { buildInvitationsFromCurrentLocation } from '../../utils/invitationNavReturn.js';
 import '../../assets/styles/HeaderStyle.css';
+
+const HOME_SECTION_IDS_LIST = CANDIDATE_HOME_NAV_ITEMS.map((item) => item.id);
 
 const BASE_DROPDOWN_ITEMS = [
     { label: 'Hồ sơ của tôi', path: ROUTES.CANDIDATE_PROFILE, icon: FileTextIcon },
@@ -57,7 +60,10 @@ const CandidateHeader = () => {
     const handleLogout = useLogoutToLanding();
     const headerHidden = useAutoHideHeader();
     const isOnHome = location.pathname === ROUTES.CANDIDATE_HOME;
-    const [activeHomeSection, setActiveHomeSection] = useState(null);
+    const { activeSectionId, activateSection, clearActiveSection } = useHomeSectionSpy(
+        HOME_SECTION_IDS_LIST,
+        { enabled: isOnHome }
+    );
 
     const dropdownItems = useMemo(
         () =>
@@ -93,19 +99,19 @@ const CandidateHeader = () => {
         event.preventDefault();
 
         if (isOnHome) {
-            setActiveHomeSection(item.id);
+            activateSection(item.id);
             scrollToHomeSection(item.id, { behavior: 'smooth' });
             return;
         }
 
         if (item.listPath) {
-            setActiveHomeSection(null);
+            clearActiveSection();
             navigate(item.listPath);
             return;
         }
 
         // No list page yet (Top employers) → homepage + one-shot scroll via state
-        setActiveHomeSection(item.id);
+        activateSection(item.id);
         navigate(ROUTES.CANDIDATE_HOME, {
             state: { [HOME_SCROLL_STATE_KEY]: item.id },
         });
@@ -118,7 +124,12 @@ const CandidateHeader = () => {
                     <NavLink
                         to={ROUTES.CANDIDATE_HOME}
                         className="site-header__logo"
-                        onClick={() => setActiveHomeSection(null)}
+                        onClick={() => {
+                            clearActiveSection();
+                            if (isOnHome) {
+                                window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                            }
+                        }}
                     >
                         JOBLINK
                     </NavLink>
@@ -127,7 +138,7 @@ const CandidateHeader = () => {
                         {CANDIDATE_HOME_NAV_ITEMS.map((item) => {
                             const href = item.listPath || ROUTES.CANDIDATE_HOME;
                             const active = isOnHome
-                                ? activeHomeSection === item.id
+                                ? activeSectionId === item.id
                                 : isListPathActive(item.listPath, location.pathname, location.search);
 
                             return (
