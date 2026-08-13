@@ -8,5 +8,15 @@ export const submitApplicationReview = (applicationId, body) =>
 export const getMyApplicationReview = (applicationId) =>
     axiosClient.get(`${API_PREFIX}/applications/${applicationId}/reviews/my`);
 
+/** GET /recruiter/reviews — danh sách review ứng viên theo job của recruiter. */
+export const getRecruiterReviews = ({ jobId, page = 0, size = 5 } = {}) =>
+    axiosClient.get(`${API_PREFIX}/recruiter/reviews`, {
+        params: {
+            ...(jobId ? { jobId } : {}),
+            page,
+            size,
+        },
+    });
+
 export const getReviewApiErrorMessage = (error, fallback = 'Không gửi được đánh giá.') =>
     error?.response?.data?.message || error?.message || fallback;
