@@ -53,6 +53,7 @@ import AdminTrustScoreRulesPage from '../pages/admin/AdminTrustScoreRulesPage.js
 import AdminAccountsPage from '../pages/admin/AdminAccountsPage.jsx';
 import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage.jsx';
 import AdminSystemConfigPage from '../pages/admin/AdminSystemConfigPage.jsx';
+import AdminBlacklistKeywordsPage from '../pages/admin/AdminBlacklistKeywordsPage.jsx';
 import CandidatePublicProfilePage from '../pages/shared/CandidatePublicProfilePage.jsx';
 import RoleBasedShellLayout from '../layouts/RoleBasedShellLayout.jsx';
 
@@ -224,6 +225,7 @@ const AppRouter = () => {
                 <Route path={ROUTES.ADMIN_SKILLS} element={<AdminSkillsPage />} />
                 <Route path={ROUTES.ADMIN_BUSINESS_TYPES} element={<AdminBusinessTypesPage />} />
                 <Route path={ROUTES.ADMIN_TRUST_SCORE_RULES} element={<AdminTrustScoreRulesPage />} />
+                <Route path={ROUTES.ADMIN_BLACKLIST_KEYWORDS} element={<AdminBlacklistKeywordsPage />} />
                 <Route path={ROUTES.ADMIN_ACCOUNTS} element={<AdminAccountsPage />} />
                 <Route path={ROUTES.ADMIN_SYSTEM_CONFIG} element={<AdminSystemConfigPage />} />
                 <Route path={ROUTES.ADMIN_AUDIT_LOG} element={<AdminAuditLogsPage />} />
