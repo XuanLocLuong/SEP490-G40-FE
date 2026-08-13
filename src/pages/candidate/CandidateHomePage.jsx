@@ -1,15 +1,12 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/authContext.js';
 import JobDiscoveryHome from '../../components/landing/JobDiscoveryHome.jsx';
 import { consumeHomeSectionScrollState } from '../../utils/homeSections.js';
 import { ROUTES } from '../../routes/path.js';
 
 const CandidateHomePage = () => {
-    const { auth } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
-    const displayName = auth?.fullName?.trim() || 'bạn';
 
     useEffect(() => {
         if (
@@ -35,8 +32,6 @@ const CandidateHomePage = () => {
             className="landing-page--candidate"
             showWhySection={false}
             showBookmarkRedirect
-            heroTitle={`Xin chào, ${displayName}`}
-            heroSubtitle=""
             featuredSize={4}
             featuredCompact
             showCandidateSections

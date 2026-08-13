@@ -16,6 +16,7 @@ import {
     MailIcon,
     StarIcon,
 } from '../common/icons.jsx';
+import SiteHeaderBrand from '../common/SiteHeaderBrand.jsx';
 import '../../assets/styles/HeaderStyle.css';
 
 const DROPDOWN_ITEMS = [
@@ -39,7 +40,7 @@ const RecruiterHeader = () => {
             <div className="site-header__inner">
                 <div className="site-header__left">
                     <NavLink to={ROUTES.RECRUITER_HOME} className="site-header__logo">
-                        JOBLINK
+                        <SiteHeaderBrand />
                     </NavLink>
 
                     <nav className="site-header__nav site-header__nav--role">

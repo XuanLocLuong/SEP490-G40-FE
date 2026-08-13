@@ -11,102 +11,203 @@
     font-size: 14px;
 }
 
-/* ---- Hero ---- */
+/* ---- Hero: banner full-bleed; search đè chân ảnh, mở rộng xuống dưới ---- */
 .landing-hero {
-    background: linear-gradient(135deg, #f7f9fc 0%, #eef3ff 100%);
-    padding: 48px 32px 40px;
+    background: var(--color-bg);
+    padding: 0;
 }
 
-.landing-hero__inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 40px;
-    align-items: center;
+.landing-hero__visual {
+    position: relative;
+    display: block;
+    width: 100%;
+    margin: 0;
+    line-height: 0;
 }
 
-.landing-hero__title {
-    margin: 0 0 16px;
-    font-size: clamp(28px, 4vw, 42px);
-    font-weight: 800;
-    line-height: 1.2;
-    color: var(--color-text);
-    letter-spacing: -0.02em;
+.landing-hero__banner {
+    display: block;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    /* Full 2 cạnh, giữ đúng tỉ lệ ảnh — không crop hai sườn. */
+    object-fit: contain;
+    object-position: center top;
+    animation: landing-hero-enter 0.6s ease-out both;
 }
 
-.landing-hero__subtitle {
-    margin: 0 0 28px;
-    font-size: 16px;
+/* Layer sparkle đè banner — không chặn click, dưới search dock. */
+.landing-hero__sparkles {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.landing-hero__sparkle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    box-shadow:
+        0 0 8px currentColor,
+        0 0 14px currentColor;
+    animation: landing-sparkle-fall var(--sparkle-dur, 6s) linear var(--sparkle-delay, 0s)
+        infinite;
+}
+
+.landing-hero__sparkle--star {
+    border-radius: 2px;
+    clip-path: polygon(
+        50% 0%,
+        61% 35%,
+        98% 35%,
+        68% 57%,
+        79% 91%,
+        50% 70%,
+        21% 91%,
+        32% 57%,
+        2% 35%,
+        39% 35%
+    );
+    box-shadow: 0 0 10px currentColor;
+}
+
+@keyframes landing-sparkle-fall {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 0, 0) scale(0.5);
+    }
+    10% {
+        opacity: 1;
+        transform: translate3d(
+                calc(var(--sparkle-dx, 0px) * 0.1),
+                calc(var(--sparkle-dy, 60px) * 0.08),
+                0
+            )
+            scale(1.15);
+    }
+    55% {
+        opacity: 0.85;
+    }
+    100% {
+        opacity: 0;
+        transform: translate3d(var(--sparkle-dx, 0px), var(--sparkle-dy, 60px), 0)
+            scale(0.7);
+    }
+}
+
+/* Flow layout (không absolute bottom) → advanced filter xổ xuống, không nhảy lên. */
+.landing-hero__dock {
+    position: relative;
+    z-index: 2;
+    width: min(1040px, calc(100% - 64px));
+    margin: -120px auto 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    line-height: normal;
+    animation: landing-hero-enter 0.5s ease-out 0.2s both;
+}
+
+@keyframes landing-hero-enter {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing-hero__banner,
+    .landing-hero__dock {
+        animation: none;
+    }
+
+    .landing-hero__sparkles {
+        display: none;
+    }
+}
+
+.landing-hero__greeting-sub {
+    margin: 0;
+    width: 100%;
+    font-size: 15px;
     line-height: 1.5;
     color: var(--color-text-muted);
 }
 
-@media (min-width: 768px) {
-    .landing-hero__subtitle {
-        white-space: nowrap;
-    }
-}
-
-.landing-hero__search {
-    margin-bottom: 0;
-}
-
-.landing-hero__visual {
-    display: flex;
-    justify-content: center;
-}
-
-.landing-hero__illustration {
-    width: 280px;
-    height: 280px;
-    border-radius: 24px;
-    background: linear-gradient(145deg, #dbe8ff 0%, #c5d8fa 100%);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
     overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
-.landing-hero__figure {
+.landing-hero__search.job-search-form {
+    width: 100%;
+    max-width: none;
+    margin: 0 0 8px;
     position: relative;
-    width: 140px;
-    height: 200px;
+    z-index: 2;
 }
 
-.landing-hero__figure-head {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: #f5c99a;
-    border: 3px solid #fff;
-}
-
-.landing-hero__figure-body {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100px;
-    height: 110px;
-    border-radius: 50px 50px 12px 12px;
-    background: var(--color-primary);
-}
-
-.landing-hero__figure-book {
-    position: absolute;
-    bottom: 50px;
-    right: -10px;
-    width: 36px;
-    height: 48px;
-    border-radius: 4px;
+.landing-hero__search .job-search-form__panel {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    border-radius: 16px;
+    border: 1px solid rgba(37, 99, 235, 0.16);
+    box-shadow: 0 12px 32px rgba(30, 58, 138, 0.12);
+    padding: 18px 20px;
     background: #fff;
-    border: 2px solid var(--color-primary-dark);
-    box-shadow: 2px 4px 0 rgba(31, 71, 184, 0.2);
+}
+
+.landing-hero__search .job-search-form__keyword-row {
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 14px;
+}
+
+.landing-hero__search .job-search-form__near-me {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.landing-hero__search .job-search-form__filter-row {
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 14px;
+}
+
+.landing-hero__search .job-search-form__locations {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(260px, 1.3fr) minmax(220px, 1fr);
+    gap: 14px;
+}
+
+.landing-hero__search .job-search-form__field--province .location-combobox__input,
+.landing-hero__search .job-search-form__field--ward .location-combobox__input {
+    width: 100%;
+    min-width: 0;
+}
+
+.landing-hero__search .job-search-form__submit {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-width: 140px;
 }
 
 /* ---- Shared section ---- */
@@ -115,6 +216,12 @@
     margin: 0 auto;
     padding: 48px 32px;
     scroll-margin-top: 96px;
+}
+
+/* Khít với hero: khoảng cách vừa phải trước “Việc làm tuyển gấp”. */
+.landing-hero + .landing-section,
+.landing-hero + div + .landing-section {
+    padding-top: 70px;
 }
 
 .landing-section__header {
@@ -509,17 +616,18 @@
 
 /* ---- Responsive ---- */
 @media (max-width: 1024px) {
-    .landing-hero__inner {
-        grid-template-columns: 1fr;
+    .landing-hero__dock {
+        width: min(1040px, calc(100% - 40px));
+        margin-top: -96px;
     }
 
-    .landing-hero__visual {
-        order: -1;
+    .landing-hero__search.job-search-form {
+        max-width: 100%;
+        margin-top: 0;
     }
 
-    .landing-hero__illustration {
-        width: 220px;
-        height: 220px;
+    .landing-hero__search .job-search-form__panel {
+        width: 100%;
     }
 
     .landing-employers__grid {
@@ -541,19 +649,41 @@
     }
 
     .landing-hero {
-        padding: 32px 16px 28px;
+        padding: 0;
+    }
+
+    .landing-hero__dock {
+        width: calc(100% - 32px);
+        margin-top: -72px;
     }
 
     .landing-section {
         padding: 36px 16px;
     }
 
+    .landing-hero + .landing-section,
+    .landing-hero + div + .landing-section {
+        padding-top: 20px;
+    }
+
     .landing-page__hero-error {
         padding: 0 16px 12px;
     }
 
-    .landing-hero__visual {
-        display: none;
+    .landing-hero__search.job-search-form {
+        margin-top: 0;
+        max-width: 100%;
+    }
+
+    .landing-hero__search .job-search-form__locations {
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .landing-hero__search .job-search-form__field--province .location-combobox__input,
+    .landing-hero__search .job-search-form__field--ward .location-combobox__input {
+        width: 100%;
+        min-width: 0;
     }
 
     .landing-section__header {
@@ -581,25 +711,7 @@
     }
 }
 
-/* Candidate home lives beside sidebar — tighter hero, skip marketing illustration. */
-.landing-page--candidate .landing-hero__title {
-    margin-bottom: 20px;
-    font-size: clamp(20px, 2.2vw, 26px);
-    font-weight: 700;
-    letter-spacing: -0.01em;
-}
-
-.landing-page--candidate .landing-hero__subtitle {
-    font-size: 14px;
-}
-
-.landing-page--candidate .landing-hero__inner {
-    grid-template-columns: 1fr;
-}
-
-.landing-page--candidate .landing-hero__visual {
-    display: none;
-}
+/* Candidate home: cùng banner + search (không greeting). */
 
 /* Force one row of compact cards on candidate homepage (override global 2-col rules). */
 .landing-page--candidate .landing-jobs__grid--compact,

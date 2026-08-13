@@ -23,6 +23,7 @@ import {
     scrollToHomeSection,
 } from '../../utils/homeSections.js';
 import { buildInvitationsFromCurrentLocation } from '../../utils/invitationNavReturn.js';
+import SiteHeaderBrand from '../common/SiteHeaderBrand.jsx';
 import '../../assets/styles/HeaderStyle.css';
 
 const HOME_SECTION_IDS_LIST = CANDIDATE_HOME_NAV_ITEMS.map((item) => item.id);
@@ -131,7 +132,7 @@ const CandidateHeader = () => {
                             }
                         }}
                     >
-                        JOBLINK
+                        <SiteHeaderBrand />
                     </NavLink>
 
                     <nav className="site-header__nav site-header__nav--role" aria-label="Khám phá việc làm">

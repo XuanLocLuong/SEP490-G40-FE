@@ -11,6 +11,7 @@ import {
     scrollToHomeSection,
 } from '../../utils/homeSections.js';
 import { setBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
+import SiteHeaderBrand from '../common/SiteHeaderBrand.jsx';
 import '../../assets/styles/HeaderStyle.css';
 
 // Highlight tab for list pages like `/jobs?section=urgent`.
@@ -104,7 +105,7 @@ const GuestHeader = () => {
                             navigate(ROUTES.LANDING);
                         }}
                     >
-                        JOBLINK
+                        <SiteHeaderBrand />
                     </a>
 
                     <nav
