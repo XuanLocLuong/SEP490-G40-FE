@@ -5,7 +5,14 @@ import '../../assets/styles/JobDetailPageStyle.css';
 import '../../assets/styles/JobDetailModalStyle.css';
 
 const markJobApplied = (prev) =>
-    prev ? { ...prev, applied: true, isApply: true } : prev;
+    prev
+        ? {
+              ...prev,
+              applied: true,
+              isApply: true,
+              applicationStatus: 'PENDING',
+          }
+        : prev;
 
 const JobDetailModal = ({ open, jobId, onClose, onApplied }) => {
     const [job, setJob] = useState(null);

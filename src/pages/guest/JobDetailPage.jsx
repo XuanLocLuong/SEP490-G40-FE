@@ -366,7 +366,14 @@ const JobDetailPage = () => {
                         error={detailError}
                         onApplied={() =>
                             setJob((prev) =>
-                                prev ? { ...prev, applied: true, isApply: true } : prev
+                                prev
+                                    ? {
+                                          ...prev,
+                                          applied: true,
+                                          isApply: true,
+                                          applicationStatus: 'PENDING',
+                                      }
+                                    : prev
                             )
                         }
                     />
