@@ -28,7 +28,11 @@ jobs:
       - name: Extract metadata
         id: meta
         run: |
-          BRANCH=${GITHUB_REF#refs/heads/}
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="pr-${{ github.event.pull_request.number }}"
+          else
+            BRANCH=${GITHUB_REF#refs/heads/}
+          fi
           COMMIT_SHA=${GITHUB_SHA::7}
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
           echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
@@ -36,17 +40,31 @@ jobs:
 
       - name: Build Docker image
         run: |
+          IMAGE="${{ steps.meta.outputs.image }}"
+          BRANCH="${{ steps.meta.outputs.branch }}"
+          SHA="${{ steps.meta.outputs.sha }}"
+
           docker build \
-            --tag ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.branch }}-${{ steps.meta.outputs.sha }} \
-            --tag ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.branch }}-latest \
-            --tag ${{ steps.meta.outputs.image }}:latest \
+            --tag "$IMAGE:$BRANCH-$SHA" \
+            --tag "$IMAGE:$BRANCH-latest" \
             .
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            docker tag "$IMAGE:$BRANCH-$SHA" "$IMAGE:latest"
+          fi
 
       - name: Push to local registry
         run: |
-          docker push ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.branch }}-${{ steps.meta.outputs.sha }}
-          docker push ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.branch }}-latest
-          docker push ${{ steps.meta.outputs.image }}:latest
+          IMAGE="${{ steps.meta.outputs.image }}"
+          BRANCH="${{ steps.meta.outputs.branch }}"
+          SHA="${{ steps.meta.outputs.sha }}"
+
+          docker push "$IMAGE:$BRANCH-$SHA"
+          docker push "$IMAGE:$BRANCH-latest"
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            docker push "$IMAGE:latest"
+          fi
 
       - name: Clean up old images
         run: |
