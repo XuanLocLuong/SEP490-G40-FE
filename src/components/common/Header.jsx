@@ -4,6 +4,7 @@ import { useLogoutToLanding } from '../../hooks/useLogoutToLanding.js';
 import { useAutoHideHeader } from '../../hooks/useAutoHideHeader.js';
 import { ROUTES } from '../../routes/path.js';
 import { setBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
+import SiteHeaderBrand from './SiteHeaderBrand.jsx';
 import '../../assets/styles/HeaderStyle.css';
 
 // Header dùng cho GuestLayout.
@@ -27,7 +28,7 @@ const Header = () => {
             <div className="site-header__inner">
                 <div className="site-header__left">
                     <NavLink to={ROUTES.LANDING} className="site-header__logo">
-                        JOBLINK
+                        <SiteHeaderBrand />
                     </NavLink>
                 </div>
 

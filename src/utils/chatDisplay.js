@@ -34,6 +34,19 @@ export const CHAT_UI_ACTIONS = new Set([
 export const isNotifyAction = (actionName) =>
     typeof actionName === 'string' && actionName.startsWith('NOTIFY_');
 
+/** Inbox preview labels for system NOTIFY_* actions (BE sends `[ACTION_NAME]`). */
+const NOTIFY_PREVIEW_LABELS = {
+    NOTIFY_APPLIED: 'Thông báo: Ứng viên đã ứng tuyển',
+    NOTIFY_ACCEPTED_INVITE: 'Thông báo: Đã chấp nhận lời mời',
+    NOTIFY_APPLICATION_ACCEPTED: 'Thông báo: Đơn đã được chấp nhận',
+    NOTIFY_ACCEPTED_WORK: 'Thông báo: Đã xác nhận nhận việc',
+};
+
+export const getNotifyPreviewLabel = (actionName) => {
+    if (!isNotifyAction(actionName)) return null;
+    return NOTIFY_PREVIEW_LABELS[actionName] || 'Thông báo hệ thống';
+};
+
 export const normalizeChatAction = (actionName) => {
     if (actionName === 'CONFIRM_HIRED') return 'ACCEPT_WORK';
     if (actionName === 'REJECT_INVITATION') return 'REJECT_INVITE';
@@ -318,9 +331,8 @@ export const conversationHasMessages = (conv) => {
 export const previewLastMessage = (conv) => {
     if (!conv) return 'Chưa có tin nhắn';
     if (conv.lastMessageType === 'ACTION' && conv.lastMessageActionName) {
-        if (isNotifyAction(conv.lastMessageActionName)) {
-            return conv.lastMessageContent || 'Thông báo hệ thống';
-        }
+        const notifyLabel = getNotifyPreviewLabel(conv.lastMessageActionName);
+        if (notifyLabel) return notifyLabel;
         const copy = getActionCardCopy(conv.lastMessageActionName);
         return copy.title;
     }

@@ -28,11 +28,35 @@
 }
 
 .site-header__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     font-size: 22px;
     font-weight: 800;
     letter-spacing: 0.5px;
-    color: var(--color-text);
+    color: #082b68;
     text-decoration: none;
+}
+
+.site-header__logo-mark {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+    border-radius: 9px;
+}
+
+.site-header__logo-text {
+    line-height: 1;
+}
+
+.site-header__logo-text-job {
+    color: #082b68;
+}
+
+.site-header__logo-text-link {
+    color: #146cf6;
 }
 
 .site-header__nav {
