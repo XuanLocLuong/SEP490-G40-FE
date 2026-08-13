@@ -357,12 +357,12 @@ const RecruiterProfilePage = () => {
             ...(keepAddress
                 ? {}
                 : {
-                      provinceId: '',
-                      wardId: '',
-                      detailAddress: '',
-                      provinceName: '',
-                      wardName: '',
-                  }),
+                    provinceId: '',
+                    wardId: '',
+                    detailAddress: '',
+                    provinceName: '',
+                    wardName: '',
+                }),
         }));
     };
 
@@ -973,11 +973,10 @@ const RecruiterProfilePage = () => {
         <div className="recruiter-profile-page">
             {fromCreateJob && (
                 <div
-                    className={`recruiter-profile__create-job-banner${
-                        profileReadyForJob
+                    className={`recruiter-profile__create-job-banner${profileReadyForJob
                             ? ' recruiter-profile__create-job-banner--success'
                             : ''
-                    }`}
+                        }`}
                 >
                     <strong>
                         {profileReadyForJob
@@ -1005,11 +1004,10 @@ const RecruiterProfilePage = () => {
                     <section className="recruiter-profile__hero">
                         <div className="recruiter-profile__hero-logo">
                             <div
-                                className={`account-settings__avatar-picker${
-                                    hasDisplayLogo
+                                className={`account-settings__avatar-picker${hasDisplayLogo
                                         ? ' account-settings__avatar-picker--deletable'
                                         : ''
-                                }`}
+                                    }`}
                             >
                                 {hasDisplayLogo ? (
                                     <img
@@ -1035,17 +1033,16 @@ const RecruiterProfilePage = () => {
                                 )}
                             </div>
                             <label
-                                className={`recruiter-profile__logo-change${
-                                    logoLoading || saving
+                                className={`recruiter-profile__logo-change${logoLoading || saving
                                         ? ' recruiter-profile__logo-change--disabled'
                                         : ''
-                                }`}
+                                    }`}
                             >
                                 {logoLoading
                                     ? 'Đang xử lý...'
                                     : hasDisplayLogo
-                                      ? 'Thay đổi logo'
-                                      : 'Thêm logo'}
+                                        ? 'Thay đổi logo'
+                                        : 'Thêm logo'}
                                 <input
                                     ref={logoInputRef}
                                     type="file"
@@ -1107,8 +1104,8 @@ const RecruiterProfilePage = () => {
                                                 <Link
                                                     to={
                                                         isRejectedVerification(profile.verificationStatus) ||
-                                                        isPendingManualVerification(profile.verificationStatus) ||
-                                                        profile.verificationStatus === VERIFICATION_STATUS.EXPIRED
+                                                            isPendingManualVerification(profile.verificationStatus) ||
+                                                            profile.verificationStatus === VERIFICATION_STATUS.EXPIRED
                                                             ? `${ROUTES.RECRUITER_VERIFICATION}?retry=1`
                                                             : ROUTES.RECRUITER_VERIFICATION
                                                     }
@@ -1117,13 +1114,13 @@ const RecruiterProfilePage = () => {
                                                     {isPendingManualVerification(profile.verificationStatus)
                                                         ? 'Xem / nộp lại'
                                                         : isRejectedVerification(profile.verificationStatus)
-                                                          ? 'Thử lại ngay'
-                                                          : profile.verificationStatus ===
-                                                              VERIFICATION_STATUS.EXPIRED
-                                                            ? 'Nộp lại xác minh'
-                                                          : needsLicenseTopUp
-                                                            ? 'Xác thực Giấy phép kinh doanh'
-                                                            : 'Xác minh ngay'}
+                                                            ? 'Thử lại ngay'
+                                                            : profile.verificationStatus ===
+                                                                VERIFICATION_STATUS.EXPIRED
+                                                                ? 'Nộp lại xác minh'
+                                                                : needsLicenseTopUp
+                                                                    ? 'Xác thực Giấy phép kinh doanh'
+                                                                    : 'Xác minh ngay'}
                                                 </Link>
                                             ) : (
                                                 <button
@@ -1165,11 +1162,10 @@ const RecruiterProfilePage = () => {
                             )}
 
                             <div
-                                className={`recruiter-profile__completion${
-                                    completionPercent < 100
+                                className={`recruiter-profile__completion${completionPercent < 100
                                         ? ' recruiter-profile__completion--incomplete'
                                         : ''
-                                }`}
+                                    }`}
                                 aria-label={`Hồ sơ hoàn thiện ${completionPercent}%`}
                             >
                                 <div className="recruiter-profile__completion-row">
@@ -1227,9 +1223,8 @@ const RecruiterProfilePage = () => {
                     <nav className="recruiter-profile__tabs" aria-label="Hồ sơ doanh nghiệp">
                         <button
                             type="button"
-                            className={`recruiter-profile__tab${
-                                activeTab === 'info' ? ' recruiter-profile__tab--active' : ''
-                            }`}
+                            className={`recruiter-profile__tab${activeTab === 'info' ? ' recruiter-profile__tab--active' : ''
+                                }`}
                             onClick={() => setActiveTab('info')}
                         >
                             Thông tin doanh nghiệp
@@ -1238,11 +1233,10 @@ const RecruiterProfilePage = () => {
                             <>
                                 <button
                                     type="button"
-                                    className={`recruiter-profile__tab${
-                                        activeTab === 'history'
+                                    className={`recruiter-profile__tab${activeTab === 'history'
                                             ? ' recruiter-profile__tab--active'
                                             : ''
-                                    }`}
+                                        }`}
                                     onClick={() => setActiveTab('history')}
                                 >
                                     Lịch sử tuyển dụng
@@ -1269,7 +1263,7 @@ const RecruiterProfilePage = () => {
                                     </h2>
 
                                     <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-business-name">
+                                        <label htmlFor="rp-business-type">
                                             Tên doanh nghiệp
                                             <RequiredMark />
                                         </label>
@@ -1283,7 +1277,10 @@ const RecruiterProfilePage = () => {
                                     </div>
 
                                     <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-business-type">Ngành nghề</label>
+                                        <label htmlFor="rp-business-type">
+                                            Loaị hình doanh nghiệp
+                                            <RequiredMark />
+                                        </label>
                                         <select
                                             id="rp-business-type"
                                             value={
@@ -1300,7 +1297,7 @@ const RecruiterProfilePage = () => {
                                             <option value="">
                                                 {businessTypeOptions.length === 0
                                                     ? '— Đang tải ngành nghề —'
-                                                    : '— Chọn ngành nghề —'}
+                                                    : '— Chọn loại hình doanh nghiệp —'}
                                             </option>
                                             {businessTypeOptions.map((opt) => (
                                                 <option key={opt.value} value={opt.value}>
@@ -1384,116 +1381,116 @@ const RecruiterProfilePage = () => {
                                 </section>
 
                                 <div className="recruiter-profile__sidebar">
-                                <section className="recruiter-profile__panel recruiter-profile__panel--account">
-                                    <div className="recruiter-profile__panel-heading">
-                                        <h2 className="recruiter-profile__panel-title">
-                                            <MailIcon width={18} height={18} />
-                                            Tài khoản
-                                        </h2>
-                                        <Link
-                                            to={`${ROUTES.RECRUITER_SETTINGS}?from=profile`}
-                                            className="recruiter-profile__panel-action"
-                                        >
-                                            Cài đặt
-                                        </Link>
-                                    </div>
+                                    <section className="recruiter-profile__panel recruiter-profile__panel--account">
+                                        <div className="recruiter-profile__panel-heading">
+                                            <h2 className="recruiter-profile__panel-title">
+                                                <MailIcon width={18} height={18} />
+                                                Tài khoản
+                                            </h2>
+                                            <Link
+                                                to={`${ROUTES.RECRUITER_SETTINGS}?from=profile`}
+                                                className="recruiter-profile__panel-action"
+                                            >
+                                                Cài đặt
+                                            </Link>
+                                        </div>
 
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-account-phone">Số điện thoại</label>
-                                        <input
-                                            id="rp-account-phone"
-                                            type="tel"
-                                            readOnly
-                                            value={accountContact.phone?.trim() || 'Chưa cập nhật'}
-                                        />
-                                    </div>
-
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-account-email">Email</label>
-                                        <input
-                                            id="rp-account-email"
-                                            type="email"
-                                            readOnly
-                                            value={accountContact.email?.trim() || '—'}
-                                        />
-                                    </div>
-                                </section>
-
-                                <section className="recruiter-profile__panel recruiter-profile__panel--contact">
-                                    <h2 className="recruiter-profile__panel-title">
-                                        <PhoneIcon width={18} height={18} />
-                                        Liên hệ tuyển dụng
-                                    </h2>
-
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-phone">Số điện thoại</label>
-                                        <div className="recruiter-profile__input-icon">
-                                            <PhoneIcon width={16} height={16} />
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-account-phone">Số điện thoại</label>
                                             <input
-                                                id="rp-phone"
+                                                id="rp-account-phone"
                                                 type="tel"
-                                                value={form.phone}
-                                                onChange={(e) =>
-                                                    updateFormField('phone', e.target.value)
-                                                }
-                                                placeholder="0xxxxxxxxx"
+                                                readOnly
+                                                value={accountContact.phone?.trim() || 'Chưa cập nhật'}
                                             />
                                         </div>
-                                    </div>
 
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-email">Email tuyển dụng</label>
-                                        <div className="recruiter-profile__input-icon">
-                                            <MailIcon width={16} height={16} />
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-account-email">Email</label>
                                             <input
-                                                id="rp-email"
+                                                id="rp-account-email"
                                                 type="email"
-                                                value={form.email}
-                                                onChange={(e) =>
-                                                    updateFormField('email', e.target.value)
-                                                }
-                                                placeholder="tuyendung@company.com"
+                                                readOnly
+                                                value={accountContact.email?.trim() || '—'}
                                             />
                                         </div>
-                                    </div>
+                                    </section>
 
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-website">Website / Fanpage</label>
-                                        <div className="recruiter-profile__input-icon">
-                                            <GlobeIcon width={16} height={16} />
-                                            <input
-                                                id="rp-website"
-                                                type="url"
-                                                value={form.websiteUrl}
-                                                onChange={(e) =>
-                                                    updateFormField('websiteUrl', e.target.value)
-                                                }
-                                                placeholder="https://..."
-                                            />
+                                    <section className="recruiter-profile__panel recruiter-profile__panel--contact">
+                                        <h2 className="recruiter-profile__panel-title">
+                                            <PhoneIcon width={18} height={18} />
+                                            Liên hệ tuyển dụng
+                                        </h2>
+
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-phone">Số điện thoại</label>
+                                            <div className="recruiter-profile__input-icon">
+                                                <PhoneIcon width={16} height={16} />
+                                                <input
+                                                    id="rp-phone"
+                                                    type="tel"
+                                                    value={form.phone}
+                                                    onChange={(e) =>
+                                                        updateFormField('phone', e.target.value)
+                                                    }
+                                                    placeholder="0xxxxxxxxx"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                </section>
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-email">Email tuyển dụng</label>
+                                            <div className="recruiter-profile__input-icon">
+                                                <MailIcon width={16} height={16} />
+                                                <input
+                                                    id="rp-email"
+                                                    type="email"
+                                                    value={form.email}
+                                                    onChange={(e) =>
+                                                        updateFormField('email', e.target.value)
+                                                    }
+                                                    placeholder="tuyendung@company.com"
+                                                />
+                                            </div>
+                                        </div>
 
-                                <button
-                                    type="button"
-                                    className="account-settings__btn account-settings__btn--primary recruiter-profile__save-btn"
-                                    disabled={saving || !canSave || galleryLoading || logoLoading}
-                                    title={
-                                        galleryLoading || logoLoading
-                                            ? 'Vui lòng đợi ảnh đang xử lý xong trước khi lưu.'
-                                            : undefined
-                                    }
-                                    onClick={handleSaveAll}
-                                >
-                                    {saving
-                                        ? 'Đang lưu...'
-                                        : galleryLoading || logoLoading
-                                          ? 'Đang xử lý ảnh...'
-                                          : noProfile
-                                            ? 'Tạo hồ sơ'
-                                            : 'Lưu thay đổi'}
-                                </button>
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-website">Website / Fanpage</label>
+                                            <div className="recruiter-profile__input-icon">
+                                                <GlobeIcon width={16} height={16} />
+                                                <input
+                                                    id="rp-website"
+                                                    type="url"
+                                                    value={form.websiteUrl}
+                                                    onChange={(e) =>
+                                                        updateFormField('websiteUrl', e.target.value)
+                                                    }
+                                                    placeholder="https://..."
+                                                />
+                                            </div>
+                                        </div>
+
+                                    </section>
+
+                                    <button
+                                        type="button"
+                                        className="account-settings__btn account-settings__btn--primary recruiter-profile__save-btn"
+                                        disabled={saving || !canSave || galleryLoading || logoLoading}
+                                        title={
+                                            galleryLoading || logoLoading
+                                                ? 'Vui lòng đợi ảnh đang xử lý xong trước khi lưu.'
+                                                : undefined
+                                        }
+                                        onClick={handleSaveAll}
+                                    >
+                                        {saving
+                                            ? 'Đang lưu...'
+                                            : galleryLoading || logoLoading
+                                                ? 'Đang xử lý ảnh...'
+                                                : noProfile
+                                                    ? 'Tạo hồ sơ'
+                                                    : 'Lưu thay đổi'}
+                                    </button>
                                 </div>
                             </div>
 

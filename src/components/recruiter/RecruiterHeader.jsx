@@ -47,9 +47,9 @@ const RecruiterHeader = () => {
                         <NavLink to={ROUTES.RECRUITER_JOBLINK_SUGGESTIONS} className="site-header__nav-link">
                             JobLink gợi ý
                         </NavLink>
-                        <a href="#" className="site-header__nav-link">
+                        <NavLink to={ROUTES.TOP_RECRUITERS} className="site-header__nav-link">
                             Top Recruiter
-                        </a>
+                        </NavLink>
                     </nav>
                 </div>
 

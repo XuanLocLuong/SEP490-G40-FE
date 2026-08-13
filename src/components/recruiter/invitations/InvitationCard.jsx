@@ -43,10 +43,6 @@ const InvitationCard = ({ invitation, onViewProfile, onChat, chatLoading = false
                 </div>
             </div>
 
-            {invitation.message ? (
-                <p className="invitation-card__message">{invitation.message}</p>
-            ) : null}
-
             <div className="application-card__actions">
                 <button
                     type="button"

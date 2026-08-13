@@ -37,7 +37,6 @@ const JOB_SUBTABS = {
     CLOSED: 'closed',
 };
 
-const LOW_TRUST_THRESHOLD = 95;
 const JOBS_PAGE_SIZE = 12;
 const REVIEWS_PAGE_SIZE = 10;
 
@@ -309,8 +308,10 @@ const PublicBusinessProfilePage = () => {
         profile?.trustScore != null ? Number(profile.trustScore) : null;
     /** Đã xác thực đầy đủ theo BE: badge, không dùng verificationStatus (vd. CCCD_PASSED). */
     const showVerified = isTrustedBadge(profile?.badge);
-    const showLowTrustWarning =
-        trustScoreNumber != null && trustScoreNumber < LOW_TRUST_THRESHOLD;
+    const showLowTrustWarning = Boolean(profile?.hasReputationWarning);
+const trustWarningMessage =
+    profile?.reputationWarningMessage ||
+    'Doanh nghiệp có điểm tin cậy thấp. Hãy xem xét kỹ thông tin trước khi ứng tuyển.';
 
     const memberSinceLabel = formatMemberSince(profile?.memberSince);
     const hasMoreJobs = jobsPage + 1 < jobsTotalPages;
@@ -421,12 +422,9 @@ const PublicBusinessProfilePage = () => {
 
                     {showLowTrustWarning && (
                         <div className="public-business__trust-warning" role="status">
-                            <span aria-hidden="true">⚠</span>
-                            <span>
-                                Doanh nghiệp có điểm tin cậy thấp. Hãy xem xét kỹ thông tin trước
-                                khi ứng tuyển.
-                            </span>
-                        </div>
+                        <span aria-hidden="true">⚠</span>
+                        <span>{trustWarningMessage}</span>
+                    </div>
                     )}
                 </div>
             </section>
