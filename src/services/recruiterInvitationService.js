@@ -10,8 +10,6 @@ export const INVITATION_STATUS_FILTERS = [
     { value: 'SENT', label: 'Chờ phản hồi' },
     { value: 'ACCEPTED', label: 'Đã nhận' },
     { value: 'REJECTED', label: 'Từ chối' },
-    { value: 'EXPIRED', label: 'Hết hạn' },
-    { value: 'CANCELLED', label: 'Đã hủy' },
     { value: 'INVALIDATED', label: 'Không còn hiệu lực' },
     { value: 'ALL', label: 'Tất cả' },
 ];

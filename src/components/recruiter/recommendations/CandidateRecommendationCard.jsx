@@ -94,6 +94,7 @@ const CandidateRecommendationCard = ({
     onToggleSelect,
     sending = false,
     sent = false,
+    profileBackTo,
     onInvite,
     onChat,
 }) => {
@@ -136,7 +137,7 @@ const CandidateRecommendationCard = ({
                             </span>
                         )}
                         {Number.isFinite(trustScore) && (
-                            <span>Trust {Math.round(trustScore)}</span>
+                            <span>Điểm uy tín {Math.round(trustScore)}</span>
                         )}
                     </div>
                     <p>
@@ -200,6 +201,7 @@ const CandidateRecommendationCard = ({
             <footer className="candidate-recommendation-card__actions">
                 <Link
                     to={getCandidatePublicProfilePath(candidate.candidateId)}
+                    state={profileBackTo ? { backTo: profileBackTo } : undefined}
                     className="candidate-recommendation-card__profile-btn"
                 >
                     Xem hồ sơ

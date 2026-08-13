@@ -13,6 +13,8 @@ import {
     StarIcon,
 } from '../../components/common/icons.jsx';
 import recruiterProfileApi, { getApiErrorMessage } from '../../apis/RecruiterProfileApi.jsx';
+import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../apis/RecruiterJobApi.jsx';
+import { getRecruiterReviews, getReviewApiErrorMessage } from '../../apis/ReviewApi.jsx';
 import locationApi, { getLocationApiErrorMessage } from '../../apis/LocationApi.jsx';
 import userApi from '../../apis/UserApi.jsx';
 import {
@@ -58,6 +60,7 @@ import '../../assets/styles/RecruiterProfileStyle.css';
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const MAX_GALLERY = 8;
+const REVIEW_PAGE_SIZE = 5;
 const PHONE_PATTERN = /^(\+84|0)[35789][0-9]{8}$/;
 const BUSINESS_DESCRIPTION_MAX_LENGTH = 2000;
 const BUSINESS_DESCRIPTION_TEMPLATE = `<h2>Giới thiệu</h2><p>Mô tả ngắn về doanh nghiệp, lĩnh vực, quy mô...</p><h2>Văn hóa &amp; môi trường làm việc</h2><ul><li>Môi trường năng động, hỗ trợ sinh viên part-time</li><li>Văn hóa giao tiếp cởi mở, làm việc nhóm</li></ul><h2>Phúc lợi</h2><ul><li>Lương theo ca + thưởng hiệu suất</li><li>BHXH, phụ cấp ăn ca (nếu có)</li></ul><h2>Đặc quyền khác</h2><ul><li>Đào tạo nghiệp vụ khi vào làm</li><li>Cơ hội chuyển chính thức</li></ul>`;
@@ -150,6 +153,17 @@ const formatMemberSince = (value) => {
     return `${month}/${date.getFullYear()}`;
 };
 
+const formatReviewDate = (value) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
+};
+
 const isBusinessVerifiedBadge = (badge) => badge === 'BUSINESS_VERIFIED';
 
 const isPendingManualVerification = (status) =>
@@ -239,6 +253,15 @@ const RecruiterProfilePage = () => {
     const pendingGalleryRef = useRef([]);
     const [galleryLoading, setGalleryLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('info');
+    const [reviewJobs, setReviewJobs] = useState([]);
+    const [reviewJobsLoaded, setReviewJobsLoaded] = useState(false);
+    const [selectedReviewJobId, setSelectedReviewJobId] = useState('');
+    const [recruiterReviews, setRecruiterReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+    const [reviewsError, setReviewsError] = useState('');
+    const [reviewsPage, setReviewsPage] = useState(0);
+    const [reviewsTotalPages, setReviewsTotalPages] = useState(0);
+    const [reviewsTotalElements, setReviewsTotalElements] = useState(0);
 
     const [savedLocation, setSavedLocation] = useState(null);
     const [coords, setCoords] = useState(null);
@@ -357,12 +380,12 @@ const RecruiterProfilePage = () => {
             ...(keepAddress
                 ? {}
                 : {
-                      provinceId: '',
-                      wardId: '',
-                      detailAddress: '',
-                      provinceName: '',
-                      wardName: '',
-                  }),
+                    provinceId: '',
+                    wardId: '',
+                    detailAddress: '',
+                    provinceName: '',
+                    wardName: '',
+                }),
         }));
     };
 
@@ -456,9 +479,64 @@ const RecruiterProfilePage = () => {
         }
     };
 
+    const loadReviewJobs = useCallback(async () => {
+        try {
+            const pageData = await recruiterJobApi.getMyJobs({ page: 0, size: 100 });
+            const jobs = Array.isArray(pageData?.content) ? pageData.content : [];
+            setReviewJobs(jobs);
+            setReviewJobsLoaded(true);
+        } catch (err) {
+            setReviewJobs([]);
+            setReviewJobsLoaded(true);
+            toast.error(
+                getRecruiterJobApiErrorMessage(err, 'Không tải được danh sách tin tuyển dụng.')
+            );
+        }
+    }, []);
+
+    const loadRecruiterReviews = useCallback(
+        async (page = 0) => {
+            setReviewsLoading(true);
+            setReviewsError('');
+            try {
+                const res = await getRecruiterReviews({
+                    jobId: selectedReviewJobId || undefined,
+                    page,
+                    size: REVIEW_PAGE_SIZE,
+                });
+                const pageData = res?.data?.data ?? res?.data ?? {};
+                setRecruiterReviews(Array.isArray(pageData.content) ? pageData.content : []);
+                setReviewsPage(pageData.currentPage ?? pageData.number ?? page);
+                setReviewsTotalPages(pageData.totalPages ?? 0);
+                setReviewsTotalElements(pageData.totalElements ?? 0);
+            } catch (err) {
+                setRecruiterReviews([]);
+                setReviewsPage(0);
+                setReviewsTotalPages(0);
+                setReviewsTotalElements(0);
+                setReviewsError(
+                    getReviewApiErrorMessage(err, 'Không tải được đánh giá từ ứng viên.')
+                );
+            } finally {
+                setReviewsLoading(false);
+            }
+        },
+        [selectedReviewJobId]
+    );
+
     useEffect(() => {
         loadProfile();
     }, []);
+
+    useEffect(() => {
+        if (activeTab !== 'reviews' || noProfile || reviewJobsLoaded) return;
+        void loadReviewJobs();
+    }, [activeTab, noProfile, reviewJobsLoaded, loadReviewJobs]);
+
+    useEffect(() => {
+        if (activeTab !== 'reviews' || noProfile) return;
+        void loadRecruiterReviews(0);
+    }, [activeTab, noProfile, loadRecruiterReviews]);
 
     useEffect(() => {
         if (loading || !draftKey) return;
@@ -469,8 +547,14 @@ const RecruiterProfilePage = () => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
+    const handleReviewJobChange = (event) => {
+        setSelectedReviewJobId(event.target.value);
+        setReviewsPage(0);
+    };
+
     const canSave =
         form.businessName.trim() &&
+        form.businessType?.trim() &&
         form.provinceId &&
         form.wardId &&
         form.detailAddress?.trim() &&
@@ -507,6 +591,11 @@ const RecruiterProfilePage = () => {
                 toast.error('Đường dẫn website không hợp lệ.');
                 return;
             }
+        }
+
+        if (!form.businessType?.trim()) {
+            toast.error('Vui lòng chọn loại hình doanh nghiệp.');
+            return;
         }
 
         const businessTypeCode = toBusinessTypeCode(form.businessType, businessTypeOptions);
@@ -973,11 +1062,10 @@ const RecruiterProfilePage = () => {
         <div className="recruiter-profile-page">
             {fromCreateJob && (
                 <div
-                    className={`recruiter-profile__create-job-banner${
-                        profileReadyForJob
+                    className={`recruiter-profile__create-job-banner${profileReadyForJob
                             ? ' recruiter-profile__create-job-banner--success'
                             : ''
-                    }`}
+                        }`}
                 >
                     <strong>
                         {profileReadyForJob
@@ -1005,11 +1093,10 @@ const RecruiterProfilePage = () => {
                     <section className="recruiter-profile__hero">
                         <div className="recruiter-profile__hero-logo">
                             <div
-                                className={`account-settings__avatar-picker${
-                                    hasDisplayLogo
+                                className={`account-settings__avatar-picker${hasDisplayLogo
                                         ? ' account-settings__avatar-picker--deletable'
                                         : ''
-                                }`}
+                                    }`}
                             >
                                 {hasDisplayLogo ? (
                                     <img
@@ -1035,17 +1122,16 @@ const RecruiterProfilePage = () => {
                                 )}
                             </div>
                             <label
-                                className={`recruiter-profile__logo-change${
-                                    logoLoading || saving
+                                className={`recruiter-profile__logo-change${logoLoading || saving
                                         ? ' recruiter-profile__logo-change--disabled'
                                         : ''
-                                }`}
+                                    }`}
                             >
                                 {logoLoading
                                     ? 'Đang xử lý...'
                                     : hasDisplayLogo
-                                      ? 'Thay đổi logo'
-                                      : 'Thêm logo'}
+                                        ? 'Thay đổi logo'
+                                        : 'Thêm logo'}
                                 <input
                                     ref={logoInputRef}
                                     type="file"
@@ -1107,8 +1193,8 @@ const RecruiterProfilePage = () => {
                                                 <Link
                                                     to={
                                                         isRejectedVerification(profile.verificationStatus) ||
-                                                        isPendingManualVerification(profile.verificationStatus) ||
-                                                        profile.verificationStatus === VERIFICATION_STATUS.EXPIRED
+                                                            isPendingManualVerification(profile.verificationStatus) ||
+                                                            profile.verificationStatus === VERIFICATION_STATUS.EXPIRED
                                                             ? `${ROUTES.RECRUITER_VERIFICATION}?retry=1`
                                                             : ROUTES.RECRUITER_VERIFICATION
                                                     }
@@ -1117,13 +1203,13 @@ const RecruiterProfilePage = () => {
                                                     {isPendingManualVerification(profile.verificationStatus)
                                                         ? 'Xem / nộp lại'
                                                         : isRejectedVerification(profile.verificationStatus)
-                                                          ? 'Thử lại ngay'
-                                                          : profile.verificationStatus ===
-                                                              VERIFICATION_STATUS.EXPIRED
-                                                            ? 'Nộp lại xác minh'
-                                                          : needsLicenseTopUp
-                                                            ? 'Xác thực Giấy phép kinh doanh'
-                                                            : 'Xác minh ngay'}
+                                                            ? 'Thử lại ngay'
+                                                            : profile.verificationStatus ===
+                                                                VERIFICATION_STATUS.EXPIRED
+                                                                ? 'Nộp lại xác minh'
+                                                                : needsLicenseTopUp
+                                                                    ? 'Xác thực Giấy phép kinh doanh'
+                                                                    : 'Xác minh ngay'}
                                                 </Link>
                                             ) : (
                                                 <button
@@ -1165,11 +1251,10 @@ const RecruiterProfilePage = () => {
                             )}
 
                             <div
-                                className={`recruiter-profile__completion${
-                                    completionPercent < 100
+                                className={`recruiter-profile__completion${completionPercent < 100
                                         ? ' recruiter-profile__completion--incomplete'
                                         : ''
-                                }`}
+                                    }`}
                                 aria-label={`Hồ sơ hoàn thiện ${completionPercent}%`}
                             >
                                 <div className="recruiter-profile__completion-row">
@@ -1227,9 +1312,8 @@ const RecruiterProfilePage = () => {
                     <nav className="recruiter-profile__tabs" aria-label="Hồ sơ doanh nghiệp">
                         <button
                             type="button"
-                            className={`recruiter-profile__tab${
-                                activeTab === 'info' ? ' recruiter-profile__tab--active' : ''
-                            }`}
+                            className={`recruiter-profile__tab${activeTab === 'info' ? ' recruiter-profile__tab--active' : ''
+                                }`}
                             onClick={() => setActiveTab('info')}
                         >
                             Thông tin doanh nghiệp
@@ -1238,20 +1322,21 @@ const RecruiterProfilePage = () => {
                             <>
                                 <button
                                     type="button"
-                                    className={`recruiter-profile__tab${
-                                        activeTab === 'history'
+                                    className={`recruiter-profile__tab${activeTab === 'history'
                                             ? ' recruiter-profile__tab--active'
                                             : ''
-                                    }`}
+                                        }`}
                                     onClick={() => setActiveTab('history')}
                                 >
                                     Lịch sử tuyển dụng
                                 </button>
                                 <button
                                     type="button"
-                                    className="recruiter-profile__tab"
-                                    disabled
-                                    title="Sắp có"
+                                    className={`recruiter-profile__tab${activeTab === 'reviews'
+                                            ? ' recruiter-profile__tab--active'
+                                            : ''
+                                        }`}
+                                    onClick={() => setActiveTab('reviews')}
                                 >
                                     Đánh giá từ ứng viên
                                 </button>
@@ -1283,7 +1368,10 @@ const RecruiterProfilePage = () => {
                                     </div>
 
                                     <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-business-type">Ngành nghề</label>
+                                        <label htmlFor="rp-business-type">
+                                            Loại hình doanh nghiệp
+                                            <RequiredMark />
+                                        </label>
                                         <select
                                             id="rp-business-type"
                                             value={
@@ -1300,7 +1388,7 @@ const RecruiterProfilePage = () => {
                                             <option value="">
                                                 {businessTypeOptions.length === 0
                                                     ? '— Đang tải ngành nghề —'
-                                                    : '— Chọn ngành nghề —'}
+                                                    : '— Chọn loại hình doanh nghiệp —'}
                                             </option>
                                             {businessTypeOptions.map((opt) => (
                                                 <option key={opt.value} value={opt.value}>
@@ -1384,116 +1472,116 @@ const RecruiterProfilePage = () => {
                                 </section>
 
                                 <div className="recruiter-profile__sidebar">
-                                <section className="recruiter-profile__panel recruiter-profile__panel--account">
-                                    <div className="recruiter-profile__panel-heading">
-                                        <h2 className="recruiter-profile__panel-title">
-                                            <MailIcon width={18} height={18} />
-                                            Tài khoản
-                                        </h2>
-                                        <Link
-                                            to={`${ROUTES.RECRUITER_SETTINGS}?from=profile`}
-                                            className="recruiter-profile__panel-action"
-                                        >
-                                            Cài đặt
-                                        </Link>
-                                    </div>
+                                    <section className="recruiter-profile__panel recruiter-profile__panel--account">
+                                        <div className="recruiter-profile__panel-heading">
+                                            <h2 className="recruiter-profile__panel-title">
+                                                <MailIcon width={18} height={18} />
+                                                Tài khoản
+                                            </h2>
+                                            <Link
+                                                to={`${ROUTES.RECRUITER_SETTINGS}?from=profile`}
+                                                className="recruiter-profile__panel-action"
+                                            >
+                                                Cài đặt
+                                            </Link>
+                                        </div>
 
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-account-phone">Số điện thoại</label>
-                                        <input
-                                            id="rp-account-phone"
-                                            type="tel"
-                                            readOnly
-                                            value={accountContact.phone?.trim() || 'Chưa cập nhật'}
-                                        />
-                                    </div>
-
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-account-email">Email</label>
-                                        <input
-                                            id="rp-account-email"
-                                            type="email"
-                                            readOnly
-                                            value={accountContact.email?.trim() || '—'}
-                                        />
-                                    </div>
-                                </section>
-
-                                <section className="recruiter-profile__panel recruiter-profile__panel--contact">
-                                    <h2 className="recruiter-profile__panel-title">
-                                        <PhoneIcon width={18} height={18} />
-                                        Liên hệ tuyển dụng
-                                    </h2>
-
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-phone">Số điện thoại</label>
-                                        <div className="recruiter-profile__input-icon">
-                                            <PhoneIcon width={16} height={16} />
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-account-phone">Số điện thoại</label>
                                             <input
-                                                id="rp-phone"
+                                                id="rp-account-phone"
                                                 type="tel"
-                                                value={form.phone}
-                                                onChange={(e) =>
-                                                    updateFormField('phone', e.target.value)
-                                                }
-                                                placeholder="0xxxxxxxxx"
+                                                readOnly
+                                                value={accountContact.phone?.trim() || 'Chưa cập nhật'}
                                             />
                                         </div>
-                                    </div>
 
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-email">Email tuyển dụng</label>
-                                        <div className="recruiter-profile__input-icon">
-                                            <MailIcon width={16} height={16} />
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-account-email">Email</label>
                                             <input
-                                                id="rp-email"
+                                                id="rp-account-email"
                                                 type="email"
-                                                value={form.email}
-                                                onChange={(e) =>
-                                                    updateFormField('email', e.target.value)
-                                                }
-                                                placeholder="tuyendung@company.com"
+                                                readOnly
+                                                value={accountContact.email?.trim() || '—'}
                                             />
                                         </div>
-                                    </div>
+                                    </section>
 
-                                    <div className="recruiter-profile__field">
-                                        <label htmlFor="rp-website">Website / Fanpage</label>
-                                        <div className="recruiter-profile__input-icon">
-                                            <GlobeIcon width={16} height={16} />
-                                            <input
-                                                id="rp-website"
-                                                type="url"
-                                                value={form.websiteUrl}
-                                                onChange={(e) =>
-                                                    updateFormField('websiteUrl', e.target.value)
-                                                }
-                                                placeholder="https://..."
-                                            />
+                                    <section className="recruiter-profile__panel recruiter-profile__panel--contact">
+                                        <h2 className="recruiter-profile__panel-title">
+                                            <PhoneIcon width={18} height={18} />
+                                            Liên hệ tuyển dụng
+                                        </h2>
+
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-phone">Số điện thoại</label>
+                                            <div className="recruiter-profile__input-icon">
+                                                <PhoneIcon width={16} height={16} />
+                                                <input
+                                                    id="rp-phone"
+                                                    type="tel"
+                                                    value={form.phone}
+                                                    onChange={(e) =>
+                                                        updateFormField('phone', e.target.value)
+                                                    }
+                                                    placeholder="0xxxxxxxxx"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                </section>
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-email">Email tuyển dụng</label>
+                                            <div className="recruiter-profile__input-icon">
+                                                <MailIcon width={16} height={16} />
+                                                <input
+                                                    id="rp-email"
+                                                    type="email"
+                                                    value={form.email}
+                                                    onChange={(e) =>
+                                                        updateFormField('email', e.target.value)
+                                                    }
+                                                    placeholder="tuyendung@company.com"
+                                                />
+                                            </div>
+                                        </div>
 
-                                <button
-                                    type="button"
-                                    className="account-settings__btn account-settings__btn--primary recruiter-profile__save-btn"
-                                    disabled={saving || !canSave || galleryLoading || logoLoading}
-                                    title={
-                                        galleryLoading || logoLoading
-                                            ? 'Vui lòng đợi ảnh đang xử lý xong trước khi lưu.'
-                                            : undefined
-                                    }
-                                    onClick={handleSaveAll}
-                                >
-                                    {saving
-                                        ? 'Đang lưu...'
-                                        : galleryLoading || logoLoading
-                                          ? 'Đang xử lý ảnh...'
-                                          : noProfile
-                                            ? 'Tạo hồ sơ'
-                                            : 'Lưu thay đổi'}
-                                </button>
+                                        <div className="recruiter-profile__field">
+                                            <label htmlFor="rp-website">Website / Fanpage</label>
+                                            <div className="recruiter-profile__input-icon">
+                                                <GlobeIcon width={16} height={16} />
+                                                <input
+                                                    id="rp-website"
+                                                    type="url"
+                                                    value={form.websiteUrl}
+                                                    onChange={(e) =>
+                                                        updateFormField('websiteUrl', e.target.value)
+                                                    }
+                                                    placeholder="https://..."
+                                                />
+                                            </div>
+                                        </div>
+
+                                    </section>
+
+                                    <button
+                                        type="button"
+                                        className="account-settings__btn account-settings__btn--primary recruiter-profile__save-btn"
+                                        disabled={saving || !canSave || galleryLoading || logoLoading}
+                                        title={
+                                            galleryLoading || logoLoading
+                                                ? 'Vui lòng đợi ảnh đang xử lý xong trước khi lưu.'
+                                                : undefined
+                                        }
+                                        onClick={handleSaveAll}
+                                    >
+                                        {saving
+                                            ? 'Đang lưu...'
+                                            : galleryLoading || logoLoading
+                                                ? 'Đang xử lý ảnh...'
+                                                : noProfile
+                                                    ? 'Tạo hồ sơ'
+                                                    : 'Lưu thay đổi'}
+                                    </button>
                                 </div>
                             </div>
 
@@ -1585,6 +1673,163 @@ const RecruiterProfilePage = () => {
 
                     {activeTab === 'history' && !noProfile && (
                         <HiringHistoryTab businessId={profile?.businessId} />
+                    )}
+
+                    {activeTab === 'reviews' && !noProfile && (
+                        <section className="recruiter-profile__panel">
+                            <div className="recruiter-profile__panel-heading">
+                                <h2 className="recruiter-profile__panel-title">
+                                    <StarIcon width={18} height={18} />
+                                    Đánh giá từ ứng viên
+                                </h2>
+                                {reviewsTotalElements > 0 && (
+                                    <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                        {reviewsTotalElements} đánh giá
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="recruiter-profile__field">
+                                <label htmlFor="rp-review-job">Tin tuyển dụng</label>
+                                <select
+                                    id="rp-review-job"
+                                    value={selectedReviewJobId}
+                                    onChange={handleReviewJobChange}
+                                    disabled={reviewJobs.length === 0}
+                                >
+                                    <option value="">Tất cả tin tuyển dụng</option>
+                                    {reviewJobs.map((job) => (
+                                        <option key={job.id} value={String(job.id)}>
+                                            {job.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {reviewsLoading && recruiterReviews.length === 0 && (
+                                <p className="account-settings__hint">Đang tải đánh giá…</p>
+                            )}
+
+                            {reviewsError && (
+                                <div className="account-settings__empty">
+                                    <p>{reviewsError}</p>
+                                    <button
+                                        type="button"
+                                        className="account-settings__btn account-settings__btn--secondary"
+                                        disabled={reviewsLoading}
+                                        onClick={() => loadRecruiterReviews(0)}
+                                    >
+                                        {reviewsLoading ? 'Đang tải…' : 'Thử lại'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {!reviewsLoading &&
+                                !reviewsError &&
+                                recruiterReviews.length === 0 && (
+                                    <p className="account-settings__hint">
+                                        Chưa có đánh giá từ ứng viên cho lựa chọn hiện tại.
+                                    </p>
+                                )}
+
+                            {recruiterReviews.length > 0 && (
+                                <ul className="recruiter-profile__review-list">
+                                    {recruiterReviews.map((review) => (
+                                        <li
+                                            key={review.reviewId}
+                                            className="recruiter-profile__review-card"
+                                        >
+                                            <div className="recruiter-profile__review-top">
+                                                {review.candidateAvatar ? (
+                                                    <img
+                                                        src={review.candidateAvatar}
+                                                        alt=""
+                                                        className="recruiter-profile__review-avatar"
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className="recruiter-profile__review-avatar recruiter-profile__review-avatar--placeholder"
+                                                        aria-hidden="true"
+                                                    >
+                                                        {(review.candidateName || 'Ứng viên')
+                                                            .charAt(0)
+                                                            .toUpperCase()}
+                                                    </div>
+                                                )}
+
+                                                <div className="recruiter-profile__review-meta">
+                                                    <div className="recruiter-profile__review-title-row">
+                                                        <strong>
+                                                            {review.candidateName || 'Ứng viên'}
+                                                        </strong>
+                                                        <span className="recruiter-profile__review-job-pill">
+                                                            Tin tuyển dụng: {review.jobTitle || '—'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="recruiter-profile__review-rating-row">
+                                                        <span className="recruiter-profile__review-stars">
+                                                            {Array.from({ length: 5 }, (_, index) => (
+                                                                <StarIcon
+                                                                    key={index}
+                                                                    width={14}
+                                                                    height={14}
+                                                                    className={
+                                                                        index <
+                                                                        Number(review.rating ?? 0)
+                                                                            ? 'recruiter-profile__review-star recruiter-profile__review-star--filled'
+                                                                            : 'recruiter-profile__review-star'
+                                                                    }
+                                                                />
+                                                            ))}
+                                                        </span>
+                                                        <span>{review.rating ?? '—'} / 5</span>
+                                                        <time dateTime={review.createdAt}>
+                                                            {formatReviewDate(review.createdAt)}
+                                                        </time>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {review.comment ? (
+                                                <p className="recruiter-profile__review-comment">
+                                                    {review.comment}
+                                                </p>
+                                            ) : (
+                                                <p className="recruiter-profile__review-comment recruiter-profile__review-comment--empty">
+                                                    Ứng viên không để lại nhận xét.
+                                                </p>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+
+                            {reviewsTotalPages > 1 && (
+                                <div className="recruiter-profile__review-pagination">
+                                    <button
+                                        type="button"
+                                        className="account-settings__btn account-settings__btn--secondary"
+                                        disabled={reviewsPage <= 0 || reviewsLoading}
+                                        onClick={() => loadRecruiterReviews(reviewsPage - 1)}
+                                    >
+                                        Trước
+                                    </button>
+                                    <span>
+                                        Trang {reviewsPage + 1} / {reviewsTotalPages}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="account-settings__btn account-settings__btn--secondary"
+                                        disabled={
+                                            reviewsPage + 1 >= reviewsTotalPages || reviewsLoading
+                                        }
+                                        onClick={() => loadRecruiterReviews(reviewsPage + 1)}
+                                    >
+                                        Sau
+                                    </button>
+                                </div>
+                            )}
+                        </section>
                     )}
                 </>
             )}

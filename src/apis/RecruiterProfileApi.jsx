@@ -6,6 +6,10 @@ const unwrapData = (response) => response.data.data;
 
 export const getApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') => {
     const message = error?.response?.data?.message || error?.message;
+    if (message === 'BUSINESS_TYPE_REQUIRED') {
+        return 'Vui lòng chọn loại hình doanh nghiệp.';
+    }
+
     if (message === 'INVALID_BUSINESS_TYPE') {
         return 'Loại hình doanh nghiệp không hợp lệ. Chọn lại ngành nghề trong danh sách.';
     }

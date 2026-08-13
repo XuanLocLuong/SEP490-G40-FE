@@ -19,7 +19,7 @@ import '../../../assets/styles/RecruiterRecommendationsStyle.css';
 const PAGE_SIZE = 10;
 
 const RecruiterRecommendationsPage = () => {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const showBackToOverview = searchParams.get('from') === 'overview';
 
     const [jobs, setJobs] = useState([]);
@@ -108,9 +108,13 @@ const RecruiterRecommendationsPage = () => {
                 setJobs(openJobs);
                 setJobsError('');
                 if (openJobs.length > 0) {
-                    const firstJobId = String(openJobs[0].id);
-                    setSelectedJobId(firstJobId);
-                    loadRecommendations(firstJobId, 0);
+                    const jobIdParam = searchParams.get('jobId');
+                    const initialJob = jobIdParam
+                        ? openJobs.find((job) => String(job.id) === String(jobIdParam))
+                        : null;
+                    const initialJobId = String((initialJob || openJobs[0]).id);
+                    setSelectedJobId(initialJobId);
+                    loadRecommendations(initialJobId, 0);
                 }
             } catch (error) {
                 if (active) {
@@ -154,6 +158,12 @@ const RecruiterRecommendationsPage = () => {
 
     const handleJobChange = (event) => {
         const jobId = event.target.value;
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            if (jobId) next.set('jobId', jobId);
+            else next.delete('jobId');
+            return next;
+        });
         setSelectedJobId(jobId);
         setCandidates([]);
         setCurrentPage(0);
@@ -275,6 +285,17 @@ const RecruiterRecommendationsPage = () => {
 
     const canGoPrev = currentPage > 0;
     const canGoNext = totalPages > 1 && currentPage + 1 < totalPages;
+
+    const profileBackTo = useMemo(() => {
+        const params = new URLSearchParams();
+        if (selectedJobId) params.set('jobId', String(selectedJobId));
+        if (showBackToOverview) params.set('from', 'overview');
+        const query = params.toString();
+        return {
+            path: `${ROUTES.RECRUITER_JOBLINK_SUGGESTIONS}${query ? `?${query}` : ''}`,
+            label: 'Quay lại JobLink gợi ý',
+        };
+    }, [selectedJobId, showBackToOverview]);
 
     const pageItems = useMemo(() => {
         if (totalPages <= 1) return [];
@@ -444,6 +465,7 @@ const RecruiterRecommendationsPage = () => {
                                 )
                             }
                             sent={sentCandidateIds.has(candidate.candidateId)}
+                            profileBackTo={profileBackTo}
                             onInvite={(c) => setInviteTargets([c])}
                             onChat={(c) => {
                                 if (c?.userId == null) {

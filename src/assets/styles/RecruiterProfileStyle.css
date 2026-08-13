@@ -304,6 +304,136 @@
     background: var(--color-primary-light);
 }
 
+.recruiter-profile__review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.recruiter-profile__review-card {
+    padding: 14px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.recruiter-profile__review-top {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.recruiter-profile__review-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.recruiter-profile__review-avatar--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg));
+}
+
+.recruiter-profile__review-meta {
+    min-width: 0;
+    flex: 1;
+}
+
+.recruiter-profile__review-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.recruiter-profile__review-meta strong {
+    display: block;
+    margin: 0;
+    font-size: 0.98rem;
+    color: var(--color-text);
+}
+
+.recruiter-profile__review-rating-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+}
+
+.recruiter-profile__review-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.recruiter-profile__review-star {
+    color: #cbd5e1;
+}
+
+.recruiter-profile__review-star--filled {
+    color: #f59e0b;
+}
+
+.recruiter-profile__review-job-pill {
+    display: inline-flex;
+    max-width: 100%;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-primary) 10%, #fff);
+    color: var(--color-primary);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.recruiter-profile__review-comment {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--color-text);
+    white-space: pre-wrap;
+}
+
+.recruiter-profile__review-comment--empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.recruiter-profile__review-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.recruiter-profile__review-pagination span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
 .recruiter-profile__panel--account input[readonly] {
     background: var(--color-surface-muted, #f8f9fa);
     color: var(--color-text-muted);

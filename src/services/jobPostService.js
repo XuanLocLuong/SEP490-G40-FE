@@ -265,8 +265,11 @@ export const getJobFormErrorKey = (field) => {
 /** Validate trước khi gọi API — trả { valid, errors } */
 export const validateJobForm = (form, action) => {
     const errors = {};
-    const fields = ['title', 'jobType', 'locationId', 'salaryMin', 'requiredCandidates', 'applicationDeadline'];
-
+    const fields =
+    action === JOB_POST_ACTION.SUBMIT
+        ? ['title', 'jobType', 'locationId', 'salaryMin', 'requiredCandidates', 'applicationDeadline']
+        : ['title', 'locationId', 'salaryMin'];
+        
     fields.forEach((field) => {
         const message = validateJobFormField(field, form, action);
         const errorKey = getJobFormErrorKey(field);

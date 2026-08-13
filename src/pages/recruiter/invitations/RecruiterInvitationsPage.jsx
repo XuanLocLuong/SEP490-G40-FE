@@ -213,7 +213,7 @@ const RecruiterInvitationsPage = () => {
                 page,
                 size: PAGE_SIZE,
             });
-            setInvitations(pageData.content);
+            setInvitations(pageData.content.filter((item) => item.status !== 'CANCELLED'));
             setTotalPages(pageData.totalPages);
             setTotalElements(pageData.totalElements);
         } catch (err) {
@@ -453,11 +453,10 @@ const RecruiterInvitationsPage = () => {
                                         <button
                                             key={item.value}
                                             type="button"
-                                            className={`applicants-page__chip${
-                                                statusFilter === item.value
+                                            className={`applicants-page__chip${statusFilter === item.value
                                                     ? ' applicants-page__chip--active'
                                                     : ''
-                                            }`}
+                                                }`}
                                             onClick={() => handleStatusChange(item.value)}
                                         >
                                             {item.label}
@@ -538,9 +537,8 @@ const RecruiterInvitationsPage = () => {
                                             <button
                                                 key={item}
                                                 type="button"
-                                                className={`applicants-page__page-btn${
-                                                    item === page ? ' is-active' : ''
-                                                }`}
+                                                className={`applicants-page__page-btn${item === page ? ' is-active' : ''
+                                                    }`}
                                                 disabled={listLoading}
                                                 aria-current={item === page ? 'page' : undefined}
                                                 aria-label={`Trang ${item + 1}`}
