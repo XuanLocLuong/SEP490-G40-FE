@@ -49,17 +49,32 @@ const Register = () => {
     const [resending, setResending] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
 
-    const { login } = useAuth();
+    const { login, auth, logout } = useAuth();
     const navigate = useNavigate();
+
+    // Clear session rồi vào /login — tránh GuestOnlyRoute đá về home role.
+    const goToLogin = async () => {
+        if (auth) {
+            await logout();
+        }
+        navigate(ROUTES.LOGIN, { replace: true });
+    };
+
+    // Đã login mà mở /register (không phải vừa xong form) → về home role.
+    useEffect(() => {
+        if (auth && !result) {
+            navigate(getHomePathByRole(auth.role), { replace: true });
+        }
+    }, [auth, result, navigate]);
 
     const buildAuthResult = (authData, fallbackEmail = '', { fromGoogle = false } = {}) => {
         const isNewAccount = Boolean(authData.newAccount);
-        // Google response thường không có emailVerified dù BE đã verified.
-        // Chỉ bắt màn verify khi BE ghi rõ emailVerified === false.
-        // Register email/password: thiếu field hoặc false → vẫn bắt verify nếu newAccount.
+        // Google: chỉ bắt verify khi BE ghi rõ emailVerified === false.
+        // Email/password: mọi lần đăng ký mà email chưa verified đều hiện màn kiểm tra email
+        // (không phụ thuộc field newAccount — BE có thể bỏ/đổi tên field).
         const needsEmailVerification = fromGoogle
             ? isNewAccount && authData.emailVerified === false
-            : isNewAccount && authData.emailVerified !== true;
+            : authData.emailVerified !== true;
 
         return {
             homePath: getHomePathByRole(authData.role),
@@ -159,7 +174,11 @@ const Register = () => {
         // Chỉ bắt xác thực email khi cần (password chưa verify). Google thường bỏ qua.
         if (result.needsEmailVerification) {
             return (
-                <AuthCard title="Kiểm tra email của bạn" subtitle="Chỉ còn 1 bước nữa thôi!">
+                <AuthCard
+                    title="Kiểm tra email của bạn"
+                    subtitle="Chỉ còn 1 bước nữa thôi!"
+                    guestBack
+                >
                     {error ? <div className="auth-card__error">{error}</div> : null}
                     <p className="auth-card__notice">
                         Chúng tôi đã gửi email xác thực tới{' '}
@@ -183,7 +202,7 @@ const Register = () => {
 
                     <div className="auth-card__footer">
                         Đã xác thực xong?{' '}
-                        <button className="auth-card__footer-link" onClick={() => navigate(ROUTES.LOGIN)}>
+                        <button type="button" className="auth-card__footer-link" onClick={goToLogin}>
                             Quay lại đăng nhập
                         </button>
                     </div>

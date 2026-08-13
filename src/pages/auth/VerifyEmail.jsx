@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axiosClient, { API_PREFIX } from '../../apis/AxiosClient.jsx';
 import AuthCard from '../../components/common/AuthCard.jsx';
+import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 
 // Trang này người dùng bấm vào từ email xác thực. Thay vì tự verify ngay khi
@@ -11,7 +12,16 @@ const VerifyEmail = () => {
     const [searchParams] = useSearchParams();
     const [status, setStatus] = useState('idle'); // idle | verifying | success | error
     const navigate = useNavigate();
+    const { auth, logout } = useAuth();
     const token = searchParams.get('token');
+
+    // Clear session rồi vào /login — tránh GuestOnlyRoute đá về home role.
+    const goToLogin = async () => {
+        if (auth) {
+            await logout();
+        }
+        navigate(ROUTES.LOGIN, { replace: true });
+    };
 
     const handleVerify = async () => {
         if (!token) return;
@@ -26,8 +36,12 @@ const VerifyEmail = () => {
 
     if (!token) {
         return (
-            <AuthCard title="Liên kết không hợp lệ" subtitle="Không tìm thấy mã xác thực trong đường dẫn.">
-                <button className="btn btn--primary btn--block" onClick={() => navigate(ROUTES.LOGIN)}>
+            <AuthCard
+                title="Liên kết không hợp lệ"
+                subtitle="Không tìm thấy mã xác thực trong đường dẫn."
+                guestBack
+            >
+                <button type="button" className="btn btn--primary btn--block" onClick={goToLogin}>
                     Về trang đăng nhập
                 </button>
             </AuthCard>
@@ -39,6 +53,7 @@ const VerifyEmail = () => {
             <AuthCard
                 title="🎉 Xác thực email thành công"
                 subtitle="Tài khoản của bạn đã được kích hoạt thành công."
+                guestBack
             >
                 <div
                     style={{
@@ -53,10 +68,7 @@ const VerifyEmail = () => {
                     Bạn có thể đóng tab này nếu không còn sử dụng.
                 </div>
 
-                <button
-                    className="btn btn--primary btn--block"
-                    onClick={() => navigate(ROUTES.LOGIN)}
-                >
+                <button type="button" className="btn btn--primary btn--block" onClick={goToLogin}>
                     Quay về đăng nhập
                 </button>
             </AuthCard>
@@ -65,8 +77,12 @@ const VerifyEmail = () => {
 
     if (status === 'error') {
         return (
-            <AuthCard title="Xác thực thất bại" subtitle="Liên kết không hợp lệ hoặc đã hết hạn (24 giờ).">
-                <button className="btn btn--primary btn--block" onClick={() => navigate(ROUTES.LOGIN)}>
+            <AuthCard
+                title="Xác thực thất bại"
+                subtitle="Liên kết không hợp lệ hoặc đã hết hạn (24 giờ)."
+                guestBack
+            >
+                <button type="button" className="btn btn--primary btn--block" onClick={goToLogin}>
                     Về trang đăng nhập
                 </button>
             </AuthCard>
@@ -74,8 +90,13 @@ const VerifyEmail = () => {
     }
 
     return (
-        <AuthCard title="Xác thực tài khoản" subtitle="Bấm nút bên dưới để hoàn tất xác thực email của bạn.">
+        <AuthCard
+            title="Xác thực tài khoản"
+            subtitle="Bấm nút bên dưới để hoàn tất xác thực email của bạn."
+            guestBack
+        >
             <button
+                type="button"
                 className="btn btn--primary btn--block"
                 onClick={handleVerify}
                 disabled={status === 'verifying'}

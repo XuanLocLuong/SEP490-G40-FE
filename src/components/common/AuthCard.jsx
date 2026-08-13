@@ -1,18 +1,39 @@
-import { Link } from 'react-router-dom';
-import { ROUTES } from '../../routes/path.js';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/authContext.js';
+import { ROUTES, getHomePathByRole } from '../../routes/path.js';
 import '../../assets/styles/AuthCardStyles.css';
 
 // Khung dùng chung cho Login & Register — logo + tiêu đề + nội dung form.
-const AuthCard = ({ title, subtitle, children }) => {
+// guestBack: màn verify/check-email — clear session rồi về Landing guest (không về home role).
+const AuthCard = ({ title, subtitle, children, guestBack = false }) => {
+    const { auth, logout } = useAuth();
+    const navigate = useNavigate();
+    const homePath = auth?.role ? getHomePathByRole(auth.role) : ROUTES.LANDING;
+
+    const handleGuestBack = async (e) => {
+        if (!guestBack) return;
+        e.preventDefault();
+        if (auth) {
+            await logout();
+        }
+        navigate(ROUTES.LANDING, { replace: true });
+    };
+
+    const backProps = guestBack
+        ? { href: ROUTES.LANDING, onClick: handleGuestBack }
+        : { to: homePath };
+
+    const BackTag = guestBack ? 'a' : Link;
+
     return (
         <div className="auth-page">
             <div className="auth-card">
-                <Link to={ROUTES.LANDING} className="auth-card__back">
+                <BackTag {...backProps} className="auth-card__back">
                     ← Về trang chủ
-                </Link>
-                <Link to={ROUTES.LANDING} className="auth-card__logo" aria-label="Về trang chủ JobLink">
+                </BackTag>
+                <BackTag {...backProps} className="auth-card__logo" aria-label="Về trang chủ JobLink">
                     JOBLINK
-                </Link>
+                </BackTag>
                 {title && <h1 className="auth-card__title">{title}</h1>}
                 {subtitle && <p className="auth-card__subtitle">{subtitle}</p>}
                 {children}
