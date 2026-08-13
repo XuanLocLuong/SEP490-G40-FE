@@ -6,6 +6,7 @@ import {ToastContainer} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import AppRouter from "./routes/AppRouter.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
+import DocumentTitle from "./components/common/DocumentTitle.jsx";
 
 function App() {
     return (
@@ -14,6 +15,7 @@ function App() {
                 <BrowserRouter>
                     <ChatProvider>
                         <ScrollToTop />
+                        <DocumentTitle />
                         <AppRouter />
                     </ChatProvider>
                 </BrowserRouter>

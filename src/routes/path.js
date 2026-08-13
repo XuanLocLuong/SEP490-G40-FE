@@ -66,6 +66,7 @@ export const ROUTES = {
     ADMIN_SKILLS: '/admin/skills',
     ADMIN_BUSINESS_TYPES: '/admin/business-types',
     ADMIN_TRUST_SCORE_RULES: '/admin/trust-score-rules',
+    ADMIN_BLACKLIST_KEYWORDS: '/admin/blacklist-keywords',
     ADMIN_AUDIT_LOG: '/admin/audit-log',
     ADMIN_ESCALATIONS: '/admin/escalations',
     ADMIN_ANALYTICS: '/admin/analytics',

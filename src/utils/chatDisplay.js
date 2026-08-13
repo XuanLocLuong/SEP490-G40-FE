@@ -192,7 +192,7 @@ export const getActionCardCopy = (actionName) => {
         case 'CONFIRM_WORK':
             return {
                 title: 'Xác nhận nhận việc',
-                body: 'Nhà tuyển dụng đã chấp nhận đơn của bạn. Xác nhận để chuyển sang trạng thái đã nhận việc (HIRED).',
+                body: 'Nhà tuyển dụng đã chấp nhận đơn của bạn. Xác nhận để chuyển sang trạng thái đã nhận việc.',
                 cta: null,
                 acceptCta: 'Xác nhận nhận việc',
                 rejectCta: 'Từ chối nhận việc',
@@ -201,7 +201,7 @@ export const getActionCardCopy = (actionName) => {
         case 'REJECT_WORK':
             return {
                 title: 'Xác nhận nhận việc',
-                body: 'Đơn của bạn đang ở trạng thái ACCEPTED. Xác nhận hoặc từ chối nhận việc.',
+                body: 'Nhà tuyển dụng đã chấp nhận đơn ứng tuyển của bạn. Xác nhận hoặc từ chối nhận việc.',
                 cta: null,
                 acceptCta: 'Xác nhận nhận việc',
                 rejectCta: 'Từ chối nhận việc',
@@ -219,7 +219,7 @@ export const getActionCardCopy = (actionName) => {
         case 'REJECT_APPLICATION':
             return {
                 title: 'Duyệt đơn ứng tuyển',
-                body: 'Ứng viên đang có đơn PENDING cho tin này. Chấp nhận hoặc từ chối.',
+                body: 'Ứng viên đang có đơn chờ duyệt từ bạn. Hãy chấp nhận hoặc từ chối.',
                 cta: null,
                 acceptCta: 'Chấp nhận đơn',
                 rejectCta: 'Từ chối đơn',

@@ -14,6 +14,7 @@ import {
     ChartIcon,
     SettingsIcon,
     LayersIcon,
+    LockIcon,
 } from '../components/common/icons.jsx';
 
 // Internal: InternalSidebar (tối) + InternalTopbar, KHÔNG có Footer (ảnh 6/7/8).
@@ -38,6 +39,7 @@ const CONFIG_BY_ROLE = {
                     { path: ROUTES.ADMIN_SKILLS, label: 'Kỹ năng', icon: LayersIcon },
                     { path: ROUTES.ADMIN_BUSINESS_TYPES, label: 'Loại hình DN', icon: ClipboardIcon },
                     { path: ROUTES.ADMIN_TRUST_SCORE_RULES, label: 'Điểm uy tín', icon: ShieldIcon },
+                    { path: ROUTES.ADMIN_BLACKLIST_KEYWORDS, label: 'Cấu hình từ cấm', icon: LockIcon },
                     { path: ROUTES.ADMIN_SYSTEM_CONFIG, label: 'Cấu hình trọng số', icon: SettingsIcon },
                 ],
             },

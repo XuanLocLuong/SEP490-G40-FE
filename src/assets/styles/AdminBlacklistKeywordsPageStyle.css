@@ -1,0 +1,117 @@
+.admin-blacklist-page__add-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 16px;
+    padding: 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.admin-blacklist-page__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.admin-blacklist-page__tab {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.admin-blacklist-page__tab:hover {
+    color: var(--color-text);
+    border-color: #cbd5e1;
+}
+
+.admin-blacklist-page__tab.is-active {
+    color: var(--color-text);
+    border-color: #94a3b8;
+    background: #f1f5f9;
+}
+
+.admin-blacklist-page__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 180px;
+}
+
+.admin-blacklist-page__field--grow {
+    flex: 1 1 260px;
+}
+
+.admin-blacklist-page__field label {
+    font-size: 13px;
+    font-weight: 650;
+    color: var(--color-text-muted);
+}
+
+.admin-blacklist-page__field input {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--color-text);
+    background: var(--color-surface);
+    min-height: 40px;
+}
+
+.admin-blacklist-page__count {
+    align-self: center;
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.admin-blacklist-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.admin-blacklist-modal__card {
+    width: min(440px, 100%);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-blacklist-modal__card h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--color-text);
+}
+
+.admin-blacklist-modal__hint {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+}
+
+.admin-blacklist-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
