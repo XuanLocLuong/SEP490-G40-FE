@@ -1,5 +1,13 @@
-import { ROUTES, getRecruiterApplicantsPath, getRecruiterEditJobPath } from '../routes/path.js';
+import {
+    ROUTES,
+    getRecruiterApplicantsPath,
+    getRecruiterEditJobPath,
+    getRecruiterMyJobsPath,
+} from '../routes/path.js';
 import { USER_ROLES } from './Constants.jsx';
+
+const notificationTypeOf = (notification) =>
+    String(notification?.type || notification?.notificationType || '').toUpperCase();
 
 /**
  * Map BE notification.action + referenceId + role → in-app path.
@@ -27,9 +35,18 @@ export const getNotificationTargetPath = (notification, role) => {
             if (refId == null) return ROUTES.RECRUITER_APPLICANTS;
             return getRecruiterApplicantsPath(refId);
 
-        case 'VIEW_MY_JOB_DETAIL':
+        case 'VIEW_MY_JOB_DETAIL': {
             if (refId == null) return ROUTES.RECRUITER_MY_JOBS;
-            return getRecruiterEditJobPath(refId);
+            const type = notificationTypeOf(notification);
+            if (type === 'JOB_REVISION_REQUESTED') {
+                return getRecruiterEditJobPath(refId);
+            }
+            if (type === 'JOB_REVIEW_REJECTED') {
+                return ROUTES.RECRUITER_MY_JOBS;
+            }
+            // JOB_APPROVED: danh sách tin của tôi, tab Đang tuyển.
+            return getRecruiterMyJobsPath({ tab: 'open', jobId: refId });
+        }
 
         case 'VIEW_PROFILE':
             if (isRecruiter) return ROUTES.RECRUITER_PROFILE;
