@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { forgotPassword } from '../../apis/AuthApi.jsx';
 import AuthCard from '../../components/common/AuthCard.jsx';
 import { MailIcon } from '../../components/common/icons.jsx';
@@ -7,6 +7,7 @@ import { ROUTES } from '../../routes/path.js';
 
 const ForgotPasswordPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -35,7 +36,7 @@ const ForgotPasswordPage = () => {
                 <button
                     type="button"
                     className="btn btn--primary btn--block"
-                    onClick={() => navigate(ROUTES.LOGIN)}
+                    onClick={() => navigate(ROUTES.LOGIN, { state: location.state })}
                 >
                     Quay về đăng nhập
                 </button>
@@ -84,7 +85,7 @@ const ForgotPasswordPage = () => {
                 <button
                     type="button"
                     className="auth-card__footer-link"
-                    onClick={() => navigate(ROUTES.LOGIN)}
+                    onClick={() => navigate(ROUTES.LOGIN, { state: location.state })}
                 >
                     Đăng nhập
                 </button>

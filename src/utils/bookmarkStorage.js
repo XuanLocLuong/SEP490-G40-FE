@@ -1,7 +1,18 @@
 const RETURN_PATH_KEY = 'joblink_bookmark_return_path';
 
+const normalizeInternalPath = (path) => {
+    if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) {
+        return null;
+    }
+    return path;
+};
+
 export const setBookmarkReturnPath = (path) => {
-    sessionStorage.setItem(RETURN_PATH_KEY, path);
+    const normalizedPath = normalizeInternalPath(path);
+    if (!normalizedPath) return false;
+
+    sessionStorage.setItem(RETURN_PATH_KEY, normalizedPath);
+    return true;
 };
 
 export const consumeBookmarkReturnPath = () => {
@@ -13,3 +24,5 @@ export const consumeBookmarkReturnPath = () => {
 };
 
 export const peekBookmarkReturnPath = () => sessionStorage.getItem(RETURN_PATH_KEY);
+
+export const clearBookmarkReturnPath = () => sessionStorage.removeItem(RETURN_PATH_KEY);

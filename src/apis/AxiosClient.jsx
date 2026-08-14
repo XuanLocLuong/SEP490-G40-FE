@@ -2,6 +2,7 @@ import axios from 'axios';
 import { getAuth, setAuth, clearAuth } from '../utils/Auth.jsx';
 import { markSessionExpired, clearSessionExpiredFlag } from '../utils/sessionExpiredStorage.js';
 import { ROUTES } from '../routes/path.js';
+import { rememberPostLoginPath } from '../utils/authRedirect.js';
 
 // Backend chạy tất cả API dưới prefix /api/v1 (xem SecurityConfig / *Controller.java).
 // VITE_API_URL chỉ nên chứa domain gốc (vd: http://localhost:8080), KHÔNG kèm /api/v1.
@@ -57,10 +58,13 @@ const redirectToLoginAfterSessionExpired = () => {
         return;
     }
 
-    clearAuth();
+    const auth = getAuth();
     const path = window.location.pathname || '';
+    const currentPath = `${path}${window.location.search || ''}${window.location.hash || ''}`;
+    const hasReturnPath = Boolean(auth && rememberPostLoginPath(currentPath, auth.role));
+    clearAuth();
 
-    if (!isProtectedAppPath(path)) {
+    if (!hasReturnPath && !isProtectedAppPath(path)) {
         // Guest / Landing / jobs public: không hiện “Phiên đăng nhập đã hết hạn”.
         clearSessionExpiredFlag();
         if (path !== ROUTES.LANDING && path !== ROUTES.LOGIN) {

@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import AppRouter from "./routes/AppRouter.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
 import DocumentTitle from "./components/common/DocumentTitle.jsx";
+import PostLoginReturnRedirect from "./components/common/PostLoginReturnRedirect.jsx";
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                 <BrowserRouter>
                     <ChatProvider>
                         <ScrollToTop />
+                        <PostLoginReturnRedirect />
                         <DocumentTitle />
                         <AppRouter />
                     </ChatProvider>

@@ -16,7 +16,7 @@ const Header = () => {
     const headerHidden = useAutoHideHeader();
 
     const goLogin = () => {
-        const returnPath = `${location.pathname}${location.search}`;
+        const returnPath = `${location.pathname}${location.search}${location.hash}`;
         if (returnPath && returnPath !== ROUTES.LOGIN && returnPath !== ROUTES.REGISTER) {
             setBookmarkReturnPath(returnPath);
         }
