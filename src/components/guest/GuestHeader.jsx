@@ -56,7 +56,7 @@ const GuestHeader = () => {
     );
 
     const goLogin = () => {
-        const returnPath = `${location.pathname}${location.search}`;
+        const returnPath = `${location.pathname}${location.search}${location.hash}`;
         if (
             returnPath &&
             returnPath !== ROUTES.LOGIN &&

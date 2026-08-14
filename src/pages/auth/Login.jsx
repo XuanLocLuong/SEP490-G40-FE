@@ -121,7 +121,11 @@ const Login = () => {
                             <button
                                 type="button"
                                 className="form-field__link"
-                                onClick={() => navigate(ROUTES.FORGOT_PASSWORD)}
+                                onClick={() =>
+                                    navigate(ROUTES.FORGOT_PASSWORD, {
+                                        state: location.state,
+                                    })
+                                }
                             >
                                 Quên mật khẩu?
                             </button>
