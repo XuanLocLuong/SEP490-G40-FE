@@ -284,6 +284,13 @@ export const SearchIcon = (props) => (
     </svg>
 );
 
+export const RefreshIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+        <path d="M21 3v6h-6" />
+    </svg>
+);
+
 export const BookmarkIcon = (props) => (
     <svg {...base} {...props}>
         <path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-3.5L6 21V4.5Z" />

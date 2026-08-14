@@ -1,5 +1,8 @@
 import { JOB_POST_ACTION } from '../constants/jobPost.js';
 
+/** Khớp BE: app.job.max-candidates (mặc định 100). */
+export const JOB_POST_MAX_REQUIRED_CANDIDATES = 100;
+
 // ---------------------------------------------------------------------------
 // Adapter giữa shape UI (form + shiftBlocks) <-> payload BE (JobSaveRequest).
 //
@@ -243,7 +246,12 @@ export const validateJobFormField = (field, form, action = null) => {
             return null;
         case 'requiredCandidates': {
             const n = parseNumber(form.requiredCandidates);
-            if (n == null || n < 1) return 'Số lượng tuyển tối thiểu là 1.';
+            if (n == null || n < 1) {
+                return 'Số lượng tuyển tối thiểu là 1 người.';
+            }
+            if (n > JOB_POST_MAX_REQUIRED_CANDIDATES) {
+                return `Số lượng tuyển tối đa là ${JOB_POST_MAX_REQUIRED_CANDIDATES} người.`;
+            }
             return null;
         }
         case 'shiftBlocks':

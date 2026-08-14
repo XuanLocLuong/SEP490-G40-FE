@@ -9,7 +9,6 @@ import {
     EyeIcon,
     MailIcon,
     PlusSquareIcon,
-    SparklesIcon,
     TrendingIcon,
     UserPlusIcon,
     UsersIcon,
@@ -59,14 +58,6 @@ const QUICK_ACTIONS = [
         Icon: MailIcon,
         tone: 'blue',
         ctaLink: 'Xem ngay',
-    },
-    {
-        to: withOverviewFrom(ROUTES.RECRUITER_JOBLINK_SUGGESTIONS),
-        label: 'JobLink gợi ý',
-        desc: 'Ứng viên phù hợp cao',
-        Icon: SparklesIcon,
-        tone: 'gold',
-        ctaLink: 'Khám phá ngay',
     },
 ];
 
@@ -342,23 +333,29 @@ const RecruiterHomePage = () => {
                                 </span>
                             </Link>
                         ))}
-                    </div>
-
-                    <Link
-                        to={`${ROUTES.RECRUITER_ANALYTICS}?from=overview`}
-                        className="recruiter-dashboard__analytics-link"
-                    >
-                        <span
-                            className="recruiter-dashboard__analytics-icon"
-                            aria-hidden="true"
+                        <Link
+                            to={`${ROUTES.RECRUITER_ANALYTICS}?from=overview`}
+                            className="recruiter-dashboard__action"
                         >
-                            <ChartIcon width={18} height={18} />
-                        </span>
-                        <span className="recruiter-dashboard__analytics-text">
-                            <strong>Xem thống kê chi tiết</strong>
-                            <span>Phân tích hiệu quả tuyển dụng</span>
-                        </span>
-                    </Link>
+                            <span
+                                className="recruiter-dashboard__action-icon recruiter-dashboard__action-icon--blue"
+                                aria-hidden="true"
+                            >
+                                <ChartIcon width={20} height={20} />
+                            </span>
+                            <strong className="recruiter-dashboard__action-label">
+                                Xem thống kê chi tiết
+                            </strong>
+                            <span className="recruiter-dashboard__action-desc">
+                                Phân tích hiệu quả tuyển dụng
+                            </span>
+                            <span className="recruiter-dashboard__action-footer">
+                                <span className="recruiter-dashboard__action-cta-link recruiter-dashboard__action-cta-link--blue">
+                                    Xem ngay
+                                </span>
+                            </span>
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="recruiter-dashboard__panel recruiter-dashboard__panel--jobs-col">

@@ -53,7 +53,7 @@ const EXACT_TITLES = {
     [ROUTES.MANUAL_CHECK_HOME]: 'Bảng điều khiển',
     [ROUTES.MANUAL_CHECK_ACCOUNTS]: 'Quản lý tài khoản',
     [ROUTES.MANUAL_CHECK_VERIFICATION]: 'Duyệt xác minh',
-    [ROUTES.MANUAL_CHECK_REPORTS]: 'Kiểm duyệt đánh giá',
+    [ROUTES.MANUAL_CHECK_REVIEWS]: 'Kiểm duyệt đánh giá',
     [ROUTES.MANUAL_CHECK_SETTINGS]: 'Cài đặt tài khoản',
 
     [ROUTES.ADMIN_HOME]: 'Thống kê toàn hệ thống',
