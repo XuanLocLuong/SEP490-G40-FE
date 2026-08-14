@@ -34,9 +34,15 @@ export const forgotPassword = (data) =>
 export const resetPassword = (data) =>
     axiosClient.post(`${AUTH_BASE}/reset-password`, data);
 
-/** POST /auth/resend-verification-email — Bearer bắt buộc, không body, không gửi email. */
-export const resendVerificationEmail = () =>
-    axiosClient.post(`${AUTH_BASE}/resend-verification-email`);
+/** POST /auth/resend-verification-email — Bearer bắt buộc, không body (email lấy từ token). */
+export const resendVerificationEmail = (accessToken) =>
+    axiosClient.post(
+        `${AUTH_BASE}/resend-verification-email`,
+        null,
+        accessToken
+            ? { headers: { Authorization: `Bearer ${accessToken}` } }
+            : undefined
+    );
 
 /** POST /auth/change-email — body { email }; đổi email hoặc gửi lại verify nếu cùng email chưa xác minh. */
 export const changeEmail = (data) => axiosClient.post(`${AUTH_BASE}/change-email`, data);

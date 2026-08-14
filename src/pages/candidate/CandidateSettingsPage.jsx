@@ -4,9 +4,13 @@ import { toast } from 'react-toastify';
 import UserAvatar from '../../components/common/UserAvatar.jsx';
 import EditFieldModal from '../../components/common/EditFieldModal.jsx';
 import { CheckCircleIcon, PencilIcon } from '../../components/common/icons.jsx';
-import { changeEmail } from '../../apis/AuthApi.jsx';
+import { changeEmail, logout as logoutApi, resendVerificationEmail } from '../../apis/AuthApi.jsx';
 import userApi, { getApiErrorMessage } from '../../apis/UserApi.jsx';
+import { setSuppressSessionExpiredRedirect } from '../../apis/AxiosClient.jsx';
 import { useAuth } from '../../contexts/authContext.js';
+import { getAuth, clearAuth } from '../../utils/Auth.jsx';
+import { clearHomeSearchQuery } from '../../utils/homeSearchStorage.js';
+import { setEmailVerificationNotice } from '../../utils/emailVerificationNoticeStorage.js';
 import { getAuthErrorMessage } from '../../utils/authErrorMessages.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
@@ -113,6 +117,18 @@ const CandidateSettingsPage = () => {
         setModalError('');
     };
 
+    const leaveToLoginWithEmailNotice = (noticeEmail) => {
+        setEmailVerificationNotice(noticeEmail);
+        setSuppressSessionExpiredRedirect(true);
+        const accessToken = getAuth()?.token;
+        clearHomeSearchQuery();
+        clearAuth();
+        if (accessToken) {
+            logoutApi(accessToken).catch(() => {});
+        }
+        window.location.assign(ROUTES.LOGIN);
+    };
+
     const handleEditValueChange = (value) => {
         setModalError('');
         setEditValue(value);
@@ -149,7 +165,7 @@ const CandidateSettingsPage = () => {
             }
         }
 
-        if (editModal === 'email') {
+        if (editModal === 'email' && user.emailVerified) {
             if (!normalized) {
                 setModalError('Vui lòng nhập email.');
                 return;
@@ -158,9 +174,7 @@ const CandidateSettingsPage = () => {
                 setModalError('Email không đúng định dạng.');
                 return;
             }
-            const sameEmail =
-                normalized.toLowerCase() === (user.email || '').trim().toLowerCase();
-            if (sameEmail && user.emailVerified) {
+            if (normalized.toLowerCase() === (user.email || '').trim().toLowerCase()) {
                 setModalError('Email mới phải khác email hiện tại.');
                 return;
             }
@@ -170,15 +184,14 @@ const CandidateSettingsPage = () => {
 
         try {
             if (editModal === 'email') {
-                await changeEmail({ email: normalized });
-                const data = await userApi.getCurrentUser();
-                syncProfile(data);
+                const noticeEmail = user.emailVerified ? normalized : user.email;
+                if (user.emailVerified) {
+                    await changeEmail({ email: normalized });
+                } else {
+                    await resendVerificationEmail();
+                }
                 closeEditModal();
-                toast.success(
-                    user.emailVerified
-                        ? 'Đã gửi email xác thực tới địa chỉ mới. Kiểm tra hộp thư (kể cả Spam).'
-                        : 'Đã gửi email xác thực. Kiểm tra hộp thư (kể cả Spam).'
-                );
+                leaveToLoginWithEmailNotice(noticeEmail);
                 return;
             }
 
@@ -548,13 +561,15 @@ const CandidateSettingsPage = () => {
                 title={user.emailVerified ? 'Thay đổi email' : 'Xác thực email'}
                 currentLabel="Email hiện tại"
                 currentValue={user.email}
-                newLabel={user.emailVerified ? 'Email mới' : 'Email xác thực'}
+                newLabel="Email mới"
                 newValue={editValue}
                 onNewValueChange={handleEditValueChange}
-                placeholder={
-                    user.emailVerified ? 'Nhập email mới' : 'Nhập email (có thể giữ email hiện tại)'
-                }
+                placeholder="Nhập email mới"
                 inputType="email"
+                hideNewField={!user.emailVerified}
+                cancelLabel={user.emailVerified ? 'Hủy bỏ' : 'Hủy'}
+                saveLabel={user.emailVerified ? 'Lưu thay đổi' : 'Xác minh'}
+                savingLabel={user.emailVerified ? 'Đang lưu...' : 'Đang gửi...'}
                 saving={saving}
                 error={modalError}
                 onClose={closeEditModal}
