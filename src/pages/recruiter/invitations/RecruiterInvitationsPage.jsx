@@ -18,8 +18,8 @@ import { openChatPanel, RECRUITMENT_CHANGED_EVENT } from '../../../utils/chatEve
 import '../../../assets/styles/ApplicantsPageStyle.css';
 import '../../../assets/styles/RecruiterInvitationsStyle.css';
 
-const PAGE_SIZE = 10;
-const DEFAULT_STATUS = 'ALL';
+const PAGE_SIZE = 9;
+const DEFAULT_STATUS = 'SENT';
 
 const RecruiterInvitationsPage = () => {
     const navigate = useNavigate();

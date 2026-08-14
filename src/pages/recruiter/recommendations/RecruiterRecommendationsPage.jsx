@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recruiterJobApi, {
     getRecruiterJobApiErrorMessage,
@@ -12,18 +12,28 @@ import {
 } from '../../../apis/RecruiterRecommendationApi.jsx';
 import CandidateRecommendationCard from '../../../components/recruiter/recommendations/CandidateRecommendationCard.jsx';
 import SendInvitationModal from '../../../components/recruiter/recommendations/SendInvitationModal.jsx';
-import { ROUTES } from '../../../routes/path.js';
+import { RefreshIcon } from '../../../components/common/icons.jsx';
+import {
+    getRecruiterApplicantsPath,
+    getRecruiterJobSuggestionsPath,
+    getRecruiterMyJobsPath,
+    ROUTES,
+} from '../../../routes/path.js';
 import { openChatPanel, RECRUITMENT_CHANGED_EVENT } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/RecruiterRecommendationsStyle.css';
 
 const PAGE_SIZE = 10;
 
 const RecruiterRecommendationsPage = () => {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const showBackToOverview = searchParams.get('from') === 'overview';
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const lockedJobId = searchParams.get('jobId') || '';
+    const fromSource = searchParams.get('from') || '';
+    const showBackToOverview = fromSource === 'overview';
 
     const [jobs, setJobs] = useState([]);
     const [selectedJobId, setSelectedJobId] = useState('');
+    const [focusJob, setFocusJob] = useState(null);
     const [jobsLoading, setJobsLoading] = useState(true);
     const [jobsError, setJobsError] = useState('');
 
@@ -40,10 +50,10 @@ const RecruiterRecommendationsPage = () => {
     const [sentCandidateIds, setSentCandidateIds] = useState(() => new Set());
     const [selectedCandidateIds, setSelectedCandidateIds] = useState(() => new Set());
 
-    const selectedJob = useMemo(
-        () => jobs.find((job) => String(job.id) === String(selectedJobId)) ?? null,
-        [jobs, selectedJobId]
-    );
+    const selectedJob = useMemo(() => {
+        if (focusJob && String(focusJob.id) === String(selectedJobId)) return focusJob;
+        return jobs.find((job) => String(job.id) === String(selectedJobId)) ?? null;
+    }, [jobs, selectedJobId, focusJob]);
 
     const selectableCandidates = useMemo(
         () =>
@@ -94,9 +104,16 @@ const RecruiterRecommendationsPage = () => {
     }, []);
 
     useEffect(() => {
+        if (lockedJobId) return;
+        toast.info('Chọn tin tuyển dụng từ mục Tin của tôi để xem gợi ý ứng viên.');
+        navigate(ROUTES.RECRUITER_MY_JOBS, { replace: true });
+    }, [lockedJobId, navigate]);
+
+    useEffect(() => {
+        if (!lockedJobId) return;
         let active = true;
 
-        const loadOpenJobs = async () => {
+        const loadJobContext = async () => {
             try {
                 const pageData = await recruiterJobApi.getMyJobs({
                     status: 'OPEN',
@@ -107,14 +124,31 @@ const RecruiterRecommendationsPage = () => {
                 const openJobs = Array.isArray(pageData?.content) ? pageData.content : [];
                 setJobs(openJobs);
                 setJobsError('');
-                if (openJobs.length > 0) {
-                    const jobIdParam = searchParams.get('jobId');
-                    const initialJob = jobIdParam
-                        ? openJobs.find((job) => String(job.id) === String(jobIdParam))
-                        : null;
-                    const initialJobId = String((initialJob || openJobs[0]).id);
-                    setSelectedJobId(initialJobId);
-                    loadRecommendations(initialJobId, 0);
+
+                const matchedJob = openJobs.find(
+                    (job) => String(job.id) === String(lockedJobId)
+                );
+                if (matchedJob) {
+                    setFocusJob(null);
+                    setSelectedJobId(String(matchedJob.id));
+                    loadRecommendations(String(matchedJob.id), 0);
+                    return;
+                }
+
+                try {
+                    const detail = await recruiterJobApi.getJobDetail(lockedJobId);
+                    if (!active) return;
+                    if (detail?.status === 'OPEN') {
+                        setFocusJob(detail);
+                        setSelectedJobId(String(detail.id));
+                        loadRecommendations(String(detail.id), 0);
+                        return;
+                    }
+                    setJobsError('Tin tuyển dụng này không còn ở trạng thái đang tuyển.');
+                } catch {
+                    if (active) {
+                        setJobsError('Không tìm thấy tin tuyển dụng hoặc bạn không có quyền truy cập.');
+                    }
                 }
             } catch (error) {
                 if (active) {
@@ -130,11 +164,13 @@ const RecruiterRecommendationsPage = () => {
             }
         };
 
-        loadOpenJobs();
+        setJobsLoading(true);
+        setSelectedJobId(String(lockedJobId));
+        loadJobContext();
         return () => {
             active = false;
         };
-    }, [loadRecommendations]);
+    }, [lockedJobId, loadRecommendations]);
 
     // Refresh recommendations when invite is sent/accepted via chat float.
     useEffect(() => {
@@ -156,24 +192,33 @@ const RecruiterRecommendationsPage = () => {
             window.removeEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
     }, [selectedJobId, currentPage, loadRecommendations]);
 
-    const handleJobChange = (event) => {
-        const jobId = event.target.value;
-        setSearchParams((prev) => {
-            const next = new URLSearchParams(prev);
-            if (jobId) next.set('jobId', jobId);
-            else next.delete('jobId');
-            return next;
-        });
-        setSelectedJobId(jobId);
-        setCandidates([]);
-        setCurrentPage(0);
-        setTotalPages(0);
-        setTotalElements(0);
-        setSentCandidateIds(new Set());
-        setSelectedCandidateIds(new Set());
-        setInviteTargets(null);
-        if (jobId) loadRecommendations(jobId, 0);
-    };
+    const backLink = useMemo(() => {
+        if (showBackToOverview) {
+            return { to: ROUTES.RECRUITER_HOME, label: '← Quay lại tổng quan' };
+        }
+        if (fromSource === 'applicants' && lockedJobId) {
+            return {
+                to: getRecruiterApplicantsPath(lockedJobId, { from: 'my-jobs' }),
+                label: '← Quay lại ứng viên',
+            };
+        }
+        return {
+            to: getRecruiterMyJobsPath({ tab: 'open', jobId: lockedJobId || undefined }),
+            label: '← Quay lại Tin của tôi',
+        };
+    }, [showBackToOverview, fromSource, lockedJobId]);
+
+    const profileBackTo = useMemo(() => {
+        if (!selectedJobId) {
+            return { path: ROUTES.RECRUITER_MY_JOBS, label: 'Quay lại Tin của tôi' };
+        }
+        return {
+            path: getRecruiterJobSuggestionsPath(selectedJobId, {
+                from: fromSource || 'my-jobs',
+            }),
+            label: 'Quay lại gợi ý ứng viên',
+        };
+    }, [selectedJobId, fromSource]);
 
     const toggleSelect = (candidateId) => {
         if (candidateId == null || sentCandidateIds.has(candidateId)) return;
@@ -286,17 +331,6 @@ const RecruiterRecommendationsPage = () => {
     const canGoPrev = currentPage > 0;
     const canGoNext = totalPages > 1 && currentPage + 1 < totalPages;
 
-    const profileBackTo = useMemo(() => {
-        const params = new URLSearchParams();
-        if (selectedJobId) params.set('jobId', String(selectedJobId));
-        if (showBackToOverview) params.set('from', 'overview');
-        const query = params.toString();
-        return {
-            path: `${ROUTES.RECRUITER_JOBLINK_SUGGESTIONS}${query ? `?${query}` : ''}`,
-            label: 'Quay lại JobLink gợi ý',
-        };
-    }, [selectedJobId, showBackToOverview]);
-
     const pageItems = useMemo(() => {
         if (totalPages <= 1) return [];
         if (totalPages <= 4) {
@@ -330,20 +364,24 @@ const RecruiterRecommendationsPage = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    const handleRefreshRecommendations = () => {
+        if (!selectedJobId || recommendationsLoading) return;
+        loadRecommendations(selectedJobId, currentPage);
+    };
+
+    if (!lockedJobId) return null;
+
     return (
         <div className="recruiter-recommendations-page">
-            {showBackToOverview ? (
-                <Link to={ROUTES.RECRUITER_HOME} className="recruiter-back-overview">
-                    ← Quay lại tổng quan
-                </Link>
-            ) : null}
-            <h1 className="recruiter-recommendations__sr-only">JobLink gợi ý</h1>
+            <Link to={backLink.to} className="recruiter-back-overview">
+                {backLink.label}
+            </Link>
+            <h1 className="recruiter-recommendations__sr-only">Gợi ý ứng viên phù hợp</h1>
             <p className="recruiter-recommendations__intro">
                 Những ứng viên phù hợp nhất với tin tuyển dụng của bạn.
             </p>
 
             <section className="recruiter-recommendations__toolbar">
-                <label htmlFor="recommendation-job">Tin tuyển dụng</label>
                 {jobsLoading ? (
                     <div className="recruiter-recommendations__job-loading">
                         Đang tải tin tuyển dụng...
@@ -352,23 +390,27 @@ const RecruiterRecommendationsPage = () => {
                     <div className="recruiter-recommendations__message recruiter-recommendations__message--error">
                         {jobsError}
                     </div>
-                ) : jobs.length === 0 ? (
-                    <div className="recruiter-recommendations__message">
-                        <span>Bạn chưa có tin tuyển dụng nào đang mở.</span>
-                        <Link to={ROUTES.RECRUITER_CREATE_JOB}>Đăng tin tuyển dụng</Link>
+                ) : selectedJob ? (
+                    <div className="recruiter-recommendations__job-title-row">
+                        <p className="recruiter-recommendations__job-title">{selectedJob.title}</p>
+                        <button
+                            type="button"
+                            className={`recruiter-recommendations__refresh-btn${
+                                recommendationsLoading ? ' is-loading' : ''
+                            }`}
+                            onClick={handleRefreshRecommendations}
+                            disabled={recommendationsLoading}
+                            aria-label="Tải lại danh sách gợi ý"
+                            title="Tải lại danh sách gợi ý"
+                        >
+                            <RefreshIcon width={18} height={18} aria-hidden="true" />
+                        </button>
                     </div>
                 ) : (
-                    <select
-                        id="recommendation-job"
-                        value={selectedJobId}
-                        onChange={handleJobChange}
-                    >
-                        {jobs.map((job) => (
-                            <option key={job.id} value={job.id}>
-                                {job.title}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="recruiter-recommendations__message">
+                        <span>Không tìm thấy tin tuyển dụng.</span>
+                        <Link to={ROUTES.RECRUITER_MY_JOBS}>Quay lại Tin của tôi</Link>
+                    </div>
                 )}
 
                 {selectedJobId && !recommendationsError && (

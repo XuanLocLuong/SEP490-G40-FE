@@ -37,3 +37,6 @@ export const resetPassword = (data) =>
 /** POST /auth/resend-verification-email — Bearer bắt buộc, không body, không gửi email. */
 export const resendVerificationEmail = () =>
     axiosClient.post(`${AUTH_BASE}/resend-verification-email`);
+
+/** POST /auth/change-email — body { email }; đổi email hoặc gửi lại verify nếu cùng email chưa xác minh. */
+export const changeEmail = (data) => axiosClient.post(`${AUTH_BASE}/change-email`, data);

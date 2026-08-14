@@ -6,6 +6,7 @@ import {
     getRecruiterApplicantsPath,
     getRecruiterEditJobPath,
     getRecruiterInvitationsPath,
+    getRecruiterJobSuggestionsPath,
 } from '../../../routes/path.js';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import { formatSalaryRange } from '../../../utils/formatters.js';
@@ -440,6 +441,14 @@ const MyJobsPage = () => {
                             Xem lời mời
                         </Link>
                     </>
+                )}
+                {job.status === 'OPEN' && (
+                    <Link
+                        to={getRecruiterJobSuggestionsPath(job.id, { from: 'my-jobs' })}
+                        className="my-jobs-page__action my-jobs-page__action--edit"
+                    >
+                        Gợi ý ứng viên phù hợp
+                    </Link>
                 )}
                 {hasRevisionNote(job) && (
                     <button

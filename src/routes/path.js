@@ -59,7 +59,8 @@ export const ROUTES = {
 
     MANUAL_CHECK_ACCOUNTS: '/manual-check/accounts',
     MANUAL_CHECK_VERIFICATION: '/manual-check/verification',
-    MANUAL_CHECK_REPORTS: '/manual-check/reports',
+    /** Kiểm duyệt nội dung đánh giá (review), không phải báo cáo (report). */
+    MANUAL_CHECK_REVIEWS: '/manual-check/reviews',
     MANUAL_CHECK_SETTINGS: '/manual-check/settings',
 
     ADMIN_SYSTEM_CONFIG: '/admin/system-config',
@@ -113,6 +114,16 @@ export const getRecruiterInvitationsPath = (
     const fromValue = from || (fromMyJobs ? 'my-jobs' : null);
     if (fromValue) params.set('from', String(fromValue));
     return `${ROUTES.RECRUITER_INVITATIONS}?${params.toString()}`;
+};
+
+/**
+ * @param {string|number} jobId
+ * @param {{ from?: 'my-jobs' | 'applicants' | 'overview' }} [options]
+ */
+export const getRecruiterJobSuggestionsPath = (jobId, { from } = {}) => {
+    const params = new URLSearchParams({ jobId: String(jobId) });
+    if (from) params.set('from', String(from));
+    return `${ROUTES.RECRUITER_JOBLINK_SUGGESTIONS}?${params.toString()}`;
 };
 
 export const getCandidateJobChatPath = (jobId) =>
