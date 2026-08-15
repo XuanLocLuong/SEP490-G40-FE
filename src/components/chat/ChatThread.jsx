@@ -47,9 +47,11 @@ import { notifyRecruitmentChanged } from '../../utils/chatEvents.js';
 import ReviewSubmitModal from '../review/ReviewSubmitModal.jsx';
 import ConfirmModal from '../common/ConfirmModal.jsx';
 import ApplicationRejectModal from '../recruiter/applicants/ApplicationRejectModal.jsx';
+import SendInvitationModal from '../recruiter/recommendations/SendInvitationModal.jsx';
 import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import ChatActionCard from './ChatActionCard.jsx';
 import ChatMessageBubble from './ChatMessageBubble.jsx';
+import '../../assets/styles/RecruiterRecommendationsStyle.css';
 
 /** Cache jobId → businessId so reopening the same thread skips a detail fetch. */
 const businessIdByJobId = new Map();
@@ -108,6 +110,49 @@ const findHiredApplicationIdForChat = async ({ jobId, role, conversation }) => {
     return null;
 };
 
+const ACTION_CONFIRMATION_COPY = {
+    ACCEPT_WORK: {
+        title: 'Xác nhận nhận việc',
+        confirmLabel: 'Xác nhận nhận việc',
+        cancelLabel: 'Quay lại',
+        variant: 'primary',
+        message: 'Bạn có chắc muốn xác nhận nhận việc cho',
+        hint: 'Sau khi xác nhận, đơn ứng tuyển sẽ chuyển sang Đã nhận việc và được tính là tuyển dụng thành công.',
+    },
+    REJECT_WORK: {
+        title: 'Từ chối nhận việc',
+        confirmLabel: 'Từ chối',
+        cancelLabel: 'Giữ lại',
+        variant: 'danger',
+        message: 'Bạn có chắc muốn từ chối lời mời nhận việc cho',
+        hint: 'Sau khi từ chối, đơn ứng tuyển sẽ chuyển sang trạng thái Đã từ chối và bạn không thể phản hồi lại lời mời nhận việc này.',
+    },
+    ACCEPT_INVITE: {
+        title: 'Chấp nhận lời mời',
+        confirmLabel: 'Chấp nhận',
+        cancelLabel: 'Quay lại',
+        variant: 'primary',
+        message: 'Bạn có chắc muốn chấp nhận lời mời ứng tuyển cho',
+        hint: 'Chấp nhận lời mời sẽ tạo ngay một đơn ứng tuyển ở trạng thái Đã nhận việc.',
+    },
+    REJECT_INVITE: {
+        title: 'Từ chối lời mời',
+        confirmLabel: 'Từ chối',
+        cancelLabel: 'Giữ lại',
+        variant: 'danger',
+        message: 'Bạn có chắc muốn từ chối lời mời ứng tuyển cho',
+        hint: 'Mỗi lời mời chỉ có thể được phản hồi một lần.',
+    },
+    ACCEPT_APPLICATION: {
+        title: 'Chấp nhận đơn ứng tuyển',
+        confirmLabel: 'Chấp nhận',
+        cancelLabel: 'Quay lại',
+        variant: 'primary',
+        message: 'Bạn có chắc muốn chấp nhận đơn ứng tuyển này cho',
+        hint: 'Đơn sẽ chuyển sang trạng thái Đã chấp nhận và chờ ứng viên xác nhận nhận việc.',
+    },
+};
+
 const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
     const { auth } = useAuth();
     const scrollerRef = useRef(null);
@@ -141,6 +186,8 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
     const [mutatingMessageId, setMutatingMessageId] = useState(null);
     const [recallTargetId, setRecallTargetId] = useState(null);
     const [rejectTarget, setRejectTarget] = useState(null);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [inviteTarget, setInviteTarget] = useState(null);
     const [businessId, setBusinessId] = useState(null);
 
     const stickyGroups = useMemo(() => groupStickyActions(actions), [actions]);
@@ -151,6 +198,8 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         setReviewAppId(null);
         setRecallTargetId(null);
         setRejectTarget(null);
+        setConfirmAction(null);
+        setInviteTarget(null);
         stickToBottomRef.current = true;
         restoreScrollRef.current = null;
         prevFirstMsgIdRef.current = null;
@@ -534,7 +583,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         }
     };
 
-    const handleInvite = async () => {
+    const handleInvite = () => {
         if (auth?.role !== USER_ROLES.RECRUITER) {
             toast.info('Chỉ nhà tuyển dụng mới gửi lời mời.');
             return;
@@ -549,12 +598,22 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             return;
         }
 
+        setInviteTarget({
+            candidateId,
+            fullName: conversation.otherPartyName || 'Ứng viên JobLink',
+            matchScore: 0,
+        });
+    };
+
+    const handleInviteConfirm = async (message) => {
+        const candidateId = inviteTarget?.candidateId;
+        if (candidateId == null || actionBusy) return;
         setActionBusy(true);
         try {
             const response = await sendCandidateInvitation(conversation.jobId, {
                 candidateIds: [candidateId],
                 type: 'JOB_INVITATION',
-                message: null,
+                message: message?.trim() || null,
                 matchScores: { [candidateId]: 0 },
             });
             const result = response?.results?.find(
@@ -562,6 +621,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             );
             if (result?.status === 'SENT' || response?.sentCount > 0) {
                 toast.success('Đã gửi lời mời ứng tuyển.');
+                setInviteTarget(null);
                 await refreshAfterAction({ kind: 'invitation', action: 'INVITE' });
             } else {
                 toast.info(
@@ -578,6 +638,33 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         } finally {
             setActionBusy(false);
         }
+    };
+
+    const handleConfirmedAction = async () => {
+        const actionName = confirmAction;
+        if (!actionName || actionBusy) return;
+
+        switch (actionName) {
+            case 'ACCEPT_WORK':
+                await handleAcceptWork();
+                break;
+            case 'REJECT_WORK':
+                await handleRejectWork();
+                break;
+            case 'ACCEPT_INVITE':
+                await handleAcceptInvite();
+                break;
+            case 'REJECT_INVITE':
+                await handleRejectInvite();
+                break;
+            case 'ACCEPT_APPLICATION':
+                await handleAcceptApplication();
+                break;
+            default:
+                return;
+        }
+
+        setConfirmAction(null);
     };
 
     const handleOpenReview = async () => {
@@ -630,25 +717,17 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
         switch (actionName) {
             case 'ACCEPT_WORK':
-                await handleAcceptWork();
-                break;
             case 'REJECT_WORK':
-                await handleRejectWork();
-                break;
             case 'ACCEPT_INVITE':
-                await handleAcceptInvite();
-                break;
             case 'REJECT_INVITE':
-                await handleRejectInvite();
-                break;
             case 'ACCEPT_APPLICATION':
-                await handleAcceptApplication();
+                setConfirmAction(actionName);
                 break;
             case 'REJECT_APPLICATION':
                 await handleRejectApplication();
                 break;
             case 'INVITE':
-                await handleInvite();
+                handleInvite();
                 break;
             case 'REQUEST_REVIEW':
                 await handleOpenReview();
@@ -666,6 +745,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         );
     }
 
+    const actionConfirmation = ACTION_CONFIRMATION_COPY[confirmAction] ?? null;
     const roleLabel =
         auth?.role === USER_ROLES.CANDIDATE ? 'Nhà tuyển dụng' : 'Ứng viên';
     const canViewCandidateProfile =
@@ -821,6 +901,29 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
             </form>
 
             <ConfirmModal
+                open={Boolean(actionConfirmation)}
+                title={actionConfirmation?.title}
+                confirmLabel={actionConfirmation?.confirmLabel}
+                cancelLabel={actionConfirmation?.cancelLabel}
+                variant={actionConfirmation?.variant}
+                loading={actionBusy}
+                onCancel={() => {
+                    if (actionBusy) return;
+                    setConfirmAction(null);
+                }}
+                onConfirm={handleConfirmedAction}
+            >
+                <p className="confirm-modal__message">
+                    {actionConfirmation?.message}{' '}
+                    <strong>{conversation.jobTitle || 'tin tuyển dụng này'}</strong>
+                    {actionConfirmation ? '?' : null}
+                </p>
+                {actionConfirmation?.hint ? (
+                    <p className="confirm-modal__hint">{actionConfirmation.hint}</p>
+                ) : null}
+            </ConfirmModal>
+
+            <ConfirmModal
                 open={recallTargetId != null}
                 title="Thu hồi tin nhắn"
                 confirmLabel="Thu hồi"
@@ -849,6 +952,19 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 }}
                 onConfirm={handleRejectApplicationConfirm}
             />
+
+            {inviteTarget ? (
+                <SendInvitationModal
+                    candidates={[inviteTarget]}
+                    jobTitle={conversation.jobTitle}
+                    loading={actionBusy}
+                    onConfirm={handleInviteConfirm}
+                    onCancel={() => {
+                        if (actionBusy) return;
+                        setInviteTarget(null);
+                    }}
+                />
+            ) : null}
 
             <ReviewSubmitModal
                 open={reviewOpen}
