@@ -13,31 +13,65 @@ import { useAuth } from './authContext.js';
 import { ChatContext } from './chatContext.js';
 
 const CHAT_ROLES = new Set([USER_ROLES.CANDIDATE, USER_ROLES.RECRUITER]);
-/** Desktop / tablet landscape: up to 3 floats. Narrower: 1. */
-const MULTI_CHAT_MQ = '(min-width: 900px)';
-const MAX_FLOATS_WIDE = 3;
-const MAX_FLOATS_NARROW = 1;
+const CHAT_FLOAT_WIDTH = 360;
+const CHAT_FLOAT_GAP = 12;
+const CHAT_DOCK_WIDE_SIDE_SPACE = 48;
+const CHAT_DOCK_NARROW_SIDE_SPACE = 16;
+const CHAT_DOCK_NARROW_MAX_WIDTH = 899;
+const MAX_CHAT_FLOATS = 3;
+const MAX_DOCK_PANELS = MAX_CHAT_FLOATS + 1;
 
 const PICKER_FRONT = 'picker';
 const floatFrontKey = (id) => `float:${id}`;
 
-const getMaxFloats = () =>
-    typeof window !== 'undefined' && window.matchMedia(MULTI_CHAT_MQ).matches
-        ? MAX_FLOATS_WIDE
-        : MAX_FLOATS_NARROW;
+const getChatCapacity = () => {
+    if (typeof window === 'undefined') {
+        return { panelCapacity: 1, maxFloats: 1 };
+    }
 
-const useMaxChatFloats = () => {
-    const [maxFloats, setMaxFloats] = useState(getMaxFloats);
+    const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+    const sideSpace =
+        viewportWidth <= CHAT_DOCK_NARROW_MAX_WIDTH
+            ? CHAT_DOCK_NARROW_SIDE_SPACE
+            : CHAT_DOCK_WIDE_SIDE_SPACE;
+    const availableWidth = Math.max(0, viewportWidth - sideSpace);
+    const fittingPanels = Math.floor(
+        (availableWidth + CHAT_FLOAT_GAP) / (CHAT_FLOAT_WIDTH + CHAT_FLOAT_GAP)
+    );
+    const panelCapacity = Math.max(
+        1,
+        Math.min(MAX_DOCK_PANELS, fittingPanels)
+    );
+
+    return {
+        panelCapacity,
+        maxFloats: Math.min(MAX_CHAT_FLOATS, panelCapacity),
+    };
+};
+
+const useChatCapacity = () => {
+    const [capacity, setCapacity] = useState(getChatCapacity);
 
     useEffect(() => {
-        const mq = window.matchMedia(MULTI_CHAT_MQ);
-        const sync = () => setMaxFloats(mq.matches ? MAX_FLOATS_WIDE : MAX_FLOATS_NARROW);
+        const sync = () => {
+            const next = getChatCapacity();
+            setCapacity((current) =>
+                current.panelCapacity === next.panelCapacity &&
+                current.maxFloats === next.maxFloats
+                    ? current
+                    : next
+            );
+        };
         sync();
-        mq.addEventListener('change', sync);
-        return () => mq.removeEventListener('change', sync);
+        window.addEventListener('resize', sync);
+        window.visualViewport?.addEventListener('resize', sync);
+        return () => {
+            window.removeEventListener('resize', sync);
+            window.visualViewport?.removeEventListener('resize', sync);
+        };
     }, []);
 
-    return maxFloats;
+    return capacity;
 };
 
 const ChatDockHost = ({
@@ -56,21 +90,41 @@ const ChatDockHost = ({
     frontKey,
     bringPickerToFront,
     bringFloatToFront,
+    panelCapacity,
 }) => {
     const floatOpen = openFloats.length > 0;
-    const dockOpen = pickerOpen || floatOpen;
+    const pickerVisible =
+        pickerOpen && (!floatOpen || panelCapacity > openFloats.length);
+    const dockOpen = pickerVisible || floatOpen;
+    const newestFloat = openFloats[openFloats.length - 1];
+    const visibleFrontKey =
+        !pickerVisible && frontKey === PICKER_FRONT && newestFloat
+            ? floatFrontKey(newestFloat.id)
+            : frontKey;
 
     useEffect(() => {
         if (!enabled || !dockOpen) return undefined;
 
         const handleKeyDown = (event) => {
             if (event.key !== 'Escape') return;
+            if (!pickerVisible && frontKey === PICKER_FRONT && newestFloat) {
+                closeFloat(newestFloat.id);
+                return;
+            }
             closeFrontPanel();
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [enabled, dockOpen, closeFrontPanel]);
+    }, [
+        enabled,
+        dockOpen,
+        pickerVisible,
+        frontKey,
+        newestFloat,
+        closeFloat,
+        closeFrontPanel,
+    ]);
 
     if (!enabled || !dockOpen) return null;
 
@@ -82,16 +136,16 @@ const ChatDockHost = ({
                 <ChatFloat
                     key={conv.id}
                     conversation={conv}
-                    isFront={frontKey === floatFrontKey(conv.id)}
+                    isFront={visibleFrontKey === floatFrontKey(conv.id)}
                     onBringToFront={() => bringFloatToFront(conv.id)}
                     onClose={() => closeFloat(conv.id)}
                     onBackToList={() => backToList(conv.id)}
                     onThreadChanged={reloadInbox}
                 />
             ))}
-            {pickerOpen ? (
+            {pickerVisible ? (
                 <ChatPicker
-                    open={pickerOpen}
+                    open={pickerVisible}
                     activeIds={openIds}
                     conversations={conversations}
                     loading={inboxLoading}
@@ -99,7 +153,7 @@ const ChatDockHost = ({
                     onReload={reloadInbox}
                     onSelect={selectConversation}
                     onClose={() => setPickerOpen(false)}
-                    isFront={frontKey === PICKER_FRONT}
+                    isFront={visibleFrontKey === PICKER_FRONT}
                     onBringToFront={bringPickerToFront}
                 />
             ) : null}
@@ -111,7 +165,7 @@ const ChatDockHost = ({
 export const ChatProvider = ({ children }) => {
     const { auth } = useAuth();
     const chatEnabled = Boolean(auth && CHAT_ROLES.has(auth.role));
-    const maxFloats = useMaxChatFloats();
+    const { maxFloats, panelCapacity } = useChatCapacity();
     const maxFloatsRef = useRef(maxFloats);
     maxFloatsRef.current = maxFloats;
 
@@ -226,10 +280,6 @@ export const ChatProvider = ({ children }) => {
     const selectConversation = useCallback(
         (conv) => {
             pushFloat(conv);
-            // Narrow: hide list after pick. Wide: keep list so user can open more.
-            if (maxFloatsRef.current <= 1) {
-                setPickerOpen(false);
-            }
         },
         [pushFloat]
     );
@@ -274,9 +324,6 @@ export const ChatProvider = ({ children }) => {
                     return null;
                 }
                 pushFloat(conv);
-                if (maxFloatsRef.current <= 1) {
-                    setPickerOpen(false);
-                }
                 reloadInbox();
                 return conv;
             } catch (err) {
@@ -307,9 +354,6 @@ export const ChatProvider = ({ children }) => {
             );
             if (alreadyOpen) {
                 bringFloatToFront(alreadyOpen.id);
-                if (maxFloatsRef.current <= 1) {
-                    setPickerOpen(false);
-                }
                 return alreadyOpen;
             }
 
@@ -451,6 +495,7 @@ export const ChatProvider = ({ children }) => {
                 frontKey={frontKey}
                 bringPickerToFront={bringPickerToFront}
                 bringFloatToFront={bringFloatToFront}
+                panelCapacity={panelCapacity}
             />
         </ChatContext.Provider>
     );
