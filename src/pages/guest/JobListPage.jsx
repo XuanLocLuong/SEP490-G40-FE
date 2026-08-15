@@ -24,6 +24,10 @@ import {
     parseJobListSection,
 } from '../../utils/jobQuery.js';
 import { resolveJobListBack, buildHomeScrollState } from '../../utils/jobNavReturn.js';
+import {
+    AI_GENERIC_ERROR_MESSAGE,
+    resolveAiUserErrorMessage,
+} from '../../utils/aiErrorMessage.js';
 import '../../assets/styles/JobListPageStyle.css';
 
 const JobListPage = () => {
@@ -78,16 +82,22 @@ const JobListPage = () => {
                 applyPageData(pageData, query);
             } catch (err) {
                 setError(
-                    err.message ||
-                        sectionMeta?.error ||
-                        'Không thể tải danh sách việc làm. Vui lòng thử lại sau.'
+                    isAiSection
+                        ? resolveAiUserErrorMessage(
+                              err,
+                              sectionMeta?.error ||
+                                  AI_GENERIC_ERROR_MESSAGE
+                          )
+                        : err.message ||
+                          sectionMeta?.error ||
+                          'Không thể tải danh sách việc làm. Vui lòng thử lại sau.'
                 );
                 setJobs([]);
             } finally {
                 setLoading(false);
             }
         },
-        [sectionMeta?.error]
+        [sectionMeta?.error, isAiSection]
     );
 
     useEffect(() => {
@@ -117,9 +127,14 @@ const JobListPage = () => {
             } catch (err) {
                 if (!cancelled) {
                     setError(
-                        err.message ||
-                            sectionMeta?.error ||
-                            'Không thể tải danh sách việc làm. Vui lòng thử lại sau.'
+                        listSection === JOB_LIST_SECTIONS.AI
+                            ? resolveAiUserErrorMessage(
+                                  err,
+                                  sectionMeta?.error || AI_GENERIC_ERROR_MESSAGE
+                              )
+                            : err.message ||
+                              sectionMeta?.error ||
+                              'Không thể tải danh sách việc làm. Vui lòng thử lại sau.'
                     );
                     setJobs([]);
                 }

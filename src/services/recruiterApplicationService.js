@@ -56,7 +56,8 @@ export const formatAppliedRelativeTime = (isoString) => {
     if (!isoString) return '—';
     const relative = formatRelativeTime(isoString);
     if (!relative) return '—';
-    return relative.replace(/^Đăng /, 'Ứng tuyển ');
+    if (relative === 'Vừa đăng') return 'Vừa gửi';
+    return relative.replace(/^Đăng /, '');
 };
 
 export const mapApplicationItem = (item) => ({

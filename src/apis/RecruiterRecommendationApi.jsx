@@ -1,4 +1,5 @@
 import axiosClient, { API_PREFIX } from './AxiosClient.jsx';
+import { resolveAiUserErrorMessage } from '../utils/aiErrorMessage.js';
 
 const RECOMMENDATION_BASE = `${API_PREFIX}/recommendation`;
 const RECRUITER_BASE = `${API_PREFIX}/recruiter`;
@@ -36,7 +37,7 @@ export const getRecruiterRecommendationErrorMessage = (
         ...INVITATION_SKIP_REASON_MESSAGES,
     };
 
-    return messages[message] || message || fallback;
+    return resolveAiUserErrorMessage(error, messages[message] || message || fallback);
 };
 
 export const fetchRecommendedCandidates = async (jobId, page = 0, size = 10) => {

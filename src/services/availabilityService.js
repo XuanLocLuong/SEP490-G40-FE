@@ -1,4 +1,5 @@
 import { toApiDayValue, toDayKey } from '../components/candidate/availabilityConstants.js';
+import { resolveAiUserErrorMessage } from '../utils/aiErrorMessage.js';
 
 export const SCHEDULE_MODES = {
     MANUAL: 'MANUAL',
@@ -155,10 +156,13 @@ export const fetchScheduleSummary = async (getScheduleSummary) => {
 };
 
 export const getScheduleApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') =>
-    error?.response?.data?.message ||
-    error?.response?.data?.error ||
-    error?.message ||
-    fallback;
+    resolveAiUserErrorMessage(
+        error,
+        error?.response?.data?.message ||
+            error?.response?.data?.error ||
+            error?.message ||
+            fallback
+    );
 
 /** @deprecated dùng fetchAvailability — giữ alias cho chỗ chỉ cần slots. */
 export const fetchAvailabilitySlots = async (getAvailability) => {

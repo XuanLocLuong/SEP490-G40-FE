@@ -1,9 +1,13 @@
 import axiosClient, { API_PREFIX } from './AxiosClient.jsx';
+import { resolveAiUserErrorMessage } from '../utils/aiErrorMessage.js';
 
 const BASE = `${API_PREFIX}/report-reviews`;
 
 export const getReportReviewApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') =>
-    error?.response?.data?.message || error?.message || fallback;
+    resolveAiUserErrorMessage(
+        error,
+        error?.response?.data?.message || error?.message || fallback
+    );
 
 /** GET /report-reviews/queue — case báo cáo PENDING gán cho PM đang login. */
 export const getReportCasesQueue = (params) => axiosClient.get(`${BASE}/queue`, { params });

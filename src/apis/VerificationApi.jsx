@@ -1,4 +1,5 @@
 import axiosClient, { API_PREFIX } from './AxiosClient.jsx';
+import { resolveAiUserErrorMessage } from '../utils/aiErrorMessage.js';
 
 const BASE = `${API_PREFIX}/verifications`;
 
@@ -6,13 +7,18 @@ const unwrap = (res) => res?.data?.data ?? res?.data ?? null;
 
 export const getVerificationApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') => {
     const code = error?.response?.data?.message || error?.response?.data?.error;
-    if (typeof code === 'string' && code.trim() && !code.startsWith('{')) return code;
-    return error?.message || fallback;
+    const mapped =
+        typeof code === 'string' && code.trim() && !code.startsWith('{')
+            ? code
+            : error?.message || fallback;
+    return resolveAiUserErrorMessage(error, mapped);
 };
 
 /** BE: /retry khi chưa có request → báo dùng /submit. */
 export const isVerificationRetryWithoutRequestError = (error) => {
-    const msg = String(getVerificationApiErrorMessage(error, '') || '').toLowerCase();
+    const msg = String(
+        error?.response?.data?.message || error?.response?.data?.error || error?.message || ''
+    ).toLowerCase();
     return (
         msg.includes('/submit') ||
         msg.includes('chưa có yêu cầu') ||

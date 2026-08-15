@@ -32,6 +32,9 @@ const STATUS_TABS = [
     { value: 'CANCELLED', label: 'Đã hủy' },
 ];
 
+/** Tạm ẩn tab Đã hủy + nút Hủy đơn. Giữ action/API, bật lại khi cho phép hủy. */
+const SHOW_CANCEL_APPLICATION_UI = false;
+
 const getStatusUi = (status) => {
     switch (status) {
         case 'PENDING':
@@ -396,7 +399,9 @@ const CandidateApplicationHistoryPage = () => {
             </header>
 
             <div className="cah-summary">
-                {STATUS_TABS.map((t) => {
+                {STATUS_TABS.filter(
+                    (t) => SHOW_CANCEL_APPLICATION_UI || t.value !== 'CANCELLED'
+                ).map((t) => {
                     const isActive = t.value === activeStatus;
                     const tone = getStatusUi(t.value).tone;
                     return (
@@ -525,7 +530,7 @@ const CandidateApplicationHistoryPage = () => {
                                         Ứng tuyển lại
                                     </button>
                                 ) : null}
-                                {isPending ? (
+                                {SHOW_CANCEL_APPLICATION_UI && isPending ? (
                                     <button
                                         type="button"
                                         className="cah-btn cah-btn--danger"

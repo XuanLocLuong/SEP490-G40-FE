@@ -1,4 +1,5 @@
 import axiosClient, { API_PREFIX } from './AxiosClient.jsx';
+import { resolveAiUserErrorMessage } from '../utils/aiErrorMessage.js';
 
 const JOBS_BASE = `${API_PREFIX}/jobs`;
 
@@ -6,7 +7,9 @@ const unwrapData = (response) => response.data.data;
 
 export const getRecruiterJobApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') => {
     const message = error?.response?.data?.message || error?.message || fallback;
-    if (typeof message !== 'string') return fallback;
+    if (typeof message !== 'string') {
+        return resolveAiUserErrorMessage(error, fallback);
+    }
 
     // Spring @Valid thường trả chuỗi dài — lấy message tiếng Việt cuối cùng nếu có.
     if (message.startsWith('Validation failed')) {
@@ -18,7 +21,7 @@ export const getRecruiterJobApiErrorMessage = (error, fallback = 'Có lỗi xả
         return 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại form.';
     }
 
-    return message;
+    return resolveAiUserErrorMessage(error, message);
 };
 
 /**

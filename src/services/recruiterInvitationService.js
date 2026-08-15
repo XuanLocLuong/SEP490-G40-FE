@@ -40,7 +40,8 @@ export const formatInvitationSentTime = (isoString) => {
     if (!isoString) return '—';
     const relative = formatRelativeTime(isoString);
     if (!relative) return '—';
-    return relative.replace(/^Đăng /, 'Gửi ');
+    if (relative === 'Vừa đăng') return 'Vừa gửi';
+    return relative.replace(/^Đăng /, '');
 };
 
 export const mapInvitationItem = (item) => ({
