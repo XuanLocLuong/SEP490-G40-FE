@@ -30,6 +30,7 @@
 .chat-dock {
     position: fixed;
     right: 24px;
+    left: auto;
     bottom: 24px;
     z-index: var(--overlay-z-chat, 240);
     display: flex;
@@ -46,7 +47,7 @@
 .chat-picker {
     position: relative;
     z-index: 1;
-    width: min(360px, calc(100vw - 32px));
+    width: 360px;
     height: min(480px, calc(100vh - 100px));
     flex: 0 0 auto;
     display: flex;
@@ -106,7 +107,7 @@
 .chat-float {
     position: relative;
     z-index: 1;
-    width: min(360px, calc(100vw - 32px));
+    width: 360px;
     height: min(520px, calc(100vh - 100px));
     flex: 0 0 auto;
     display: flex;
@@ -960,16 +961,18 @@
 @media (max-width: 899px) {
     .chat-dock {
         right: 8px;
-        left: 8px;
+        left: auto;
         bottom: 8px;
-        align-items: stretch;
-        gap: 0;
-        overflow: visible;
+        align-items: flex-end;
+        gap: 12px;
+        max-width: calc(100vw - 16px);
+        overflow-x: auto;
+        overflow-y: visible;
     }
 
     .chat-picker,
     .chat-float {
-        width: 100%;
+        width: 360px;
         height: min(70vh, 560px);
     }
 }
