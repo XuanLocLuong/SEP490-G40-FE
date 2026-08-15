@@ -9,8 +9,12 @@ const EditFieldModal = ({
     placeholder,
     inputType = 'text',
     multiline = false,
+    hideNewField = false,
     saving = false,
     error = '',
+    cancelLabel = 'Hủy bỏ',
+    saveLabel = 'Lưu thay đổi',
+    savingLabel = 'Đang lưu...',
     onClose,
     onSave,
 }) => {
@@ -45,27 +49,29 @@ const EditFieldModal = ({
                         <input type="text" value={currentValue || '—'} readOnly disabled />
                     </label>
 
-                    <label className="edit-field-modal__field">
-                        <span>{newLabel}</span>
-                        {multiline ? (
-                            <textarea
-                                className="edit-field-modal__textarea"
-                                value={newValue}
-                                onChange={(e) => onNewValueChange(e.target.value)}
-                                placeholder={placeholder}
-                                rows={5}
-                                autoFocus
-                            />
-                        ) : (
-                            <input
-                                type={inputType}
-                                value={newValue}
-                                onChange={(e) => onNewValueChange(e.target.value)}
-                                placeholder={placeholder}
-                                autoFocus
-                            />
-                        )}
-                    </label>
+                    {!hideNewField && (
+                        <label className="edit-field-modal__field">
+                            <span>{newLabel}</span>
+                            {multiline ? (
+                                <textarea
+                                    className="edit-field-modal__textarea"
+                                    value={newValue}
+                                    onChange={(e) => onNewValueChange(e.target.value)}
+                                    placeholder={placeholder}
+                                    rows={5}
+                                    autoFocus
+                                />
+                            ) : (
+                                <input
+                                    type={inputType}
+                                    value={newValue}
+                                    onChange={(e) => onNewValueChange(e.target.value)}
+                                    placeholder={placeholder}
+                                    autoFocus
+                                />
+                            )}
+                        </label>
+                    )}
                 </div>
 
                 <div className="edit-field-modal__footer">
@@ -75,7 +81,7 @@ const EditFieldModal = ({
                         onClick={onClose}
                         disabled={saving}
                     >
-                        Hủy bỏ
+                        {cancelLabel}
                     </button>
                     <button
                         type="button"
@@ -83,7 +89,7 @@ const EditFieldModal = ({
                         onClick={onSave}
                         disabled={saving}
                     >
-                        {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                        {saving ? savingLabel : saveLabel}
                     </button>
                 </div>
             </div>

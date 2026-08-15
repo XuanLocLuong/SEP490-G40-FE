@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { toast } from 'react-toastify';
@@ -11,7 +11,9 @@ import { useAuth } from '../../contexts/authContext.js';
 import { getHomePathByRole, ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import AuthCard from '../../components/common/AuthCard.jsx';
+import EmailVerificationSentCard from '../../components/auth/EmailVerificationSentCard.jsx';
 import { getAuthErrorMessage } from '../../utils/authErrorMessages.js';
+import { clearEmailVerificationNotice } from '../../utils/emailVerificationNoticeStorage.js';
 import {
     MailIcon,
     LockIcon,
@@ -48,21 +50,25 @@ const Register = () => {
     const [secondsLeft, setSecondsLeft] = useState(AUTO_REDIRECT_SECONDS);
     const [resending, setResending] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
+    const [pendingAccessToken, setPendingAccessToken] = useState(null);
+    const stayOnRegisterRef = useRef(false);
 
     const { login, auth, logout } = useAuth();
     const navigate = useNavigate();
 
     // Clear session rồi vào /login — tránh GuestOnlyRoute đá về home role.
-    const goToLogin = async () => {
+    const goToLogin = useCallback(async () => {
+        clearEmailVerificationNotice();
         if (auth) {
             await logout();
         }
         navigate(ROUTES.LOGIN, { replace: true });
-    };
+    }, [auth, logout, navigate]);
 
     // Đã login mà mở /register (không phải vừa xong form) → về home role.
+    // stayOnRegisterRef chặn race: login() cập nhật auth trước khi setResult kịp flush.
     useEffect(() => {
-        if (auth && !result) {
+        if (auth && !result && !stayOnRegisterRef.current) {
             navigate(getHomePathByRole(auth.role), { replace: true });
         }
     }, [auth, result, navigate]);
@@ -86,11 +92,11 @@ const Register = () => {
 
 
     useEffect(() => {
-        if (!result || result.needsEmailVerification) return;
+        if (!result || result.needsEmailVerification) return undefined;
 
         if (secondsLeft <= 0) {
             navigate(result.homePath);
-            return;
+            return undefined;
         }
 
         const timer = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
@@ -108,14 +114,14 @@ const Register = () => {
         setResending(true);
         setError('');
         try {
-            await resendVerificationEmail();
+            await resendVerificationEmail(pendingAccessToken);
             toast.success('Đã gửi lại email xác thực. Kiểm tra hộp thư (kể cả Spam) — liên kết khoảng 24 giờ.');
             setResendCooldown(60);
         } catch (err) {
             const code = err?.response?.data?.message || err?.response?.data?.code;
             if (code === 'EMAIL_ALREADY_VERIFIED') {
                 toast.info('Email đã được xác thực. Bạn có thể đăng nhập.');
-                navigate(ROUTES.LOGIN);
+                await goToLogin();
                 return;
             }
             setError(getAuthErrorMessage(err));
@@ -149,8 +155,16 @@ const Register = () => {
                 phone: phone.trim(),
             });
             const authData = res.data.data;
-            login(authData);
-            setResult(buildAuthResult(authData, email));
+            const next = buildAuthResult(authData, email);
+            stayOnRegisterRef.current = true;
+            setSecondsLeft(AUTO_REDIRECT_SECONDS);
+            setResult(next);
+            if (next.needsEmailVerification) {
+                // Chưa verify: không giữ session — hiện màn gửi mail rồi về /login.
+                setPendingAccessToken(authData.token || null);
+            } else {
+                login(authData);
+            }
         } catch (err) {
             setError(getAuthErrorMessage(err));
         } finally {
@@ -163,8 +177,10 @@ const Register = () => {
         try {
             const res = await loginWithGoogle({ idToken: credentialResponse.credential, role });
             const authData = res.data.data;
-            login(authData);
+            stayOnRegisterRef.current = true;
+            setSecondsLeft(AUTO_REDIRECT_SECONDS);
             setResult(buildAuthResult(authData, authData.email || '', { fromGoogle: true }));
+            login(authData);
         } catch (err) {
             setError(getAuthErrorMessage(err));
         }
@@ -174,39 +190,14 @@ const Register = () => {
         // Chỉ bắt xác thực email khi cần (password chưa verify). Google thường bỏ qua.
         if (result.needsEmailVerification) {
             return (
-                <AuthCard
-                    title="Kiểm tra email của bạn"
-                    subtitle="Chỉ còn 1 bước nữa thôi!"
-                    guestBack
-                >
-                    {error ? <div className="auth-card__error">{error}</div> : null}
-                    <p className="auth-card__notice">
-                        Chúng tôi đã gửi email xác thực tới{' '}
-                        <strong>{result.email || 'địa chỉ email của bạn'}</strong>.
-                        Vui lòng mở hộp thư (kể cả mục Spam) và bấm vào liên kết xác thực
-                        để hoàn tất đăng ký trước khi tiếp tục sử dụng JobLink.
-                    </p>
-
-                    <button
-                        type="button"
-                        className="btn btn--primary btn--block"
-                        onClick={handleResendVerification}
-                        disabled={resending || resendCooldown > 0}
-                    >
-                        {resending
-                            ? 'Đang gửi lại...'
-                            : resendCooldown > 0
-                              ? `Gửi lại sau ${resendCooldown}s`
-                              : 'Gửi lại email xác thực'}
-                    </button>
-
-                    <div className="auth-card__footer">
-                        Đã xác thực xong?{' '}
-                        <button type="button" className="auth-card__footer-link" onClick={goToLogin}>
-                            Quay lại đăng nhập
-                        </button>
-                    </div>
-                </AuthCard>
+                <EmailVerificationSentCard
+                    email={result.email}
+                    error={error}
+                    onGoToLogin={goToLogin}
+                    onResend={pendingAccessToken ? handleResendVerification : undefined}
+                    resending={resending}
+                    resendCooldown={resendCooldown}
+                />
             );
         }
 

@@ -191,6 +191,17 @@
     .job-post-form__row--type-location .job-post-form__location-readonly {
         white-space: normal;
     }
+
+    .job-post-form__salary-quantity-block {
+        grid-template-columns: 1fr;
+    }
+
+    .job-post-form__hint--salary,
+    .job-post-form__hint--candidates,
+    .job-post-form__error--salary,
+    .job-post-form__error--candidates {
+        grid-column: 1;
+    }
 }
 
 /* Form */
@@ -238,6 +249,43 @@
     border-radius: 10px;
     padding: 10px 12px;
     font: inherit;
+}
+
+.job-post-form__salary-quantity-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr minmax(140px, 200px);
+    column-gap: 14px;
+    row-gap: 8px;
+    align-items: start;
+    margin-bottom: 14px;
+}
+
+.job-post-form__salary-quantity-block .job-post-form__field {
+    margin-bottom: 0;
+}
+
+.job-post-form__salary-quantity-block .job-post-form__field--narrow {
+    max-width: none;
+}
+
+.job-post-form__hint--salary {
+    grid-column: 1 / 3;
+    margin: 14px 0 0;
+}
+
+.job-post-form__hint--candidates {
+    grid-column: 3;
+    margin: 14px 0 0;
+}
+
+.job-post-form__error--salary {
+    grid-column: 1 / 3;
+    margin: 0;
+}
+
+.job-post-form__error--candidates {
+    grid-column: 3;
+    margin: 0;
 }
 
 .job-post-form__field--narrow {

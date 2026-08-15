@@ -206,8 +206,12 @@ const AppRouter = () => {
                 <Route path={ROUTES.MANUAL_CHECK_HOME} element={<ManualCheckDashboard />} />
                 <Route path={ROUTES.MANUAL_CHECK_VERIFICATION} element={<ManualVerificationQueuePage />} />
                 <Route
-                    path={ROUTES.MANUAL_CHECK_REPORTS}
+                    path={ROUTES.MANUAL_CHECK_REVIEWS}
                     element={<ManualCheckReviewModerationPage />}
+                />
+                <Route
+                    path="/manual-check/reports"
+                    element={<Navigate to={ROUTES.MANUAL_CHECK_REVIEWS} replace />}
                 />
                 <Route path={ROUTES.MANUAL_CHECK_SETTINGS} element={<CandidateSettingsPage />} />
             </Route>

@@ -18,14 +18,20 @@ import recruiterApplicationService, {
     getRecruiterApplicationApiErrorMessage,
     isApplicationCancelledError,
 } from '../../../services/recruiterApplicationService.js';
-import { getCandidatePublicProfilePath, getRecruiterJobAnalyticsPath, ROUTES } from '../../../routes/path.js';
+import {
+    getCandidatePublicProfilePath,
+    getRecruiterJobAnalyticsPath,
+    getRecruiterJobSuggestionsPath,
+    getRecruiterMyJobsPath,
+    ROUTES,
+} from '../../../routes/path.js';
 import {
     openChatPanel,
     RECRUITMENT_CHANGED_EVENT,
 } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 9;
 const DEFAULT_STATUS_MANAGE = 'PENDING';
 const DEFAULT_STATUS_READONLY = 'ALL';
 const DEFAULT_SORT = 'appliedAt,desc';
@@ -67,16 +73,9 @@ const ApplicantsPage = () => {
     const statusParam = searchParams.get('status');
     const fromParam = searchParams.get('from');
 
-    /** Có jobId trên URL = vào từ My Jobs / thống kê / deep link; from=overview = từ Tổng quan. */
-    const showBackLink = Boolean(jobIdParam) || fromParam === 'overview';
+    /** Chỉ hiện back khi vào từ Tin của tôi hoặc thống kê tin — không hiện khi vào từ menu / thông báo. */
+    const showBackLink = fromParam === 'my-jobs' || fromParam === 'analytics';
     const backNav = useMemo(() => {
-        if (fromParam === 'overview') {
-            return {
-                to: ROUTES.RECRUITER_HOME,
-                label: 'Quay lại tổng quan',
-                state: undefined,
-            };
-        }
         if (fromParam === 'analytics' && jobIdParam) {
             return {
                 to: getRecruiterJobAnalyticsPath(jobIdParam),
@@ -84,11 +83,14 @@ const ApplicantsPage = () => {
                 state: location.state,
             };
         }
-        return {
-            to: ROUTES.RECRUITER_MY_JOBS,
-            label: 'Quay lại tin tuyển dụng',
-            state: undefined,
-        };
+        if (fromParam === 'my-jobs') {
+            return {
+                to: getRecruiterMyJobsPath({ tab: 'open', jobId: jobIdParam || undefined }),
+                label: 'Quay lại Tin của tôi',
+                state: undefined,
+            };
+        }
+        return null;
     }, [fromParam, jobIdParam, location.state]);
 
     const selectedJobId = useMemo(() => {
@@ -526,15 +528,11 @@ const ApplicantsPage = () => {
 
     return (
         <div className="applicants-page">
-            {showBackLink && (
+            {showBackLink && backNav && (
                 <Link
                     to={backNav.to}
                     state={backNav.state}
-                    className={
-                        fromParam === 'overview'
-                            ? 'recruiter-back-overview'
-                            : 'applicants-page__back'
-                    }
+                    className="applicants-page__back"
                 >
                     ← {backNav.label}
                 </Link>
@@ -680,7 +678,13 @@ const ApplicantsPage = () => {
                             {!readOnly && statusFilter === 'PENDING' && (
                                 <div className="applicants-page__empty-actions">
                                     <Link
-                                        to={ROUTES.RECRUITER_JOBLINK_SUGGESTIONS}
+                                        to={
+                                            selectedJobId != null
+                                                ? getRecruiterJobSuggestionsPath(selectedJobId, {
+                                                      from: 'applicants',
+                                                  })
+                                                : ROUTES.RECRUITER_MY_JOBS
+                                        }
                                         className="btn btn--secondary"
                                     >
                                         Xem JobLink gợi ý

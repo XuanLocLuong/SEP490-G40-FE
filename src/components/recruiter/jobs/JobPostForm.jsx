@@ -3,6 +3,7 @@ import {
     formatLocationDisplay,
     formatSalaryInputDisplay,
     getMinApplicationDeadline,
+    JOB_POST_MAX_REQUIRED_CANDIDATES,
     parseSalaryInput,
     sameSkillId,
 } from '../../../services/jobPostService.js';
@@ -106,7 +107,7 @@ const JobPostForm = ({
                     </div>
                 </div>
 
-                <div className="job-post-form__row">
+                <div className="job-post-form__salary-quantity-block">
                     <div className="job-post-form__field">
                         <label htmlFor="salary-min">Lương tối thiểu (/giờ)</label>
                         <input
@@ -141,24 +142,30 @@ const JobPostForm = ({
                             id="required-candidates"
                             type="number"
                             min="1"
+                            max={JOB_POST_MAX_REQUIRED_CANDIDATES}
                             value={form.requiredCandidates}
                             disabled={disabled}
                             onChange={(e) => setField('requiredCandidates', e.target.value)}
                             onBlur={blur('requiredCandidates')}
                         />
-                        {errors.requiredCandidates && (
-                            <p className="job-post-form__error job-post-form__error--candidates">
-                                {errors.requiredCandidates}
-                            </p>
-                        )}
                     </div>
+                    <p className="job-post-form__hint job-post-form__hint--salary">
+                        Lương theo giờ (₫/giờ). Có thể chỉ điền một mức (VD: 22.000 ₫/giờ).
+                    </p>
+                    <p className="job-post-form__hint job-post-form__hint--candidates">
+                        Tối thiểu 1, tối đa {JOB_POST_MAX_REQUIRED_CANDIDATES} người.
+                    </p>
+                    {errors.salaryMax && (
+                        <p className="job-post-form__error job-post-form__error--salary">
+                            {errors.salaryMax}
+                        </p>
+                    )}
+                    {errors.requiredCandidates && (
+                        <p className="job-post-form__error job-post-form__error--candidates">
+                            {errors.requiredCandidates}
+                        </p>
+                    )}
                 </div>
-                <p className="job-post-form__hint job-post-form__hint--row">
-                    Lương theo giờ (₫/giờ). Có thể chỉ điền một mức (VD: 22.000 ₫/giờ).
-                </p>
-                {errors.salaryMax && (
-                    <p className="job-post-form__error">{errors.salaryMax}</p>
-                )}
 
                 <div className="job-post-form__row">
                     <div className="job-post-form__field job-post-form__field--deadline">

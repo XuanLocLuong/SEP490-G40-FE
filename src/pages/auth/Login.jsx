@@ -10,7 +10,12 @@ import {
     clearSessionExpiredFlag,
     peekSessionExpiredMessage,
 } from '../../utils/sessionExpiredStorage.js';
+import {
+    clearEmailVerificationNotice,
+    peekEmailVerificationNotice,
+} from '../../utils/emailVerificationNoticeStorage.js';
 import AuthCard from '../../components/common/AuthCard.jsx';
+import EmailVerificationSentCard from '../../components/auth/EmailVerificationSentCard.jsx';
 import { MailIcon, LockIcon, EyeIcon, EyeOffIcon } from '../../components/common/icons.jsx';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -21,10 +26,16 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [googleRole, setGoogleRole] = useState(USER_ROLES.CANDIDATE);
     const [error, setError] = useState('');
+    const [emailNotice, setEmailNotice] = useState(() => peekEmailVerificationNotice());
 
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+
+    const dismissEmailNotice = () => {
+        clearEmailVerificationNotice();
+        setEmailNotice(null);
+    };
 
     useEffect(() => {
         const message = peekSessionExpiredMessage();
@@ -45,6 +56,7 @@ const Login = () => {
             const res = await LoginApi({ email, password });
             const authData = res.data.data;
             login(authData);
+            clearEmailVerificationNotice();
             navigate(resolvePostLoginPath(authData.role, location.state), { replace: true });
         } catch (err) {
             setError('Đăng nhập thất bại. Vui lòng kiểm tra lại email/mật khẩu.');
@@ -61,11 +73,21 @@ const Login = () => {
             });
             const authData = res.data.data;
             login(authData);
+            clearEmailVerificationNotice();
             navigate(resolvePostLoginPath(authData.role, location.state), { replace: true });
         } catch (err) {
             setError('Đăng nhập bằng Google thất bại. Vui lòng thử lại.');
         }
     };
+
+    if (emailNotice) {
+        return (
+            <EmailVerificationSentCard
+                email={emailNotice.email}
+                onGoToLogin={dismissEmailNotice}
+            />
+        );
+    }
 
     return (
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
