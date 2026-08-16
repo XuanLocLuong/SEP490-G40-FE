@@ -43,7 +43,6 @@ import JobAnalyticsDetailPage from '../pages/recruiter/analytics/JobAnalyticsDet
 import PostManagerReviewQueuePage from '../pages/post-manager/PostManagerReviewQueuePage.jsx';
 import PostManagerReportQueuePage from '../pages/post-manager/PostManagerReportQueuePage.jsx';
 import PostManagerAnalyticsPage from '../pages/post-manager/PostManagerAnalyticsPage.jsx';
-import ManualCheckDashboard from '../pages/manual-check/ManualCheckDashboard.jsx';
 import ManualVerificationQueuePage from '../pages/manual-check/ManualVerificationQueuePage.jsx';
 import ManualCheckReviewModerationPage from '../pages/manual-check/ManualCheckReviewModerationPage.jsx';
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx';
@@ -203,7 +202,14 @@ const AppRouter = () => {
                     </ProtectedRoute>
                 }
             >
-                <Route path={ROUTES.MANUAL_CHECK_HOME} element={<ManualCheckDashboard />} />
+                <Route
+                    path={ROUTES.MANUAL_CHECK_HOME}
+                    element={<Navigate to={ROUTES.MANUAL_CHECK_VERIFICATION} replace />}
+                />
+                <Route
+                    path={ROUTES.MANUAL_CHECK_ACCOUNTS}
+                    element={<Navigate to={ROUTES.MANUAL_CHECK_VERIFICATION} replace />}
+                />
                 <Route path={ROUTES.MANUAL_CHECK_VERIFICATION} element={<ManualVerificationQueuePage />} />
                 <Route
                     path={ROUTES.MANUAL_CHECK_REVIEWS}

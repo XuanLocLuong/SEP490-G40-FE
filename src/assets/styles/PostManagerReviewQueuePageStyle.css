@@ -548,6 +548,11 @@
     color: var(--color-text);
 }
 
+.pm-report-view-job {
+    width: fit-content;
+    min-width: 180px;
+}
+
 .pm-review-detail__phase2-note {
     margin: 0;
     padding: 10px 12px;

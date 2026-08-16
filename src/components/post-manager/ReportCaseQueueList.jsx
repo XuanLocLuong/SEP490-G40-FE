@@ -64,11 +64,11 @@ const ReportCaseQueueList = ({
                                     title="Xem hồ sơ công khai nhà tuyển dụng"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    Xem hồ sơ NTĐ
+                                    Xem hồ sơ NTD
                                 </BusinessProfileLink>
                             ) : (
                                 <span className="pm-report-card__profile-link pm-report-card__profile-link--muted">
-                                    Xem hồ sơ NTĐ
+                                    Xem hồ sơ NTD
                                 </span>
                             )}
                             <span className="pm-queue-card__time">

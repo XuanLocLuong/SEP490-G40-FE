@@ -24,6 +24,7 @@ const ReportCaseDetailPanel = ({
     aiError,
     onAnalyzeAi,
     onOpenReport,
+    onViewJobContent,
 }) => {
     if (loading) {
         return (
@@ -91,7 +92,16 @@ const ReportCaseDetailPanel = ({
 
             <div className="pm-review-detail__preview">
                 <h3>Nội dung tin đăng</h3>
-                {job.description ? (
+                {job.id ? (
+                    <button
+                        type="button"
+                        className="pm-review-btn pm-review-btn--ghost pm-report-view-job"
+                        onClick={() => onViewJobContent?.(job.id)}
+                        disabled={deciding}
+                    >
+                        Xem nội dung tin đăng
+                    </button>
+                ) : job.description ? (
                     <RichTextContent content={job.description} className="pm-review-detail__description" />
                 ) : (
                     <p className="pm-report-muted">Không có mô tả.</p>

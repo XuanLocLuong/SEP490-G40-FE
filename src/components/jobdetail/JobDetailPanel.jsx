@@ -54,6 +54,7 @@ const JobDetailPanel = ({
     variant = 'default',
     sectionsOnly = false,
     showPostedLabel = true,
+    hideCtas = false,
 }) => {
     const isPreview = variant === 'preview';
     if (loading) {
@@ -245,7 +246,7 @@ const JobDetailPanel = ({
                 </div>
             </div>
 
-            {!isPreview && (
+            {!isPreview && !hideCtas && (
                 <div className="job-detail-panel__actions">
                     <div className="job-detail-panel__chat-block">
                         <p className="job-detail-panel__chat-note">

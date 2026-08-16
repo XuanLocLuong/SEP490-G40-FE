@@ -14,7 +14,7 @@ const markJobApplied = (prev) =>
           }
         : prev;
 
-const JobDetailModal = ({ open, jobId, onClose, onApplied }) => {
+const JobDetailModal = ({ open, jobId, onClose, onApplied, hideCtas = false }) => {
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -104,6 +104,7 @@ const JobDetailModal = ({ open, jobId, onClose, onApplied }) => {
                         job={job}
                         loading={loading}
                         error={error}
+                        hideCtas={hideCtas}
                         onApplied={() => {
                             setJob(markJobApplied);
                             onApplied?.(jobId);

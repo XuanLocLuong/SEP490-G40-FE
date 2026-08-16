@@ -6,7 +6,6 @@ import { useLogoutToLanding } from '../hooks/useLogoutToLanding.js';
 import { USER_ROLES } from '../utils/Constants.jsx';
 import { ROUTES } from '../routes/path.js';
 import {
-    GridIcon,
     ClipboardIcon,
     UsersIcon,
     ShieldIcon,
@@ -73,8 +72,6 @@ const CONFIG_BY_ROLE = {
         variant: 'verification',
         roleLabel: 'Manual Team',
         items: [
-            { path: ROUTES.MANUAL_CHECK_HOME, label: 'Dashboard', icon: GridIcon },
-            { path: ROUTES.MANUAL_CHECK_ACCOUNTS, label: 'Quản lý tài khoản', icon: UsersIcon },
             { path: ROUTES.MANUAL_CHECK_VERIFICATION, label: 'Duyệt xác minh', icon: ShieldIcon },
             { path: ROUTES.MANUAL_CHECK_REVIEWS, label: 'Kiểm duyệt đánh giá', icon: AlertIcon },
             { path: ROUTES.MANUAL_CHECK_SETTINGS, label: 'Cài đặt', icon: SettingsIcon },

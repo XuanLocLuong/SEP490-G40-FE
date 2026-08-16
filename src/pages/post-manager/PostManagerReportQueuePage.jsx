@@ -11,6 +11,7 @@ import {
 import ReportCaseDetailPanel from '../../components/post-manager/ReportCaseDetailPanel.jsx';
 import ReportCaseQueueList from '../../components/post-manager/ReportCaseQueueList.jsx';
 import ReportItemDetailModal from '../../components/post-manager/ReportItemDetailModal.jsx';
+import JobDetailModal from '../../components/job/JobDetailModal.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useAuth } from '../../contexts/authContext.js';
@@ -53,6 +54,7 @@ const PostManagerReportQueuePage = () => {
     const [aiError, setAiError] = useState('');
 
     const [activeReportId, setActiveReportId] = useState(null);
+    const [jobContentOpen, setJobContentOpen] = useState(false);
     const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
 
     const loadQueue = useCallback(async (pageNum, { append = false } = {}) => {
@@ -119,6 +121,7 @@ const PostManagerReportQueuePage = () => {
         setAiAnalysis(null);
         setAiError('');
         setActiveReportId(null);
+        setJobContentOpen(false);
         setBlockConfirmOpen(false);
     }, [isPostManager, selectedJobId, loadDetail]);
 
@@ -279,6 +282,7 @@ const PostManagerReportQueuePage = () => {
                     aiError={aiError}
                     onAnalyzeAi={handleAnalyzeAi}
                     onOpenReport={setActiveReportId}
+                    onViewJobContent={() => setJobContentOpen(true)}
                 />
             </div>
 
@@ -287,6 +291,13 @@ const PostManagerReportQueuePage = () => {
                 reportId={activeReportId}
                 onClose={() => setActiveReportId(null)}
                 onMarkedRead={handleMarkedRead}
+            />
+
+            <JobDetailModal
+                open={jobContentOpen}
+                jobId={selectedJobId}
+                hideCtas
+                onClose={() => setJobContentOpen(false)}
             />
 
             <ConfirmModal
