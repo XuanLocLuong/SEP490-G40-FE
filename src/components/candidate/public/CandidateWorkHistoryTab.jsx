@@ -1,8 +1,8 @@
-import { formatMonthYear } from '../../../utils/profileFormat.js';
+import { formatDate } from '../../../utils/profileFormat.js';
 
 const renderPeriod = (exp) => {
-    const start = formatMonthYear(exp.startDate);
-    const end = exp.endDate ? formatMonthYear(exp.endDate) : 'Hiện tại';
+    const start = formatDate(exp.startDate);
+    const end = exp.endDate ? formatDate(exp.endDate) : 'Hiện tại';
     if (!start && !exp.endDate) return '';
     return `${start || '?'} - ${end}`;
 };

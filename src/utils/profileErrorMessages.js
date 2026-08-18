@@ -3,6 +3,9 @@ const PROFILE_ERROR_MESSAGES = {
     USER_NOT_FOUND: 'Không tìm thấy người dùng.',
     IDENTITY_FIELD_LOCKED:
         'Bạn đã xác thực danh tính nên không thể tự sửa các thông tin định danh (họ tên, ngày sinh, giới tính, quốc tịch).',
+    DATE_OF_BIRTH_IN_FUTURE: 'Ngày sinh không thể ở tương lai.',
+    AGE_TOO_YOUNG: 'Bạn chưa đủ tuổi để sử dụng hệ thống (>= 16 tuổi).',
+    AGE_TOO_OLD: 'Ngày sinh không hợp lệ. Vui lòng kiểm tra lại.',
     INVALID_SALARY_RANGE: 'Lương tối thiểu phải nhỏ hơn hoặc bằng lương tối đa.',
     LOCATION_COORDINATES_INCOMPLETE: 'Vui lòng chọn đầy đủ toạ độ trên bản đồ cho địa điểm tìm việc.',
     INVALID_SKILL_ID: 'Có kỹ năng không hợp lệ trong danh sách đã chọn.',

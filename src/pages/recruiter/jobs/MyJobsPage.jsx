@@ -17,6 +17,8 @@ import '../../../assets/styles/JobPostStyle.css';
 import '../../../assets/styles/MyJobsStyle.css';
 
 const PAGE_SIZE = 10;
+/** Spring Pageable: property,direction — tin mới nhất trước. */
+const MY_JOBS_SORT = 'createdAt,desc';
 
 const STATUS_TABS = [
     { id: 'all', label: 'Tất cả', dotClass: '' },
@@ -85,6 +87,7 @@ const fetchMyJobsPage = async (tabId, pageNum, size = PAGE_SIZE) => {
                     status,
                     page: pageNum,
                     size,
+                    sort: MY_JOBS_SORT,
                 })
             )
         );
@@ -92,7 +95,7 @@ const fetchMyJobsPage = async (tabId, pageNum, size = PAGE_SIZE) => {
     }
 
     const status = TAB_API_STATUS[tabId];
-    const params = { page: pageNum, size };
+    const params = { page: pageNum, size, sort: MY_JOBS_SORT };
     if (status) params.status = status;
     return recruiterJobApi.getMyJobs(params);
 };

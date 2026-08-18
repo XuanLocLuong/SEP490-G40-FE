@@ -12,8 +12,8 @@ import * as api from '../apis/CandidateProfileApi.jsx';
 //   - address: BE chỉ 1 cột, dùng chung cho "địa chỉ cá nhân" & "địa điểm tìm việc".
 //   - educations[]: BE chỉ lưu ĐÚNG 1 học vấn (schoolName/studentCode/educationLevel,
 //     không có major/năm học) -> chỉ phần tử đầu tiên trong mảng được lưu.
-//   - experiences[] (Work History): BE CHƯA có API -> KHÔNG gọi save thật (xử lý ở
-//     CandidateProfilePage.jsx, không phải ở đây).
+//   - experiences[] (Work History): CRUD riêng /api/v1/candidate/work-histories,
+//     không gửi qua PUT profile (xem useCandidateWorkHistories).
 //   - status: BE chỉ có openToWork (boolean) -> quy về 2 trạng thái SEEKING/NOT_SEEKING.
 // ---------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ export const normalizeProfile = (raw) => {
             educationLevel: data.educationLevel || '',
         },
 
-        // Work History: BE chưa có Controller/Repository — không đọc qua Profile API.
+        // Work History CRUD riêng — không đọc/ghi qua Profile API.
         experiences: [],
 
         skills: toArray(data.skills).map(normalizeSkill).filter(Boolean),

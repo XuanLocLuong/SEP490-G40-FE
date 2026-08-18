@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCandidateProfile } from '../../../hooks/useCandidateProfile.js';
 import { useCandidateAvailability } from '../../../hooks/useCandidateAvailability.js';
+import { useCandidateWorkHistories } from '../../../hooks/useCandidateWorkHistories.js';
 import { useAuth } from '../../../contexts/authContext.js';
 import userApi, { getApiErrorMessage } from '../../../apis/UserApi.jsx';
 import ProfileHeader from '../../../components/candidate/ProfileHeader.jsx';
@@ -49,6 +50,13 @@ const CandidateProfilePage = () => {
         scheduleMode: availabilityScheduleMode,
         loading: availabilityLoading,
     } = useCandidateAvailability();
+    const {
+        experiences,
+        loading: experiencesLoading,
+        saving: experiencesSaving,
+        saveExperience,
+        deleteExperience,
+    } = useCandidateWorkHistories();
 
     const [accountPhone, setAccountPhone] = useState('');
     const [draft, setDraft] = useState(null);
@@ -254,15 +262,11 @@ const CandidateProfilePage = () => {
             />
 
             <ExperienceCard
-                experiences={draft.experiences}
-                onSave={(experiences) => {
-                    // Work History CHƯA có API (chỉ có entity rỗng bên BE) — không gọi PUT
-                    // thật kẻo báo "lưu thành công" giả. Chỉ giữ ở draft cục bộ.
-                    patchDraft({ experiences });
-                    toast.info('Kinh nghiệm làm việc sẽ được lưu khi tính năng Work History hoàn tất.');
-                    return false; // false = ExperienceCard không tự đóng modal như đã lưu thành công.
-                }}
-                saving={saving}
+                experiences={experiences}
+                loading={experiencesLoading}
+                saving={experiencesSaving}
+                onSave={saveExperience}
+                onDelete={deleteExperience}
             />
 
             <AvailabilityCard

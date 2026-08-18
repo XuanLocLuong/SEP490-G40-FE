@@ -14,8 +14,7 @@ const SkillCard = ({ skills, catalog, onChange }) => {
         const q = query.trim().toLowerCase();
         return catalog
             .filter((s) => !selectedIds.has(String(s.id ?? s.name)))
-            .filter((s) => (q ? s.name.toLowerCase().includes(q) : true))
-            .slice(0, 8);
+            .filter((s) => (q ? s.name.toLowerCase().includes(q) : true));
     }, [catalog, query, selectedIds]);
 
     const addSkill = (skill) => {

@@ -6,12 +6,20 @@ const normalizeSkill = (skill = {}) => ({
     description: skill.description || '',
 });
 
+const toDateOrEmpty = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+        return value.slice(0, 10);
+    }
+    return String(value);
+};
+
 const normalizeExperience = (exp = {}) => ({
     id: exp.id,
-    jobTitle: exp.jobTitle || exp.position || '',
-    organization: exp.organization || exp.company || '',
-    startDate: exp.startDate || '',
-    endDate: exp.endDate || null,
+    jobTitle: exp.jobTitle || '',
+    organization: exp.organization || '',
+    startDate: toDateOrEmpty(exp.startDate),
+    endDate: exp.endDate ? toDateOrEmpty(exp.endDate) : null,
     description: exp.description || '',
 });
 
