@@ -14,9 +14,6 @@ const JobReviewQueueList = ({
     riskCounts,
     search,
     onSearchChange,
-    showGreenQueue,
-    onShowGreenQueueChange,
-    greenHiddenCount = 0,
     loading,
     onSelect,
 }) => (
@@ -52,18 +49,6 @@ const JobReviewQueueList = ({
                 onChange={(e) => onSearchChange(e.target.value)}
             />
         </div>
-
-        <label className="pm-queue__green-toggle">
-            <input
-                type="checkbox"
-                checked={Boolean(showGreenQueue)}
-                onChange={(e) => onShowGreenQueueChange?.(e.target.checked)}
-            />
-            <span>
-                Hiện ưu tiên thấp
-                {greenHiddenCount > 0 && !showGreenQueue ? ` (đang ẩn ${greenHiddenCount})` : ''}
-            </span>
-        </label>
 
         <div className="pm-queue__list" aria-busy={loading}>
             {loading && items.length === 0 &&

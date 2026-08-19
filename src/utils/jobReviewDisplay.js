@@ -140,18 +140,19 @@ export const countByRisk = (items = []) => {
 };
 
 export const RULE_NAME_LABELS = {
-    ALL_HARD_RULES: 'Quy tắc cứng',
-    SALARY_VALIDATION: 'Kiểm tra mức lương',
-    BLACKLIST_KEYWORD: 'Từ khóa cấm',
-    BLACKLIST_URL: 'URL đáng ngờ',
-    SPAM_FREQUENCY: 'Tần suất spam',
-    RECRUITER_TRUST: 'Độ tin cậy nhà tuyển dụng',
-    TRUST_HISTORY_HEALTH: 'Lịch sử sức khỏe Trust',
-    APPROVAL_RATE: 'Tỷ lệ duyệt bài thành công',
-    REPORT_HISTORY: 'Lịch sử bị báo cáo',
-    PROFILE_COMPLETENESS: 'Độ hoàn thiện hồ sơ DN',
-    POSTING_FREQUENCY: 'Tần suất đăng bài',
-    CONTENT_QUALITY: 'Chất lượng nội dung',
+    ALL_HARD_RULES: 'Quy tắc cứng (ALL_HARD_RULES)',
+    SALARY_VALIDATION: 'Kiểm tra mức lương (SALARY_VALIDATION)',
+    BLACKLIST_KEYWORD: 'Từ khóa cấm (BLACKLIST_KEYWORD)',
+    BLACKLIST_URL: 'URL đáng ngờ (BLACKLIST_URL)',
+    SPAM_FREQUENCY: 'Tần suất spam (SPAM_FREQUENCY)',
+    RECRUITER_TRUST: 'Độ tin cậy nhà tuyển dụng (RECRUITER_TRUST)',
+    TRUST_HISTORY_HEALTH: 'Lịch sử sức khỏe Trust (TRUST_HISTORY_HEALTH)',
+    APPROVAL_RATE: 'Tỷ lệ duyệt bài thành công (APPROVAL_RATE)',
+    REPORT_HISTORY: 'Lịch sử bị báo cáo (REPORT_HISTORY)',
+    PROFILE_COMPLETENESS: 'Độ hoàn thiện hồ sơ doanh nghiệp (PROFILE_COMPLETENESS)',
+    POSTING_FREQUENCY: 'Tần suất đăng bài (POSTING_FREQUENCY)',
+    CONTENT_QUALITY: 'Chất lượng nội dung (CONTENT_QUALITY)',
+    AUTO_APPROVE_CONDITIONS: 'Điều kiện để tự động duyệt bài (AUTO_APPROVE_CONDITIONS)'
 };
 
 export const getRuleNameLabel = (ruleName) => RULE_NAME_LABELS[ruleName] || ruleName;

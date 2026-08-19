@@ -174,9 +174,14 @@ const ReportCaseDetailPanel = ({
                         )}
                         {Array.isArray(aiAnalysis.recommendations) &&
                             aiAnalysis.recommendations.length > 0 && (
-                                <p className="pm-review-detail__ai-hint">
-                                    Gợi ý: {aiAnalysis.recommendations.join(' · ')}
-                                </p>
+                                <div className="pm-review-detail__ai-hint">
+                                    <strong>Gợi ý:</strong>
+                                    <ul>
+                                        {aiAnalysis.recommendations.map((rec, i) => (
+                                            <li key={i}>{rec}</li>
+                                        ))}
+                                    </ul>
+                                </div>
                             )}
                         {aiAnalysis.spamCheck?.duplicateCount > 0 && (
                             <p className="pm-review-detail__ai-hint">

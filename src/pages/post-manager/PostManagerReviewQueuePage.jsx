@@ -38,7 +38,7 @@ const PostManagerReviewQueuePage = () => {
 
     const [activeRiskTab, setActiveRiskTab] = useState('ALL');
     const [search, setSearch] = useState('');
-    const [showGreenQueue, setShowGreenQueue] = useState(false);
+    const [showGreenQueue, setShowGreenQueue] = useState(true);
 
     const [selectedReviewId, setSelectedReviewId] = useState(null);
     const [detail, setDetail] = useState(null);

@@ -83,13 +83,13 @@ const JobReviewDetailPanel = ({
                             <span>{detail.businessName || '—'}</span>
                         )}
                         {detail.jobId != null && (
-                            <span className="pm-review-detail__job-id">#{detail.jobId}</span>
+                            <span className="pm-review-detail__job-id"><b>Mã job</b>:{detail.jobId}</span>
                         )}
                     </p>
                     <p className="pm-review-detail__recruiter">
-                        Nhà tuyển dụng: {detail.recruiterName || '—'}
+                        <b>Nhà tuyển dụng</b>: {detail.recruiterName || '—'}
                         {detail.businessTrustScore != null && (
-                            <span> · Độ tin cậy: {Math.round(detail.businessTrustScore)}</span>
+                            <span> · <b>Độ tin cậy</b>: {Math.round(detail.businessTrustScore)}</span>
                         )}
                     </p>
                 </div>
