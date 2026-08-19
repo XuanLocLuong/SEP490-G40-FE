@@ -23,6 +23,8 @@ import {
     areConfigValuesEqual,
     buildSystemConfigUiSections,
     cloneConfigDraftValue,
+    formatConfigDefaultFieldDisplay,
+    getJsonConfigDefaultEntries,
     toApiConfigNewValue,
     validateConfigDraftValue,
 } from '../../utils/adminSystemConfigDisplay.js';
@@ -296,15 +298,20 @@ const AdminSystemConfigPage = () => {
 
         if (entries.length === 0) {
             return (
-                <p className="admin-config-inline__empty-json">
-                    Không parse được field con — giá trị trống hoặc không phải object JSON.
-                </p>
+                <div className="admin-config-current-block">
+                    <span className="admin-config-current-block__title">Giá trị hiện tại</span>
+                    <p className="admin-config-inline__empty-json">
+                        Không parse được field con — giá trị trống hoặc không phải object JSON.
+                    </p>
+                </div>
             );
         }
 
         return (
-            <div className="admin-config-json-grid">
-                {entries.map(([fieldKey, fieldVal]) => {
+            <div className="admin-config-current-block">
+                <span className="admin-config-current-block__title">Giá trị hiện tại</span>
+                <div className="admin-config-json-grid">
+                    {entries.map(([fieldKey, fieldVal]) => {
                     const isNested = fieldVal != null && typeof fieldVal === 'object';
                     return (
                         <label key={fieldKey} className="admin-config-json-field">
@@ -361,6 +368,47 @@ const AdminSystemConfigPage = () => {
                         </label>
                     );
                 })}
+                </div>
+            </div>
+        );
+    };
+
+    const renderJsonDefaultGrid = (item) => {
+        const draftObj =
+            drafts[item.configKey] && typeof drafts[item.configKey] === 'object'
+                ? drafts[item.configKey]
+                : {};
+        const entries = getJsonConfigDefaultEntries(item.defaultValue, draftObj);
+
+        if (entries.length === 0) {
+            return (
+                <span className="admin-config-param__default">
+                    Mặc định: —
+                    {item.allowedRange ? ` · Phạm vi: ${item.allowedRange}` : ''}
+                </span>
+            );
+        }
+
+        return (
+            <div className="admin-config-default-block">
+                <span className="admin-config-default-block__title">Mặc định</span>
+                <div className="admin-config-json-grid admin-config-json-grid--default">
+                    {entries.map(([fieldKey, fieldVal]) => (
+                        <div key={fieldKey} className="admin-config-default-field">
+                            <span className="admin-config-json-field__label">
+                                {getSystemConfigJsonFieldLabel(fieldKey)}
+                            </span>
+                            <span className="admin-config-default-field__value">
+                                {formatConfigDefaultFieldDisplay(fieldVal)}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+                {item.allowedRange ? (
+                    <span className="admin-config-param__default-range">
+                        Phạm vi: {item.allowedRange}
+                    </span>
+                ) : null}
             </div>
         );
     };
@@ -472,10 +520,14 @@ const AdminSystemConfigPage = () => {
                                                         {forceJson
                                                             ? renderJsonFields(item, meta)
                                                             : renderScalarInput(item, meta)}
-                                                        <span className="admin-config-param__default">
-                                                            Mặc định: {formatDefaultHint(item.defaultValue)}
-                                                            {item.allowedRange ? ` · Phạm vi: ${item.allowedRange}` : ''}
-                                                        </span>
+                                                        {forceJson ? (
+                                                            renderJsonDefaultGrid(item)
+                                                        ) : (
+                                                            <span className="admin-config-param__default">
+                                                                Mặc định: {formatDefaultHint(item.defaultValue)}
+                                                                {item.allowedRange ? ` · Phạm vi: ${item.allowedRange}` : ''}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </li>
                                             );

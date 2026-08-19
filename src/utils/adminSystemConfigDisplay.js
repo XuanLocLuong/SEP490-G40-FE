@@ -151,6 +151,39 @@ export const parseAndValidateConfigValue = (draft, config) => {
     return { ok: true, value: String(raw), error: '' };
 };
 
+/** Hiển thị giá trị mặc định của một field con trong JSON config. */
+export const formatConfigDefaultFieldDisplay = (value) => {
+    if (value == null) return '—';
+    if (typeof value === 'boolean') {
+        return value ? 'Bật (true)' : 'Tắt (false)';
+    }
+    if (typeof value === 'object') {
+        try {
+            return JSON.stringify(value);
+        } catch {
+            return String(value);
+        }
+    }
+    return String(value);
+};
+
+/**
+ * Parse defaultValue JSON config → object, giữ thứ tự field theo draft nếu có.
+ */
+export const getJsonConfigDefaultEntries = (defaultValue, draftObject) => {
+    const defaults = parseJsonConfigObject(defaultValue);
+    const draftKeys =
+        draftObject && typeof draftObject === 'object' && !Array.isArray(draftObject)
+            ? Object.keys(draftObject)
+            : [];
+    const defaultKeys = Object.keys(defaults);
+    const orderedKeys = draftKeys.length
+        ? [...draftKeys, ...defaultKeys.filter((k) => !draftKeys.includes(k))]
+        : defaultKeys;
+
+    return orderedKeys.map((key) => [key, defaults[key]]);
+};
+
 /** Normalize currentValue (object | JSON string) → plain object for JSON editors. */
 export const parseJsonConfigObject = (raw) => {
     if (raw == null || raw === '') return {};

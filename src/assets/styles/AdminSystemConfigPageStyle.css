@@ -137,6 +137,10 @@
     gap: 10px;
 }
 
+.admin-config-dash-card--json .admin-config-dash-card__list {
+    gap: 24px;
+}
+
 .admin-config-param {
     padding: 12px;
     border-radius: 12px;
@@ -155,7 +159,31 @@
     grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    padding: 16px;
+    background: #fafbfc;
+    border-color: #cbd5e1;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.admin-config-dash-card--json .admin-config-param--json + .admin-config-param--json {
+    position: relative;
+}
+
+.admin-config-dash-card--json .admin-config-param--json + .admin-config-param--json::before {
+    content: '';
+    position: absolute;
+    top: -13px;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        #cbd5e1 15%,
+        #cbd5e1 85%,
+        transparent 100%
+    );
 }
 
 .admin-config-param.is-dirty {
@@ -196,8 +224,50 @@
 .admin-config-param__editor {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 10px;
     min-width: 0;
+}
+
+.admin-config-current-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-left: 3px solid var(--color-primary, #2563eb);
+}
+
+.admin-config-current-block__title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #334155;
+    letter-spacing: 0.02em;
+}
+
+.admin-config-current-block .admin-config-json-field__label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    min-height: auto;
+}
+
+.admin-config-current-block .admin-config-inline__control {
+    border-color: #cbd5e1;
+    background: #fff;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.admin-config-current-block .admin-config-inline__control:focus {
+    outline: none;
+    border-color: var(--color-primary, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.admin-config-current-block .admin-config-inline__empty-json {
+    margin: 0;
 }
 
 .admin-config-inline__input-wrap {
@@ -242,6 +312,63 @@
     color: #94a3b8;
     line-height: 1.35;
     word-break: break-word;
+}
+
+.admin-config-default-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-left: 3px solid #64748b;
+}
+
+.admin-config-default-block__title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #334155;
+    letter-spacing: 0.02em;
+}
+
+.admin-config-json-grid--default {
+    gap: 10px;
+}
+
+.admin-config-default-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.admin-config-default-field .admin-config-json-field__label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    min-height: auto;
+}
+
+.admin-config-default-field__value {
+    min-height: 38px;
+    padding: 8px 11px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.admin-config-param__default-range {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
 }
 
 .admin-config-inline__empty-json {
