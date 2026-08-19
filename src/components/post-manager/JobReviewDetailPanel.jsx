@@ -151,13 +151,6 @@ const JobReviewDetailPanel = ({
                 </div>
             )}
 
-            <div className="pm-review-detail__phase2">
-                <h3>Chi tiết chỉnh sửa</h3>
-                <p className="pm-review-detail__phase2-note">
-                    Phase 2 — Cần BE hỗ trợ version snapshot để so sánh Bản cũ / Bản mới.
-                </p>
-            </div>
-
             <div className="pm-review-detail__preview">
                 <h3>Nội dung tin đăng (xem trước)</h3>
                 <dl className="pm-review-detail__meta-grid">
