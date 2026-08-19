@@ -219,6 +219,37 @@ const getCompletionHint = (noProfile, profile, savedLocation, completionPercent)
     return `Bổ sung: ${missing.join(', ')}`;
 };
 
+/** Mục còn thiếu để quay lại đăng tin — chỉ điều kiện tối thiểu, không gồm % hoàn thiện. */
+const getJobPostingMissingItems = ({
+    noProfile,
+    form,
+    savedLocation,
+    hasCommittedAddress,
+    hasPhone,
+}) => {
+    const missing = [];
+
+    if (!form.businessName?.trim()) missing.push('tên doanh nghiệp');
+    if (!form.businessType?.trim()) missing.push('loại hình doanh nghiệp');
+
+    if (!savedLocation && !hasCommittedAddress) {
+        missing.push('địa chỉ trụ sở');
+    }
+
+    const profileFieldsReady =
+        Boolean(form.businessName?.trim()) &&
+        Boolean(form.businessType?.trim()) &&
+        hasCommittedAddress;
+
+    if (profileFieldsReady && (noProfile || !savedLocation)) {
+        missing.push('lưu hồ sơ');
+    }
+
+    if (!hasPhone) missing.push('số điện thoại)');
+
+    return missing;
+};
+
 const applyStoredRecruiterDraft = (draftKey, setForm, setCoords) => {
     if (!draftKey) return;
     const stored = loadRecruiterProfileDraft(draftKey);
@@ -936,7 +967,15 @@ const RecruiterProfilePage = () => {
 
     const galleryCount = (profile.galleryImages?.length || 0) + pendingGallery.length;
     const canAddGallery = galleryCount < MAX_GALLERY;
-    const profileReadyForJob = !noProfile && Boolean(savedLocation);
+    const hasPhone = Boolean(form.phone?.trim() || accountContact.phone?.trim());
+    const profileReadyForJob = !noProfile && Boolean(savedLocation) && hasPhone;
+    const jobPostingMissing = getJobPostingMissingItems({
+        noProfile,
+        form,
+        savedLocation,
+        hasCommittedAddress,
+        hasPhone,
+    });
     /** Cần hồ sơ đã lưu (businessId + tên + địa chỉ) trước khi mở wizard xác minh. */
     const canStartVerification =
         Boolean(profile.businessId) &&
@@ -1067,11 +1106,18 @@ const RecruiterProfilePage = () => {
                             : ''
                         }`}
                 >
-                    <strong>
-                        {profileReadyForJob
-                            ? 'Hồ sơ doanh nghiệp đã hoàn thiện. Bạn có thể quay lại đăng tin tuyển dụng.'
-                            : 'Bạn cần hoàn thiện hồ sơ doanh nghiệp trước khi đăng tin tuyển dụng.'}
-                    </strong>
+                    <div className="recruiter-profile__create-job-banner-content">
+                        <strong>
+                            {profileReadyForJob
+                                ? 'Hồ sơ doanh nghiệp đã hoàn thiện. Bạn có thể quay lại đăng tin tuyển dụng.'
+                                : 'Bạn cần hoàn thiện hồ sơ doanh nghiệp trước khi đăng tin tuyển dụng.'}
+                        </strong>
+                        {!profileReadyForJob && jobPostingMissing.length > 0 && (
+                            <span className="recruiter-profile__create-job-banner-note">
+                                (Còn thiếu: {jobPostingMissing.join(', ')})
+                            </span>
+                        )}
+                    </div>
                     {profileReadyForJob && (
                         <Link
                             to={ROUTES.RECRUITER_CREATE_JOB}

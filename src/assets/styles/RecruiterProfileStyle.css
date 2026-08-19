@@ -912,6 +912,19 @@
     color: #9a3412;
 }
 
+.recruiter-profile__create-job-banner-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.recruiter-profile__create-job-banner-note {
+    font-size: 0.875rem;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
 .recruiter-profile__create-job-banner--success {
     background: var(--color-success-bg);
     border-color: #86efac;
