@@ -55,6 +55,7 @@ import '../../assets/styles/RecruiterRecommendationsStyle.css';
 
 /** Cache jobId → businessId so reopening the same thread skips a detail fetch. */
 const businessIdByJobId = new Map();
+const MAX_MESSAGE_LENGTH = 5000;
 const pageContent = (res) => {
     const page = res?.data?.data ?? res?.data;
     return Array.isArray(page?.content) ? page.content : Array.isArray(page) ? page : [];
@@ -342,6 +343,10 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
     const handleSend = async (event) => {
         event.preventDefault();
+        if (draft.length > MAX_MESSAGE_LENGTH) {
+            toast.error('Tin nhắn không được vượt quá 5.000 ký tự.');
+            return;
+        }
         stickToBottomRef.current = true;
         const ok = await sendText(draft);
         if (ok) {
@@ -888,12 +893,14 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                     onBlur={stopTyping}
                     placeholder="Nhập tin nhắn..."
                     disabled={sending}
+                    maxLength={MAX_MESSAGE_LENGTH}
+                    title="Tin nhắn tối đa 5.000 ký tự"
                     autoComplete="off"
                 />
                 <button
                     type="submit"
                     className="chat-panel__send"
-                    disabled={sending || !draft.trim()}
+                    disabled={sending || !draft.trim() || draft.length > MAX_MESSAGE_LENGTH}
                     aria-label="Gửi"
                 >
                     ➤
