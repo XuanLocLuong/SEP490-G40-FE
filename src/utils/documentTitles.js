@@ -59,6 +59,7 @@ const EXACT_TITLES = {
     [ROUTES.ADMIN_HOME]: 'Thống kê toàn hệ thống',
     [ROUTES.ADMIN_ANALYTICS]: 'Thống kê toàn hệ thống',
     [ROUTES.ADMIN_SKILLS]: 'Quản lý kỹ năng',
+    [ROUTES.ADMIN_JOB_TYPES]: 'Quản lý lĩnh vực',
     [ROUTES.ADMIN_BUSINESS_TYPES]: 'Loại hình doanh nghiệp',
     [ROUTES.ADMIN_TRUST_SCORE_RULES]: 'Quy tắc điểm uy tín',
     [ROUTES.ADMIN_BLACKLIST_KEYWORDS]: 'Cấu hình từ cấm',
