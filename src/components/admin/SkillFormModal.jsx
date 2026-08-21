@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 const EMPTY = {
     name: '',
     description: '',
-    category: '',
     active: true,
     reason: '',
 };
@@ -12,7 +11,6 @@ const SkillFormModal = ({
     open,
     mode = 'create',
     initialSkill = null,
-    categories = [],
     loading = false,
     onSubmit,
     onCancel,
@@ -27,7 +25,6 @@ const SkillFormModal = ({
             setForm({
                 name: initialSkill.name || '',
                 description: initialSkill.description || '',
-                category: initialSkill.category || '',
                 active: initialSkill.active !== false,
                 reason: '',
             });
@@ -61,11 +58,13 @@ const SkillFormModal = ({
         const payload = {
             name,
             description: form.description.trim() || null,
-            category: form.category.trim() || null,
             reason,
         };
         if (mode === 'create') {
             payload.active = Boolean(form.active);
+        } else {
+            // Category is no longer managed in FE; preserve the existing DB value on update.
+            payload.category = initialSkill?.category || null;
         }
         onSubmit?.(payload);
     };
@@ -116,22 +115,6 @@ const SkillFormModal = ({
                             rows={3}
                             disabled={loading}
                         />
-                    </label>
-
-                    <label className="admin-skills-field">
-                        <span>Danh mục</span>
-                        <input
-                            list="admin-skill-categories"
-                            value={form.category}
-                            onChange={(e) => patch('category', e.target.value)}
-                            placeholder="Chọn hoặc nhập danh mục"
-                            disabled={loading}
-                        />
-                        <datalist id="admin-skill-categories">
-                            {categories.map((c) => (
-                                <option key={c} value={c} />
-                            ))}
-                        </datalist>
                     </label>
 
                     {mode === 'create' && (

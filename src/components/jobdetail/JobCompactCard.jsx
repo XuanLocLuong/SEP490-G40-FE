@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    formatJobType,
     formatSalary,
     formatLocation,
     formatVacancyLabel,
@@ -12,6 +11,8 @@ import {
     hasInvitedToJob,
 } from '../../utils/formatters.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
+import { formatJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import { MapPinIcon, BriefcaseIcon, UsersIcon, ClockIcon } from '../common/icons.jsx';
 import { getJobDetailPath } from '../../routes/path.js';
 
@@ -38,6 +39,7 @@ const CompactBusinessLogo = ({ name, logoUrl }) => {
 };
 
 const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false }) => {
+    const jobTypeOptions = useJobTypeOptions();
     const businessName = job.business?.name || 'Công ty';
     const businessLogoUrl = job.business?.logoUrl || null;
     const distance = getJobDistanceDisplay(job.distanceKm, nearMe);
@@ -47,6 +49,7 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
     const vacancyLabel = formatVacancyLabel(job);
     const isVacancyFull = vacancyLabel === 'Đã hết vị trí';
     const shiftsLabel = formatJobShiftsLabel(job.shifts);
+    const jobTypeLabel = formatJobTypeLabels(job.jobType, jobTypeOptions);
 
     return (
         <Link
@@ -114,10 +117,10 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
                             <span className="job-compact-card__meta-text">{shiftsLabel}</span>
                         </span>
                     )}
-                    {formatJobType(job.jobType) && (
+                    {jobTypeLabel && (
                         <span className="job-compact-card__meta-item">
                             <BriefcaseIcon width={14} height={14} />
-                            {formatJobType(job.jobType)}
+                            {jobTypeLabel}
                         </span>
                     )}
                     {vacancyLabel && (

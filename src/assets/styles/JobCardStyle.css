@@ -126,7 +126,7 @@
     flex-direction: column;
     gap: 6px;
     min-width: 0;
-    min-height: calc(3 * 1.35em + 12px);
+    min-height: calc(4 * 1.35em + 18px);
 }
 
 .job-card__meta-item {
@@ -431,7 +431,7 @@
 
 .job-card--compact .job-card__meta-rows,
 .landing-page .job-card__meta-rows {
-    min-height: calc(3 * 1.3em + 12px);
+    min-height: calc(4 * 1.3em + 18px);
 }
 
 .job-card--compact .job-card__meta-item--urgent,

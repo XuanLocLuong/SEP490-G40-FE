@@ -9,13 +9,15 @@ export const JOB_POST_ACTION = {
     SUBMIT: 'SUBMIT',
 };
 
-/** Fallback FE khi chưa load được GET /jobs/types (khớp enum JobType BE). */
+/** Fallback FE khi chưa load được danh mục active từ GET /api/v1/jobs/types. */
 export const JOB_TYPE_OPTIONS = [
-    { value: 'PART_TIME', label: 'Part-time' },
-    { value: 'FULL_TIME', label: 'Full-time' },
-    { value: 'INTERNSHIP', label: 'Thực tập' },
+    { value: 'FNB_SERVICE', label: 'F&B & Dịch vụ' },
+    { value: 'RETAIL', label: 'Bán hàng & Bán lẻ' },
+    { value: 'LOGISTICS_DELIVERY', label: 'Kho vận & Giao hàng' },
+    { value: 'EDUCATION', label: 'Giáo dục' },
+    { value: 'EVENT_PROMOTION', label: 'Sự kiện & Promotion' },
+    { value: 'OFFICE_CSA', label: 'Văn phòng & Chăm sóc khách hàng' },
     { value: 'FREELANCE', label: 'Freelance' },
-    { value: 'SEASONAL', label: 'Thời vụ' },
 ];
 
 /** BE: "2"=T2 … "8"=CN (CandidateSchedule_BusinessRules) */

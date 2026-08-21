@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-    formatJobType,
     formatSalary,
     formatLocation,
     formatRelativeTime,
@@ -12,6 +11,8 @@ import {
     hasInvitedToJob,
 } from '../../utils/formatters.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
+import { formatJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import {
     MapPinIcon,
     ClockIcon,
@@ -19,6 +20,7 @@ import {
     EyeIcon,
     CheckCircleIcon,
     UsersIcon,
+    BriefcaseIcon,
 } from '../common/icons.jsx';
 import JobBookmarkButton from './JobBookmarkButton.jsx';
 import JobPrimaryCta from './JobPrimaryCta.jsx';
@@ -47,7 +49,7 @@ const CardBusinessLogo = ({ name, logoUrl }) => {
     );
 };
 
-const buildJobMetaRows = (job, shiftsLabel, vacancyLabel, isVacancyFull) => {
+const buildJobMetaRows = (job, jobTypeLabel, shiftsLabel, vacancyLabel, isVacancyFull) => {
     const locationText = formatLocation(job.location);
     const locationLine = locationText && locationText !== '—' ? locationText : null;
     const shiftsLine = shiftsLabel || null;
@@ -60,6 +62,14 @@ const buildJobMetaRows = (job, shiftsLabel, vacancyLabel, isVacancyFull) => {
             placeholder: !locationLine,
             Icon: MapPinIcon,
             className: 'job-card__meta-item--location',
+        },
+        {
+            key: 'job-type',
+            text: jobTypeLabel || 'Chưa có thông tin lĩnh vực',
+            placeholder: !jobTypeLabel,
+            Icon: BriefcaseIcon,
+            className: 'job-card__meta-item--job-type',
+            title: jobTypeLabel || undefined,
         },
         {
             key: 'shifts',
@@ -92,11 +102,12 @@ const JobCard = ({
     /** Homepage section id — scroll back to this section after leaving detail */
     homeSectionId,
 }) => {
+    const jobTypeOptions = useJobTypeOptions();
     const isPreview = variant === 'preview';
     const isClosed = job?.status === 'CLOSED';
     const businessName = job.business?.name || 'Công ty';
     const businessLogoUrl = job.business?.logoUrl || null;
-    const tagLabel = formatJobType(job.jobType);
+    const tagLabel = formatJobTypeLabels(job.jobType, jobTypeOptions);
     const distance = getJobDistanceDisplay(job.distanceKm, nearMe || showDistance);
     const hired = hasHiredJob(job);
     const applied = hasAppliedToJob(job);
@@ -107,7 +118,13 @@ const JobCard = ({
     const shiftsLabel = formatJobShiftsLabel(job.shifts);
     const vacancyLabel = formatVacancyLabel(job);
     const isVacancyFull = vacancyLabel === 'Đã hết vị trí';
-    const metaRows = buildJobMetaRows(job, shiftsLabel, vacancyLabel, isVacancyFull);
+    const metaRows = buildJobMetaRows(
+        job,
+        tagLabel,
+        shiftsLabel,
+        vacancyLabel,
+        isVacancyFull
+    );
     const hasMetaTags =
         isClosed ||
         matchLabel ||
@@ -238,7 +255,6 @@ const JobCard = ({
 
             <div className="job-card__footer">
                 <div className="job-card__footer-meta">
-                    {tagLabel && <span className="job-card__tag">{tagLabel}</span>}
                     {(isPreview || job.createdAt) && (
                         <span className="job-card__posted">
                             <ClockIcon width={14} height={14} />

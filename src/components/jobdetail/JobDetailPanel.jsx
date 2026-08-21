@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import RichTextContent from '../common/RichTextContent.jsx';
 import {
-    formatJobType,
     formatSalary,
     formatLocation,
     formatLocationAddressDetail,
@@ -15,6 +14,8 @@ import {
     getBusinessInitial,
     isPrimarySkill,
 } from '../../utils/formatters.js';
+import { getJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import { CheckCircleIcon, MapPinIcon, ClockIcon, UsersIcon } from '../common/icons.jsx';
 import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import JobPrimaryCta from '../job/JobPrimaryCta.jsx';
@@ -56,6 +57,7 @@ const JobDetailPanel = ({
     showPostedLabel = true,
     hideCtas = false,
 }) => {
+    const jobTypeOptions = useJobTypeOptions();
     const isPreview = variant === 'preview';
     if (loading) {
         return (
@@ -80,6 +82,8 @@ const JobDetailPanel = ({
             </div>
         );
     }
+
+    const jobTypeLabels = getJobTypeLabels(job.jobType, jobTypeOptions);
 
     const businessName = job.business?.name || 'Công ty';
     const businessId = job.business?.id;
@@ -324,11 +328,16 @@ const JobDetailPanel = ({
                 </section>
             )}
 
-            {formatJobType(job.jobType) && (
+            {jobTypeLabels.length > 0 && (
                 <div className="job-detail-panel__footer-meta">
-                    <span className="job-detail-panel__tag job-detail-panel__tag--type">
-                        {formatJobType(job.jobType)}
-                    </span>
+                    {jobTypeLabels.map((label, index) => (
+                        <span
+                            key={`${label}-${index}`}
+                            className="job-detail-panel__tag job-detail-panel__tag--type"
+                        >
+                            {label}
+                        </span>
+                    ))}
                 </div>
             )}
         </article>

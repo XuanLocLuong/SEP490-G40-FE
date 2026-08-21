@@ -446,7 +446,7 @@ const JobSearchForm = ({
                     <div className="job-search-form__advanced">
                         <div className="job-search-form__advanced-grid">
                             <label className="job-search-form__select-field">
-                                <span>Loại việc</span>
+                                <span>Lĩnh vực</span>
                                 <select
                                     value={jobType}
                                     onChange={(e) => setJobType(e.target.value)}

@@ -20,18 +20,50 @@ const normalizeJobTypeOptions = (list) => {
         .filter(Boolean);
 };
 
+let cachedJobTypeOptions = null;
+let cachedJobTypeOptionsAt = 0;
+let jobTypeOptionsRequest = null;
+const JOB_TYPE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+const loadJobTypeOptions = async () => {
+    if (
+        cachedJobTypeOptions &&
+        Date.now() - cachedJobTypeOptionsAt < JOB_TYPE_CACHE_TTL_MS
+    ) {
+        return cachedJobTypeOptions;
+    }
+
+    if (!jobTypeOptionsRequest) {
+        jobTypeOptionsRequest = recruiterJobApi
+            .getJobTypes()
+            .then(normalizeJobTypeOptions)
+            .then((list) => {
+                if (list.length > 0) {
+                    cachedJobTypeOptions = list;
+                    cachedJobTypeOptionsAt = Date.now();
+                }
+                return list;
+            })
+            .finally(() => {
+                jobTypeOptionsRequest = null;
+            });
+    }
+
+    return jobTypeOptionsRequest;
+};
+
 /**
  * Load JobType từ GET /api/v1/jobs/types.
  * Fallback JOB_TYPE_OPTIONS nếu API lỗi / empty.
  */
 export const useJobTypeOptions = () => {
-    const [options, setOptions] = useState(JOB_TYPE_OPTIONS);
+    const [options, setOptions] = useState(cachedJobTypeOptions || JOB_TYPE_OPTIONS);
 
     useEffect(() => {
         let cancelled = false;
         (async () => {
             try {
-                const list = normalizeJobTypeOptions(await recruiterJobApi.getJobTypes());
+                const list = await loadJobTypeOptions();
                 if (!cancelled && list.length > 0) {
                     setOptions(list);
                 }
