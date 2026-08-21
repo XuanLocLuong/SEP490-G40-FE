@@ -51,6 +51,12 @@ const getSourceLabel = (source) => {
     return 'Tự động (GPS)';
 };
 
+const coordsNearlyEqual = (a, b) =>
+    a != null &&
+    b != null &&
+    Math.abs(Number(a.latitude) - Number(b.latitude)) < 1e-7 &&
+    Math.abs(Number(a.longitude) - Number(b.longitude)) < 1e-7;
+
 /** Gọi Nominatim (OpenStreetMap) để đổi text địa chỉ → tọa độ. */
 const geocodeAddress = async (query) => {
     const res = await fetch(
@@ -108,6 +114,9 @@ const LocationPicker = ({
     const scanTimerRef = useRef(null);
     const bestPositionRef = useRef(null);
     const requestStartedAtRef = useRef(null);
+    const onLocationChangeRef = useRef(onLocationChange);
+    /** Tọa độ đã áp lên map lần gần nhất — tránh setView lại khi parent chỉ đổi identity callback. */
+    const appliedMapCoordsRef = useRef(null);
 
     const [selectedLocation, setSelectedLocation] = useState(() =>
         initialLocation?.latitude != null && initialLocation?.longitude != null
@@ -127,17 +136,18 @@ const LocationPicker = ({
     const isScanning = status === 'loading';
     const viewerName = auth?.fullName || auth?.email || 'Khách';
 
-    const selectLocation = useCallback(
-        (location) => {
-            setSelectedLocation(location);
-            onLocationChange?.({
-                latitude: location.latitude,
-                longitude: location.longitude,
-                source: location.source,
-            });
-        },
-        [onLocationChange]
-    );
+    useEffect(() => {
+        onLocationChangeRef.current = onLocationChange;
+    }, [onLocationChange]);
+
+    const selectLocation = useCallback((location) => {
+        setSelectedLocation(location);
+        onLocationChangeRef.current?.({
+            latitude: location.latitude,
+            longitude: location.longitude,
+            source: location.source,
+        });
+    }, []);
 
     const clearLocationScan = useCallback(() => {
         if (watchIdRef.current !== null) {
@@ -188,7 +198,7 @@ const LocationPicker = ({
 
     useEffect(() => () => clearLocationScan(), [clearLocationScan]);
 
-    // Khởi tạo bản đồ Leaflet (chạy 1 lần)
+    // Khởi tạo bản đồ Leaflet — chỉ 1 lần; không phụ thuộc selectLocation để tránh remount → nhảy zoom.
     useEffect(() => {
         if (!mapContainerRef.current || mapRef.current) return undefined;
 
@@ -226,10 +236,12 @@ const LocationPicker = ({
             map.remove();
             mapRef.current = null;
             markerRef.current = null;
+            appliedMapCoordsRef.current = null;
         };
-    }, [selectLocation]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- mount once; selectLocation ổn định qua ref/callback rỗng deps
+    }, []);
 
-    // Cập nhật marker khi có tọa độ mới
+    // Cập nhật marker khi có tọa độ mới — chỉ setView khi tọa độ thực sự đổi
     useEffect(() => {
         const map = mapRef.current;
         if (!map) return;
@@ -237,10 +249,12 @@ const LocationPicker = ({
         if (!selectedLocation) {
             markerRef.current?.remove();
             markerRef.current = null;
+            appliedMapCoordsRef.current = null;
             return;
         }
 
         const latLng = [selectedLocation.latitude, selectedLocation.longitude];
+        const coordsChanged = !coordsNearlyEqual(appliedMapCoordsRef.current, selectedLocation);
 
         if (!markerRef.current) {
             markerRef.current = L.marker(latLng, { draggable: true, icon: markerIcon }).addTo(map);
@@ -252,26 +266,35 @@ const LocationPicker = ({
                 setError('');
                 setStatus('success');
             });
-        } else {
+        } else if (coordsChanged) {
             markerRef.current.setLatLng(latLng);
         }
 
-        map.setView(latLng, Math.max(map.getZoom(), SELECTED_ZOOM), { animate: true });
+        if (coordsChanged) {
+            appliedMapCoordsRef.current = {
+                latitude: selectedLocation.latitude,
+                longitude: selectedLocation.longitude,
+            };
+            map.setView(latLng, Math.max(map.getZoom(), SELECTED_ZOOM), { animate: true });
+        }
     }, [selectLocation, selectedLocation]);
 
-    // Load lại marker khi parent truyền initialLocation (sửa location đã lưu — bước 5)
+    // Đồng bộ từ parent initialLocation — bỏ qua nếu cùng tọa độ (tránh vòng lặp zoom)
     useEffect(() => {
         if (initialLocation?.latitude == null || initialLocation?.longitude == null) return;
 
+        const next = {
+            latitude: Number(initialLocation.latitude),
+            longitude: Number(initialLocation.longitude),
+        };
+
+        setSelectedLocation((prev) => {
+            if (coordsNearlyEqual(prev, next)) return prev;
+            return createManualPosition({ ...next, source: 'map' });
+        });
         setError('');
-        selectLocation(
-            createManualPosition({
-                latitude: Number(initialLocation.latitude),
-                longitude: Number(initialLocation.longitude),
-                source: 'map',
-            })
-        );
-    }, [initialLocation?.latitude, initialLocation?.longitude, selectLocation]);
+        // Không gọi onLocationChange lại — parent đã nắm coords này.
+    }, [initialLocation?.latitude, initialLocation?.longitude]);
 
     /** Store mode: geocode từ searchQuery (AddressForm). */
     const handleFindOnMap = async () => {
