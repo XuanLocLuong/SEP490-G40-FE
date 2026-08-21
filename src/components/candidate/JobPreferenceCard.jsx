@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
 import { PencilIcon, TargetIcon, WalletIcon, MapPinIcon } from './profileIcons.jsx';
-import { formatSalaryRange, getJobTypeLabel } from '../../utils/profileFormat.js';
+import { formatSalaryRange } from '../../utils/profileFormat.js';
+import { getJobTypeLabels } from '../../utils/jobTypeDisplay.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import LocationPicker from '../../modules/location/LocationPicker.jsx';
 
-// SECTION 2 — Job Preference: hình thức, lương mong đợi, địa điểm. Edit qua modal -> PUT Profile.
+// SECTION 2 — Job Preference: lĩnh vực, lương mong đợi, địa điểm. Edit qua modal -> PUT Profile.
 const JobPreferenceCard = ({ preference, onSave, saving }) => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(preference);
     const jobTypeOptions = useJobTypeOptions();
+    const jobTypeLabels = getJobTypeLabels(
+        (preference.jobTypes || []).join(','),
+        jobTypeOptions
+    );
 
     const [showMap, setShowMap] = useState(false);
     const [formError, setFormError] = useState('');
@@ -146,17 +151,20 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
             </div>
 
             <div className="cp-field">
-                <span className="cp-field__label">HÌNH THỨC</span>
+                <span className="cp-field__label">LĨNH VỰC</span>
                 {hasTypes ? (
                     <div className="cp-tags">
-                        {preference.jobTypes.map((type) => (
-                            <span key={type} className="cp-tag cp-tag--soft">
-                                {getJobTypeLabel(type)}
+                        {jobTypeLabels.map((label, index) => (
+                            <span
+                                key={`${preference.jobTypes[index] || label}-${index}`}
+                                className="cp-tag cp-tag--soft"
+                            >
+                                {label}
                             </span>
                         ))}
                     </div>
                 ) : (
-                    <span className="cp-empty-text">Chưa chọn hình thức</span>
+                    <span className="cp-empty-text">Chưa chọn lĩnh vực</span>
                 )}
             </div>
 
@@ -199,7 +207,7 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
             >
                 <div className="cp-form-group">
                     {formError && <p className="cp-form-error">{formError}</p>}
-                    <label className="cp-form-label">Hình thức mong muốn</label>
+                    <label className="cp-form-label">Lĩnh vực mong muốn</label>
                     <div className="cp-choice-grid">
                         {jobTypeOptions.map((opt) => {
                             const active = (form.jobTypes || []).includes(opt.value);
