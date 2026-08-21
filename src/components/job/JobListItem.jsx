@@ -1,5 +1,4 @@
 import {
-    formatJobType,
     formatSalary,
     formatLocation,
     formatRelativeTime,
@@ -11,6 +10,8 @@ import {
     hasInvitedToJob,
 } from '../../utils/formatters.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
+import { getJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import {
     MapPinIcon,
     ClockIcon,
@@ -25,8 +26,9 @@ import JobDetailLink from './JobDetailLink.jsx';
 import '../../assets/styles/JobListItemStyle.css';
 
 const JobListItem = ({ job, nearMe = false }) => {
+    const jobTypeOptions = useJobTypeOptions();
     const businessName = job.business?.name || 'Công ty';
-    const tagLabel = formatJobType(job.jobType);
+    const jobTypeLabels = getJobTypeLabels(job.jobType, jobTypeOptions);
     const distance = getJobDistanceDisplay(job.distanceKm, nearMe);
     const hired = hasHiredJob(job);
     const applied = hasAppliedToJob(job);
@@ -38,7 +40,7 @@ const JobListItem = ({ job, nearMe = false }) => {
     const vacancyLabel = formatVacancyLabel(job);
     const isVacancyFull = vacancyLabel === 'Đã hết vị trí';
     const hasTags =
-        tagLabel ||
+        jobTypeLabels.length > 0 ||
         matchLabel ||
         scheduleMatchLabel ||
         interactionLabel ||
@@ -69,7 +71,14 @@ const JobListItem = ({ job, nearMe = false }) => {
 
             {hasTags && (
                 <div className="job-list-item__tags">
-                    {tagLabel && <span className="job-list-item__tag">{tagLabel}</span>}
+                    {jobTypeLabels.map((label, index) => (
+                        <span
+                            key={`${label}-${index}`}
+                            className="job-list-item__tag"
+                        >
+                            {label}
+                        </span>
+                    ))}
                     {matchLabel && (
                         <span className="job-list-item__tag job-list-item__tag--match">
                             {matchLabel}
