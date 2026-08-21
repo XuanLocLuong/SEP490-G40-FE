@@ -16,9 +16,6 @@ export const getApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') => {
 /** GET /admin/skills — keyword, status, category, page, size */
 export const searchSkills = (params) => axiosClient.get(BASE, { params });
 
-/** GET /admin/skills/categories */
-export const getSkillCategories = () => axiosClient.get(`${BASE}/categories`);
-
 /** GET /admin/skills/{id} */
 export const getSkillDetail = (id) => axiosClient.get(`${BASE}/${id}`);
 

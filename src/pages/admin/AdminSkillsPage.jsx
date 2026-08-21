@@ -5,7 +5,6 @@ import {
     createSkill,
     deactivateSkill,
     getApiErrorMessage,
-    getSkillCategories,
     searchSkills,
     updateSkill,
 } from '../../apis/AdminSkillApi.jsx';
@@ -27,7 +26,6 @@ const AdminSkillsPage = () => {
     const [keyword, setKeyword] = useState('');
     const [keywordInput, setKeywordInput] = useState('');
     const [status, setStatus] = useState('');
-    const [category, setCategory] = useState('');
     const [page, setPage] = useState(0);
 
     const [items, setItems] = useState([]);
@@ -35,7 +33,6 @@ const AdminSkillsPage = () => {
     const [totalElements, setTotalElements] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [categories, setCategories] = useState([]);
     const [suggestCatalog, setSuggestCatalog] = useState([]);
     const [keywordFocused, setKeywordFocused] = useState(false);
     const keywordInputRef = useRef(null);
@@ -48,16 +45,6 @@ const AdminSkillsPage = () => {
 
     const [statusSkill, setStatusSkill] = useState(null);
     const [statusSaving, setStatusSaving] = useState(false);
-
-    const loadCategories = useCallback(async () => {
-        try {
-            const res = await getSkillCategories();
-            const list = res?.data?.data ?? res?.data ?? [];
-            setCategories(Array.isArray(list) ? list.filter(Boolean) : []);
-        } catch {
-            /* filter category là phụ — không chặn trang nếu fail */
-        }
-    }, []);
 
     const loadSuggestCatalog = useCallback(async () => {
         try {
@@ -82,7 +69,6 @@ const AdminSkillsPage = () => {
             };
             if (keyword.trim()) params.keyword = keyword.trim();
             if (status === 'true' || status === 'false') params.status = status === 'true';
-            if (category.trim()) params.category = category.trim();
 
             const res = await searchSkills(params);
             const pageData = res?.data?.data ?? res?.data;
@@ -97,7 +83,7 @@ const AdminSkillsPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [page, keyword, status, category]);
+    }, [page, keyword, status]);
 
     useEffect(() => {
         loadSkills();
@@ -105,8 +91,7 @@ const AdminSkillsPage = () => {
 
     useEffect(() => {
         loadSuggestCatalog();
-        loadCategories();
-    }, [loadSuggestCatalog, loadCategories]);
+    }, [loadSuggestCatalog]);
 
     const keywordSuggestions = useMemo(
         () => suggestSkillNames(suggestCatalog, keywordInput, 6),
@@ -138,7 +123,7 @@ const AdminSkillsPage = () => {
             }
             setFormOpen(false);
             setEditingSkill(null);
-            await Promise.all([loadSuggestCatalog(), loadCategories()]);
+            await loadSuggestCatalog();
             if (page !== 0 && formMode === 'create') setPage(0);
             else await loadSkills();
         } catch (err) {
@@ -253,20 +238,6 @@ const AdminSkillsPage = () => {
                         </option>
                     ))}
                 </select>
-                <select
-                    value={category}
-                    onChange={(e) => {
-                        setPage(0);
-                        setCategory(e.target.value);
-                    }}
-                >
-                    <option value="">Tất cả danh mục</option>
-                    {categories.map((c) => (
-                        <option key={c} value={c}>
-                            {c}
-                        </option>
-                    ))}
-                </select>
                 <button type="submit" className="admin-skills-btn admin-skills-btn--ghost">
                     Tìm kiếm
                 </button>
@@ -279,7 +250,6 @@ const AdminSkillsPage = () => {
                     <thead>
                         <tr>
                             <th>Tên</th>
-                            <th>Danh mục</th>
                             <th>Trạng thái</th>
                             <th>Ứng viên</th>
                             <th>Tin tuyển</th>
@@ -289,14 +259,14 @@ const AdminSkillsPage = () => {
                     <tbody>
                         {loading && items.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="admin-skills-table__empty">
+                                <td colSpan={5} className="admin-skills-table__empty">
                                     Đang tải...
                                 </td>
                             </tr>
                         ) : null}
                         {!loading && items.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="admin-skills-table__empty">
+                                <td colSpan={5} className="admin-skills-table__empty">
                                     Không có kỹ năng nào phù hợp.
                                 </td>
                             </tr>
@@ -309,7 +279,6 @@ const AdminSkillsPage = () => {
                                         <div className="admin-skills-table__desc">{skill.description}</div>
                                     ) : null}
                                 </td>
-                                <td>{skill.category || '—'}</td>
                                 <td>
                                     <span
                                         className={`admin-skills-badge ${
@@ -379,7 +348,6 @@ const AdminSkillsPage = () => {
                 open={formOpen}
                 mode={formMode}
                 initialSkill={editingSkill}
-                categories={categories}
                 loading={formSaving}
                 onSubmit={handleFormSubmit}
                 onCancel={() => {
