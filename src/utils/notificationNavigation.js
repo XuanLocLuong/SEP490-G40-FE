@@ -48,6 +48,10 @@ export const getNotificationTargetPath = (notification, role) => {
             return getRecruiterMyJobsPath({ tab: 'open', jobId: refId });
         }
 
+        case 'VIEW_REVIEWS':
+            if (role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_REVIEWS;
+            return null;
+
         case 'VIEW_PROFILE':
             if (isRecruiter) return ROUTES.RECRUITER_PROFILE;
             if (role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_PROFILE;
