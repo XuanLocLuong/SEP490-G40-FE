@@ -144,6 +144,15 @@
     color: var(--color-text-muted);
 }
 
+.cp-bio-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-text);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .cp-header__meta {
     display: flex;
     align-items: center;
