@@ -97,7 +97,7 @@ const CandidateReceivedReviewsPanel = ({
     if (userId == null || userId === '') {
         return (
             <section className="cpp-card">
-                <h2 className="cpp-card__title">{title}</h2>
+                {title ? <h2 className="cpp-card__title">{title}</h2> : null}
                 <p className="cpp-empty-text">{missingUserIdText}</p>
             </section>
         );
@@ -106,7 +106,7 @@ const CandidateReceivedReviewsPanel = ({
     return (
         <section className="cpp-card">
             <div className="cpp-reviews-header">
-                <h2 className="cpp-card__title">{title}</h2>
+                {title ? <h2 className="cpp-card__title">{title}</h2> : <span />}
                 {!loading && !error && totalReviews > 0 && (
                     <div className="cpp-reviews-summary">
                         <ReviewStars rating={averageRating} size={18} />

@@ -156,31 +156,239 @@
     white-space: nowrap;
 }
 
-/* ---- Tabs ---- */
-.cpp-tabs__bar {
-    display: flex;
-    gap: 4px;
-    border-bottom: 1px solid var(--color-border);
+/* ---- Tabs (legacy removed) ---- */
+
+/* ---- CV / Hồ sơ ---- */
+.cpp-resume {
     margin-bottom: 16px;
-    overflow-x: auto;
 }
 
-.cpp-tabs__btn {
-    border: none;
-    background: none;
-    padding: 12px 4px;
-    margin-right: 24px;
+.cpp-resume__sheet {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.cpp-resume__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.9fr);
+    align-items: stretch;
+    min-height: 280px;
+}
+
+.cpp-resume__main {
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    background: #fff;
+}
+
+.cpp-resume__side {
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    background: #eef4ff;
+    border-left: 1px solid #dbe7ff;
+}
+
+.cpp-resume__about {
+    border: 1.5px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: #f8fbff;
+}
+
+.cpp-resume__headline {
+    margin: 0 0 8px;
     font-size: 14px;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    white-space: nowrap;
+    font-weight: 700;
+    color: var(--color-primary);
 }
 
-.cpp-tabs__btn--active {
+.cpp-resume__about-text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-text);
+    white-space: pre-wrap;
+}
+
+.cpp-resume__block {
+    min-width: 0;
+}
+
+.cpp-resume__capsule {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 14px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.cpp-resume-exp {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.cpp-resume-exp__item {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.cpp-resume-exp__item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.cpp-resume-exp__org {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.cpp-resume-exp__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 14px;
+    margin-bottom: 6px;
+}
+
+.cpp-resume-exp__meta strong {
+    font-size: 14px;
     color: var(--color-primary);
-    border-bottom-color: var(--color-primary);
+}
+
+.cpp-resume-exp__meta span {
+    font-size: 13px;
+    color: var(--color-text-soft);
+}
+
+.cpp-resume-exp__desc {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--color-text);
+    white-space: pre-wrap;
+}
+
+.cpp-resume-edu__school {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.cpp-resume-edu__line {
+    margin: 0 0 4px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-text);
+}
+
+.cpp-resume-skills {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cpp-resume-skills__item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cpp-resume-skills__name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.cpp-resume-skills__desc {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+}
+
+/* ---- Reviews accordion ---- */
+.cpp-reviews-acc {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.cpp-reviews-acc__toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border: none;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: var(--color-text);
+}
+
+.cpp-reviews-acc__toggle:hover {
+    background: #f8fafc;
+}
+
+.cpp-reviews-acc__label {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.cpp-reviews-acc__hint {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.cpp-reviews-acc__chevron {
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    transition: transform 0.2s ease;
+}
+
+.cpp-reviews-acc__toggle--open .cpp-reviews-acc__chevron {
+    transform: rotate(180deg);
+}
+
+.cpp-reviews-acc__body {
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--color-border);
+}
+
+.cpp-reviews-acc__body .cpp-card {
+    border: none;
+    box-shadow: none;
+    padding: 16px 4px 4px;
 }
 
 .cpp-tab-panel {
@@ -370,6 +578,15 @@
     margin-bottom: 20px;
 }
 
+.cpp-skeleton--resume {
+    height: 360px;
+    margin-bottom: 16px;
+}
+
+.cpp-skeleton--accordion {
+    height: 56px;
+}
+
 .cpp-skeleton--tabs {
     height: 44px;
     margin-bottom: 16px;
@@ -396,6 +613,15 @@
 
     .cpp-hero__metrics {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cpp-resume__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cpp-resume__side {
+        border-left: none;
+        border-top: 1px solid #dbe7ff;
     }
 }
 
