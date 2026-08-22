@@ -49,6 +49,19 @@ const ApplicationCard = ({
                     <p className="application-card__time">
                         {formatAppliedRelativeTime(application.appliedAt)}
                     </p>
+                    {application.matchScore != null &&
+                    !(application.criticalMismatchReasons || []).length ? (
+                        <p className="application-card__score">
+                            Khớp {Number(application.matchScore).toFixed(0)}%
+                        </p>
+                    ) : null}
+                    {(application.criticalMismatchReasons || []).length > 0 ? (
+                        <ul className="application-card__reasons">
+                            {application.criticalMismatchReasons.map((reason) => (
+                                <li key={reason}>{reason}</li>
+                            ))}
+                        </ul>
+                    ) : null}
                 </div>
             </div>
 

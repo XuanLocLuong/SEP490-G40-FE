@@ -33,7 +33,7 @@
 .my-jobs-page__tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 20px;
+    gap: 4px 12px;
     margin-bottom: 20px;
     padding-bottom: 0;
     border-bottom: 1px solid #e2e8f0;
@@ -42,13 +42,13 @@
 .my-jobs-page__tab {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 4px 12px;
+    gap: 6px;
+    padding: 10px 2px 12px;
     margin-bottom: -1px;
     border: none;
     border-bottom: 2px solid transparent;
     background: none;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     font-weight: 500;
     color: #64748b;
     cursor: pointer;
@@ -78,6 +78,10 @@
 
 .my-jobs-page__tab-dot--pending {
     background: #eab308;
+}
+
+.my-jobs-page__tab-dot--revision {
+    background: #f97316;
 }
 
 .my-jobs-page__tab-dot--rejected {

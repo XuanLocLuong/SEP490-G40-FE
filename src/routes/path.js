@@ -92,6 +92,25 @@ export const getRecruiterJobAnalyticsPath = (jobId) =>
     `/recruiter/analytics/jobs/${jobId}`;
 
 /** My Jobs list — optional tab, jobId (highlight card), from (vd. overview → hiện nút quay lại). */
+export const getMyJobsTabForStatus = (status) => {
+    switch (status) {
+        case 'OPEN':
+            return 'open';
+        case 'CLOSED':
+            return 'closed';
+        case 'DRAFT':
+            return 'draft';
+        case 'PENDING_REVIEW':
+            return 'pending';
+        case 'REJECTED':
+            return 'rejected';
+        case 'REVISION_REQUESTED':
+            return 'revision';
+        default:
+            return 'all';
+    }
+};
+
 export const getRecruiterMyJobsPath = ({ tab, jobId, from } = {}) => {
     const params = new URLSearchParams();
     if (tab) params.set('tab', String(tab));

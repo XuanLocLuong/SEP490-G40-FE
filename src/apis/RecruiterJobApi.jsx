@@ -66,6 +66,12 @@ const recruiterJobApi = {
         return unwrapData(res);
     },
 
+    /** GET /api/v1/jobs/education-levels — bậc học cho yêu cầu tuyển dụng */
+    getEducationLevels: async () => {
+        const res = await axiosClient.get(`${API_PREFIX}/education-levels`);
+        return unwrapData(res);
+    },
+
     /** OPEN ↔ CLOSED — BE: PATCH /api/v1/{jobId}/status */
     changeJobStatus: async (jobId, status) => {
         const res = await axiosClient.patch(`${API_PREFIX}/${jobId}/status`, { status });

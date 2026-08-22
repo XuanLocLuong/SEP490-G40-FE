@@ -1,3 +1,8 @@
+import {
+    EDUCATION_REQUIREMENT_MODES,
+    GENDER_REQUIREMENT_OPTIONS,
+    JOB_POST_MAX_JOB_TYPES,
+} from '../../../constants/jobPost.js';
 import { useJobTypeOptions } from '../../../hooks/useJobTypeOptions.js';
 import {
     formatLocationDisplay,
@@ -22,6 +27,7 @@ const JobPostForm = ({
     onOpenAiDesc,
     skillsCatalog = [],
     skillsLoading = false,
+    educationLevelOptions = [],
 }) => {
     const minApplicationDeadline = getMinApplicationDeadline();
     const jobTypeOptions = useJobTypeOptions();
@@ -45,6 +51,24 @@ const JobPostForm = ({
         setField('skillIds', next);
     };
 
+    const toggleJobType = (value) => {
+        const current = form.jobTypes || [];
+        const exists = current.includes(value);
+        if (!exists && current.length >= JOB_POST_MAX_JOB_TYPES) return;
+        const next = exists
+            ? current.filter((code) => code !== value)
+            : [...current, value];
+        setField('jobTypes', next);
+    };
+
+    const handleEducationModeChange = (mode) => {
+        onChange({
+            ...form,
+            educationRequirementMode: mode,
+            minEducationLevel: mode === 'MIN' ? form.minEducationLevel : '',
+        });
+    };
+
     return (
         <form className="job-post-form" onSubmit={(e) => e.preventDefault()}>
             <section className="job-post-form__section">
@@ -66,45 +90,55 @@ const JobPostForm = ({
                     {errors.title && <p className="job-post-form__error">{errors.title}</p>}
                 </div>
 
-                <div className="job-post-form__row job-post-form__row--type-location">
-                    <div className="job-post-form__field job-post-form__field--job-type">
-                        <label htmlFor="job-type">
-                            Loại công việc
-                            <RequiredMark />
-                        </label>
-                        <select
-                            id="job-type"
-                            value={form.jobType}
-                            disabled={disabled}
-                            onChange={(e) => setField('jobType', e.target.value)}
-                            onBlur={blur('jobType')}
-                        >
-                            {jobTypeOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
+                <div className="job-post-form__field">
+                    <span className="job-post-form__label">
+                        Ngành nghề
+                        <RequiredMark />
+                    </span>
+                    <div className="job-post-form__chips">
+                        {jobTypeOptions.map((opt) => {
+                            const active = (form.jobTypes || []).includes(opt.value);
+                            const atMax =
+                                !active &&
+                                (form.jobTypes || []).length >= JOB_POST_MAX_JOB_TYPES;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    disabled={disabled || atMax}
+                                    className={`job-post-form__chip${
+                                        active ? ' job-post-form__chip--active' : ''
+                                    }`}
+                                    onClick={() => toggleJobType(opt.value)}
+                                    onBlur={blur('jobTypes')}
+                                >
                                     {opt.label}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.jobType && (
-                            <p className="job-post-form__error">{errors.jobType}</p>
-                        )}
+                                </button>
+                            );
+                        })}
                     </div>
+                    <p className="job-post-form__hint">
+                        Chọn 1–{JOB_POST_MAX_JOB_TYPES} ngành nghề phù hợp với tin tuyển dụng.
+                    </p>
+                    {errors.jobTypes && (
+                        <p className="job-post-form__error">{errors.jobTypes}</p>
+                    )}
+                </div>
 
-                    <div className="job-post-form__field job-post-form__field--location">
-                        <span className="job-post-form__label">
-                            Địa điểm làm việc
-                            <RequiredMark />
-                        </span>
-                        <p
-                            className="job-post-form__location-readonly"
-                            title={formatLocationDisplay(businessLocation)}
-                        >
-                            {formatLocationDisplay(businessLocation)}
-                        </p>
-                        {errors.locationId && (
-                            <p className="job-post-form__error">{errors.locationId}</p>
-                        )}
-                    </div>
+                <div className="job-post-form__field job-post-form__field--location">
+                    <span className="job-post-form__label">
+                        Địa điểm làm việc
+                        <RequiredMark />
+                    </span>
+                    <p
+                        className="job-post-form__location-readonly"
+                        title={formatLocationDisplay(businessLocation)}
+                    >
+                        {formatLocationDisplay(businessLocation)}
+                    </p>
+                    {errors.locationId && (
+                        <p className="job-post-form__error">{errors.locationId}</p>
+                    )}
                 </div>
 
                 <div className="job-post-form__salary-quantity-block">
@@ -150,7 +184,7 @@ const JobPostForm = ({
                         />
                     </div>
                     <p className="job-post-form__hint job-post-form__hint--salary">
-                        Lương theo giờ (₫/giờ). Có thể chỉ điền một mức (VD: 22.000 ₫/giờ).
+                        Lương theo giờ (₫/giờ). Nên nhập cả mức tối thiểu và tối đa.
                     </p>
                     <p className="job-post-form__hint job-post-form__hint--candidates">
                         Tối thiểu 1, tối đa {JOB_POST_MAX_REQUIRED_CANDIDATES} người.
@@ -200,32 +234,96 @@ const JobPostForm = ({
             </section>
 
             <section className="job-post-form__section">
-                <div className="job-post-form__field-label-row">
-                    <h2 className="job-post-form__section-title job-post-form__section-title--inline">
-                        Mô tả công việc
-                    </h2>
-                    <button
-                        type="button"
-                        className="job-post-form__ai-btn"
-                        disabled={disabled}
-                        onClick={onOpenAiDesc}
-                    >
-                        Gợi ý bằng AI
-                    </button>
+                <h2 className="job-post-form__section-title">Yêu cầu ứng viên</h2>
+
+                <div className="job-post-form__requirements-grid">
+                    <div className="job-post-form__field">
+                        <label htmlFor="min-age">Tuổi tối thiểu</label>
+                        <input
+                            id="min-age"
+                            type="number"
+                            min="15"
+                            max="80"
+                            value={form.minAge}
+                            disabled={disabled}
+                            placeholder="VD: 18"
+                            onChange={(e) => setField('minAge', e.target.value)}
+                            onBlur={blur('minAge')}
+                        />
+                    </div>
+                    <div className="job-post-form__field">
+                        <label htmlFor="max-age">Tuổi tối đa</label>
+                        <input
+                            id="max-age"
+                            type="number"
+                            min="15"
+                            max="80"
+                            value={form.maxAge}
+                            disabled={disabled}
+                            placeholder="VD: 45"
+                            onChange={(e) => setField('maxAge', e.target.value)}
+                            onBlur={blur('maxAge')}
+                        />
+                    </div>
+                    <div className="job-post-form__field">
+                        <label htmlFor="gender-requirement">Giới tính</label>
+                        <select
+                            id="gender-requirement"
+                            value={form.genderRequirement || 'ANY'}
+                            disabled={disabled}
+                            onChange={(e) => setField('genderRequirement', e.target.value)}
+                        >
+                            {GENDER_REQUIREMENT_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="job-post-form__field">
+                        <label htmlFor="education-mode">Trình độ học vấn</label>
+                        <select
+                            id="education-mode"
+                            value={form.educationRequirementMode || 'NONE'}
+                            disabled={disabled}
+                            onChange={(e) => handleEducationModeChange(e.target.value)}
+                        >
+                            {EDUCATION_REQUIREMENT_MODES.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    {form.educationRequirementMode === 'MIN' ? (
+                        <div className="job-post-form__field">
+                            <label htmlFor="min-education-level">
+                                Bậc học tối thiểu
+                                <RequiredMark />
+                            </label>
+                            <select
+                                id="min-education-level"
+                                value={form.minEducationLevel || ''}
+                                disabled={disabled}
+                                onChange={(e) => setField('minEducationLevel', e.target.value)}
+                                onBlur={blur('minEducationLevel')}
+                            >
+                                <option value="">— Chọn bậc học —</option>
+                                {educationLevelOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : null}
                 </div>
-                <p className="job-post-form__ai-hint">
-                    AI dùng thông tin bạn đã nhập phía trên. Thêm
-                    lương, kỹ năng sẽ giúp mô tả sát hơn.
-                </p>
-                <div className="job-post-form__field">
-                    <RichTextEditor
-                        rows={8}
-                        value={form.description}
-                        disabled={disabled}
-                        placeholder="Mô tả chi tiết công việc..."
-                        onChange={(value) => setField('description', value)}
-                    />
-                </div>
+                {(errors.minAge || errors.maxAge) && (
+                    <p className="job-post-form__error">{errors.maxAge || errors.minAge}</p>
+                )}
+                {errors.minEducationLevel && (
+                    <p className="job-post-form__error">{errors.minEducationLevel}</p>
+                )}
             </section>
 
             <section className="job-post-form__section">
@@ -266,6 +364,35 @@ const JobPostForm = ({
                     error={errors.shiftBlocks}
                     onChange={(shiftBlocks) => setField('shiftBlocks', shiftBlocks)}
                 />
+            </section>
+
+            <section className="job-post-form__section">
+                <div className="job-post-form__field-label-row">
+                    <h2 className="job-post-form__section-title job-post-form__section-title--inline">
+                        Mô tả công việc
+                    </h2>
+                    <button
+                        type="button"
+                        className="job-post-form__ai-btn"
+                        disabled={disabled}
+                        onClick={onOpenAiDesc}
+                    >
+                        Gợi ý bằng AI
+                    </button>
+                </div>
+                <p className="job-post-form__ai-hint">
+                    AI dùng thông tin bạn đã nhập phía trên. Thêm ngành nghề, lương,
+                    kỹ năng và yêu cầu ứng viên sẽ giúp mô tả sát hơn.
+                </p>
+                <div className="job-post-form__field">
+                    <RichTextEditor
+                        rows={8}
+                        value={form.description}
+                        disabled={disabled}
+                        placeholder="Mô tả chi tiết công việc..."
+                        onChange={(value) => setField('description', value)}
+                    />
+                </div>
             </section>
         </form>
     );

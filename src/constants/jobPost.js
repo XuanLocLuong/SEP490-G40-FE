@@ -9,6 +9,20 @@ export const JOB_POST_ACTION = {
     SUBMIT: 'SUBMIT',
 };
 
+/** Số ngành nghề tối đa khi đăng tin (khớp quy ước candidate preference). */
+export const JOB_POST_MAX_JOB_TYPES = 3;
+
+export const GENDER_REQUIREMENT_OPTIONS = [
+    { value: 'ANY', label: 'Không yêu cầu' },
+    { value: 'MALE', label: 'Nam' },
+    { value: 'FEMALE', label: 'Nữ' },
+];
+
+export const EDUCATION_REQUIREMENT_MODES = [
+    { value: 'NONE', label: 'Không yêu cầu' },
+    { value: 'MIN', label: 'Tối thiểu' },
+];
+
 /** Fallback FE khi chưa load được danh mục active từ GET /api/v1/jobs/types. */
 export const JOB_TYPE_OPTIONS = [
     { value: 'FNB_SERVICE', label: 'F&B & Dịch vụ' },
