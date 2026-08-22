@@ -45,6 +45,38 @@ export const ChatIcon = (props) => (
     </svg>
 );
 
+/** Đánh giá nhận được — bong bóng + sao + like (khác StarIcon uy tín). */
+export const ReviewsIcon = (props) => (
+    <svg {...base} {...props}>
+        {/* Speech bubble */}
+        <path d="M2.5 5.2h13.2c.9 0 1.6.7 1.6 1.6v6.6c0 .9-.7 1.6-1.6 1.6H8.4L4.8 18.5v-3.5H2.5c-.9 0-1.6-.7-1.6-1.6V6.8c0-.9.7-1.6 1.6-1.6Z" />
+        {/* Stars row inside bubble */}
+        <path
+            fill="currentColor"
+            stroke="none"
+            d="m4.4 9 .5 1.05 1.15.1-.88.78.26 1.12L4.4 11.4l-1.03.65.26-1.12-.88-.78 1.15-.1Z"
+        />
+        <path
+            fill="currentColor"
+            stroke="none"
+            d="m7.5 9 .5 1.05 1.15.1-.88.78.26 1.12L7.5 11.4l-1.03.65.26-1.12-.88-.78 1.15-.1Z"
+        />
+        <path
+            fill="currentColor"
+            stroke="none"
+            d="m10.6 9 .5 1.05 1.15.1-.88.78.26 1.12-1.03-.65-1.03.65.26-1.12-.88-.78 1.15-.1Z"
+        />
+        <path
+            fill="currentColor"
+            stroke="none"
+            d="m13.7 9 .5 1.05 1.15.1-.88.78.26 1.12-1.03-.65-1.03.65.26-1.12-.88-.78 1.15-.1Z"
+        />
+        {/* Thumbs up — góc trên phải */}
+        <path d="M18.2 9.2V6.4a1.35 1.35 0 0 1 2.7 0v2.8" />
+        <path d="M18.2 9.2h2.1c.85 0 1.5.7 1.4 1.55l-.35 2.4a2.2 2.2 0 0 1-2.15 1.85h-2.4a1.2 1.2 0 0 1-1.15-.9l-.55-2.1a1.8 1.8 0 0 1 1.1-2.2c.35-.12.72-.2 1.1-.2h.9Z" />
+    </svg>
+);
+
 export const BellIcon = (props) => (
     <svg {...base} {...props}>
         <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" />

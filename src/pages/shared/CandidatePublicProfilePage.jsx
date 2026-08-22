@@ -15,6 +15,10 @@ const CandidatePublicProfilePage = () => {
     const [activeTab, setActiveTab] = useState(CANDIDATE_PROFILE_TABS.PERSONAL);
 
     const backTo = location.state?.backTo;
+    const candidateUserId =
+        location.state?.candidateUserId ??
+        location.state?.userId ??
+        null;
     const showBackToApplicants =
         backTo?.path && typeof backTo.label === 'string' && backTo.label.trim().length > 0;
 
@@ -64,6 +68,7 @@ const CandidatePublicProfilePage = () => {
                 profile={profile}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
+                candidateUserId={candidateUserId}
             />
         </div>
     );

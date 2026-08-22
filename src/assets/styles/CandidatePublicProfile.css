@@ -421,3 +421,142 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ---- Received reviews ---- */
+.cpp-page-header {
+    margin: 0 0 16px;
+}
+
+.cpp-page-header__title {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-text);
+}
+
+.cpp-page-header__desc {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.45;
+}
+
+.cpp-reviews-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.cpp-reviews-header .cpp-card__title {
+    margin: 0;
+}
+
+.cpp-reviews-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.cpp-reviews-summary strong {
+    color: var(--color-text);
+    font-size: 16px;
+}
+
+.cpp-review-stars {
+    display: inline-flex;
+    gap: 1px;
+    color: #cbd5e1;
+    line-height: 1;
+}
+
+.cpp-review-stars__star--filled {
+    color: #f59e0b;
+}
+
+.cpp-reviews-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.cpp-review-item {
+    padding: 14px;
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.cpp-review-item__top {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.cpp-review-item__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.cpp-review-item__avatar--placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e2e8f0;
+    color: #475569;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.cpp-review-item__meta {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cpp-review-item__meta strong {
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+.cpp-review-item__rating-row {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.cpp-review-item__badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.cpp-review-item__comment {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text);
+}
+
+.cpp-reviews-more {
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+}

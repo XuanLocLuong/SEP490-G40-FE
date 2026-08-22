@@ -83,18 +83,23 @@ const SkillCard = ({ skills, catalog, onChange }) => {
                 </div>
 
                 {focused && suggestions.length > 0 && (
-                    <ul
-                        className="cp-autocomplete"
-                        onMouseDown={() => clearTimeout(blurTimer.current)}
-                    >
+                    <ul className="cp-autocomplete">
                         {suggestions.map((s) => (
                             <li key={s.id ?? s.name}>
                                 <button
                                     type="button"
                                     className="cp-autocomplete__item"
+                                    onMouseDown={(e) => {
+                                        // Tránh blur input trước click → mất chọn skill.
+                                        e.preventDefault();
+                                        if (blurTimer.current) {
+                                            clearTimeout(blurTimer.current);
+                                            blurTimer.current = null;
+                                        }
+                                    }}
                                     onClick={() => {
                                         addSkill(s);
-                                        setFocused(true);
+                                        setFocused(false);
                                     }}
                                 >
                                     {s.name}

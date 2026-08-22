@@ -292,6 +292,7 @@ const RecruiterInvitationsPage = () => {
         const backQuery = returnParams.toString() ? `?${returnParams.toString()}` : '';
         navigate(getCandidatePublicProfilePath(candidateId), {
             state: {
+                candidateUserId: invitation?.candidateUserId ?? null,
                 backTo: {
                     path: `${ROUTES.RECRUITER_INVITATIONS}${backQuery}`,
                     label: 'Quay lại danh sách lời mời',

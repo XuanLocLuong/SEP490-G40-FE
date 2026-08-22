@@ -2,7 +2,8 @@ import { useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
 import { PencilIcon } from './profileIcons.jsx';
 import { GraduationCapIcon as FallbackCap } from '../common/icons.jsx';
-import { EDUCATION_LEVEL_OPTIONS, getEducationLevelLabel } from '../../utils/profileFormat.js';
+import { getEducationLevelLabel } from '../../utils/profileFormat.js';
+import { useEducationLevelOptions } from '../../hooks/useEducationLevelOptions.js';
 
 // Backend chỉ lưu ĐÚNG 1 học vấn (schoolName/studentCode/educationLevel) trên
 // CandidateProfile, không phải danh sách nhiều trường/bằng cấp — nên đây là
@@ -11,6 +12,7 @@ import { EDUCATION_LEVEL_OPTIONS, getEducationLevelLabel } from '../../utils/pro
 const EducationCard = ({ education, onSave, saving }) => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(education);
+    const educationLevelOptions = useEducationLevelOptions();
 
     const handleOpen = () => {
         setForm(education);
@@ -47,7 +49,10 @@ const EducationCard = ({ education, onSave, saving }) => {
                         <h3 className="cp-edu-item__school">{education.school || 'Chưa rõ trường'}</h3>
                         {education.educationLevel && (
                             <p className="cp-edu-item__major">
-                                {getEducationLevelLabel(education.educationLevel)}
+                                {getEducationLevelLabel(
+                                    education.educationLevel,
+                                    educationLevelOptions
+                                )}
                             </p>
                         )}
                         {education.studentCode && (
@@ -98,7 +103,7 @@ const EducationCard = ({ education, onSave, saving }) => {
                         onChange={(e) => setForm((p) => ({ ...p, educationLevel: e.target.value }))}
                     >
                         <option value="">-- Chọn trình độ --</option>
-                        {EDUCATION_LEVEL_OPTIONS.map((opt) => (
+                        {educationLevelOptions.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                                 {opt.label}
                             </option>

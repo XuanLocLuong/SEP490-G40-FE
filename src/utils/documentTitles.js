@@ -24,6 +24,7 @@ const EXACT_TITLES = {
     [ROUTES.CANDIDATE_INVITATIONS]: 'Lời mời ứng tuyển',
     [ROUTES.CANDIDATE_APPLICATION_HISTORY]: 'Lịch sử ứng tuyển',
     [ROUTES.CANDIDATE_TRUST_SCORE]: 'Điểm uy tín',
+    [ROUTES.CANDIDATE_REVIEWS]: 'Đánh giá nhận được',
     [ROUTES.CANDIDATE_NOTIFICATIONS]: 'Thông báo',
     [ROUTES.CANDIDATE_SETTINGS]: 'Cài đặt tài khoản',
     [ROUTES.CANDIDATE_MESSAGES]: 'Tin nhắn',

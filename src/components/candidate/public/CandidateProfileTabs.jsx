@@ -3,7 +3,7 @@ import CandidatePersonalTab from './CandidatePersonalTab.jsx';
 import CandidateWorkHistoryTab from './CandidateWorkHistoryTab.jsx';
 import CandidateReviewsTab from './CandidateReviewsTab.jsx';
 
-const CandidateProfileTabs = ({ profile, activeTab, onTabChange }) => {
+const CandidateProfileTabs = ({ profile, activeTab, onTabChange, candidateUserId }) => {
     const tabs = [
         { id: CANDIDATE_PROFILE_TABS.PERSONAL, label: 'Thông tin cá nhân' },
         { id: CANDIDATE_PROFILE_TABS.WORK, label: 'Lịch sử làm việc' },
@@ -36,7 +36,9 @@ const CandidateProfileTabs = ({ profile, activeTab, onTabChange }) => {
                 {activeTab === CANDIDATE_PROFILE_TABS.WORK && (
                     <CandidateWorkHistoryTab experiences={profile.experiences} />
                 )}
-                {activeTab === CANDIDATE_PROFILE_TABS.REVIEWS && <CandidateReviewsTab />}
+                {activeTab === CANDIDATE_PROFILE_TABS.REVIEWS && (
+                    <CandidateReviewsTab userId={candidateUserId} />
+                )}
             </div>
         </div>
     );

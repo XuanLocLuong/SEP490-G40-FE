@@ -1,4 +1,5 @@
 import { getEducationLevelLabel, getJobTypeLabel } from '../../../utils/profileFormat.js';
+import { useEducationLevelOptions } from '../../../hooks/useEducationLevelOptions.js';
 
 const DetailField = ({ label, value }) => {
     if (!value && value !== 0) return null;
@@ -20,12 +21,16 @@ const parsePreferredJobTypes = (raw) => {
 };
 
 const CandidatePersonalTab = ({ profile }) => {
+    const educationLevelOptions = useEducationLevelOptions();
     const preferredJobTypes = parsePreferredJobTypes(profile.preferredJobType);
 
     const fields = [
         { label: 'Họ và tên', value: profile.fullName },
         { label: 'Trường học', value: profile.university },
-        { label: 'Bậc học', value: getEducationLevelLabel(profile.educationLevel) },
+        {
+            label: 'Bậc học',
+            value: getEducationLevelLabel(profile.educationLevel, educationLevelOptions),
+        },
         { label: 'Chuyên ngành', value: profile.major },
         { label: 'Thành phố', value: profile.city },
         { label: 'Năm học', value: profile.academicYear },
