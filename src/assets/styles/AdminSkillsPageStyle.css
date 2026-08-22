@@ -29,6 +29,11 @@
     max-width: 640px;
 }
 
+.admin-job-types-page__subtitle {
+    max-width: none;
+    white-space: nowrap;
+}
+
 .admin-skills-page__error {
     margin: 0 0 12px;
     color: var(--color-danger);
@@ -435,5 +440,11 @@
     .admin-skills-filters__keyword {
         width: 100%;
         flex: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .admin-job-types-page__subtitle {
+        white-space: normal;
     }
 }
