@@ -9,7 +9,9 @@ import * as api from '../apis/CandidateProfileApi.jsx';
 // Các gap cấu trúc thật sự giữa BE/FE (đã note rõ từng chỗ bên dưới):
 //   - preferredJobTypeCodes: mã lĩnh vực (FNB_SERVICE,...) — FE dùng cho multi-select
 //     + PUT. preferredJobType là label hiển thị từ BE (chỉ đọc, không gửi lại).
-//   - address: BE chỉ 1 cột, dùng chung cho "địa chỉ cá nhân" & "địa điểm tìm việc".
+//   - address (text) vs lat/lng: cùng profile nhưng FE tách UI —
+//     "Địa chỉ" cá nhân → chỉ PUT address; "Địa điểm tìm việc" → chỉ PUT lat/lng (+ radius).
+//     Apply vẫn cần đủ cả 3. Không có 2 cột address trên BE.
 //   - educations[]: BE chỉ lưu ĐÚNG 1 học vấn (schoolName/studentCode/educationLevel,
 //     không có major/năm học) -> chỉ phần tử đầu tiên trong mảng được lưu.
 //   - experiences[] (Work History): CRUD riêng /api/v1/candidate/work-histories,
@@ -77,8 +79,8 @@ export const normalizeProfile = (raw) => {
             salaryMax: data.expectedSalaryMax ?? null,
             salaryUnit: 'giờ',
             locationRadiusKm: data.preferredRadiusKm ?? null,
-            location: data.address || '',
-            // Toạ độ đã có sẵn cột trên BE (latitude/longitude) — trước đây FE luôn gửi null.
+            // Chỉ dùng để hiện trên UI (reverse geocode) — không map từ address BE.
+            location: '',
             latitude: data.latitude ?? null,
             longitude: data.longitude ?? null,
         },
@@ -86,7 +88,8 @@ export const normalizeProfile = (raw) => {
         personalInfo: {
             birthday: data.dateOfBirth || null,
             gender: data.gender || '',
-            address: data.address || '', // Dùng chung cột address với jobPreference.location.
+            // Text địa chỉ cá nhân → PUT `address` (tách khỏi lat/lng tìm việc).
+            address: data.address || '',
         },
 
         // Backend chỉ lưu ĐÚNG 1 học vấn (schoolName/studentCode/educationLevel) — không
@@ -110,15 +113,12 @@ export const toUpdatePayload = (draft) => {
     const personal = draft.personalInfo || {};
     const edu = draft.education || {};
 
-    if (personal.address && pref.location && personal.address !== pref.location) {
-        // eslint-disable-next-line no-console
-        console.warn(
-            '[CandidateProfile] "Địa chỉ" và "Địa điểm tìm việc" đang khác nhau nhưng backend chỉ có 1 cột address — giá trị "Thông tin cá nhân" sẽ được ưu tiên lưu.'
-        );
-    }
-    const address = pref.location || personal.address || '';
-
     const toNumberOrNull = (v) => (v === '' || v == null ? null : Number(v));
+
+    // Địa chỉ text chỉ từ Thông tin cá nhân. Lat/lng chỉ từ Nhu cầu tìm việc.
+    // (pref.location chỉ là nhãn reverse-geocode trên UI, không PUT vào address.)
+    const personalAddress =
+        personal.address == null ? '' : String(personal.address).trim();
 
     return {
         bio: draft.bio ?? null,
@@ -137,7 +137,7 @@ export const toUpdatePayload = (draft) => {
         expectedSalaryMin: toNumberOrNull(pref.salaryMin),
         expectedSalaryMax: toNumberOrNull(pref.salaryMax),
 
-        address: address || null,
+        address: personalAddress,
         latitude: pref.latitude ?? null,
         longitude: pref.longitude ?? null,
         preferredRadiusKm: toNumberOrNull(pref.locationRadiusKm),

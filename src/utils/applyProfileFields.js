@@ -8,7 +8,7 @@ export const APPLY_REQUIRED_PROFILE_FIELD_LABELS = {
     phone: 'Số điện thoại',
     dateOfBirth: 'Ngày sinh',
     gender: 'Giới tính',
-    address: 'Địa chỉ (kèm vị trí trên bản đồ)',
+    address: 'Địa chỉ',
     educationLevel: 'Trình độ học vấn',
     skills: 'Kỹ năng (ít nhất 1)',
     preferredJobType: 'Lĩnh vực mong muốn',

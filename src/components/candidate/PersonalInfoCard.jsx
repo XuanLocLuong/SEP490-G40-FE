@@ -189,8 +189,8 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
                         onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
                     />
                     <p className="cp-input-hint">
-                        Để ứng tuyển cần địa chỉ kèm tọa độ — chọn vị trí trên bản đồ ở mục Nhu cầu tìm
-                        việc.
+                        Địa chỉ chữ lưu riêng. Vị trí tìm việc (bản đồ) chọn ở mục Nhu cầu tìm việc.
+                        Ứng tuyển cần đủ cả địa chỉ chữ và tọa độ.
                     </p>
                 </div>
             </ProfileModal>

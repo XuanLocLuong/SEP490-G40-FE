@@ -1110,6 +1110,13 @@
     font-weight: 600;
 }
 
+.cp-map-coords__label {
+    margin-top: 6px;
+    font-weight: 400;
+    color: var(--color-text-muted, #4b5563);
+    line-height: 1.45;
+}
+
 .cp-btn--sm {
     padding: 6px 12px;
     font-size: 13px;
