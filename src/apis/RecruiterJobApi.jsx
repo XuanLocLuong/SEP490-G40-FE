@@ -43,7 +43,7 @@ const recruiterJobApi = {
         await axiosClient.delete(`${JOBS_BASE}/${jobId}`);
     },
 
-    /** @param {{ status?: string, page?: number, size?: number, sort?: string }} params */
+    /** @param {{ status?: string, keyword?: string, page?: number, size?: number, sort?: string }} params */
     getMyJobs: async (params = {}) => {
         const res = await axiosClient.get(`${JOBS_BASE}/my-jobs`, { params });
         return unwrapData(res);

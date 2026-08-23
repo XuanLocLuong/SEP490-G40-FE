@@ -57,27 +57,23 @@ const isPastDeadline = (job) => {
     return !Number.isNaN(end.getTime()) && end.getTime() < Date.now();
 };
 
-const fetchMyJobsPage = async (tabId, pageNum, size = PAGE_SIZE) => {
+const fetchMyJobsPage = async (tabId, pageNum, size = PAGE_SIZE, keyword = '') => {
     const status = TAB_API_STATUS[tabId];
     const params = { page: pageNum, size, sort: MY_JOBS_SORT };
     if (status) params.status = status;
+    if (keyword) params.keyword = keyword;
     return recruiterJobApi.getMyJobs(params);
 };
 
-/** totalElements theo từng tab (size=1) — hiện count sẵn trên mọi tab như trước. */
-const fetchTabCounts = async () => {
-    const entries = await Promise.all(
-        STATUS_TABS.map(async (tab) => {
-            try {
-                const pageData = await fetchMyJobsPage(tab.id, 0, 1);
-                return [tab.id, Number(pageData?.totalElements) || 0];
-            } catch {
-                return [tab.id, 0];
-            }
-        })
-    );
-    return Object.fromEntries(entries);
-};
+const tabCountsFromApi = (counts = {}) => ({
+    all: Number(counts.ALL) || 0,
+    draft: Number(counts.DRAFT) || 0,
+    open: Number(counts.OPEN) || 0,
+    pending: Number(counts.PENDING_REVIEW) || 0,
+    revision: Number(counts.REVISION_REQUESTED) || 0,
+    rejected: Number(counts.REJECTED) || 0,
+    closed: Number(counts.CLOSED) || 0,
+});
 
 const getJobMetrics = (job) => {
     const requiredCandidates = Number(job.requiredCandidates);
@@ -172,34 +168,31 @@ const MyJobsPage = () => {
     const [reviewNoteJob, setReviewNoteJob] = useState(null);
     const [detailJobId, setDetailJobId] = useState(null);
     const [highlightJobId, setHighlightJobId] = useState(null);
+    const [keywordInput, setKeywordInput] = useState('');
+    const [keyword, setKeyword] = useState('');
     const loadSeqRef = useRef(0);
 
     /** true khi vào từ Tổng quan (?from=overview) — giữ trên URL để hiện nút quay lại. */
     const showBackToOverview = searchParams.get('from') === 'overview';
 
-    const refreshTabCounts = useCallback(async () => {
-        try {
-            const counts = await fetchTabCounts();
-            setTabCounts(counts);
-        } catch {
-            // giữ count cũ nếu lỗi
-        }
-    }, []);
+    useEffect(() => {
+        const timer = setTimeout(() => setKeyword(keywordInput.trim()), 400);
+        return () => clearTimeout(timer);
+    }, [keywordInput]);
 
     const loadJobs = useCallback(async (tabId, pageNum) => {
         const seq = ++loadSeqRef.current;
         setLoading(true);
         try {
-            const pageData = await fetchMyJobsPage(tabId, pageNum);
+            const pageData = await fetchMyJobsPage(tabId, pageNum, PAGE_SIZE, keyword);
             if (seq !== loadSeqRef.current) return;
             const content = Array.isArray(pageData?.content) ? pageData.content : [];
             setJobs(content);
             setTotalPages(Number(pageData?.totalPages) || 0);
-            setPage(Number.isFinite(Number(pageData?.number)) ? Number(pageData.number) : pageNum);
-            setTabCounts((prev) => ({
-                ...prev,
-                [tabId]: Number(pageData?.totalElements) || 0,
-            }));
+            const pageNumber = pageData?.number ?? pageData?.currentPage;
+            setPage(Number.isFinite(Number(pageNumber)) ? Number(pageNumber) : pageNum);
+            const counts = pageData?.statusCounts || pageData?.counts;
+            if (counts) setTabCounts(tabCountsFromApi(counts));
         } catch (err) {
             if (seq !== loadSeqRef.current) return;
             setJobs([]);
@@ -209,15 +202,11 @@ const MyJobsPage = () => {
         } finally {
             if (seq === loadSeqRef.current) setLoading(false);
         }
-    }, []);
-
-    useEffect(() => {
-        refreshTabCounts();
-    }, [refreshTabCounts]);
+    }, [keyword]);
 
     useEffect(() => {
         loadJobs(activeTab, 0);
-    }, [activeTab, loadJobs]);
+    }, [activeTab, keyword, loadJobs]);
 
     useEffect(() => {
         const tab = location.state?.highlightStatusTab;
@@ -328,7 +317,6 @@ const MyJobsPage = () => {
             setConfirmDialog(null);
             // Reload tab — tin có thể rời khỏi tab hiện tại sau đổi status.
             await loadJobs(activeTab, 0);
-            refreshTabCounts();
         } catch (err) {
             const fallback =
                 type === 'delete' ? 'Không thể xóa tin.' : 'Không thể đổi trạng thái tin.';
@@ -619,6 +607,14 @@ const MyJobsPage = () => {
                     + Đăng tin mới
                 </Link>
             </header>
+
+            <input
+                type="search"
+                className="my-jobs-page__search"
+                placeholder="Tìm theo tiêu đề tin hoặc tên doanh nghiệp"
+                value={keywordInput}
+                onChange={(event) => setKeywordInput(event.target.value)}
+            />
 
             <div className="my-jobs-page__tabs" role="tablist" aria-label="Lọc theo trạng thái">
                 {STATUS_TABS.map((tab) => (

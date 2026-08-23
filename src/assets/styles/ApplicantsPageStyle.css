@@ -209,6 +209,12 @@
     cursor: pointer;
 }
 
+.applicants-page__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
 .applicants-page__chip:hover {
     border-color: #93c5fd;
     color: #3b82f6;

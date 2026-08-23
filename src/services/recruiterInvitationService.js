@@ -64,6 +64,7 @@ export const mapInvitationsPage = (data) => ({
     totalElements: data?.totalElements ?? 0,
     currentPage: data?.currentPage ?? 0,
     pageSize: data?.pageSize ?? 10,
+    statusCounts: data?.statusCounts || data?.counts || {},
 });
 
 const buildListParams = ({ status, page, size }) => {

@@ -109,9 +109,11 @@ export const mapApplicationsResponse = (data) => {
     const mediumMatch = mapBucket(data?.mediumMatch);
     const lowMatch = mapBucket(data?.lowMatch);
     const criticalMismatch = mapBucket(data?.criticalMismatch);
+    const applications = mapBucket(data?.applications);
     return {
         jobId: data?.jobId ?? null,
         totalApplications: data?.totalApplications ?? 0,
+        statusCounts: data?.statusCounts || data?.counts || {},
         highMatchCount: data?.highMatchCount ?? highMatch.length,
         mediumMatchCount: data?.mediumMatchCount ?? mediumMatch.length,
         lowMatchCount: data?.lowMatchCount ?? lowMatch.length,
@@ -120,15 +122,20 @@ export const mapApplicationsResponse = (data) => {
         mediumMatch,
         lowMatch,
         criticalMismatch,
+        applications,
     };
 };
 
-export const flattenApplicationBuckets = (buckets) => [
-    ...(buckets.highMatch || []),
-    ...(buckets.mediumMatch || []),
-    ...(buckets.lowMatch || []),
-    ...(buckets.criticalMismatch || []),
-];
+export const flattenApplicationBuckets = (buckets) => {
+    const fromColumns = [
+        ...(buckets.highMatch || []),
+        ...(buckets.mediumMatch || []),
+        ...(buckets.lowMatch || []),
+        ...(buckets.criticalMismatch || []),
+    ];
+    if (fromColumns.length > 0) return fromColumns;
+    return buckets.applications || [];
+};
 
 export const recruiterApplicationService = {
     getApplications: async (jobId, options = {}) => {

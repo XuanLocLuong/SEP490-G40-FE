@@ -50,7 +50,7 @@ const RecruiterInvitationsPage = () => {
     const [listError, setListError] = useState('');
     const [chatLoadingId, setChatLoadingId] = useState(null);
     const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
+    const [statusCounts, setStatusCounts] = useState({});
 
     const selectedJobId = useMemo(() => {
         if (jobIdParam) {
@@ -213,7 +213,6 @@ const RecruiterInvitationsPage = () => {
         if (jobIdParam && !selectedJob) {
             setInvitations([]);
             setTotalPages(0);
-            setTotalElements(0);
             return;
         }
 
@@ -227,14 +226,14 @@ const RecruiterInvitationsPage = () => {
             });
             setInvitations(pageData.content.filter((item) => item.status !== 'CANCELLED'));
             setTotalPages(pageData.totalPages);
-            setTotalElements(pageData.totalElements);
+            setStatusCounts(pageData.statusCounts || {});
         } catch (err) {
             setListError(
                 getRecruiterInvitationApiErrorMessage(err, 'Không tải được danh sách lời mời.')
             );
             setInvitations([]);
             setTotalPages(0);
-            setTotalElements(0);
+            setStatusCounts({});
         } finally {
             setListLoading(false);
         }
@@ -446,9 +445,6 @@ const RecruiterInvitationsPage = () => {
                             {selectedJob.status && (
                                 <JobStatusBadge status={selectedJob.status} />
                             )}
-                            <span className="applicants-page__count">
-                                {totalElements} lời mời
-                            </span>
                         </div>
 
                         <div className="applicants-page__filters-row">
@@ -465,7 +461,7 @@ const RecruiterInvitationsPage = () => {
                                                 }`}
                                             onClick={() => handleStatusChange(item.value)}
                                         >
-                                            {item.label}
+                                            {item.label} ({statusCounts[item.value] ?? 0})
                                         </button>
                                     ))}
                                 </div>

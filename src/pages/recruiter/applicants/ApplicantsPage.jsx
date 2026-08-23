@@ -40,6 +40,7 @@ const DEFAULT_STATUS_READONLY = 'ALL';
 
 const EMPTY_MATCH_DATA = {
     totalApplications: 0,
+    statusCounts: {},
     highMatchCount: 0,
     mediumMatchCount: 0,
     lowMatchCount: 0,
@@ -48,6 +49,7 @@ const EMPTY_MATCH_DATA = {
     mediumMatch: [],
     lowMatch: [],
     criticalMismatch: [],
+    applications: [],
 };
 
 const canManageApplications = (job) => job?.status === 'OPEN';
@@ -609,9 +611,6 @@ const ApplicantsPage = () => {
                             {selectedJob.status && (
                                 <JobStatusBadge status={selectedJob.status} />
                             )}
-                            <span className="applicants-page__count">
-                                {matchData.totalApplications} ứng viên
-                            </span>
                         </div>
 
                         {readOnly && (
@@ -636,7 +635,7 @@ const ApplicantsPage = () => {
                                             }`}
                                             onClick={() => handleStatusChange(item.value)}
                                         >
-                                            {item.label}
+                                            {item.label} ({matchData.statusCounts?.[item.value] ?? 0})
                                         </button>
                                     ))}
                                 </div>
@@ -663,7 +662,7 @@ const ApplicantsPage = () => {
 
                     {!listLoading && !listError && (
                         <>
-                            {matchData.totalApplications === 0 &&
+                            {matchData.statusCounts?.PENDING === 0 &&
                                 !readOnly &&
                                 statusFilter === 'PENDING' && (
                                     <p className="applicants-page__suggest-hint">
@@ -682,6 +681,7 @@ const ApplicantsPage = () => {
                                     </p>
                                 )}
 
+                            {statusFilter === 'PENDING' ? (
                             <div className="applicants-page__columns">
                                 {MATCH_BUCKETS.map((bucket) => {
                                     const items = matchData[bucket.key] || [];
@@ -738,6 +738,15 @@ const ApplicantsPage = () => {
                                     );
                                 })}
                             </div>
+                            ) : (matchData.applications || []).length === 0 ? (
+                                <div className="applicants-page__empty">
+                                    <p>Không có ứng viên ở trạng thái này.</p>
+                                </div>
+                            ) : (
+                                <div className="applicants-page__grid">
+                                    {(matchData.applications || []).map(renderApplicationCard)}
+                                </div>
+                            )}
                         </>
                     )}
                 </>
