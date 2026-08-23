@@ -8,6 +8,7 @@ import { useAuth } from '../../../contexts/authContext.js';
 import userApi, { getApiErrorMessage } from '../../../apis/UserApi.jsx';
 import ProfileHeader from '../../../components/candidate/ProfileHeader.jsx';
 import JobPreferenceCard from '../../../components/candidate/JobPreferenceCard.jsx';
+import BioCard from '../../../components/candidate/BioCard.jsx';
 import PersonalInfoCard from '../../../components/candidate/PersonalInfoCard.jsx';
 import EducationCard from '../../../components/candidate/EducationCard.jsx';
 import SkillCard from '../../../components/candidate/SkillCard.jsx';
@@ -232,6 +233,11 @@ const CandidateProfilePage = () => {
                     <JobPreferenceCard
                         preference={draft.jobPreference}
                         onSave={(pref) => saveSection({ jobPreference: pref })}
+                        saving={saving}
+                    />
+                    <BioCard
+                        bio={draft.bio}
+                        onSave={(bio) => saveSection({ bio })}
                         saving={saving}
                     />
                 </div>

@@ -451,6 +451,7 @@ const ApplicantsPage = () => {
         const backQuery = returnParams.toString() ? `?${returnParams.toString()}` : '';
         navigate(getCandidatePublicProfilePath(candidateId), {
             state: {
+                candidateUserId: application?.candidateUserId ?? null,
                 backTo: {
                     path: `${ROUTES.RECRUITER_APPLICANTS}${backQuery}`,
                     label: 'Quay lại danh sách ứng viên',

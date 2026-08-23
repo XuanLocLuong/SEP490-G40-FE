@@ -8,17 +8,23 @@ export const GENDER_OPTIONS = [
     { value: 'OTHER', label: 'Khác' },
 ];
 
+/** Fallback khớp enum BE EducationLevel khi GET /education-levels lỗi. */
 export const EDUCATION_LEVEL_OPTIONS = [
-    { value: 'HIGH_SCHOOL', label: 'Trung học phổ thông' },
-    { value: 'VOCATIONAL', label: 'Trung cấp/Cao đẳng nghề' },
-    { value: 'COLLEGE', label: 'Cao đẳng' },
-    { value: 'UNIVERSITY', label: 'Đại học' },
+    { value: 'THCS', label: 'THCS', order: 1 },
+    { value: 'THPT', label: 'THPT', order: 2 },
+    { value: 'TRUNG_CAP', label: 'Trung cấp', order: 3 },
+    { value: 'CAO_DANG', label: 'Cao đẳng', order: 4 },
+    { value: 'DAI_HOC', label: 'Đại học', order: 5 },
+    { value: 'SAU_DAI_HOC', label: 'Sau đại học', order: 6 },
 ];
 
-export const getEducationLevelLabel = (value) => {
+export const getEducationLevelLabel = (value, options = EDUCATION_LEVEL_OPTIONS) => {
     if (!value) return '';
-    const found = EDUCATION_LEVEL_OPTIONS.find((e) => e.value === value);
-    return found ? found.label : value;
+    const code = String(value).trim();
+    const found = options.find(
+        (e) => e.value === code || String(e.value).toUpperCase() === code.toUpperCase()
+    );
+    return found ? found.label : code;
 };
 
 export const getGenderLabel = (value) => {

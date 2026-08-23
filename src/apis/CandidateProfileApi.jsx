@@ -23,3 +23,6 @@ export const uploadAvatar = (file) => {
 
 // GET /api/v1/candidate/profile/skills — ĐÚNG path thật (KHÔNG phải /api/v1/skills).
 export const getSkills = () => axiosClient.get(`${PROFILE_BASE}/skills`);
+
+/** GET /api/v1/education-levels — enum bậc học (cần login). */
+export const getEducationLevels = () => axiosClient.get(`${API_PREFIX}/education-levels`);

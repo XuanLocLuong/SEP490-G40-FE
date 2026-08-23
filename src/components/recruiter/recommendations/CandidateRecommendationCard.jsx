@@ -201,7 +201,10 @@ const CandidateRecommendationCard = ({
             <footer className="candidate-recommendation-card__actions">
                 <Link
                     to={getCandidatePublicProfilePath(candidate.candidateId)}
-                    state={profileBackTo ? { backTo: profileBackTo } : undefined}
+                    state={{
+                        ...(profileBackTo ? { backTo: profileBackTo } : {}),
+                        candidateUserId: candidate.userId ?? null,
+                    }}
                     className="candidate-recommendation-card__profile-btn"
                 >
                     Xem hồ sơ

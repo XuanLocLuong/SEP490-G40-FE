@@ -29,6 +29,7 @@ import AvailabilityPage from '../pages/candidate/availability/AvailabilityPage.j
 import CandidateApplicationHistoryPage from '../pages/candidate/CandidateApplicationHistoryPage.jsx';
 import CandidateInvitationsPage from '../pages/candidate/CandidateInvitationsPage.jsx';
 import CandidateNotificationsPage from '../pages/candidate/CandidateNotificationsPage.jsx';
+import CandidateReceivedReviewsPage from '../pages/candidate/CandidateReceivedReviewsPage.jsx';
 import TrustScoreHistoryPage from '../pages/shared/TrustScoreHistoryPage.jsx';
 import RecruiterHomePage from '../pages/recruiter/RecruiterHomePage.jsx';
 import RecruiterProfilePage from '../pages/recruiter/RecruiterProfilePage.jsx';
@@ -134,6 +135,10 @@ const AppRouter = () => {
                 <Route
                     path={ROUTES.CANDIDATE_TRUST_SCORE}
                     element={<TrustScoreHistoryPage />}
+                />
+                <Route
+                    path={ROUTES.CANDIDATE_REVIEWS}
+                    element={<CandidateReceivedReviewsPage />}
                 />
                 <Route
                     path={ROUTES.CANDIDATE_NOTIFICATIONS}

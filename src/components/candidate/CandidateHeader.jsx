@@ -15,6 +15,7 @@ import {
     SettingsIcon,
     ClockIcon,
     StarIcon,
+    ReviewsIcon,
     EyeIcon,
 } from '../common/icons.jsx';
 import {
@@ -31,6 +32,7 @@ const HOME_SECTION_IDS_LIST = CANDIDATE_HOME_NAV_ITEMS.map((item) => item.id);
 const BASE_DROPDOWN_ITEMS = [
     { label: 'Hồ sơ của tôi', path: ROUTES.CANDIDATE_PROFILE, icon: FileTextIcon },
     { label: 'Tổng điểm uy tín', path: ROUTES.CANDIDATE_TRUST_SCORE, icon: StarIcon },
+    { label: 'Đánh giá nhận được', path: ROUTES.CANDIDATE_REVIEWS, icon: ReviewsIcon },
     { label: 'Tài khoản và bảo mật', path: ROUTES.CANDIDATE_SETTINGS, icon: SettingsIcon },
     { label: 'Lời mời', path: ROUTES.CANDIDATE_INVITATIONS, icon: MailIcon },
     { label: 'Lịch sử ứng tuyển', path: ROUTES.CANDIDATE_APPLICATION_HISTORY, icon: ClockIcon },
