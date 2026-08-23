@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
+import RequiredMark from './RequiredMark.jsx';
 import { PencilIcon, TargetIcon, WalletIcon, MapPinIcon } from './profileIcons.jsx';
 import { formatSalaryRange } from '../../utils/profileFormat.js';
 import { getJobTypeLabels } from '../../utils/jobTypeDisplay.js';
@@ -7,6 +8,7 @@ import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import LocationPicker from '../../modules/location/LocationPicker.jsx';
 
 // SECTION 2 — Job Preference: lĩnh vực, lương mong đợi, địa điểm. Edit qua modal -> PUT Profile.
+// Apply bắt buộc: preferredJobType + address (text + lat/lng).
 const JobPreferenceCard = ({ preference, onSave, saving }) => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(preference);
@@ -75,6 +77,10 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
 
     const salaryText = formatSalaryRange(preference);
     const hasTypes = preference.jobTypes?.length > 0;
+    const hasLocation =
+        Boolean(preference.location?.trim()) &&
+        preference.latitude != null &&
+        preference.longitude != null;
 
     const toggleType = (value) => {
         setForm((prev) => {
@@ -150,8 +156,11 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                 </button>
             </div>
 
-            <div className="cp-field">
-                <span className="cp-field__label">LĨNH VỰC</span>
+            <div className={'cp-field' + (!hasTypes ? ' cp-field--missing' : '')}>
+                <span className="cp-field__label">
+                    LĨNH VỰC
+                    <RequiredMark />
+                </span>
                 {hasTypes ? (
                     <div className="cp-tags">
                         {jobTypeLabels.map((label, index) => (
@@ -176,8 +185,11 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                 </div>
             </div>
 
-            <div className="cp-field">
-                <span className="cp-field__label">ĐỊA ĐIỂM</span>
+            <div className={'cp-field' + (!hasLocation ? ' cp-field--missing' : '')}>
+                <span className="cp-field__label">
+                    ĐỊA ĐIỂM
+                    <RequiredMark />
+                </span>
                 <div className="cp-inline-value">
                     <MapPinIcon className="cp-inline-value__icon" />
                     <span>
@@ -207,7 +219,10 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
             >
                 <div className="cp-form-group">
                     {formError && <p className="cp-form-error">{formError}</p>}
-                    <label className="cp-form-label">Lĩnh vực mong muốn</label>
+                    <label className="cp-form-label">
+                        Lĩnh vực mong muốn
+                        <RequiredMark />
+                    </label>
                     <div className="cp-choice-grid">
                         {jobTypeOptions.map((opt) => {
                             const active = (form.jobTypes || []).includes(opt.value);
@@ -262,7 +277,10 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
 
                 <div className="cp-form-row">
                     <div className="cp-form-group">
-                        <label className="cp-form-label">Địa điểm mong muốn</label>
+                        <label className="cp-form-label">
+                            Địa điểm mong muốn
+                            <RequiredMark />
+                        </label>
                         <input
                             type="text"
                             className="cp-input"
@@ -272,7 +290,10 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                         />
                     </div>
                     <div className="cp-form-group cp-map-toggle-group">
-                        <label className="cp-form-label">Toạ độ trên bản đồ</label>
+                        <label className="cp-form-label">
+                            Toạ độ trên bản đồ
+                            <RequiredMark />
+                        </label>
                         {form.latitude != null && form.longitude != null ? (
                             <div className="cp-map-coords">
                                 <div>

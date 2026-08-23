@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
+import RequiredMark from './RequiredMark.jsx';
 import { PencilIcon, UserBadgeIcon, CalendarIcon, GenderIcon, HomeAddressIcon } from './profileIcons.jsx';
 import { PhoneIcon } from '../common/icons.jsx';
 import { GENDER_OPTIONS, formatDate, getGenderLabel, toDateInputValue } from '../../utils/profileFormat.js';
 
 // SECTION 3 — Personal Information: birthday, gender, address, phone.
 // phone lưu qua PUT /users/me (khác API profile).
+// Apply bắt buộc: dateOfBirth, gender, phone, address (+ lat/lng qua nhu cầu tìm việc).
 const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(personalInfo);
@@ -48,10 +50,34 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
     };
 
     const rows = [
-        { icon: CalendarIcon, label: 'Ngày sinh', value: formatDate(personalInfo.birthday) },
-        { icon: GenderIcon, label: 'Giới tính', value: getGenderLabel(personalInfo.gender) },
-        { icon: PhoneIcon, label: 'Số điện thoại', value: personalInfo.phone },
-        { icon: HomeAddressIcon, label: 'Địa chỉ', value: personalInfo.address },
+        {
+            icon: CalendarIcon,
+            label: 'Ngày sinh',
+            value: formatDate(personalInfo.birthday),
+            required: true,
+            empty: !personalInfo.birthday,
+        },
+        {
+            icon: GenderIcon,
+            label: 'Giới tính',
+            value: getGenderLabel(personalInfo.gender),
+            required: true,
+            empty: !personalInfo.gender,
+        },
+        {
+            icon: PhoneIcon,
+            label: 'Số điện thoại',
+            value: personalInfo.phone,
+            required: true,
+            empty: !personalInfo.phone?.trim(),
+        },
+        {
+            icon: HomeAddressIcon,
+            label: 'Địa chỉ',
+            value: personalInfo.address,
+            required: true,
+            empty: !personalInfo.address?.trim(),
+        },
     ];
 
     return (
@@ -67,11 +93,19 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
             </div>
 
             <div className="cp-info-grid">
-                {rows.map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="cp-info-item">
+                {rows.map(({ icon: Icon, label, value, required, empty }) => (
+                    <div
+                        key={label}
+                        className={
+                            'cp-info-item' + (required && empty ? ' cp-info-item--missing' : '')
+                        }
+                    >
                         <Icon className="cp-info-item__icon" />
                         <div className="cp-info-item__text">
-                            <span className="cp-info-item__label">{label}</span>
+                            <span className="cp-info-item__label">
+                                {label}
+                                {required ? <RequiredMark /> : null}
+                            </span>
                             <span className="cp-info-item__value">{value || 'Chưa cập nhật'}</span>
                         </div>
                     </div>
@@ -94,7 +128,10 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
                 }
             >
                 <div className="cp-form-group">
-                    <label className="cp-form-label">Ngày sinh</label>
+                    <label className="cp-form-label">
+                        Ngày sinh
+                        <RequiredMark />
+                    </label>
                     <input
                         type="date"
                         className="cp-input"
@@ -106,7 +143,10 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
                 </div>
 
                 <div className="cp-form-group">
-                    <label className="cp-form-label">Giới tính</label>
+                    <label className="cp-form-label">
+                        Giới tính
+                        <RequiredMark />
+                    </label>
                     <select
                         className="cp-input"
                         value={form.gender || ''}
@@ -122,7 +162,10 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
                 </div>
 
                 <div className="cp-form-group">
-                    <label className="cp-form-label">Số điện thoại</label>
+                    <label className="cp-form-label">
+                        Số điện thoại
+                        <RequiredMark />
+                    </label>
                     <input
                         type="tel"
                         className="cp-input"
@@ -134,7 +177,10 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
                 </div>
 
                 <div className="cp-form-group">
-                    <label className="cp-form-label">Địa chỉ</label>
+                    <label className="cp-form-label">
+                        Địa chỉ
+                        <RequiredMark />
+                    </label>
                     <input
                         type="text"
                         className="cp-input"
@@ -142,6 +188,10 @@ const PersonalInfoCard = ({ personalInfo, onSave, saving }) => {
                         value={form.address || ''}
                         onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
                     />
+                    <p className="cp-input-hint">
+                        Để ứng tuyển cần địa chỉ kèm tọa độ — chọn vị trí trên bản đồ ở mục Nhu cầu tìm
+                        việc.
+                    </p>
                 </div>
             </ProfileModal>
         </section>

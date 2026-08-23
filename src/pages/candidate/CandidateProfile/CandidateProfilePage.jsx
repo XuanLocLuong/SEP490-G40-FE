@@ -228,6 +228,13 @@ const CandidateProfilePage = () => {
         <div className="cp-page">
             <ProfileHeader profile={draft} onUploadAvatar={handleAvatar} saving={saving} />
 
+            <p className="cp-apply-legend" role="note">
+                <span className="cp-required" aria-hidden="true">
+                    *
+                </span>{' '}
+                Trường bắt buộc để có thể ứng tuyển việc làm.
+            </p>
+
             <div className="cp-grid">
                 <div className="cp-col">
                     <JobPreferenceCard

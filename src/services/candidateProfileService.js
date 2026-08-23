@@ -128,8 +128,9 @@ export const toUpdatePayload = (draft) => {
         gender: personal.gender || null,
 
         educationLevel: edu.educationLevel || null,
-        schoolName: edu.school || null,
-        studentCode: edu.studentCode || null,
+        // BE: null = không đổi; "" = xóa (trim). Không dùng || null khi user cố ý clear.
+        schoolName: edu.school == null ? '' : String(edu.school).trim(),
+        studentCode: edu.studentCode == null ? '' : String(edu.studentCode).trim(),
 
         // Gửi mã lĩnh vực (FNB_SERVICE,...). Chuỗi rỗng "" = xóa hết (BE: null = không đổi).
         preferredJobType: toArray(pref.jobTypes).join(JOB_TYPES_SEPARATOR),

@@ -31,7 +31,14 @@ const ProfileHeader = ({ profile, onUploadAvatar, saving }) => {
 
             <div className="cp-header__main">
                 <div className="cp-header__top">
-                    <h1 className="cp-header__name">{profile.fullName || 'Chưa cập nhật tên'}</h1>
+                    <h1 className="cp-header__name">
+                        {profile.fullName || 'Chưa cập nhật tên'}
+                        {!profile.fullName?.trim() ? (
+                            <span className="cp-required" title="Bắt buộc để ứng tuyển">
+                                *
+                            </span>
+                        ) : null}
+                    </h1>
                     {profile.trustScore != null && (
                         <span className="cp-trust-badge">
                             <StarIcon width={14} height={14} />
