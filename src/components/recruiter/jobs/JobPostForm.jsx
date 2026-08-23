@@ -1,7 +1,9 @@
 import {
     EDUCATION_REQUIREMENT_MODES,
     GENDER_REQUIREMENT_OPTIONS,
+    JOB_POST_MAX_AGE,
     JOB_POST_MAX_JOB_TYPES,
+    JOB_POST_MIN_AGE,
 } from '../../../constants/jobPost.js';
 import { useJobTypeOptions } from '../../../hooks/useJobTypeOptions.js';
 import {
@@ -106,9 +108,8 @@ const JobPostForm = ({
                                     key={opt.value}
                                     type="button"
                                     disabled={disabled || atMax}
-                                    className={`job-post-form__chip${
-                                        active ? ' job-post-form__chip--active' : ''
-                                    }`}
+                                    className={`job-post-form__chip${active ? ' job-post-form__chip--active' : ''
+                                        }`}
                                     onClick={() => toggleJobType(opt.value)}
                                     onBlur={blur('jobTypes')}
                                 >
@@ -184,8 +185,7 @@ const JobPostForm = ({
                         />
                     </div>
                     <p className="job-post-form__hint job-post-form__hint--salary">
-                        Lương theo giờ (₫/giờ). Nên nhập cả mức tối thiểu và tối đa.
-                    </p>
+                        Không bắt buộc. Có thể nhập một khoảng; nếu nhập cả hai thì lương tối đa không nhỏ hơn lương tối thiểu (đồng/giờ).                    </p>
                     <p className="job-post-form__hint job-post-form__hint--candidates">
                         Tối thiểu 1, tối đa {JOB_POST_MAX_REQUIRED_CANDIDATES} người.
                     </p>
@@ -242,11 +242,11 @@ const JobPostForm = ({
                         <input
                             id="min-age"
                             type="number"
-                            min="15"
-                            max="80"
+                            min={JOB_POST_MIN_AGE}
+                            max={JOB_POST_MAX_AGE}
                             value={form.minAge}
                             disabled={disabled}
-                            placeholder="VD: 18"
+                            placeholder={`${JOB_POST_MIN_AGE}`}
                             onChange={(e) => setField('minAge', e.target.value)}
                             onBlur={blur('minAge')}
                         />
@@ -256,11 +256,11 @@ const JobPostForm = ({
                         <input
                             id="max-age"
                             type="number"
-                            min="15"
-                            max="80"
+                            min={JOB_POST_MIN_AGE}
+                            max={JOB_POST_MAX_AGE}
                             value={form.maxAge}
                             disabled={disabled}
-                            placeholder="VD: 45"
+                            placeholder={`${JOB_POST_MAX_AGE}`}
                             onChange={(e) => setField('maxAge', e.target.value)}
                             onBlur={blur('maxAge')}
                         />
@@ -280,6 +280,11 @@ const JobPostForm = ({
                             ))}
                         </select>
                     </div>
+                    {(errors.minAge || errors.maxAge) && (
+                        <p className="job-post-form__error job-post-form__error--age">
+                            {errors.maxAge || errors.minAge}
+                        </p>
+                    )}
                     <div className="job-post-form__field">
                         <label htmlFor="education-mode">Trình độ học vấn</label>
                         <select
@@ -318,16 +323,16 @@ const JobPostForm = ({
                         </div>
                     ) : null}
                 </div>
-                {(errors.minAge || errors.maxAge) && (
-                    <p className="job-post-form__error">{errors.maxAge || errors.minAge}</p>
-                )}
                 {errors.minEducationLevel && (
                     <p className="job-post-form__error">{errors.minEducationLevel}</p>
                 )}
             </section>
 
             <section className="job-post-form__section">
-                <h2 className="job-post-form__section-title">Kỹ năng yêu cầu</h2>
+                <h2 className="job-post-form__section-title">
+                    Kỹ năng yêu cầu
+                    <RequiredMark />
+                </h2>
                 {skillsLoading ? (
                     <p className="job-post-form__hint">Đang tải danh sách kỹ năng…</p>
                 ) : skillsCatalog.length === 0 ? (
@@ -345,9 +350,8 @@ const JobPostForm = ({
                                     key={skill.id}
                                     type="button"
                                     disabled={disabled}
-                                    className={`job-post-form__chip${
-                                        active ? ' job-post-form__chip--active' : ''
-                                    }`}
+                                    className={`job-post-form__chip${active ? ' job-post-form__chip--active' : ''
+                                        }`}
                                     onClick={() => toggleSkill(skill.id)}
                                 >
                                     {skill.name}
@@ -355,6 +359,9 @@ const JobPostForm = ({
                             );
                         })}
                     </div>
+                )}
+                {errors.skillIds && (
+                    <p className="job-post-form__error">{errors.skillIds}</p>
                 )}
             </section>
 
@@ -370,6 +377,7 @@ const JobPostForm = ({
                 <div className="job-post-form__field-label-row">
                     <h2 className="job-post-form__section-title job-post-form__section-title--inline">
                         Mô tả công việc
+                        <RequiredMark />
                     </h2>
                     <button
                         type="button"
@@ -392,6 +400,9 @@ const JobPostForm = ({
                         placeholder="Mô tả chi tiết công việc..."
                         onChange={(value) => setField('description', value)}
                     />
+                    {errors.description && (
+                        <p className="job-post-form__error">{errors.description}</p>
+                    )}
                 </div>
             </section>
         </form>

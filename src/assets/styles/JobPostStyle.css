@@ -202,8 +202,10 @@
 
     .job-post-form__hint--salary,
     .job-post-form__hint--candidates,
+    .job-post-form__hint--age,
     .job-post-form__error--salary,
-    .job-post-form__error--candidates {
+    .job-post-form__error--candidates,
+    .job-post-form__error--age {
         grid-column: 1;
     }
 }
@@ -353,6 +355,16 @@
 .job-post-form__requirements-grid .job-post-form__field select {
     min-height: 42px;
     box-sizing: border-box;
+}
+
+.job-post-form__hint--age {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.job-post-form__error--age {
+    grid-column: 1 / -1;
+    margin: 0;
 }
 
 .job-post-form__hint {

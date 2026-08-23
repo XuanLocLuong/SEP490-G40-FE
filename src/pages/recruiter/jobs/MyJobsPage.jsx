@@ -13,6 +13,7 @@ import { formatSalaryRange } from '../../../utils/formatters.js';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
 import RecruiterJobDetailModal from '../../../components/recruiter/jobs/RecruiterJobDetailModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
+import { SearchIcon } from '../../../components/common/icons.jsx';
 import '../../../assets/styles/JobPostStyle.css';
 import '../../../assets/styles/MyJobsStyle.css';
 
@@ -608,13 +609,17 @@ const MyJobsPage = () => {
                 </Link>
             </header>
 
-            <input
-                type="search"
-                className="my-jobs-page__search"
-                placeholder="Tìm theo tiêu đề tin hoặc tên doanh nghiệp"
-                value={keywordInput}
-                onChange={(event) => setKeywordInput(event.target.value)}
-            />
+            <div className="my-jobs-page__search-wrap">
+                <SearchIcon width={18} height={18} aria-hidden="true" />
+                <input
+                    type="search"
+                    className="my-jobs-page__search"
+                    placeholder="Tìm theo tiêu đề tin tuyển dụng"
+                    aria-label="Tìm theo tiêu đề tin tuyển dụng"
+                    value={keywordInput}
+                    onChange={(event) => setKeywordInput(event.target.value)}
+                />
+            </div>
 
             <div className="my-jobs-page__tabs" role="tablist" aria-label="Lọc theo trạng thái">
                 {STATUS_TABS.map((tab) => (

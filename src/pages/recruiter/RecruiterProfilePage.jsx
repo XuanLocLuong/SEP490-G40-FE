@@ -115,7 +115,7 @@ const mapProfileFromApi = (data) => ({
     businessName: data?.businessName || '',
     description: data?.description || '',
     websiteUrl: data?.websiteUrl || '',
-    businessType: toBusinessTypeCode(data?.businessType) || data?.businessType || '',
+    businessType: data?.businessType || '',
     phone: data?.phone || '',
     email: data?.email || '',
     logoUrl: data?.logoUrl || null,
@@ -135,14 +135,14 @@ const mapProfileFromApi = (data) => ({
             : undefined,
 });
 
-const buildUpdatePayload = (form, businessId) => ({
+const buildUpdatePayload = (form, businessId, typeOptions = []) => ({
     businessId,
     businessName: form.businessName.trim(),
     description: form.description?.trim() || null,
     phone: form.phone?.trim() || null,
     email: form.email?.trim() || null,
     websiteUrl: form.websiteUrl?.trim() || null,
-    businessType: toBusinessTypeCode(form.businessType),
+    businessType: toBusinessTypeCode(form.businessType, typeOptions),
 });
 
 const formatMemberSince = (value) => {
@@ -662,7 +662,7 @@ const RecruiterProfilePage = () => {
                 businessId = mappedAfterSave.businessId;
             } else {
                 const updated = await recruiterProfileApi.updateProfile(
-                    buildUpdatePayload(form, businessId)
+                    buildUpdatePayload(form, businessId, businessTypeOptions)
                 );
                 mappedAfterSave = mapProfileFromApi(updated);
 

@@ -12,6 +12,13 @@ export const JOB_POST_ACTION = {
 /** Số ngành nghề tối đa khi đăng tin (khớp quy ước candidate preference). */
 export const JOB_POST_MAX_JOB_TYPES = 3;
 
+/** Yêu cầu tuổi trên tin: để trống = không giới hạn. Có nhập thì 16–99. */
+export const JOB_POST_MIN_AGE = 16;
+export const JOB_POST_MAX_AGE = 99;
+
+/** Khớp BE `app.job.max-candidates` (mặc định 100). */
+export const JOB_POST_MAX_REQUIRED_CANDIDATES = 100;
+
 export const GENDER_REQUIREMENT_OPTIONS = [
     { value: 'ANY', label: 'Không yêu cầu' },
     { value: 'MALE', label: 'Nam' },

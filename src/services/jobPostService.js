@@ -1,10 +1,12 @@
 import {
     JOB_POST_ACTION,
+    JOB_POST_MAX_AGE,
     JOB_POST_MAX_JOB_TYPES,
+    JOB_POST_MAX_REQUIRED_CANDIDATES,
+    JOB_POST_MIN_AGE,
 } from '../constants/jobPost.js';
 
-/** Khớp BE: app.job.max-candidates (mặc định 100). */
-export const JOB_POST_MAX_REQUIRED_CANDIDATES = 100;
+export { JOB_POST_MAX_REQUIRED_CANDIDATES };
 
 // ---------------------------------------------------------------------------
 // Adapter giữa shape UI (form + shiftBlocks) <-> payload BE (JobSaveRequest).
@@ -280,10 +282,26 @@ const salaryRangeError = (form) => {
 const ageRangeError = (form) => {
     const min = parseNumber(form.minAge);
     const max = parseNumber(form.maxAge);
+    const outOfRange = (age) => age < JOB_POST_MIN_AGE || age > JOB_POST_MAX_AGE;
+    if (min != null && outOfRange(min)) {
+        return `Tuổi tối thiểu từ ${JOB_POST_MIN_AGE} đến ${JOB_POST_MAX_AGE}.`;
+    }
+    if (max != null && outOfRange(max)) {
+        return `Tuổi tối đa từ ${JOB_POST_MIN_AGE} đến ${JOB_POST_MAX_AGE}.`;
+    }
     if (min != null && max != null && min > max) {
         return 'Tuổi tối đa phải lớn hơn hoặc bằng tuổi tối thiểu.';
     }
     return null;
+};
+
+/** Mô tả là HTML (editor). Bỏ thẻ để biết còn chữ hay không. */
+const descriptionHasText = (html) => {
+    const text = String(html || '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .trim();
+    return text.length > 0;
 };
 
 const jobTypesError = (form, action) => {
@@ -322,11 +340,27 @@ export const validateJobFormField = (field, form, action = null) => {
         case 'salaryMax':
             return salaryRangeError(form);
         case 'applicationDeadline':
+            // Nháp: để trống được. Đăng tin: bắt buộc. Có điền thì không được ở quá khứ.
             if (!form.applicationDeadline) {
-                return 'Vui lòng chọn hạn nộp hồ sơ.';
+                return action === JOB_POST_ACTION.SUBMIT
+                    ? 'Vui lòng chọn hạn nộp hồ sơ.'
+                    : null;
             }
             if (isPastApplicationDeadline(form.applicationDeadline)) {
                 return 'Hạn nộp hồ sơ phải sau thời điểm hiện tại.';
+            }
+            return null;
+        case 'description':
+            if (action === JOB_POST_ACTION.SUBMIT && !descriptionHasText(form.description)) {
+                return 'Vui lòng nhập mô tả công việc.';
+            }
+            return null;
+        case 'skillIds':
+            if (
+                action === JOB_POST_ACTION.SUBMIT &&
+                toArray(form.skillIds).length === 0
+            ) {
+                return 'Vui lòng chọn ít nhất một kỹ năng.';
             }
             return null;
         case 'requiredCandidates': {
@@ -369,8 +403,11 @@ export const validateJobForm = (form, action) => {
                   'requiredCandidates',
                   'applicationDeadline',
                   'minEducationLevel',
+                  'minAge',
+                  'description',
+                  'skillIds',
               ]
-            : ['title', 'locationId', 'salaryMin'];
+            : ['title', 'locationId', 'salaryMin', 'minAge'];
         
     fields.forEach((field) => {
         const message = validateJobFormField(field, form, action);
