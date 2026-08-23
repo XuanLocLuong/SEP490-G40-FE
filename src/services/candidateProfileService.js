@@ -7,9 +7,11 @@ import * as api from '../apis/CandidateProfileApi.jsx';
 // phải sửa lại toàn bộ component UI đã viết.
 //
 // Các gap cấu trúc thật sự giữa BE/FE (đã note rõ từng chỗ bên dưới):
-//   - preferredJobType: BE chỉ 1 string, FE cho multi-select -> join bằng dấu phẩy
-//     (quy ước riêng của FE, BE coi là 1 chuỗi tự do, không phải enum thật).
-//   - address: BE chỉ 1 cột, dùng chung cho "địa chỉ cá nhân" & "địa điểm tìm việc".
+//   - preferredJobTypeCodes: mã lĩnh vực (FNB_SERVICE,...) — FE dùng cho multi-select
+//     + PUT. preferredJobType là label hiển thị từ BE (chỉ đọc, không gửi lại).
+//   - address (text) vs lat/lng: cùng profile nhưng FE tách UI —
+//     "Địa chỉ" cá nhân → chỉ PUT address; "Địa điểm tìm việc" → chỉ PUT lat/lng (+ radius).
+//     Apply vẫn cần đủ cả 3. Không có 2 cột address trên BE.
 //   - educations[]: BE chỉ lưu ĐÚNG 1 học vấn (schoolName/studentCode/educationLevel,
 //     không có major/năm học) -> chỉ phần tử đầu tiên trong mảng được lưu.
 //   - experiences[] (Work History): CRUD riêng /api/v1/candidate/work-histories,
@@ -21,6 +23,29 @@ const unwrap = (res) => res?.data?.data ?? res?.data ?? null;
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
 const JOB_TYPES_SEPARATOR = ',';
+
+/** Tách chuỗi code/label lĩnh vực từ BE (có thể "A,B" hoặc 1 phần tử). */
+const splitJobTypeValues = (raw) =>
+    String(raw || '')
+        .split(JOB_TYPES_SEPARATOR)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+/**
+ * GET: ưu tiên preferredJobTypeCodes (mã). Fallback preferredJobType chỉ khi
+ * giá trị trông giống code (UPPER_SNAKE), tránh nhét label vào form.
+ */
+const resolveJobTypeCodesFromProfile = (data) => {
+    const fromCodes = splitJobTypeValues(data?.preferredJobTypeCodes);
+    if (fromCodes.length > 0) return fromCodes;
+
+    const fromLegacy = splitJobTypeValues(data?.preferredJobType);
+    const looksLikeCode = (v) => /^[A-Z][A-Z0-9_]*$/.test(v);
+    if (fromLegacy.length > 0 && fromLegacy.every(looksLikeCode)) {
+        return fromLegacy;
+    }
+    return [];
+};
 
 const normalizeSkill = (raw) => {
     if (raw == null) return null;
@@ -49,13 +74,13 @@ export const normalizeProfile = (raw) => {
         hasAvailability: Boolean(data.hasAvailability),
 
         jobPreference: {
-            jobTypes: data.preferredJobType ? data.preferredJobType.split(JOB_TYPES_SEPARATOR) : [],
+            jobTypes: resolveJobTypeCodesFromProfile(data),
             salaryMin: data.expectedSalaryMin ?? null,
             salaryMax: data.expectedSalaryMax ?? null,
             salaryUnit: 'giờ',
             locationRadiusKm: data.preferredRadiusKm ?? null,
-            location: data.address || '',
-            // Toạ độ đã có sẵn cột trên BE (latitude/longitude) — trước đây FE luôn gửi null.
+            // Chỉ dùng để hiện trên UI (reverse geocode) — không map từ address BE.
+            location: '',
             latitude: data.latitude ?? null,
             longitude: data.longitude ?? null,
         },
@@ -63,7 +88,8 @@ export const normalizeProfile = (raw) => {
         personalInfo: {
             birthday: data.dateOfBirth || null,
             gender: data.gender || '',
-            address: data.address || '', // Dùng chung cột address với jobPreference.location.
+            // Text địa chỉ cá nhân → PUT `address` (tách khỏi lat/lng tìm việc).
+            address: data.address || '',
         },
 
         // Backend chỉ lưu ĐÚNG 1 học vấn (schoolName/studentCode/educationLevel) — không
@@ -87,15 +113,12 @@ export const toUpdatePayload = (draft) => {
     const personal = draft.personalInfo || {};
     const edu = draft.education || {};
 
-    if (personal.address && pref.location && personal.address !== pref.location) {
-        // eslint-disable-next-line no-console
-        console.warn(
-            '[CandidateProfile] "Địa chỉ" và "Địa điểm tìm việc" đang khác nhau nhưng backend chỉ có 1 cột address — giá trị "Thông tin cá nhân" sẽ được ưu tiên lưu.'
-        );
-    }
-    const address = pref.location || personal.address || '';
-
     const toNumberOrNull = (v) => (v === '' || v == null ? null : Number(v));
+
+    // Địa chỉ text chỉ từ Thông tin cá nhân. Lat/lng chỉ từ Nhu cầu tìm việc.
+    // (pref.location chỉ là nhãn reverse-geocode trên UI, không PUT vào address.)
+    const personalAddress =
+        personal.address == null ? '' : String(personal.address).trim();
 
     return {
         bio: draft.bio ?? null,
@@ -105,14 +128,16 @@ export const toUpdatePayload = (draft) => {
         gender: personal.gender || null,
 
         educationLevel: edu.educationLevel || null,
-        schoolName: edu.school || null,
-        studentCode: edu.studentCode || null,
+        // BE: null = không đổi; "" = xóa (trim). Không dùng || null khi user cố ý clear.
+        schoolName: edu.school == null ? '' : String(edu.school).trim(),
+        studentCode: edu.studentCode == null ? '' : String(edu.studentCode).trim(),
 
-        preferredJobType: toArray(pref.jobTypes).join(JOB_TYPES_SEPARATOR) || null,
+        // Gửi mã lĩnh vực (FNB_SERVICE,...). Chuỗi rỗng "" = xóa hết (BE: null = không đổi).
+        preferredJobType: toArray(pref.jobTypes).join(JOB_TYPES_SEPARATOR),
         expectedSalaryMin: toNumberOrNull(pref.salaryMin),
         expectedSalaryMax: toNumberOrNull(pref.salaryMax),
 
-        address: address || null,
+        address: personalAddress,
         latitude: pref.latitude ?? null,
         longitude: pref.longitude ?? null,
         preferredRadiusKm: toNumberOrNull(pref.locationRadiusKm),

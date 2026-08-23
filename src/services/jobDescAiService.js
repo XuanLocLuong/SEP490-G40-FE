@@ -1,5 +1,5 @@
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../apis/RecruiterJobApi.jsx';
-import { resolveSkillsFromCatalog } from './jobPostService.js';
+import { joinJobTypeCodes, resolveSkillsFromCatalog } from './jobPostService.js';
 
 /**
  * Adapter AI gợi ý mô tả tin tuyển dụng.
@@ -13,6 +13,11 @@ export const TONE_DISPLAY_LABELS = {
     default: 'Chuyên nghiệp',
     concise: 'Ngắn gọn',
     youthful: 'Thân thiện',
+};
+
+const GENDER_AI_LABELS = {
+    MALE: 'Nam',
+    FEMALE: 'Nữ',
 };
 
 export const validateAiDescBasics = ({ title, businessName }) => {
@@ -32,6 +37,15 @@ const toOptionalString = (value) => {
     return s || null;
 };
 
+const resolveEducationLabel = (code, educationLevelOptions = []) => {
+    const normalized = toOptionalString(code);
+    if (!normalized) return null;
+    const match = educationLevelOptions.find(
+        (opt) => String(opt.value).toUpperCase() === normalized.toUpperCase()
+    );
+    return match?.label || normalized;
+};
+
 /** Map skillIds form → tên skill gửi BE (không gửi id). */
 export const mapSkillIdsToNames = (skillIds, skillsCatalog = []) => {
     const names = resolveSkillsFromCatalog(skillIds, skillsCatalog).map((s) => s.name);
@@ -40,13 +54,13 @@ export const mapSkillIdsToNames = (skillIds, skillsCatalog = []) => {
 
 /**
  * Build payload generate-description từ form + profile.
- * Chỉ include field có giá trị.
+ * Chỉ include field có giá trị. jobType = CSV ngành nghề (không gửi industry).
  */
 export const buildGeneratePayload = ({
     title,
     businessName,
+    jobTypes,
     jobType,
-    industry,
     salaryMin,
     salaryMax,
     requiredSkills,
@@ -55,17 +69,23 @@ export const buildGeneratePayload = ({
     requiredCandidates,
     location,
     isUrgent,
+    minEducationLevel,
+    educationRequirementMode,
+    genderRequirement,
+    minAge,
+    maxAge,
+    educationLevelOptions,
 }) => {
     const payload = {
         title: String(title || '').trim(),
         businessName: String(businessName || '').trim(),
     };
 
-    const jobTypeVal = toOptionalString(jobType);
-    if (jobTypeVal) payload.jobType = jobTypeVal;
-
-    const industryVal = toOptionalString(industry);
-    if (industryVal) payload.industry = industryVal;
+    const jobTypeCsv =
+        Array.isArray(jobTypes) && jobTypes.length
+            ? joinJobTypeCodes(jobTypes)
+            : toOptionalString(jobType);
+    if (jobTypeCsv) payload.jobType = jobTypeCsv;
 
     const min = toOptionalNumber(salaryMin);
     if (min != null) payload.salaryMin = min;
@@ -86,6 +106,22 @@ export const buildGeneratePayload = ({
     if (locationVal && locationVal !== '—') payload.location = locationVal;
 
     if (typeof isUrgent === 'boolean') payload.isUrgent = isUrgent;
+
+    if (educationRequirementMode === 'MIN' && minEducationLevel) {
+        const eduLabel = resolveEducationLabel(minEducationLevel, educationLevelOptions);
+        if (eduLabel) payload.minEducationLevel = eduLabel;
+    }
+
+    const gender = toOptionalString(genderRequirement);
+    if (gender && gender !== 'ANY') {
+        payload.genderRequirement = GENDER_AI_LABELS[gender] || gender;
+    }
+
+    const ageMin = toOptionalNumber(minAge);
+    if (ageMin != null) payload.minAge = Math.trunc(ageMin);
+
+    const ageMax = toOptionalNumber(maxAge);
+    if (ageMax != null) payload.maxAge = Math.trunc(ageMax);
 
     return payload;
 };

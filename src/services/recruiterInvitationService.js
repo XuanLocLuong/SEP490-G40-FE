@@ -10,6 +10,7 @@ export const INVITATION_STATUS_FILTERS = [
     { value: 'SENT', label: 'Chờ phản hồi' },
     { value: 'ACCEPTED', label: 'Đã nhận' },
     { value: 'REJECTED', label: 'Từ chối' },
+    { value: 'EXPIRED', label: 'Hết hạn' },
     { value: 'INVALIDATED', label: 'Không còn hiệu lực' },
     { value: 'ALL', label: 'Tất cả' },
 ];
@@ -63,6 +64,7 @@ export const mapInvitationsPage = (data) => ({
     totalElements: data?.totalElements ?? 0,
     currentPage: data?.currentPage ?? 0,
     pageSize: data?.pageSize ?? 10,
+    statusCounts: data?.statusCounts || data?.counts || {},
 });
 
 const buildListParams = ({ status, page, size }) => {

@@ -8,6 +8,7 @@ import { useAuth } from '../../../contexts/authContext.js';
 import userApi, { getApiErrorMessage } from '../../../apis/UserApi.jsx';
 import ProfileHeader from '../../../components/candidate/ProfileHeader.jsx';
 import JobPreferenceCard from '../../../components/candidate/JobPreferenceCard.jsx';
+import BioCard from '../../../components/candidate/BioCard.jsx';
 import PersonalInfoCard from '../../../components/candidate/PersonalInfoCard.jsx';
 import EducationCard from '../../../components/candidate/EducationCard.jsx';
 import SkillCard from '../../../components/candidate/SkillCard.jsx';
@@ -227,11 +228,23 @@ const CandidateProfilePage = () => {
         <div className="cp-page">
             <ProfileHeader profile={draft} onUploadAvatar={handleAvatar} saving={saving} />
 
+            <p className="cp-apply-legend" role="note">
+                <span className="cp-required" aria-hidden="true">
+                    *
+                </span>{' '}
+                Trường bắt buộc để có thể ứng tuyển việc làm.
+            </p>
+
             <div className="cp-grid">
                 <div className="cp-col">
                     <JobPreferenceCard
                         preference={draft.jobPreference}
                         onSave={(pref) => saveSection({ jobPreference: pref })}
+                        saving={saving}
+                    />
+                    <BioCard
+                        bio={draft.bio}
+                        onSave={(bio) => saveSection({ bio })}
                         saving={saving}
                     />
                 </div>

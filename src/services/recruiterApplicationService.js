@@ -17,9 +17,31 @@ export const APPLICATION_STATUS_FILTERS = [
     { value: 'ALL', label: 'Tất cả' },
 ];
 
-export const APPLICATION_SORT_OPTIONS = [
-    { value: 'appliedAt,desc', label: 'Mới nhất' },
-    { value: 'appliedAt,asc', label: 'Cũ nhất' },
+export const MATCH_BUCKETS = [
+    {
+        key: 'highMatch',
+        title: 'Phù hợp cao',
+        hint: '>80%',
+        empty: 'Chưa có ứng viên',
+    },
+    {
+        key: 'mediumMatch',
+        title: 'Phù hợp khá',
+        hint: '50–80%',
+        empty: 'Chưa có ứng viên',
+    },
+    {
+        key: 'lowMatch',
+        title: 'Phù hợp thấp',
+        hint: '<50%',
+        empty: 'Chưa có ứng viên',
+    },
+    {
+        key: 'criticalMismatch',
+        title: 'Không đạt yêu cầu bắt buộc',
+        hint: null,
+        empty: 'Không có ứng viên không đạt yêu cầu bắt buộc',
+    },
 ];
 
 export const REJECTION_REASONS = [
@@ -68,33 +90,60 @@ export const mapApplicationItem = (item) => ({
     candidateAvatar: item?.candidateAvatar || null,
     status: item?.status || null,
     appliedAt: item?.appliedAt || null,
+    matchScore: item?.matchScore ?? null,
+    scheduleScore: item?.scheduleScore ?? null,
+    skillScore: item?.skillScore ?? null,
+    distanceScore: item?.distanceScore ?? null,
+    distanceKm: item?.distanceKm ?? null,
+    trustScore: item?.trustScore ?? null,
+    criticalMismatchReasons: Array.isArray(item?.criticalMismatchReasons)
+        ? item.criticalMismatchReasons.filter(Boolean)
+        : [],
 });
 
-export const mapApplicationsPage = (data) => ({
-    content: Array.isArray(data?.content) ? data.content.map(mapApplicationItem) : [],
-    totalPages: data?.totalPages ?? 0,
-    totalElements: data?.totalElements ?? 0,
-    currentPage: data?.currentPage ?? 0,
-    pageSize: data?.pageSize ?? 12,
-});
+const mapBucket = (list) =>
+    Array.isArray(list) ? list.map(mapApplicationItem) : [];
 
-const buildListParams = ({ status, sort, page, size }) => {
-    const params = { page, size };
-    if (status && status !== 'ALL') {
-        params.status = status;
-    }
-    if (sort) {
-        const [sortBy, direction] = sort.split(',');
-        params.sort = `${sortBy},${direction}`;
-    }
-    return params;
+export const mapApplicationsResponse = (data) => {
+    const highMatch = mapBucket(data?.highMatch);
+    const mediumMatch = mapBucket(data?.mediumMatch);
+    const lowMatch = mapBucket(data?.lowMatch);
+    const criticalMismatch = mapBucket(data?.criticalMismatch);
+    const applications = mapBucket(data?.applications);
+    return {
+        jobId: data?.jobId ?? null,
+        totalApplications: data?.totalApplications ?? 0,
+        statusCounts: data?.statusCounts || data?.counts || {},
+        highMatchCount: data?.highMatchCount ?? highMatch.length,
+        mediumMatchCount: data?.mediumMatchCount ?? mediumMatch.length,
+        lowMatchCount: data?.lowMatchCount ?? lowMatch.length,
+        criticalMismatchCount: data?.criticalMismatchCount ?? criticalMismatch.length,
+        highMatch,
+        mediumMatch,
+        lowMatch,
+        criticalMismatch,
+        applications,
+    };
+};
+
+export const flattenApplicationBuckets = (buckets) => {
+    const fromColumns = [
+        ...(buckets.highMatch || []),
+        ...(buckets.mediumMatch || []),
+        ...(buckets.lowMatch || []),
+        ...(buckets.criticalMismatch || []),
+    ];
+    if (fromColumns.length > 0) return fromColumns;
+    return buckets.applications || [];
 };
 
 export const recruiterApplicationService = {
     getApplications: async (jobId, options = {}) => {
-        const { status = 'PENDING', sort = 'appliedAt,desc', page = 0, size = 12 } = options;
-        const res = await fetchJobApplications(jobId, buildListParams({ status, sort, page, size }));
-        return mapApplicationsPage(res?.data?.data ?? {});
+        const { status = 'PENDING' } = options;
+        const params = {};
+        if (status && status !== 'ALL') params.status = status;
+        const res = await fetchJobApplications(jobId, params);
+        return mapApplicationsResponse(res?.data?.data ?? {});
     },
 
     accept: (applicationId) => acceptApplication(applicationId),

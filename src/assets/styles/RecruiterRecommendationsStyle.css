@@ -37,9 +37,29 @@
 .recruiter-recommendations__job-title-row {
     grid-column: 1;
     display: flex;
-    align-items: stretch;
+    align-items: flex-end;
     gap: 8px;
     min-width: 0;
+}
+
+.recruiter-recommendations__job-picker {
+    flex: 1;
+    min-width: 0;
+}
+
+.recruiter-recommendations__job-picker label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-muted, #64748b);
+}
+
+.recruiter-recommendations__job-picker .job-picker-combobox,
+.recruiter-recommendations__job-picker .job-picker-combobox__input {
+    max-width: none;
+    width: 100%;
+    min-height: 44px;
 }
 
 .recruiter-recommendations__job-title {
@@ -155,6 +175,7 @@
 }
 
 .recruiter-recommendations__message--error {
+    grid-column: 1 / -1;
     color: #b91c1c;
 }
 

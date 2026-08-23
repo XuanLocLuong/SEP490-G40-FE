@@ -18,5 +18,14 @@ export const getRecruiterReviews = ({ jobId, page = 0, size = 5 } = {}) =>
         },
     });
 
+/**
+ * GET /candidates/{userId}/reviews — đánh giá về ứng viên.
+ * {userId} = users.id (không phải candidate_profiles.id).
+ */
+export const getCandidateReviews = (userId, { page = 0, size = 20 } = {}) =>
+    axiosClient.get(`${API_PREFIX}/candidates/${userId}/reviews`, {
+        params: { page, size },
+    });
+
 export const getReviewApiErrorMessage = (error, fallback = 'Không gửi được đánh giá.') =>
     error?.response?.data?.message || error?.message || fallback;

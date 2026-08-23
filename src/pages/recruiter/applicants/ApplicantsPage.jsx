@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { toast } from 'react-toastify';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import ApplicationCard from '../../../components/recruiter/applicants/ApplicationCard.jsx';
+import JobPickerCombobox from '../../../components/recruiter/applicants/JobPickerCombobox.jsx';
 import ApplicationRejectModal from '../../../components/recruiter/applicants/ApplicationRejectModal.jsx';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
 import ReviewSubmitModal from '../../../components/review/ReviewSubmitModal.jsx';
@@ -13,8 +14,9 @@ import {
     submitApplicationReview,
 } from '../../../apis/ReviewApi.jsx';
 import recruiterApplicationService, {
-    APPLICATION_SORT_OPTIONS,
     APPLICATION_STATUS_FILTERS,
+    MATCH_BUCKETS,
+    flattenApplicationBuckets,
     getRecruiterApplicationApiErrorMessage,
     isApplicationCancelledError,
 } from '../../../services/recruiterApplicationService.js';
@@ -23,6 +25,7 @@ import {
     getRecruiterJobAnalyticsPath,
     getRecruiterJobSuggestionsPath,
     getRecruiterMyJobsPath,
+    getMyJobsTabForStatus,
     ROUTES,
 } from '../../../routes/path.js';
 import {
@@ -31,10 +34,23 @@ import {
 } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 
-const PAGE_SIZE = 9;
+const COLUMN_PREVIEW = 5;
 const DEFAULT_STATUS_MANAGE = 'PENDING';
 const DEFAULT_STATUS_READONLY = 'ALL';
-const DEFAULT_SORT = 'appliedAt,desc';
+
+const EMPTY_MATCH_DATA = {
+    totalApplications: 0,
+    statusCounts: {},
+    highMatchCount: 0,
+    mediumMatchCount: 0,
+    lowMatchCount: 0,
+    criticalMismatchCount: 0,
+    highMatch: [],
+    mediumMatch: [],
+    lowMatch: [],
+    criticalMismatch: [],
+    applications: [],
+};
 
 const canManageApplications = (job) => job?.status === 'OPEN';
 
@@ -49,11 +65,10 @@ const ApplicantsPage = () => {
     const [focusJobError, setFocusJobError] = useState(false);
     const [jobsLoading, setJobsLoading] = useState(true);
 
-    const [applications, setApplications] = useState([]);
+    const [matchData, setMatchData] = useState(EMPTY_MATCH_DATA);
     const [listLoading, setListLoading] = useState(false);
     const [listError, setListError] = useState('');
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
+    const [expandedBuckets, setExpandedBuckets] = useState(() => new Set());
 
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [chatLoadingId, setChatLoadingId] = useState(null);
@@ -67,31 +82,13 @@ const ApplicantsPage = () => {
     const [reviewCache, setReviewCache] = useState(() => ({}));
 
 
-    const sortValue = searchParams.get('sort') || DEFAULT_SORT;
-    const page = Math.max(0, Number(searchParams.get('page') || 0) || 0);
     const jobIdParam = searchParams.get('jobId');
     const statusParam = searchParams.get('status');
     const fromParam = searchParams.get('from');
 
-    /** Chỉ hiện back khi vào từ Tin của tôi hoặc thống kê tin — không hiện khi vào từ menu / thông báo. */
-    const showBackLink = fromParam === 'my-jobs' || fromParam === 'analytics';
-    const backNav = useMemo(() => {
-        if (fromParam === 'analytics' && jobIdParam) {
-            return {
-                to: getRecruiterJobAnalyticsPath(jobIdParam),
-                label: 'Quay lại thống kê',
-                state: location.state,
-            };
-        }
-        if (fromParam === 'my-jobs') {
-            return {
-                to: getRecruiterMyJobsPath({ tab: 'open', jobId: jobIdParam || undefined }),
-                label: 'Quay lại Tin của tôi',
-                state: undefined,
-            };
-        }
-        return null;
-    }, [fromParam, jobIdParam, location.state]);
+    /** Back khi vào từ Tổng quan / Tin của tôi / thống kê — không hiện khi vào từ menu / thông báo. */
+    const showBackLink =
+        fromParam === 'overview' || fromParam === 'my-jobs' || fromParam === 'analytics';
 
     const selectedJobId = useMemo(() => {
         if (jobIdParam) {
@@ -108,6 +105,34 @@ const ApplicantsPage = () => {
         if (focusJob && String(focusJob.id) === String(selectedJobId)) return focusJob;
         return null;
     }, [selectedJobId, openJobs, focusJob]);
+
+    const backNav = useMemo(() => {
+        if (fromParam === 'overview') {
+            return {
+                to: ROUTES.RECRUITER_HOME,
+                label: 'Quay lại tổng quan',
+                state: undefined,
+            };
+        }
+        if (fromParam === 'analytics' && jobIdParam) {
+            return {
+                to: getRecruiterJobAnalyticsPath(jobIdParam),
+                label: 'Quay lại thống kê',
+                state: location.state,
+            };
+        }
+        if (fromParam === 'my-jobs') {
+            return {
+                to: getRecruiterMyJobsPath({
+                    tab: getMyJobsTabForStatus(selectedJob?.status),
+                    jobId: jobIdParam || undefined,
+                }),
+                label: 'Quay lại Tin của tôi',
+                state: undefined,
+            };
+        }
+        return null;
+    }, [fromParam, jobIdParam, location.state, selectedJob?.status]);
 
     const readOnly = Boolean(selectedJob) && !canManageApplications(selectedJob);
     const statusFilter =
@@ -219,7 +244,7 @@ const ApplicantsPage = () => {
     useEffect(() => {
         if (jobIdParam || jobsLoading) return;
         if (selectedJobId != null) {
-            updateParams({ jobId: selectedJobId, page: 0 });
+            updateParams({ jobId: selectedJobId });
         }
     }, [jobIdParam, jobsLoading, selectedJobId, updateParams]);
 
@@ -229,31 +254,23 @@ const ApplicantsPage = () => {
         }
         // URL trỏ tin không resolve được — không gọi list / không fallback tin khác.
         if (jobIdParam && !selectedJob) {
-            setApplications([]);
-            setTotalPages(0);
-            setTotalElements(0);
+            setMatchData(EMPTY_MATCH_DATA);
             return;
         }
 
         setListLoading(true);
         setListError('');
+        setExpandedBuckets(new Set());
         try {
-            const pageData = await recruiterApplicationService.getApplications(selectedJobId, {
+            const data = await recruiterApplicationService.getApplications(selectedJobId, {
                 status: statusFilter,
-                sort: sortValue,
-                page,
-                size: PAGE_SIZE,
             });
-            setApplications(pageData.content);
-            setTotalPages(pageData.totalPages);
-            setTotalElements(pageData.totalElements);
+            setMatchData(data);
         } catch (err) {
             setListError(
                 getRecruiterApplicationApiErrorMessage(err, 'Không tải được danh sách ứng viên.')
             );
-            setApplications([]);
-            setTotalPages(0);
-            setTotalElements(0);
+            setMatchData(EMPTY_MATCH_DATA);
         } finally {
             setListLoading(false);
         }
@@ -261,8 +278,6 @@ const ApplicantsPage = () => {
         selectedJobId,
         selectedJob,
         statusFilter,
-        sortValue,
-        page,
         focusJobLoading,
         jobsLoading,
         jobIdParam,
@@ -271,6 +286,8 @@ const ApplicantsPage = () => {
     useEffect(() => {
         loadApplications();
     }, [loadApplications]);
+
+    const applications = useMemo(() => flattenApplicationBuckets(matchData), [matchData]);
 
     useEffect(() => {
         const hired = applications.filter((app) => app.status === 'HIRED' && app.id != null);
@@ -335,21 +352,44 @@ const ApplicantsPage = () => {
             window.removeEventListener(RECRUITMENT_CHANGED_EVENT, onRecruitmentChanged);
     }, [loadApplications, selectedJobId]);
 
-    const handleJobChange = (event) => {
+    const handleJobChange = (jobId) => {
+        if (jobId == null || jobId === '') return;
+        if (String(jobId) === String(selectedJobId)) return;
         updateParams({
-            jobId: event.target.value,
-            page: 0,
+            jobId,
             status: DEFAULT_STATUS_MANAGE,
         });
     };
 
     const handleStatusChange = (value) => {
-        updateParams({ status: value, page: 0 });
+        updateParams({ status: value === DEFAULT_STATUS_READONLY ? 'ALL' : value });
     };
 
-    const handleSortChange = (event) => {
-        updateParams({ sort: event.target.value, page: 0 });
+    const toggleBucketExpand = (key) => {
+        setExpandedBuckets((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
     };
+
+    const renderApplicationCard = (application) => (
+        <ApplicationCard
+            key={application.id}
+            application={application}
+            actionLoading={actionLoadingId === application.id}
+            chatLoading={chatLoadingId === application.id}
+            reviewLoading={reviewBusy && reviewTarget?.id === application.id}
+            hasReviewed={reviewedIds.has(String(application.id))}
+            readOnly={readOnly}
+            onAccept={setAcceptTarget}
+            onReject={setRejectTarget}
+            onViewProfile={handleViewProfile}
+            onChat={handleChat}
+            onReview={handleOpenReview}
+        />
+    );
 
     const handleAcceptConfirm = async () => {
         if (!acceptTarget || readOnly) return;
@@ -405,12 +445,13 @@ const ApplicantsPage = () => {
         }
         const returnParams = new URLSearchParams();
         if (selectedJobId != null) returnParams.set('jobId', String(selectedJobId));
-        if (fromParam === 'my-jobs' || fromParam === 'analytics') {
+        if (fromParam === 'overview' || fromParam === 'my-jobs' || fromParam === 'analytics') {
             returnParams.set('from', fromParam);
         }
         const backQuery = returnParams.toString() ? `?${returnParams.toString()}` : '';
         navigate(getCandidatePublicProfilePath(candidateId), {
             state: {
+                candidateUserId: application?.candidateUserId ?? null,
                 backTo: {
                     path: `${ROUTES.RECRUITER_APPLICANTS}${backQuery}`,
                     label: 'Quay lại danh sách ứng viên',
@@ -499,32 +540,7 @@ const ApplicantsPage = () => {
     const jobNotFound =
         Boolean(jobIdParam) && !pageLoading && !hasSelectedJob && (focusJobError || !focusJobLoading);
     const emptyNoJobs = !pageLoading && !jobIdParam && !hasOpenJobs;
-    const hasMorePages = page + 1 < totalPages;
     const showManageDropdown = hasSelectedJob && !readOnly && hasOpenJobs;
-
-    const pageItems = useMemo(() => {
-        if (totalPages <= 1) return [];
-        if (totalPages <= 4) {
-            return Array.from({ length: totalPages }, (_, i) => i);
-        }
-        const last = totalPages - 1;
-        const set = new Set([0, last, page, page - 1, page + 1, page - 2, page + 2]);
-        const sorted = [...set].filter((p) => p >= 0 && p <= last).sort((a, b) => a - b);
-        const items = [];
-        let prev = null;
-        sorted.forEach((p) => {
-            if (prev != null && p - prev > 1) items.push('ellipsis');
-            items.push(p);
-            prev = p;
-        });
-        return items;
-    }, [page, totalPages]);
-
-    const goToPage = (nextPage) => {
-        if (listLoading) return;
-        if (nextPage < 0 || nextPage >= totalPages || nextPage === page) return;
-        updateParams({ page: nextPage });
-    };
 
     return (
         <div className="applicants-page">
@@ -532,7 +548,7 @@ const ApplicantsPage = () => {
                 <Link
                     to={backNav.to}
                     state={backNav.state}
-                    className="applicants-page__back"
+                    className="recruiter-back-overview"
                 >
                     ← {backNav.label}
                 </Link>
@@ -576,17 +592,12 @@ const ApplicantsPage = () => {
                             {showManageDropdown ? (
                                 <div className="applicants-page__job-field">
                                     <label htmlFor="applicants-job-select">Xem ứng viên cho</label>
-                                    <select
+                                    <JobPickerCombobox
                                         id="applicants-job-select"
+                                        jobs={openJobs}
                                         value={selectedJobId ?? ''}
                                         onChange={handleJobChange}
-                                    >
-                                        {openJobs.map((job) => (
-                                            <option key={job.id} value={job.id}>
-                                                {job.title}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    />
                                 </div>
                             ) : (
                                 <div className="applicants-page__job-locked">
@@ -601,9 +612,6 @@ const ApplicantsPage = () => {
                             {selectedJob.status && (
                                 <JobStatusBadge status={selectedJob.status} />
                             )}
-                            <span className="applicants-page__count">
-                                {totalElements} ứng viên
-                            </span>
                         </div>
 
                         {readOnly && (
@@ -628,25 +636,10 @@ const ApplicantsPage = () => {
                                             }`}
                                             onClick={() => handleStatusChange(item.value)}
                                         >
-                                            {item.label}
+                                            {item.label} ({matchData.statusCounts?.[item.value] ?? 0})
                                         </button>
                                     ))}
                                 </div>
-                            </div>
-
-                            <div className="applicants-page__sort">
-                                <label htmlFor="applicants-sort">Sắp xếp</label>
-                                <select
-                                    id="applicants-sort"
-                                    value={sortValue}
-                                    onChange={handleSortChange}
-                                >
-                                    {APPLICATION_SORT_OPTIONS.map((item) => (
-                                        <option key={item.value} value={item.value}>
-                                            {item.label}
-                                        </option>
-                                    ))}
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -668,104 +661,92 @@ const ApplicantsPage = () => {
                         </div>
                     )}
 
-                    {!listLoading && !listError && applications.length === 0 && (
-                        <div className="applicants-page__empty">
-                            <p>
-                                {statusFilter === 'PENDING'
-                                    ? 'Chưa có ứng viên chờ duyệt cho tin này.'
-                                    : 'Không có ứng viên phù hợp bộ lọc hiện tại.'}
-                            </p>
-                            {!readOnly && statusFilter === 'PENDING' && (
-                                <div className="applicants-page__empty-actions">
-                                    <Link
-                                        to={
-                                            selectedJobId != null
-                                                ? getRecruiterJobSuggestionsPath(selectedJobId, {
-                                                      from: 'applicants',
-                                                  })
-                                                : ROUTES.RECRUITER_MY_JOBS
-                                        }
-                                        className="btn btn--secondary"
-                                    >
-                                        Xem JobLink gợi ý
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {!listLoading && !listError && applications.length > 0 && (
+                    {!listLoading && !listError && (
                         <>
-                            <div className="applicants-page__grid">
-                                {applications.map((application) => (
-                                    <ApplicationCard
-                                        key={application.id}
-                                        application={application}
-                                        actionLoading={actionLoadingId === application.id}
-                                        chatLoading={chatLoadingId === application.id}
-                                        reviewLoading={
-                                            reviewBusy && reviewTarget?.id === application.id
-                                        }
-                                        hasReviewed={reviewedIds.has(String(application.id))}
-                                        readOnly={readOnly}
-                                        onAccept={setAcceptTarget}
-                                        onReject={setRejectTarget}
-                                        onViewProfile={handleViewProfile}
-                                        onChat={handleChat}
-                                        onReview={handleOpenReview}
-                                    />
-                                ))}
-                            </div>
+                            {matchData.statusCounts?.PENDING === 0 &&
+                                !readOnly &&
+                                statusFilter === 'PENDING' && (
+                                    <p className="applicants-page__suggest-hint">
+                                        Chưa có ứng viên chờ duyệt.{' '}
+                                        <Link
+                                            to={
+                                                selectedJobId != null
+                                                    ? getRecruiterJobSuggestionsPath(selectedJobId, {
+                                                          from: 'applicants',
+                                                      })
+                                                    : ROUTES.RECRUITER_MY_JOBS
+                                            }
+                                        >
+                                            Xem JobLink gợi ý
+                                        </Link>
+                                    </p>
+                                )}
 
-                            {totalPages > 1 && (
-                                <nav
-                                    className="applicants-page__pagination"
-                                    aria-label="Phân trang ứng viên"
-                                >
-                                    <button
-                                        type="button"
-                                        className="applicants-page__page-btn applicants-page__page-btn--nav"
-                                        disabled={page <= 0 || listLoading}
-                                        onClick={() => goToPage(page - 1)}
-                                        aria-label="Trang trước"
-                                    >
-                                        ‹
-                                    </button>
-                                    {pageItems.map((item, index) =>
-                                        item === 'ellipsis' ? (
-                                            <span
-                                                key={`e-${index}`}
-                                                className="applicants-page__page-ellipsis"
-                                                aria-hidden="true"
-                                            >
-                                                …
-                                            </span>
-                                        ) : (
-                                            <button
-                                                key={item}
-                                                type="button"
-                                                className={`applicants-page__page-btn${
-                                                    item === page ? ' is-active' : ''
-                                                }`}
-                                                disabled={listLoading}
-                                                aria-current={item === page ? 'page' : undefined}
-                                                aria-label={`Trang ${item + 1}`}
-                                                onClick={() => goToPage(item)}
-                                            >
-                                                {item + 1}
-                                            </button>
-                                        )
-                                    )}
-                                    <button
-                                        type="button"
-                                        className="applicants-page__page-btn applicants-page__page-btn--nav"
-                                        disabled={!hasMorePages || listLoading}
-                                        onClick={() => goToPage(page + 1)}
-                                        aria-label="Trang sau"
-                                    >
-                                        ›
-                                    </button>
-                                </nav>
+                            {statusFilter === 'PENDING' ? (
+                            <div className="applicants-page__columns">
+                                {MATCH_BUCKETS.map((bucket) => {
+                                    const items = matchData[bucket.key] || [];
+                                    const count =
+                                        matchData[`${bucket.key}Count`] ?? items.length;
+                                    const expanded = expandedBuckets.has(bucket.key);
+                                    const visible = expanded
+                                        ? items
+                                        : items.slice(0, COLUMN_PREVIEW);
+                                    const hiddenCount = Math.max(0, items.length - COLUMN_PREVIEW);
+
+                                    return (
+                                        <section
+                                            key={bucket.key}
+                                            className={`applicants-col applicants-col--${bucket.key}`}
+                                        >
+                                            <header className="applicants-col__header">
+                                                <h2 className="applicants-col__title">
+                                                    {bucket.title}
+                                                </h2>
+                                                <span className="applicants-col__count">{count}</span>
+                                                {bucket.hint ? (
+                                                    <span className="applicants-col__hint">
+                                                        {bucket.hint}
+                                                    </span>
+                                                ) : null}
+                                            </header>
+                                            {items.length === 0 ? (
+                                                <p className="applicants-col__empty">{bucket.empty}</p>
+                                            ) : (
+                                                <div className="applicants-col__list">
+                                                    {visible.map(renderApplicationCard)}
+                                                </div>
+                                            )}
+                                            {hiddenCount > 0 && !expanded ? (
+                                                <button
+                                                    type="button"
+                                                    className="applicants-col__more"
+                                                    onClick={() => toggleBucketExpand(bucket.key)}
+                                                >
+                                                    Xem thêm ({hiddenCount})
+                                                </button>
+                                            ) : null}
+                                            {expanded && items.length > COLUMN_PREVIEW ? (
+                                                <button
+                                                    type="button"
+                                                    className="applicants-col__more"
+                                                    onClick={() => toggleBucketExpand(bucket.key)}
+                                                >
+                                                    Thu gọn
+                                                </button>
+                                            ) : null}
+                                        </section>
+                                    );
+                                })}
+                            </div>
+                            ) : (matchData.applications || []).length === 0 ? (
+                                <div className="applicants-page__empty">
+                                    <p>Không có ứng viên ở trạng thái này.</p>
+                                </div>
+                            ) : (
+                                <div className="applicants-page__grid">
+                                    {(matchData.applications || []).map(renderApplicationCard)}
+                                </div>
                             )}
                         </>
                     )}

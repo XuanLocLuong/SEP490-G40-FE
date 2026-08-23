@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     BuildingIcon,
@@ -115,7 +115,7 @@ const mapProfileFromApi = (data) => ({
     businessName: data?.businessName || '',
     description: data?.description || '',
     websiteUrl: data?.websiteUrl || '',
-    businessType: toBusinessTypeCode(data?.businessType) || data?.businessType || '',
+    businessType: data?.businessType || '',
     phone: data?.phone || '',
     email: data?.email || '',
     logoUrl: data?.logoUrl || null,
@@ -135,14 +135,14 @@ const mapProfileFromApi = (data) => ({
             : undefined,
 });
 
-const buildUpdatePayload = (form, businessId) => ({
+const buildUpdatePayload = (form, businessId, typeOptions = []) => ({
     businessId,
     businessName: form.businessName.trim(),
     description: form.description?.trim() || null,
     phone: form.phone?.trim() || null,
     email: form.email?.trim() || null,
     websiteUrl: form.websiteUrl?.trim() || null,
-    businessType: toBusinessTypeCode(form.businessType),
+    businessType: toBusinessTypeCode(form.businessType, typeOptions),
 });
 
 const formatMemberSince = (value) => {
@@ -245,7 +245,7 @@ const getJobPostingMissingItems = ({
         missing.push('lưu hồ sơ');
     }
 
-    if (!hasPhone) missing.push('số điện thoại)');
+    if (!hasPhone) missing.push('số điện thoại');
 
     return missing;
 };
@@ -262,10 +262,18 @@ const applyStoredRecruiterDraft = (draftKey, setForm, setCoords) => {
 
 const RecruiterProfilePage = () => {
     const { auth } = useAuth();
+    const location = useLocation();
     const draftKey = useMemo(() => getRecruiterProfileDraftKey(auth), [auth]);
-    const [fromCreateJob, setFromCreateJob] = useState(
-        () => sessionStorage.getItem(RECRUITER_PROFILE_CREATE_JOB_INTENT) === '1'
-    );
+    // Banner cam mạnh chỉ cho lần redirect từ Đăng tin (location.state / intent).
+    // Consume sessionStorage ngay để vào lại từ menu không còn banner mạnh.
+    const [fromCreateJob, setFromCreateJob] = useState(() => {
+        const fromState = Boolean(location.state?.fromCreateJob);
+        const fromSession = sessionStorage.getItem(RECRUITER_PROFILE_CREATE_JOB_INTENT) === '1';
+        if (fromSession) {
+            sessionStorage.removeItem(RECRUITER_PROFILE_CREATE_JOB_INTENT);
+        }
+        return fromState || fromSession;
+    });
     const logoInputRef = useRef(null);
     const galleryInputRef = useRef(null);
 
@@ -662,7 +670,7 @@ const RecruiterProfilePage = () => {
                 businessId = mappedAfterSave.businessId;
             } else {
                 const updated = await recruiterProfileApi.updateProfile(
-                    buildUpdatePayload(form, businessId)
+                    buildUpdatePayload(form, businessId, businessTypeOptions)
                 );
                 mappedAfterSave = mapProfileFromApi(updated);
 
@@ -1130,6 +1138,17 @@ const RecruiterProfilePage = () => {
                             Quay lại đăng tin
                         </Link>
                     )}
+                </div>
+            )}
+            {!fromCreateJob && !loading && jobPostingMissing.length > 0 && (
+                <div className="recruiter-profile__job-tip" role="status">
+                    <div className="recruiter-profile__job-tip-content">
+                        <strong>Gợi ý đăng tin</strong>
+                        <span>
+                            Để đăng tin tuyển dụng, còn thiếu:{' '}
+                            {jobPostingMissing.join(', ')}.
+                        </span>
+                    </div>
                 </div>
             )}
             {loading ? (

@@ -38,7 +38,7 @@ export const ensureCanPostJob = async ({ auth, navigate }) => {
     } catch (err) {
         if (err?.response?.status === 404) {
             sessionStorage.setItem(RECRUITER_PROFILE_CREATE_JOB_INTENT, '1');
-            navigate(ROUTES.RECRUITER_PROFILE);
+            navigate(ROUTES.RECRUITER_PROFILE, { state: { fromCreateJob: true } });
             return false;
         }
         throw err;
@@ -55,7 +55,7 @@ export const ensureCanPostJob = async ({ auth, navigate }) => {
 
     if (!toArray(locations).length) {
         sessionStorage.setItem(RECRUITER_PROFILE_CREATE_JOB_INTENT, '1');
-        navigate(ROUTES.RECRUITER_PROFILE);
+        navigate(ROUTES.RECRUITER_PROFILE, { state: { fromCreateJob: true } });
         return false;
     }
 

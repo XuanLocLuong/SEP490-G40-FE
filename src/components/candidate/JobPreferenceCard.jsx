@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
+import RequiredMark from './RequiredMark.jsx';
 import { PencilIcon, TargetIcon, WalletIcon, MapPinIcon } from './profileIcons.jsx';
 import { formatSalaryRange } from '../../utils/profileFormat.js';
 import { getJobTypeLabels } from '../../utils/jobTypeDisplay.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
+import { reverseGeocodeLatLng } from '../../utils/reverseGeocode.js';
 import LocationPicker from '../../modules/location/LocationPicker.jsx';
 
-// SECTION 2 — Job Preference: lĩnh vực, lương mong đợi, địa điểm. Edit qua modal -> PUT Profile.
+// SECTION 2 — Job Preference: lĩnh vực, lương, tâm tìm việc (lat/lng + bán kính).
+// Apply: lat/lng bắt buộc (cặp); address text nằm ở Thông tin cá nhân.
 const JobPreferenceCard = ({ preference, onSave, saving }) => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(preference);
@@ -18,32 +21,30 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
 
     const [showMap, setShowMap] = useState(false);
     const [formError, setFormError] = useState('');
+    const [locationLabel, setLocationLabel] = useState('');
     const reverseGeocodeTimerRef = useRef(null);
 
-    // Dọn timer khi component unmount, tránh setState sau khi đã unmount.
     useEffect(() => () => {
         if (reverseGeocodeTimerRef.current) clearTimeout(reverseGeocodeTimerRef.current);
     }, []);
 
-    const reverseGeocode = async (latitude, longitude) => {
-        try {
-            const res = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
-                {
-                    headers: {
-                        'Accept-Language': 'vi',
-                    },
-                }
-            );
-
-            const data = await res.json();
-
-            return data?.display_name || '';
-        } catch (err) {
-            console.error('Reverse geocode failed:', err);
-            return '';
+    // Nhãn địa điểm từ tọa độ (chỉ view — không ghi vào address BE).
+    useEffect(() => {
+        let cancelled = false;
+        const lat = preference.latitude;
+        const lng = preference.longitude;
+        if (lat == null || lng == null) {
+            setLocationLabel('');
+            return undefined;
         }
-    };
+        (async () => {
+            const label = await reverseGeocodeLatLng(lat, lng);
+            if (!cancelled) setLocationLabel(label);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [preference.latitude, preference.longitude]);
 
     const handleLocationChange = (loc) => {
         if (reverseGeocodeTimerRef.current) {
@@ -51,30 +52,30 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
         }
 
         reverseGeocodeTimerRef.current = setTimeout(async () => {
-            const address = await reverseGeocode(
-                loc.latitude,
-                loc.longitude
-            );
-
+            const label = await reverseGeocodeLatLng(loc.latitude, loc.longitude);
             setForm((prev) => ({
                 ...prev,
                 latitude: loc.latitude,
                 longitude: loc.longitude,
-                location: address,
+                location: label,
             }));
         }, 600);
     };
 
-
-    // Nạp giá trị hiện tại vào form ngay khi mở modal (không dùng effect).
-    const handleOpen = () => {
-        setForm(preference);
+    const handleOpen = async () => {
+        const next = { ...preference };
+        if (next.latitude != null && next.longitude != null && !next.location) {
+            next.location = await reverseGeocodeLatLng(next.latitude, next.longitude);
+        }
+        setForm(next);
+        setFormError('');
         setShowMap(false);
         setOpen(true);
     };
 
     const salaryText = formatSalaryRange(preference);
     const hasTypes = preference.jobTypes?.length > 0;
+    const hasLocation = preference.latitude != null && preference.longitude != null;
 
     const toggleType = (value) => {
         setForm((prev) => {
@@ -88,7 +89,6 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
     };
 
     const handleSubmit = async () => {
-
         setFormError('');
 
         const min = form.salaryMin === '' ? null : Number(form.salaryMin);
@@ -98,20 +98,17 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
             return;
         }
 
+        const lat = form.latitude ?? null;
+        const lng = form.longitude ?? null;
+        if ((lat == null) !== (lng == null)) {
+            setFormError('Vĩ độ và kinh độ phải chọn cùng lúc trên bản đồ.');
+            return;
+        }
+
         let location = form.location || '';
-
-        if (
-            form.latitude != null &&
-            form.longitude != null
-        ) {
-            const latestAddress = await reverseGeocode(
-                form.latitude,
-                form.longitude
-            );
-
-            if (latestAddress) {
-                location = latestAddress;
-            }
+        if (lat != null && lng != null) {
+            const latestLabel = await reverseGeocodeLatLng(lat, lng);
+            if (latestLabel) location = latestLabel;
         }
 
         const ok = await onSave({
@@ -120,23 +117,23 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
             salaryMax: form.salaryMax === '' ? null : form.salaryMax,
             salaryUnit: 'giờ',
             locationRadiusKm:
-                form.locationRadiusKm === ''
-                    ? null
-                    : form.locationRadiusKm,
+                form.locationRadiusKm === '' ? null : form.locationRadiusKm,
+            // Nhãn UI only — toUpdatePayload không PUT field này vào address.
             location,
-            latitude: form.latitude ?? null,
-            longitude: form.longitude ?? null,
+            latitude: lat,
+            longitude: lng,
         });
 
         if (ok) {
-            setForm((prev) => ({
-                ...prev,
-                location,
-            }));
-
+            setLocationLabel(location);
             setOpen(false);
         }
     };
+
+    const locationDisplay = locationLabel
+        || (hasLocation
+            ? `${Number(preference.latitude).toFixed(5)}, ${Number(preference.longitude).toFixed(5)}`
+            : '');
 
     return (
         <section className="cp-card">
@@ -150,8 +147,11 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                 </button>
             </div>
 
-            <div className="cp-field">
-                <span className="cp-field__label">LĨNH VỰC</span>
+            <div className={'cp-field' + (!hasTypes ? ' cp-field--missing' : '')}>
+                <span className="cp-field__label">
+                    LĨNH VỰC
+                    <RequiredMark />
+                </span>
                 {hasTypes ? (
                     <div className="cp-tags">
                         {jobTypeLabels.map((label, index) => (
@@ -176,16 +176,18 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                 </div>
             </div>
 
-            <div className="cp-field">
-                <span className="cp-field__label">ĐỊA ĐIỂM</span>
+            <div className={'cp-field' + (!hasLocation ? ' cp-field--missing' : '')}>
+                <span className="cp-field__label">
+                    ĐỊA ĐIỂM TÌM VIỆC
+                    <RequiredMark />
+                </span>
                 <div className="cp-inline-value">
                     <MapPinIcon className="cp-inline-value__icon" />
                     <span>
-                        {preference.location
-                            ? preference.location
-                            : preference.locationRadiusKm
-                              ? `Tìm việc trong bán kính ${preference.locationRadiusKm} km`
-                              : 'Chưa cập nhật'}
+                        {locationDisplay
+                            || (preference.locationRadiusKm
+                                ? `Chưa chọn vị trí · bán kính ${preference.locationRadiusKm} km`
+                                : 'Chưa chọn vị trí trên bản đồ')}
                     </span>
                 </div>
             </div>
@@ -207,7 +209,10 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
             >
                 <div className="cp-form-group">
                     {formError && <p className="cp-form-error">{formError}</p>}
-                    <label className="cp-form-label">Lĩnh vực mong muốn</label>
+                    <label className="cp-form-label">
+                        Lĩnh vực mong muốn
+                        <RequiredMark />
+                    </label>
                     <div className="cp-choice-grid">
                         {jobTypeOptions.map((opt) => {
                             const active = (form.jobTypes || []).includes(opt.value);
@@ -249,73 +254,6 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                         />
                     </div>
                     <div className="cp-form-group cp-form-group--sm">
-                        <label className="cp-form-label">Đơn vị</label>
-                        <input
-                            className="cp-input"
-                            value="/giờ"
-                            disabled
-                            readOnly
-                            aria-label="Đơn vị lương theo giờ"
-                        />
-                    </div>
-                </div>
-
-                <div className="cp-form-row">
-                    <div className="cp-form-group">
-                        <label className="cp-form-label">Địa điểm mong muốn</label>
-                        <input
-                            type="text"
-                            className="cp-input"
-                            placeholder="VD: Quận 9, TP.HCM"
-                            value={form.location || ''}
-                            onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
-                        />
-                    </div>
-                    <div className="cp-form-group cp-map-toggle-group">
-                        <label className="cp-form-label">Toạ độ trên bản đồ</label>
-                        {form.latitude != null && form.longitude != null ? (
-                            <div className="cp-map-coords">
-                                <div>
-                                    ✓ Đã chọn:
-                                    {' '}
-                                    {form.latitude.toFixed(5)},
-                                    {' '}
-                                    {form.longitude.toFixed(5)}
-                                </div>
-
-                                {form.location && (
-                                    <div
-                                        style={{
-                                            marginTop: 6,
-                                            color: '#4b5563',
-                                            fontSize: 13,
-                                        }}
-                                    >
-                                        📍 {form.location}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <p className="cp-empty-text">Chưa chọn vị trí trên bản đồ.</p>
-                        )}
-                        <button
-                            type="button"
-                            className="cp-btn cp-btn--ghost cp-btn--sm"
-                            onClick={() => setShowMap((v) => !v)}
-                        >
-                            {showMap ? 'Ẩn bản đồ' : '📍 Chọn trên bản đồ'}
-                        </button>
-                    </div>
-
-                    {/*{showMap && (*/}
-                    {/*    <div className="cp-map-embed">*/}
-                    {/*        <LocationPicker*/}
-                    {/*            title="Chọn vị trí tìm việc"*/}
-                    {/*            onLocationChange={handleLocationChange}*/}
-                    {/*        />*/}
-                    {/*    </div>*/}
-                    {/*)}*/}
-                    <div className="cp-form-group cp-form-group--sm">
                         <label className="cp-form-label">Bán kính (km)</label>
                         <input
                             type="number"
@@ -323,9 +261,39 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                             className="cp-input"
                             placeholder="VD: 5"
                             value={form.locationRadiusKm ?? ''}
-                            onChange={(e) => setForm((p) => ({ ...p, locationRadiusKm: e.target.value }))}
+                            onChange={(e) =>
+                                setForm((p) => ({ ...p, locationRadiusKm: e.target.value }))
+                            }
                         />
                     </div>
+                </div>
+
+                <div className="cp-form-group">
+                    <label className="cp-form-label">
+                        Địa điểm tìm việc
+                        <RequiredMark />
+                    </label>
+                    {form.latitude != null && form.longitude != null ? (
+                        <div className="cp-map-coords">
+                            <div>
+                                ✓ Đã chọn:{' '}
+                                {Number(form.latitude).toFixed(5)},{' '}
+                                {Number(form.longitude).toFixed(5)}
+                            </div>
+                            {form.location && (
+                                <div className="cp-map-coords__label">{form.location}</div>
+                            )}
+                        </div>
+                    ) : (
+                        <p className="cp-empty-text">Chưa chọn vị trí trên bản đồ.</p>
+                    )}
+                    <button
+                        type="button"
+                        className="cp-btn cp-btn--ghost cp-btn--sm"
+                        onClick={() => setShowMap((v) => !v)}
+                    >
+                        {showMap ? 'Ẩn bản đồ' : 'Cập nhật vị trí'}
+                    </button>
                 </div>
             </ProfileModal>
             {showMap && (

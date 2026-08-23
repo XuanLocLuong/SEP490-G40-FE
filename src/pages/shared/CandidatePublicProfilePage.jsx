@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { useAuth } from '../../contexts/authContext.js';
+import { USER_ROLES } from '../../utils/Constants.jsx';
 import { useCandidatePublicProfile } from '../../hooks/useCandidatePublicProfile.js';
-import { CANDIDATE_PROFILE_TABS } from '../../utils/candidatePublicProfileConstants.js';
 import CandidateProfileHeader from '../../components/candidate/public/CandidateProfileHeader.jsx';
-import CandidateProfileTabs from '../../components/candidate/public/CandidateProfileTabs.jsx';
+import CandidatePublicResume from '../../components/candidate/public/CandidatePublicResume.jsx';
+import CandidateReviewsAccordion from '../../components/candidate/public/CandidateReviewsAccordion.jsx';
 import CandidateNotFound from '../../components/candidate/public/CandidateNotFound.jsx';
 import CandidateProfileSkeleton from '../../components/candidate/public/CandidateProfileSkeleton.jsx';
 import '../../assets/styles/CandidatePublicProfile.css';
@@ -11,15 +12,19 @@ import '../../assets/styles/CandidatePublicProfile.css';
 const CandidatePublicProfilePage = () => {
     const { candidateId } = useParams();
     const location = useLocation();
+    const { auth } = useAuth();
     const { profile, loading, notFound, error, loadProfile } = useCandidatePublicProfile(candidateId);
-    const [activeTab, setActiveTab] = useState(CANDIDATE_PROFILE_TABS.PERSONAL);
 
     const backTo = location.state?.backTo;
+    const candidateUserId =
+        location.state?.candidateUserId ?? location.state?.userId ?? null;
     const showBackToApplicants =
         backTo?.path && typeof backTo.label === 'string' && backTo.label.trim().length > 0;
+    const backClassName =
+        auth?.role === USER_ROLES.RECRUITER ? 'recruiter-back-overview' : 'cpp-back-link';
 
     const backLink = showBackToApplicants ? (
-        <Link to={backTo.path} className="cpp-back-link">
+        <Link to={backTo.path} className={backClassName}>
             ← {backTo.label}
         </Link>
     ) : null;
@@ -60,11 +65,8 @@ const CandidatePublicProfilePage = () => {
         <div className="cpp-page">
             {backLink}
             <CandidateProfileHeader profile={profile} />
-            <CandidateProfileTabs
-                profile={profile}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-            />
+            <CandidatePublicResume profile={profile} />
+            <CandidateReviewsAccordion userId={candidateUserId} />
         </div>
     );
 };

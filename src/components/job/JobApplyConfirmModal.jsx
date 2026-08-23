@@ -90,7 +90,12 @@ const JobApplyConfirmModal = ({
                                 <ul className="job-apply-modal__errors">
                                     {blockingReasons.map((reason) => (
                                         <li key={reason}>
-                                            <span>{getReasonMessage(reason)}</span>
+                                            <span>
+                                                {getReasonMessage(reason, {
+                                                    missingProfileFields:
+                                                        preview?.missingProfileFields,
+                                                })}
+                                            </span>
                                             {reason === 'PROFILE_INCOMPLETE' && (
                                                 <>
                                                     {' '}

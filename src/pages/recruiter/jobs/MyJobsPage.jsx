@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
@@ -13,6 +13,7 @@ import { formatSalaryRange } from '../../../utils/formatters.js';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
 import RecruiterJobDetailModal from '../../../components/recruiter/jobs/RecruiterJobDetailModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
+import { SearchIcon } from '../../../components/common/icons.jsx';
 import '../../../assets/styles/JobPostStyle.css';
 import '../../../assets/styles/MyJobsStyle.css';
 
@@ -25,22 +26,23 @@ const STATUS_TABS = [
     { id: 'draft', label: 'Bản nháp', dotClass: 'my-jobs-page__tab-dot--draft' },
     { id: 'open', label: 'Đang tuyển', dotClass: 'my-jobs-page__tab-dot--open' },
     { id: 'pending', label: 'Chờ duyệt', dotClass: 'my-jobs-page__tab-dot--pending' },
+    { id: 'revision', label: 'Yêu cầu chỉnh sửa', dotClass: 'my-jobs-page__tab-dot--revision' },
     { id: 'rejected', label: 'Từ chối', dotClass: 'my-jobs-page__tab-dot--rejected' },
     { id: 'closed', label: 'Đã đóng', dotClass: 'my-jobs-page__tab-dot--closed' },
 ];
 
 const VALID_STATUS_TABS = new Set(STATUS_TABS.map((tab) => tab.id));
 
-/** Tab → JobStatus BE (null = không lọc). Tab rejected gom 2 status → gọi riêng. */
+/** Tab → JobStatus BE (null = không lọc). */
 const TAB_API_STATUS = {
     all: null,
     draft: 'DRAFT',
     open: 'OPEN',
     pending: 'PENDING_REVIEW',
+    revision: 'REVISION_REQUESTED',
+    rejected: 'REJECTED',
     closed: 'CLOSED',
 };
-
-const REJECTED_API_STATUSES = ['REJECTED', 'REVISION_REQUESTED'];
 
 const formatDate = (value) => {
     if (!value) return '—';
@@ -56,64 +58,23 @@ const isPastDeadline = (job) => {
     return !Number.isNaN(end.getTime()) && end.getTime() < Date.now();
 };
 
-const jobSortTime = (job) => {
-    const t = new Date(job?.updatedAt || job?.createdAt || 0).getTime();
-    return Number.isFinite(t) ? t : 0;
-};
-
-/** Gộp 2 Page Spring (REJECTED + REVISION_REQUESTED) cho tab Từ chối. */
-const mergeRejectedJobPages = (pages) => {
-    const byId = new Map();
-    pages.forEach((pageData) => {
-        (pageData?.content || []).forEach((job) => {
-            if (job?.id != null) byId.set(job.id, job);
-        });
-    });
-    const content = [...byId.values()].sort((a, b) => jobSortTime(b) - jobSortTime(a));
-    const totalPages = Math.max(0, ...pages.map((p) => Number(p?.totalPages) || 0));
-    const totalElements = pages.reduce(
-        (sum, p) => sum + (Number(p?.totalElements) || 0),
-        0
-    );
-    const number = Math.max(0, ...pages.map((p) => Number(p?.number) || 0));
-    return { content, totalPages, totalElements, number };
-};
-
-const fetchMyJobsPage = async (tabId, pageNum, size = PAGE_SIZE) => {
-    if (tabId === 'rejected') {
-        const pages = await Promise.all(
-            REJECTED_API_STATUSES.map((status) =>
-                recruiterJobApi.getMyJobs({
-                    status,
-                    page: pageNum,
-                    size,
-                    sort: MY_JOBS_SORT,
-                })
-            )
-        );
-        return mergeRejectedJobPages(pages);
-    }
-
+const fetchMyJobsPage = async (tabId, pageNum, size = PAGE_SIZE, keyword = '') => {
     const status = TAB_API_STATUS[tabId];
     const params = { page: pageNum, size, sort: MY_JOBS_SORT };
     if (status) params.status = status;
+    if (keyword) params.keyword = keyword;
     return recruiterJobApi.getMyJobs(params);
 };
 
-/** totalElements theo từng tab (size=1) — hiện count sẵn trên mọi tab như trước. */
-const fetchTabCounts = async () => {
-    const entries = await Promise.all(
-        STATUS_TABS.map(async (tab) => {
-            try {
-                const pageData = await fetchMyJobsPage(tab.id, 0, 1);
-                return [tab.id, Number(pageData?.totalElements) || 0];
-            } catch {
-                return [tab.id, 0];
-            }
-        })
-    );
-    return Object.fromEntries(entries);
-};
+const tabCountsFromApi = (counts = {}) => ({
+    all: Number(counts.ALL) || 0,
+    draft: Number(counts.DRAFT) || 0,
+    open: Number(counts.OPEN) || 0,
+    pending: Number(counts.PENDING_REVIEW) || 0,
+    revision: Number(counts.REVISION_REQUESTED) || 0,
+    rejected: Number(counts.REJECTED) || 0,
+    closed: Number(counts.CLOSED) || 0,
+});
 
 const getJobMetrics = (job) => {
     const requiredCandidates = Number(job.requiredCandidates);
@@ -197,60 +158,60 @@ const MyJobsPage = () => {
         Object.fromEntries(STATUS_TABS.map((tab) => [tab.id, 0]))
     );
     const [activeTab, setActiveTab] = useState(() => {
-        const tab = location.state?.highlightStatusTab;
-        return tab === 'rejected' || tab === 'pending' ? tab : 'all';
+        const fromState = location.state?.highlightStatusTab;
+        if (fromState && VALID_STATUS_TABS.has(fromState)) return fromState;
+        const fromUrl = new URLSearchParams(location.search).get('tab');
+        if (fromUrl && VALID_STATUS_TABS.has(fromUrl)) return fromUrl;
+        return 'all';
     });
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [reviewNoteJob, setReviewNoteJob] = useState(null);
     const [detailJobId, setDetailJobId] = useState(null);
     const [highlightJobId, setHighlightJobId] = useState(null);
+    const [keywordInput, setKeywordInput] = useState('');
+    const [keyword, setKeyword] = useState('');
+    const loadSeqRef = useRef(0);
 
     /** true khi vào từ Tổng quan (?from=overview) — giữ trên URL để hiện nút quay lại. */
     const showBackToOverview = searchParams.get('from') === 'overview';
 
-    const refreshTabCounts = useCallback(async () => {
-        try {
-            const counts = await fetchTabCounts();
-            setTabCounts(counts);
-        } catch {
-            // giữ count cũ nếu lỗi
-        }
-    }, []);
+    useEffect(() => {
+        const timer = setTimeout(() => setKeyword(keywordInput.trim()), 400);
+        return () => clearTimeout(timer);
+    }, [keywordInput]);
 
     const loadJobs = useCallback(async (tabId, pageNum) => {
+        const seq = ++loadSeqRef.current;
         setLoading(true);
         try {
-            const pageData = await fetchMyJobsPage(tabId, pageNum);
+            const pageData = await fetchMyJobsPage(tabId, pageNum, PAGE_SIZE, keyword);
+            if (seq !== loadSeqRef.current) return;
             const content = Array.isArray(pageData?.content) ? pageData.content : [];
             setJobs(content);
             setTotalPages(Number(pageData?.totalPages) || 0);
-            setPage(Number.isFinite(Number(pageData?.number)) ? Number(pageData.number) : pageNum);
-            setTabCounts((prev) => ({
-                ...prev,
-                [tabId]: Number(pageData?.totalElements) || 0,
-            }));
+            const pageNumber = pageData?.number ?? pageData?.currentPage;
+            setPage(Number.isFinite(Number(pageNumber)) ? Number(pageNumber) : pageNum);
+            const counts = pageData?.statusCounts || pageData?.counts;
+            if (counts) setTabCounts(tabCountsFromApi(counts));
         } catch (err) {
+            if (seq !== loadSeqRef.current) return;
             setJobs([]);
             setTotalPages(0);
             setPage(0);
             toast.error(getRecruiterJobApiErrorMessage(err, 'Không thể tải danh sách tin.'));
         } finally {
-            setLoading(false);
+            if (seq === loadSeqRef.current) setLoading(false);
         }
-    }, []);
-
-    useEffect(() => {
-        refreshTabCounts();
-    }, [refreshTabCounts]);
+    }, [keyword]);
 
     useEffect(() => {
         loadJobs(activeTab, 0);
-    }, [activeTab, loadJobs]);
+    }, [activeTab, keyword, loadJobs]);
 
     useEffect(() => {
         const tab = location.state?.highlightStatusTab;
-        if (tab === 'rejected' || tab === 'pending') {
+        if (tab && VALID_STATUS_TABS.has(tab)) {
             setActiveTab(tab);
             navigate(location.pathname, { replace: true, state: {} });
         }
@@ -315,20 +276,7 @@ const MyJobsPage = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    /** Deep-link (?jobId=): đưa tin đó lên đầu list đang hiện để dễ chú ý. */
-    const displayJobs = useMemo(() => {
-        if (highlightJobId == null || !Array.isArray(jobs) || jobs.length === 0) {
-            return jobs;
-        }
-        const pinned = [];
-        const rest = [];
-        for (const job of jobs) {
-            if (String(job.id) === String(highlightJobId)) pinned.push(job);
-            else rest.push(job);
-        }
-        return pinned.length ? [...pinned, ...rest] : jobs;
-    }, [jobs, highlightJobId]);
-
+    /** Deep-link (?jobId=): giữ thứ tự list, scroll + highlight card. */
     useEffect(() => {
         if (highlightJobId == null || loading) return undefined;
 
@@ -343,7 +291,7 @@ const MyJobsPage = () => {
 
         const timer = window.setTimeout(() => setHighlightJobId(null), 4500);
         return () => window.clearTimeout(timer);
-    }, [highlightJobId, loading, displayJobs]);
+    }, [highlightJobId, loading, jobs]);
 
     const openConfirm = (type, job, nextStatus = null) => {
         setConfirmDialog({ type, job, nextStatus });
@@ -370,7 +318,6 @@ const MyJobsPage = () => {
             setConfirmDialog(null);
             // Reload tab — tin có thể rời khỏi tab hiện tại sau đổi status.
             await loadJobs(activeTab, 0);
-            refreshTabCounts();
         } catch (err) {
             const fallback =
                 type === 'delete' ? 'Không thể xóa tin.' : 'Không thể đổi trạng thái tin.';
@@ -662,6 +609,18 @@ const MyJobsPage = () => {
                 </Link>
             </header>
 
+            <div className="my-jobs-page__search-wrap">
+                <SearchIcon width={18} height={18} aria-hidden="true" />
+                <input
+                    type="search"
+                    className="my-jobs-page__search"
+                    placeholder="Tìm theo tiêu đề tin tuyển dụng"
+                    aria-label="Tìm theo tiêu đề tin tuyển dụng"
+                    value={keywordInput}
+                    onChange={(event) => setKeywordInput(event.target.value)}
+                />
+            </div>
+
             <div className="my-jobs-page__tabs" role="tablist" aria-label="Lọc theo trạng thái">
                 {STATUS_TABS.map((tab) => (
                     <button
@@ -696,7 +655,7 @@ const MyJobsPage = () => {
             ) : (
                 <>
                     <div className="my-jobs-page__list">
-                        {displayJobs.map((job) =>
+                        {jobs.map((job) =>
                             hasRecruitingMetricsCard(job)
                                 ? renderMetricsCard(job)
                                 : renderDefaultCard(job)

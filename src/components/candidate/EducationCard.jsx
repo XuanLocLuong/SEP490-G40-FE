@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
+import RequiredMark from './RequiredMark.jsx';
 import { PencilIcon } from './profileIcons.jsx';
 import { GraduationCapIcon as FallbackCap } from '../common/icons.jsx';
-import { EDUCATION_LEVEL_OPTIONS, getEducationLevelLabel } from '../../utils/profileFormat.js';
+import { getEducationLevelLabel } from '../../utils/profileFormat.js';
+import { useEducationLevelOptions } from '../../hooks/useEducationLevelOptions.js';
 
 // Backend chỉ lưu ĐÚNG 1 học vấn (schoolName/studentCode/educationLevel) trên
-// CandidateProfile, không phải danh sách nhiều trường/bằng cấp — nên đây là
-// form single-entry (giống PersonalInfoCard), bỏ hẳn "thêm nhiều học vấn" của
-// bản trước vì chỉ gây hiểu lầm (trước đây thêm cái thứ 2 cũng không được lưu).
+// CandidateProfile. Apply chỉ bắt buộc educationLevel — trường/MSSV optional.
 const EducationCard = ({ education, onSave, saving }) => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(education);
+    const educationLevelOptions = useEducationLevelOptions();
 
     const handleOpen = () => {
         setForm(education);
@@ -23,6 +24,7 @@ const EducationCard = ({ education, onSave, saving }) => {
     };
 
     const hasData = education.school || education.studentCode || education.educationLevel;
+    const levelMissing = !education.educationLevel;
 
     return (
         <section className="cp-card">
@@ -37,18 +39,41 @@ const EducationCard = ({ education, onSave, saving }) => {
             </div>
 
             {!hasData ? (
-                <p className="cp-empty-text">Chưa có thông tin học vấn.</p>
+                <p className="cp-empty-text">
+                    Chưa có thông tin học vấn.
+                    {levelMissing ? (
+                        <>
+                            {' '}
+                            <span className="cp-required-hint">
+                                Cần chọn trình độ học vấn
+                                <RequiredMark />
+                            </span>
+                        </>
+                    ) : null}
+                </p>
             ) : (
                 <div className="cp-edu-item">
                     <div className="cp-edu-item__logo">
-                        {(education.school || '?').slice(0, 3).toUpperCase()}
+                        {(education.school || getEducationLevelLabel(education.educationLevel, educationLevelOptions) || '?')
+                            .slice(0, 3)
+                            .toUpperCase()}
                     </div>
                     <div className="cp-edu-item__body">
-                        <h3 className="cp-edu-item__school">{education.school || 'Chưa rõ trường'}</h3>
-                        {education.educationLevel && (
-                            <p className="cp-edu-item__major">
-                                {getEducationLevelLabel(education.educationLevel)}
-                            </p>
+                        {education.educationLevel ? (
+                            <h3 className="cp-edu-item__school">
+                                {getEducationLevelLabel(
+                                    education.educationLevel,
+                                    educationLevelOptions
+                                )}
+                            </h3>
+                        ) : (
+                            <h3 className="cp-edu-item__school cp-edu-item__school--missing">
+                                Chưa chọn trình độ học vấn
+                                <RequiredMark />
+                            </h3>
+                        )}
+                        {education.school && (
+                            <p className="cp-edu-item__major">{education.school}</p>
                         )}
                         {education.studentCode && (
                             <div className="cp-edu-item__meta">
@@ -80,8 +105,32 @@ const EducationCard = ({ education, onSave, saving }) => {
                 }
             >
                 <div className="cp-form-group">
-                    <label className="cp-form-label">Trường</label>
+                    <label className="cp-form-label" htmlFor="cp-edu-level">
+                        Trình độ học vấn
+                        <RequiredMark />
+                    </label>
+                    <select
+                        id="cp-edu-level"
+                        className="cp-input"
+                        value={form.educationLevel || ''}
+                        onChange={(e) => setForm((p) => ({ ...p, educationLevel: e.target.value }))}
+                        required
+                    >
+                        <option value="">-- Chọn trình độ --</option>
+                        {educationLevelOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="cp-form-group">
+                    <label className="cp-form-label" htmlFor="cp-edu-school">
+                        Trường
+                    </label>
                     <input
+                        id="cp-edu-school"
                         type="text"
                         className="cp-input"
                         placeholder="VD: Đại học FPT"
@@ -91,24 +140,11 @@ const EducationCard = ({ education, onSave, saving }) => {
                 </div>
 
                 <div className="cp-form-group">
-                    <label className="cp-form-label">Trình độ học vấn</label>
-                    <select
-                        className="cp-input"
-                        value={form.educationLevel || ''}
-                        onChange={(e) => setForm((p) => ({ ...p, educationLevel: e.target.value }))}
-                    >
-                        <option value="">-- Chọn trình độ --</option>
-                        {EDUCATION_LEVEL_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="cp-form-group">
-                    <label className="cp-form-label">MSSV</label>
+                    <label className="cp-form-label" htmlFor="cp-edu-mssv">
+                        MSSV
+                    </label>
                     <input
+                        id="cp-edu-mssv"
                         type="text"
                         className="cp-input"
                         placeholder="VD: SE123456"

@@ -63,24 +63,9 @@ export const needsBusinessLicenseTopUp = ({
 };
 
 /**
- * Fallback legacy khi catalog chưa có `requiresBusinessLicense`.
- * Ưu tiên dùng resolveRequiresBusinessLicense với flag từ business type.
- */
-export const isIndividualBusinessType = (businessType) => {
-    const raw = String(businessType || '').trim();
-    if (!raw) return false;
-    const upper = raw.toUpperCase();
-    if (upper === 'INDIVIDUAL') return true;
-    const normalized = raw
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
-    return normalized === 'ca nhan' || normalized.includes('ca nhan');
-};
-
-/**
  * Có cần MST/GPKD không — theo `requiresBusinessLicense` của business type (BE).
- * Ưu tiên: profile flag → option catalog → default true (BE entity default), trừ cá nhân rõ ràng.
+ * Không hard-code code (vd. INDIVIDUAL). Ưu tiên: profile flag → option catalog →
+ * default true (BE entity default).
  */
 export const resolveRequiresBusinessLicense = ({
     businessType,
@@ -101,8 +86,6 @@ export const resolveRequiresBusinessLicense = ({
         }
     }
 
-    // BE: requiresBusinessLicense default true; chỉ cá nhân seed = false.
-    if (isIndividualBusinessType(businessType)) return false;
     return true;
 };
 
@@ -194,7 +177,7 @@ export const getBusinessTypeChangeVerifyFeedback = ({
         status === VERIFICATION_STATUS.CCCD_PASSED ||
         status === VERIFICATION_STATUS.BUSINESS_PASSED;
 
-    // Cá nhân → loại cần GPKD
+    // Loại không cần GPKD → loại cần GPKD
     if (!prevRequiresLicense && nextRequiresLicense) {
         if (status === VERIFICATION_STATUS.CCCD_PASSED) {
             return {
@@ -207,7 +190,7 @@ export const getBusinessTypeChangeVerifyFeedback = ({
         return null;
     }
 
-    // Loại cần GPKD → cá nhân: gắn lại badge khi đã có CCCD trở lên và trước đó chưa có badge
+    // Loại cần GPKD → loại không cần: gắn lại badge khi đã có CCCD trở lên và trước đó chưa có badge
     if (prevRequiresLicense && !nextRequiresLicense) {
         if (hasCccdOrBusinessPassed && hasVerifiedBadge && !hadVerifiedBadge) {
             return {

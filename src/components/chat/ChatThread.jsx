@@ -787,6 +787,10 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                     {canViewCandidateProfile ? (
                         <Link
                             to={getCandidatePublicProfilePath(conversation.candidateProfileId)}
+                            state={{
+                                candidateUserId:
+                                    conversation.otherPartyId ?? conversation.candidateUserId ?? null,
+                            }}
                             className="chat-panel__profile-link"
                         >
                             Xem ứng viên →
