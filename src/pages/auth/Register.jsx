@@ -31,8 +31,8 @@ const AUTO_REDIRECT_SECONDS = 10;
 
 // Backend (RegisterRequestDTO) nhận { email, fullName, phone, password, role }.
 // role bắt buộc, chỉ nhận CANDIDATE/RECRUITER khi tự đăng ký công khai.
-// Giờ chỉ cần đúng 10 số: 0 + 9 số bất kỳ, hoặc +84 + 9 số bất kỳ.
-const PHONE_REGEX = /^(\+84|0)\d{9}$/;
+// Khớp BE: ^(\+84|0)[35789][0-9]{8}$ — đầu số 03/05/07/08/09 (hoặc +84…).
+const PHONE_REGEX = /^(\+84|0)[35789][0-9]{8}$/;
 
 const Register = () => {
     const [role, setRole] = useState(USER_ROLES.CANDIDATE);
@@ -141,7 +141,9 @@ const Register = () => {
         }
 
         if (!PHONE_REGEX.test(phone.trim())) {
-            setError('Số điện thoại không hợp lệ (VD: 0912345678 hoặc +84912345678).');
+            setError(
+                'Số điện thoại không hợp lệ (VD: 0912345678, 0378123456 hoặc +84912345678).'
+            );
             return;
         }
 

@@ -904,6 +904,40 @@
     margin-bottom: 6px;
 }
 
+.cp-required {
+    color: #dc2626;
+    margin-left: 3px;
+    font-weight: 700;
+}
+
+.cp-apply-legend {
+    margin: 0 0 14px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted, #64748b);
+}
+
+.cp-apply-legend .cp-required {
+    margin-left: 0;
+    margin-right: 2px;
+}
+
+.cp-required-hint {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #b91c1c;
+}
+
+.cp-field--missing .cp-empty-text,
+.cp-info-item--missing .cp-info-item__value,
+.cp-edu-item__school--missing {
+    color: #b91c1c;
+}
+
+.cp-card--missing-required {
+    border-color: #fecaca;
+}
+
 .cp-input {
     width: 100%;
     padding: 10px 12px;
@@ -1074,6 +1108,13 @@
     font-size: 13px;
     color: var(--color-success, #16a34a);
     font-weight: 600;
+}
+
+.cp-map-coords__label {
+    margin-top: 6px;
+    font-weight: 400;
+    color: var(--color-text-muted, #4b5563);
+    line-height: 1.45;
 }
 
 .cp-btn--sm {

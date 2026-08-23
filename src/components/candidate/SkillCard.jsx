@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { CloseIcon, PlusIcon } from './profileIcons.jsx';
+import RequiredMark from './RequiredMark.jsx';
 
 // SECTION 6 — Skill: render tag + ô "Thêm kỹ năng" có autocomplete từ GET /skills.
-// Không hardcode. Thay đổi cập nhật draft (lưu qua nút "Lưu hồ sơ" hoặc modal khác).
+// Apply bắt buộc ít nhất 1 kỹ năng.
 const SkillCard = ({ skills, catalog, onChange }) => {
     const [query, setQuery] = useState('');
     const [focused, setFocused] = useState(false);
@@ -41,11 +42,20 @@ const SkillCard = ({ skills, catalog, onChange }) => {
         }
     };
 
+    const skillsMissing = skills.length === 0;
+
     return (
-        <section className="cp-card">
+        <section className={'cp-card' + (skillsMissing ? ' cp-card--missing-required' : '')}>
             <div className="cp-card__head">
-                <h2 className="cp-card__title">Kỹ năng của bạn</h2>
+                <h2 className="cp-card__title">
+                    Kỹ năng của bạn
+                    <RequiredMark />
+                </h2>
             </div>
+
+            {skillsMissing && (
+                <p className="cp-required-hint">Cần ít nhất 1 kỹ năng để ứng tuyển.</p>
+            )}
 
             {skills.length > 0 && (
                 <div className="cp-tags cp-tags--gap">

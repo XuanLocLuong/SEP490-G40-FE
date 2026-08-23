@@ -70,7 +70,11 @@ const ApplyDemoButton = ({ jobId }) => {
                             <p className="apply-demo__blocked">Bạn chưa thể ứng tuyển:</p>
                             <ul className="apply-demo__reasons">
                                 {preview.blockingReasons.map((reason) => (
-                                    <li key={reason}>{getReasonMessage(reason)}</li>
+                                    <li key={reason}>
+                                        {getReasonMessage(reason, {
+                                            missingProfileFields: preview.missingProfileFields,
+                                        })}
+                                    </li>
                                 ))}
                             </ul>
                             {preview.blockingReasons.includes('PROFILE_INCOMPLETE') && (
