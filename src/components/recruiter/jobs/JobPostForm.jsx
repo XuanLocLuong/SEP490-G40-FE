@@ -185,7 +185,7 @@ const JobPostForm = ({
                         />
                     </div>
                     <p className="job-post-form__hint job-post-form__hint--salary">
-                        Không bắt buộc. Có thể nhập một khoảng; nếu nhập cả hai thì lương tối đa không nhỏ hơn lương tối thiểu (đồng/giờ).                    </p>
+                        Không bắt buộc. Lương tối đa không nhỏ hơn lương tối thiểu (đồng/giờ).                    </p>
                     <p className="job-post-form__hint job-post-form__hint--candidates">
                         Tối thiểu 1, tối đa {JOB_POST_MAX_REQUIRED_CANDIDATES} người.
                     </p>
