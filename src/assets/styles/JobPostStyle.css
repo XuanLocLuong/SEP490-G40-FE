@@ -196,10 +196,16 @@
         grid-template-columns: 1fr;
     }
 
+    .job-post-form__requirements-grid {
+        grid-template-columns: 1fr;
+    }
+
     .job-post-form__hint--salary,
     .job-post-form__hint--candidates,
+    .job-post-form__hint--age,
     .job-post-form__error--salary,
-    .job-post-form__error--candidates {
+    .job-post-form__error--candidates,
+    .job-post-form__error--age {
         grid-column: 1;
     }
 }
@@ -329,9 +335,36 @@
     min-width: 0;
 }
 
-.job-post-form__row .job-post-form__field {
-    flex: 1;
-    min-width: 160px;
+.job-post-form__requirements-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+
+.job-post-form__requirements-grid .job-post-form__field {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.job-post-form__requirements-grid .job-post-form__field label {
+    line-height: 1.25;
+}
+
+.job-post-form__requirements-grid .job-post-form__field input,
+.job-post-form__requirements-grid .job-post-form__field select {
+    min-height: 42px;
+    box-sizing: border-box;
+}
+
+.job-post-form__hint--age {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.job-post-form__error--age {
+    grid-column: 1 / -1;
+    margin: 0;
 }
 
 .job-post-form__hint {

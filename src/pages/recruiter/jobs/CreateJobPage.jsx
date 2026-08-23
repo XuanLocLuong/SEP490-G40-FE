@@ -97,6 +97,7 @@ const CreateJobPage = () => {
     const [aiDescOpen, setAiDescOpen] = useState(false);
     const [skillsCatalog, setSkillsCatalog] = useState([]);
     const [skillsLoading, setSkillsLoading] = useState(false);
+    const [educationLevelOptions, setEducationLevelOptions] = useState([]);
 
     const loadPage = useCallback(async () => {
         setLoading(true);
@@ -121,6 +122,14 @@ const CreateJobPage = () => {
                 toast.warn('Không tải được danh sách kỹ năng. Bạn vẫn có thể đăng tin.');
             } finally {
                 setSkillsLoading(false);
+            }
+
+            try {
+                const levels = await recruiterJobApi.getEducationLevels();
+                setEducationLevelOptions(Array.isArray(levels) ? levels : []);
+            } catch {
+                setEducationLevelOptions([]);
+                toast.warn('Không tải được danh sách bậc học. Bạn vẫn có thể đăng tin.');
             }
 
             if (isEdit) {
@@ -217,7 +226,7 @@ const CreateJobPage = () => {
             // Mở đúng tab Tin của tôi theo kết quả submit (pending / cần chỉnh sửa).
             const highlightStatusTab =
                 resolvedJob?.status === 'REVISION_REQUESTED'
-                    ? 'rejected'
+                    ? 'revision'
                     : resolvedJob?.status === 'PENDING_REVIEW'
                       ? 'pending'
                       : undefined;
@@ -286,6 +295,7 @@ const CreateJobPage = () => {
                     disabled={saving}
                     skillsCatalog={skillsCatalog}
                     skillsLoading={skillsLoading}
+                    educationLevelOptions={educationLevelOptions}
                     onChange={handleFormChange}
                     onFieldBlur={handleFieldBlur}
                     onOpenAiDesc={() => setAiDescOpen(true)}
@@ -346,9 +356,8 @@ const CreateJobPage = () => {
             <AiJobDescModal
                 open={aiDescOpen}
                 jobTitle={form.title}
-                jobType={form.jobType}
+                jobTypes={form.jobTypes}
                 businessName={guardData.profile?.businessName}
-                businessType={guardData.profile?.businessType}
                 salaryMin={form.salaryMin}
                 salaryMax={form.salaryMax}
                 requiredCandidates={form.requiredCandidates}
@@ -356,6 +365,12 @@ const CreateJobPage = () => {
                 locationLabel={formatLocationDisplay(businessLocation)}
                 skillIds={form.skillIds}
                 skillsCatalog={skillsCatalog}
+                minAge={form.minAge}
+                maxAge={form.maxAge}
+                genderRequirement={form.genderRequirement}
+                educationRequirementMode={form.educationRequirementMode}
+                minEducationLevel={form.minEducationLevel}
+                educationLevelOptions={educationLevelOptions}
                 onClose={() => setAiDescOpen(false)}
                 onApply={(html) => {
                     setForm((prev) => ({ ...prev, description: html }));

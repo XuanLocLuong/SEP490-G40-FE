@@ -23,7 +23,6 @@ import { useAuth } from '../../contexts/authContext.js';
 import { resolveBusinessProfileBack } from '../../utils/businessNavReturn.js';
 import { buildHomeScrollState } from '../../utils/jobNavReturn.js';
 import { HOME_SCROLL_STATE_KEY } from '../../utils/homeSections.js';
-import { formatBusinessTypeLabel } from '../../utils/businessTypeDisplay.js';
 import '../../assets/styles/PublicBusinessProfileStyle.css';
 
 const TABS = {
@@ -387,9 +386,9 @@ const trustWarningMessage =
                                 </p>
                             )}
                         </div>
-                        {profile.businessType && (
+                        {(profile.businessTypeName || profile.businessType) && (
                             <span className="public-business__badge public-business__badge--muted">
-                                {formatBusinessTypeLabel(profile.businessType)}
+                                {profile.businessTypeName || profile.businessType}
                             </span>
                         )}
                         {showVerified && (

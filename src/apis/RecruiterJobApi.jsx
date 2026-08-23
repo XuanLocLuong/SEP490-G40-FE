@@ -43,7 +43,7 @@ const recruiterJobApi = {
         await axiosClient.delete(`${JOBS_BASE}/${jobId}`);
     },
 
-    /** @param {{ status?: string, page?: number, size?: number, sort?: string }} params */
+    /** @param {{ status?: string, keyword?: string, page?: number, size?: number, sort?: string }} params */
     getMyJobs: async (params = {}) => {
         const res = await axiosClient.get(`${JOBS_BASE}/my-jobs`, { params });
         return unwrapData(res);
@@ -63,6 +63,12 @@ const recruiterJobApi = {
     /** GET /api/v1/jobs/types — danh sách JobType (enum BE) cho dropdown */
     getJobTypes: async () => {
         const res = await axiosClient.get(`${JOBS_BASE}/types`);
+        return unwrapData(res);
+    },
+
+    /** GET /api/v1/jobs/education-levels — bậc học cho yêu cầu tuyển dụng */
+    getEducationLevels: async () => {
+        const res = await axiosClient.get(`${API_PREFIX}/education-levels`);
         return unwrapData(res);
     },
 

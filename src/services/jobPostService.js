@@ -1,7 +1,12 @@
-import { JOB_POST_ACTION } from '../constants/jobPost.js';
+import {
+    JOB_POST_ACTION,
+    JOB_POST_MAX_AGE,
+    JOB_POST_MAX_JOB_TYPES,
+    JOB_POST_MAX_REQUIRED_CANDIDATES,
+    JOB_POST_MIN_AGE,
+} from '../constants/jobPost.js';
 
-/** Khớp BE: app.job.max-candidates (mặc định 100). */
-export const JOB_POST_MAX_REQUIRED_CANDIDATES = 100;
+export { JOB_POST_MAX_REQUIRED_CANDIDATES };
 
 // ---------------------------------------------------------------------------
 // Adapter giữa shape UI (form + shiftBlocks) <-> payload BE (JobSaveRequest).
@@ -13,6 +18,32 @@ export const JOB_POST_MAX_REQUIRED_CANDIDATES = 100;
 // ---------------------------------------------------------------------------
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
+
+const JOB_TYPES_SEPARATOR = ',';
+
+/** UI jobTypes[] → CSV lưu BE (jobs.job_type). */
+export const joinJobTypeCodes = (jobTypes) => {
+    const codes = toArray(jobTypes)
+        .map((code) => String(code).trim())
+        .filter(Boolean);
+    return codes.length ? codes.join(JOB_TYPES_SEPARATOR) : '';
+};
+
+/** BE CSV → UI jobTypes[]. */
+export const splitJobTypeCodes = (raw) => {
+    if (!raw) return [];
+    return String(raw)
+        .split(JOB_TYPES_SEPARATOR)
+        .map((code) => code.trim())
+        .filter(Boolean);
+};
+
+const normalizeEducationLevelCode = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value.trim();
+    if (typeof value === 'object' && value.name) return String(value.name).trim();
+    return String(value).trim();
+};
 
 export const sameSkillId = (a, b) =>
     a != null && b != null && String(a) === String(b);
@@ -81,7 +112,7 @@ export const emptyShiftBlock = () => ({
 export const emptyJobForm = () => ({
     title: '',
     description: '',
-    jobType: 'PART_TIME',
+    jobTypes: [],
     salaryMin: '',
     salaryMax: '',
     requiredCandidates: 1,
@@ -89,6 +120,11 @@ export const emptyJobForm = () => ({
     locationId: '',
     applicationDeadline: '',
     isUrgent: false,
+    minAge: '',
+    maxAge: '',
+    genderRequirement: 'ANY',
+    educationRequirementMode: 'NONE',
+    minEducationLevel: '',
     skillIds: [],
     shiftBlocks: [emptyShiftBlock()],
 });
@@ -159,10 +195,12 @@ export const mapJobDetailToForm = (detail) => {
         ? new Date(detail.applicationDeadline).toISOString().slice(0, 16)
         : '';
 
+    const minEducationCode = normalizeEducationLevelCode(detail.minEducationLevel);
+
     return {
         title: detail.title || '',
         description: detail.description || '',
-        jobType: detail.jobType || 'PART_TIME',
+        jobTypes: splitJobTypeCodes(detail.jobType),
         salaryMin: detail.salaryMin != null ? String(detail.salaryMin) : '',
         salaryMax: detail.salaryMax != null ? String(detail.salaryMax) : '',
         requiredCandidates: detail.requiredCandidates ?? 1,
@@ -170,6 +208,11 @@ export const mapJobDetailToForm = (detail) => {
         locationId: detail.location?.id ? String(detail.location.id) : '',
         applicationDeadline: deadline,
         isUrgent: Boolean(detail.urgent),
+        minAge: detail.minAge != null ? String(detail.minAge) : '',
+        maxAge: detail.maxAge != null ? String(detail.maxAge) : '',
+        genderRequirement: detail.genderRequirement || 'ANY',
+        educationRequirementMode: minEducationCode ? 'MIN' : 'NONE',
+        minEducationLevel: minEducationCode,
         skillIds: toArray(detail.requiredSkills).map((s) => s.id),
         shiftBlocks: groupShiftsForUi(detail.shifts),
     };
@@ -186,16 +229,28 @@ const parseNumber = (value) => {
 /** Form UI -> JobSaveRequest payload */
 export const buildSavePayload = (form, action, businessId) => {
     const jobShifts = expandShiftBlocks(form.shiftBlocks);
+    const jobTypeCsv = joinJobTypeCodes(form.jobTypes);
+    const minEducationLevel =
+        form.educationRequirementMode === 'MIN' && form.minEducationLevel
+            ? form.minEducationLevel
+            : null;
+    const gender =
+        form.genderRequirement && form.genderRequirement !== 'ANY'
+            ? form.genderRequirement
+            : null;
 
     return {
         businessId: Number(businessId ?? form.businessId),
         title: form.title.trim(),
         description: form.description?.trim() || null,
-        jobType: form.jobType,
+        jobType: jobTypeCsv || null,
+        minEducationLevel,
+        genderRequirement: gender,
+        minAge: parseNumber(form.minAge),
+        maxAge: parseNumber(form.maxAge),
         salaryMin: parseNumber(form.salaryMin),
         salaryMax: parseNumber(form.salaryMax),
         requiredCandidates: parseNumber(form.requiredCandidates) ?? 1,
-        businessId: form.businessId != null ? Number(form.businessId) : null,
         locationId: Number(form.locationId),
         applicationDeadline: form.applicationDeadline
             ? new Date(form.applicationDeadline).toISOString()
@@ -224,24 +279,88 @@ const salaryRangeError = (form) => {
     return null;
 };
 
+const ageRangeError = (form) => {
+    const min = parseNumber(form.minAge);
+    const max = parseNumber(form.maxAge);
+    const outOfRange = (age) => age < JOB_POST_MIN_AGE || age > JOB_POST_MAX_AGE;
+    if (min != null && outOfRange(min)) {
+        return `Tuổi tối thiểu từ ${JOB_POST_MIN_AGE} đến ${JOB_POST_MAX_AGE}.`;
+    }
+    if (max != null && outOfRange(max)) {
+        return `Tuổi tối đa từ ${JOB_POST_MIN_AGE} đến ${JOB_POST_MAX_AGE}.`;
+    }
+    if (min != null && max != null && min > max) {
+        return 'Tuổi tối đa phải lớn hơn hoặc bằng tuổi tối thiểu.';
+    }
+    return null;
+};
+
+/** Mô tả là HTML (editor). Bỏ thẻ để biết còn chữ hay không. */
+const descriptionHasText = (html) => {
+    const text = String(html || '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .trim();
+    return text.length > 0;
+};
+
+const jobTypesError = (form, action) => {
+    const types = toArray(form.jobTypes);
+    if (action === JOB_POST_ACTION.SUBMIT && types.length === 0) {
+        return 'Vui lòng chọn ít nhất một ngành nghề.';
+    }
+    if (types.length > JOB_POST_MAX_JOB_TYPES) {
+        return 'Chỉ chọn tối đa ' + JOB_POST_MAX_JOB_TYPES + ' ngành nghề.';
+    }
+    return null;
+};
+
 /** Validate một field — dùng on blur; trả message hoặc null */
 export const validateJobFormField = (field, form, action = null) => {
     switch (field) {
         case 'title':
             return !form.title?.trim() ? 'Vui lòng nhập tiêu đề tin tuyển dụng.' : null;
-        case 'jobType':
-            return !form.jobType ? 'Vui lòng chọn loại công việc.' : null;
+        case 'jobTypes':
+            return jobTypesError(form, action);
+        case 'minAge':
+        case 'maxAge':
+            return ageRangeError(form);
+        case 'minEducationLevel':
+            if (
+                form.educationRequirementMode === 'MIN' &&
+                action === JOB_POST_ACTION.SUBMIT &&
+                !form.minEducationLevel
+            ) {
+                return 'Vui lòng chọn bậc học tối thiểu.';
+            }
+            return null;
         case 'locationId':
             return !form.locationId ? 'Vui lòng chọn địa điểm làm việc.' : null;
         case 'salaryMin':
         case 'salaryMax':
             return salaryRangeError(form);
         case 'applicationDeadline':
+            // Nháp: để trống được. Đăng tin: bắt buộc. Có điền thì không được ở quá khứ.
             if (!form.applicationDeadline) {
-                return 'Vui lòng chọn hạn nộp hồ sơ.';
+                return action === JOB_POST_ACTION.SUBMIT
+                    ? 'Vui lòng chọn hạn nộp hồ sơ.'
+                    : null;
             }
             if (isPastApplicationDeadline(form.applicationDeadline)) {
                 return 'Hạn nộp hồ sơ phải sau thời điểm hiện tại.';
+            }
+            return null;
+        case 'description':
+            if (action === JOB_POST_ACTION.SUBMIT && !descriptionHasText(form.description)) {
+                return 'Vui lòng nhập mô tả công việc.';
+            }
+            return null;
+        case 'skillIds':
+            if (
+                action === JOB_POST_ACTION.SUBMIT &&
+                toArray(form.skillIds).length === 0
+            ) {
+                return 'Vui lòng chọn ít nhất một kỹ năng.';
             }
             return null;
         case 'requiredCandidates': {
@@ -250,7 +369,7 @@ export const validateJobFormField = (field, form, action = null) => {
                 return 'Số lượng tuyển tối thiểu là 1 người.';
             }
             if (n > JOB_POST_MAX_REQUIRED_CANDIDATES) {
-                return `Số lượng tuyển tối đa là ${JOB_POST_MAX_REQUIRED_CANDIDATES} người.`;
+                return 'Số lượng tuyển tối đa là ' + JOB_POST_MAX_REQUIRED_CANDIDATES + ' người.';
             }
             return null;
         }
@@ -267,6 +386,7 @@ export const validateJobFormField = (field, form, action = null) => {
 /** Map tên field validate -> key hiển thị lỗi trên form */
 export const getJobFormErrorKey = (field) => {
     if (field === 'salaryMin' || field === 'salaryMax') return 'salaryMax';
+    if (field === 'minAge' || field === 'maxAge') return 'maxAge';
     return field;
 };
 
@@ -274,9 +394,20 @@ export const getJobFormErrorKey = (field) => {
 export const validateJobForm = (form, action) => {
     const errors = {};
     const fields =
-    action === JOB_POST_ACTION.SUBMIT
-        ? ['title', 'jobType', 'locationId', 'salaryMin', 'requiredCandidates', 'applicationDeadline']
-        : ['title', 'locationId', 'salaryMin'];
+        action === JOB_POST_ACTION.SUBMIT
+            ? [
+                  'title',
+                  'jobTypes',
+                  'locationId',
+                  'salaryMin',
+                  'requiredCandidates',
+                  'applicationDeadline',
+                  'minEducationLevel',
+                  'minAge',
+                  'description',
+                  'skillIds',
+              ]
+            : ['title', 'locationId', 'salaryMin', 'minAge'];
         
     fields.forEach((field) => {
         const message = validateJobFormField(field, form, action);
@@ -314,7 +445,7 @@ export const toPreviewJobDetail = (
         id: 'preview',
         title: form.title?.trim() || 'Tiêu đề tin tuyển dụng',
         description: form.description?.trim() || '',
-        jobType: form.jobType || null,
+        jobType: joinJobTypeCodes(form.jobTypes) || null,
         salaryMin: parseNumber(form.salaryMin),
         salaryMax: parseNumber(form.salaryMax),
         requiredCandidates,
