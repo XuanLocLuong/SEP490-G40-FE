@@ -1,5 +1,7 @@
 import {
     ROUTES,
+    getBusinessProfilePath,
+    getCandidatePublicProfilePath,
     getRecruiterApplicantsPath,
     getRecruiterEditJobPath,
     getRecruiterMyJobsPath,
@@ -51,6 +53,14 @@ export const getNotificationTargetPath = (notification, role) => {
         case 'VIEW_REVIEWS':
             if (role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_REVIEWS;
             return null;
+
+        case 'VIEW_BUSINESS_PROFILE':
+            if (refId == null) return null;
+            return `${getBusinessProfilePath(refId)}?tab=reviews`;
+
+        case 'VIEW_CANDIDATE_PROFILE':
+            if (refId == null) return null;
+            return getCandidatePublicProfilePath(refId);
 
         case 'VIEW_PROFILE':
             if (isRecruiter) return ROUTES.RECRUITER_PROFILE;
