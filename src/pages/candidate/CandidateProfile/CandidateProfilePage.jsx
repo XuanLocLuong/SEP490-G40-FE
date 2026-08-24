@@ -22,6 +22,11 @@ import {
     consumePendingApplyReturn,
     peekPendingApplyReturn,
 } from '../../../utils/applyReturnStorage.js';
+import {
+    clearUnsavedCandidateProfileDraft,
+    peekUnsavedCandidateProfileDraft,
+    setUnsavedCandidateProfileDraft,
+} from '../../../utils/candidateProfileDraftStorage.js';
 import { ROUTES, getJobDetailPath } from '../../../routes/path.js';
 import '../../../assets/styles/CandidateProfile.css';
 
@@ -36,6 +41,23 @@ const withPhone = (profile, phone) => {
             phone: phone || '',
         },
     };
+};
+
+const skillsEqual = (a, b) => JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
+
+/** Giữ kỹ năng chưa lưu khi sync lại profile từ BE / restore từ sessionStorage. */
+const mergeDraftSkills = (fromServer, prevDraft, oldBaseline, storedSkills) => {
+    if (!fromServer) return null;
+
+    if (prevDraft && oldBaseline && !skillsEqual(prevDraft.skills, oldBaseline.skills)) {
+        return { ...fromServer, skills: prevDraft.skills };
+    }
+
+    if (storedSkills && !skillsEqual(storedSkills, fromServer.skills)) {
+        return { ...fromServer, skills: storedSkills };
+    }
+
+    return fromServer;
 };
 
 // CandidateProfilePage — CHỈ là content, render bên trong <CandidateLayout> đã có.
@@ -81,9 +103,12 @@ const CandidateProfilePage = () => {
     }, []);
 
     if (profile !== syncedProfile) {
+        const fromServer = withPhone(profile, accountPhone);
+        const oldBaseline = withPhone(syncedProfile, syncedPhone);
+        const stored = peekUnsavedCandidateProfileDraft(profile?.id);
         setSyncedProfile(profile);
         setSyncedPhone(accountPhone);
-        setDraft(withPhone(profile, accountPhone));
+        setDraft(mergeDraftSkills(fromServer, draft, oldBaseline, stored?.skills));
     } else if (accountPhone !== syncedPhone) {
         setSyncedPhone(accountPhone);
         setDraft(
@@ -105,6 +130,23 @@ const CandidateProfilePage = () => {
         () => JSON.stringify(draft) !== JSON.stringify(baseline),
         [draft, baseline],
     );
+
+    const skillsDirty = useMemo(
+        () => !skillsEqual(draft?.skills, baseline?.skills),
+        [draft?.skills, baseline?.skills],
+    );
+
+    useEffect(() => {
+        if (!draft || !baseline) return;
+        if (skillsDirty) {
+            setUnsavedCandidateProfileDraft({
+                profileId: draft.id ?? profile?.id ?? null,
+                skills: draft.skills,
+            });
+        } else {
+            clearUnsavedCandidateProfileDraft();
+        }
+    }, [draft, baseline, skillsDirty, profile?.id]);
 
     if (loading && !profile) {
         return <ProfileSkeleton />;
@@ -187,11 +229,15 @@ const CandidateProfilePage = () => {
         const phoneOk = await savePhoneIfNeeded(draft.personalInfo);
         if (!phoneOk) return false;
         const ok = await updateProfile(draft);
-        if (ok) offerReturnToJobIfNeeded();
+        if (ok) {
+            clearUnsavedCandidateProfileDraft();
+            offerReturnToJobIfNeeded();
+        }
         return ok;
     };
 
     const handleCancel = () => {
+        clearUnsavedCandidateProfileDraft();
         setDraft(baseline);
         toast.info('Đã hoàn tác các thay đổi chưa lưu.');
     };
