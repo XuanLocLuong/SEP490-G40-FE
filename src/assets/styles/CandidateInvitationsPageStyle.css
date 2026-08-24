@@ -42,7 +42,7 @@
 
 .ci-stats {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
     margin-bottom: 20px;
 }
@@ -58,7 +58,8 @@
     border-left-width: 4px;
     cursor: pointer;
     text-align: left;
-    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease,
+        transform 0.12s ease;
 }
 
 .ci-stat--sent {
@@ -73,9 +74,24 @@
     border-left-color: #94a3b8;
 }
 
-.ci-stat.is-active,
+.ci-stat--inactive {
+    border-left-color: #f59e0b;
+}
+
 .ci-stat:hover {
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.ci-stat.is-active {
+    box-shadow: 0 0 0 2px var(--color-primary), 0 6px 16px rgba(37, 99, 235, 0.12);
+    border-color: var(--color-primary);
+    background: var(--color-primary-light, #eff6ff);
+    transform: translateY(-1px);
+}
+
+.ci-stat.is-active .ci-stat__label,
+.ci-stat.is-active .ci-stat__count {
+    color: var(--color-primary);
 }
 
 .ci-stat__icon {
@@ -103,6 +119,11 @@
     color: #64748b;
 }
 
+.ci-stat--inactive .ci-stat__icon {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+}
+
 .ci-stat__body {
     display: flex;
     flex-direction: column;
@@ -121,34 +142,6 @@
     font-size: 0.875rem;
     color: var(--color-text-muted);
     font-weight: 600;
-}
-
-.ci-tabs {
-    display: flex;
-    gap: 4px;
-    border-bottom: 1px solid var(--color-border);
-    margin-bottom: 18px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
-}
-
-.ci-tab {
-    flex-shrink: 0;
-    padding: 10px 14px;
-    border: none;
-    background: none;
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-}
-
-.ci-tab.is-active {
-    color: #2563eb;
-    border-bottom-color: #2563eb;
 }
 
 .ci-list {
@@ -544,6 +537,12 @@
     font-size: 0.9rem;
     line-height: 1.6;
     color: #334155;
+}
+
+@media (max-width: 960px) {
+    .ci-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 720px) {

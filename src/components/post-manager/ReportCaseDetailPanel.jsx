@@ -1,5 +1,6 @@
 import RichTextContent from '../common/RichTextContent.jsx';
-import { formatJobType } from '../../utils/formatters.js';
+import { formatJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import {
     REPORT_DECISION,
     formatQueueTime,
@@ -26,6 +27,8 @@ const ReportCaseDetailPanel = ({
     onOpenReport,
     onViewJobContent,
 }) => {
+    const jobTypeOptions = useJobTypeOptions();
+
     if (loading) {
         return (
             <section className="pm-review-detail pm-review-detail--loading">
@@ -77,7 +80,9 @@ const ReportCaseDetailPanel = ({
                 <div>
                     <h2 className="pm-review-detail__title">{job.title || '—'}</h2>
                     <p className="pm-review-detail__sub">
-                        {job.jobType ? <span>{formatJobType(job.jobType)}</span> : null}
+                        {job.jobType ? (
+                            <span>{formatJobTypeLabels(job.jobType, jobTypeOptions)}</span>
+                        ) : null}
                     </p>
                 </div>
                 <div className="pm-review-detail__badges">

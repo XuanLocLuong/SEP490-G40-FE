@@ -9,7 +9,9 @@ import {
 import ConfirmModal from '../../common/ConfirmModal.jsx';
 import RichTextContent from '../../common/RichTextContent.jsx';
 import { ChatIcon } from '../../common/icons.jsx';
-import { formatJobType, formatSalary, getBusinessInitial } from '../../../utils/formatters.js';
+import { formatSalary, getBusinessInitial } from '../../../utils/formatters.js';
+import { formatJobTypeLabels } from '../../../utils/jobTypeDisplay.js';
+import { useJobTypeOptions } from '../../../hooks/useJobTypeOptions.js';
 import { openChatPanel } from '../../../utils/chatEvents.js';
 import {
     formatInvitationSentAt,
@@ -48,6 +50,7 @@ const InvitationDetailModal = ({
     onAccepted,
     onRejected,
 }) => {
+    const jobTypeOptions = useJobTypeOptions();
     const [detail, setDetail] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -178,7 +181,10 @@ const InvitationDetailModal = ({
                                         <div className="ci-detail__badges">
                                             {detail.jobType && (
                                                 <span className="ci-badge ci-badge--type">
-                                                    {formatJobType(detail.jobType)}
+                                                    {formatJobTypeLabels(
+                                                        detail.jobType,
+                                                        jobTypeOptions,
+                                                    )}
                                                 </span>
                                             )}
                                             {matchLabel && (

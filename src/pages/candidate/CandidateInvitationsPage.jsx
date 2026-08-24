@@ -9,18 +9,19 @@ import {
 } from '../../apis/InvitationApi.jsx';
 import InvitationDetailModal from '../../components/candidate/invitations/InvitationDetailModal.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
-import { CheckCircleIcon, ChatIcon, ClockIcon, XIcon } from '../../components/common/icons.jsx';
+import { CheckCircleIcon, ChatIcon, ClockIcon, AlertIcon, XIcon } from '../../components/common/icons.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { openChatPanel, RECRUITMENT_CHANGED_EVENT } from '../../utils/chatEvents.js';
-import { formatJobType, getBusinessInitial } from '../../utils/formatters.js';
+import { getBusinessInitial } from '../../utils/formatters.js';
+import { formatJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import {
     formatInvitationSentAt,
     formatMatchScore,
     getInvitationRemainingLabel,
     getInvitationStatusLabel,
     INACTIVE_STATUSES,
-    INVITATION_TABS,
 } from '../../utils/invitationDisplay.js';
 import {
     buildInvitationsLeaveNavigate,
@@ -67,6 +68,7 @@ const CandidateInvitationsPage = () => {
     const { auth } = useAuth();
     const location = useLocation();
     const isCandidate = auth?.role === USER_ROLES.CANDIDATE;
+    const jobTypeOptions = useJobTypeOptions();
     const back = useMemo(
         () => resolveInvitationsBack(location.state),
         [location.state],
@@ -240,16 +242,6 @@ const CandidateInvitationsPage = () => {
         }
     };
 
-    const tabCounts = useMemo(
-        () => ({
-            SENT: counts.SENT,
-            ACCEPTED: counts.ACCEPTED,
-            REJECTED: counts.REJECTED,
-            INACTIVE: counts.INACTIVE,
-        }),
-        [counts]
-    );
-
     if (!isCandidate) return null;
 
     return (
@@ -269,9 +261,11 @@ const CandidateInvitationsPage = () => {
                 <p className="ci-page__subtitle">Quản lý các lời mời từ nhà tuyển dụng</p>
             </header>
 
-            <div className="ci-stats">
+            <div className="ci-stats" role="tablist" aria-label="Lọc lời mời">
                 <button
                     type="button"
+                    role="tab"
+                    aria-selected={activeTab === 'SENT'}
                     className={`ci-stat ci-stat--sent${activeTab === 'SENT' ? ' is-active' : ''}`}
                     onClick={() => setActiveTab('SENT')}
                 >
@@ -285,6 +279,8 @@ const CandidateInvitationsPage = () => {
                 </button>
                 <button
                     type="button"
+                    role="tab"
+                    aria-selected={activeTab === 'ACCEPTED'}
                     className={`ci-stat ci-stat--accepted${
                         activeTab === 'ACCEPTED' ? ' is-active' : ''
                     }`}
@@ -300,6 +296,8 @@ const CandidateInvitationsPage = () => {
                 </button>
                 <button
                     type="button"
+                    role="tab"
+                    aria-selected={activeTab === 'REJECTED'}
                     className={`ci-stat ci-stat--rejected${
                         activeTab === 'REJECTED' ? ' is-active' : ''
                     }`}
@@ -313,24 +311,23 @@ const CandidateInvitationsPage = () => {
                         <span className="ci-stat__label">Đã từ chối</span>
                     </span>
                 </button>
-            </div>
-
-            <div className="ci-tabs" role="tablist" aria-label="Lọc lời mời">
-                {INVITATION_TABS.map((tab) => (
-                    <button
-                        key={tab.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={activeTab === tab.id}
-                        className={`ci-tab${activeTab === tab.id ? ' is-active' : ''}`}
-                        onClick={() => setActiveTab(tab.id)}
-                    >
-                        {tab.label}
-                        {tab.id === 'SENT' && tabCounts.SENT > 0
-                            ? ` (${tabCounts.SENT})`
-                            : ''}
-                    </button>
-                ))}
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === 'INACTIVE'}
+                    className={`ci-stat ci-stat--inactive${
+                        activeTab === 'INACTIVE' ? ' is-active' : ''
+                    }`}
+                    onClick={() => setActiveTab('INACTIVE')}
+                >
+                    <span className="ci-stat__icon" aria-hidden="true">
+                        <AlertIcon width={20} height={20} />
+                    </span>
+                    <span className="ci-stat__body">
+                        <span className="ci-stat__count">{counts.INACTIVE}</span>
+                        <span className="ci-stat__label">Không còn hiệu lực</span>
+                    </span>
+                </button>
             </div>
 
             {listError && <p className="ci-page__error">{listError}</p>}
@@ -387,7 +384,7 @@ const CandidateInvitationsPage = () => {
                                     <div className="ci-card__badges">
                                         {item.jobType && (
                                             <span className="ci-badge ci-badge--type">
-                                                {formatJobType(item.jobType)}
+                                                {formatJobTypeLabels(item.jobType, jobTypeOptions)}
                                             </span>
                                         )}
                                         {matchLabel && (

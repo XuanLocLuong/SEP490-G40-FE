@@ -8,11 +8,13 @@ export const INVITATION_TABS = [
     {
         id: 'INACTIVE',
         label: 'Không còn hiệu lực',
-        statuses: ['EXPIRED', 'CANCELLED', 'INVALIDATED'],
+        // BE InvitationStatus không có CANCELLED (gửi → 400 typeMismatch).
+        statuses: ['EXPIRED', 'INVALIDATED'],
     },
 ];
 
-export const INACTIVE_STATUSES = ['EXPIRED', 'CANCELLED', 'INVALIDATED'];
+/** Status gộp tab "Không còn hiệu lực" — chỉ enum BE nhận trên GET /invitations/me. */
+export const INACTIVE_STATUSES = ['EXPIRED', 'INVALIDATED'];
 
 export const getInvitationStatusLabel = (status) => {
     switch (status) {

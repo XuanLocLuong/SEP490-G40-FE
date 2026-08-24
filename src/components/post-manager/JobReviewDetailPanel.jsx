@@ -1,6 +1,8 @@
 import RichTextContent from '../common/RichTextContent.jsx';
 import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
-import { formatJobType, formatSalary } from '../../utils/formatters.js';
+import { formatSalary } from '../../utils/formatters.js';
+import { formatJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import {
     getAutoScoreTone,
     getHardRuleFailures,
@@ -21,6 +23,8 @@ const JobReviewDetailPanel = ({
     deciding,
     onDecide,
 }) => {
+    const jobTypeOptions = useJobTypeOptions();
+
     if (loading) {
         return (
             <section className="pm-review-detail pm-review-detail--loading">
@@ -156,7 +160,7 @@ const JobReviewDetailPanel = ({
                 <dl className="pm-review-detail__meta-grid">
                     <div>
                         <dt>Loại việc</dt>
-                        <dd>{formatJobType(detail.jobType) || '—'}</dd>
+                        <dd>{formatJobTypeLabels(detail.jobType, jobTypeOptions) || '—'}</dd>
                     </div>
                     <div>
                         <dt>Mức lương</dt>
