@@ -771,15 +771,15 @@ const RecruiterVerificationPage = () => {
                     <h2>Hồ sơ đang chờ duyệt</h2>
                     <p>
                         {licenseOnlyFlow
-                            ? 'Manual Team đang xem xét giấy phép / MST. Nếu cần sửa, dùng nút nộp lại — không cần upload lại CCCD.'
-                            : 'Manual Team đang xem xét. Không gửi lại bằng API nộp mới — nếu cần sửa, dùng nút nộp lại (retry).'}
+                            ? 'Manual Team đang xem xét giấy phép / MST. Nếu cần sửa, dùng nút nộp lại - không cần upload lại CCCD.'
+                            : 'Manual Team đang xem xét. Nếu cần sửa, dùng nút nộp lại.'}
                     </p>
                     <div className="rv-card__actions rv-card__actions--center">
                         <Link to={ROUTES.RECRUITER_HOME} className="rv-btn rv-btn--primary">
                             Về trang chủ
                         </Link>
                         <button type="button" className="rv-btn rv-btn--ghost" onClick={handleRetry}>
-                            Nộp lại (retry)
+                            Nộp lại
                         </button>
                     </div>
                     <p className="rv-info-bar">
