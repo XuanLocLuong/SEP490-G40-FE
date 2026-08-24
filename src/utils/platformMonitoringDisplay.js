@@ -12,8 +12,7 @@ export const USER_ROLE_OPTIONS = [
 export const ACCOUNT_STATUS_OPTIONS = [
     { value: '', label: 'Tất cả trạng thái tài khoản' },
     { value: 'ACTIVE', label: 'Đang hoạt động' },
-    { value: 'INACTIVE', label: 'Không hoạt động' },
-    { value: 'SUSPENDED', label: 'Tạm khóa' },
+    { value: 'INACTIVE', label: 'Tạm khóa' },
     { value: 'BANNED', label: 'Cấm' },
 ];
 
@@ -39,8 +38,8 @@ export const LABEL_MAPS = {
     },
     accountStatus: {
         ACTIVE: 'Hoạt động',
-        INACTIVE: 'Không hoạt động',
-        SUSPENDED: 'Tạm khóa',
+        INACTIVE: 'Tạm khóa',
+        SUSPENDED: 'Tạm khóa', // legacy
         BANNED: 'Cấm',
     },
     jobStatus: {

@@ -1,24 +1,24 @@
 import { USER_ROLES } from './Constants.jsx';
 
+/** Khớp BE AccountStatus: ACTIVE | INACTIVE | BANNED (không có SUSPENDED). */
 export const ACCOUNT_STATUS = {
     ACTIVE: 'ACTIVE',
     INACTIVE: 'INACTIVE',
-    SUSPENDED: 'SUSPENDED',
     BANNED: 'BANNED',
 };
 
 export const ACCOUNT_STATUS_LABELS = {
     ACTIVE: 'Đang hoạt động',
-    INACTIVE: 'Không hoạt động',
-    SUSPENDED: 'Tạm khóa',
+    INACTIVE: 'Tạm khóa',
     BANNED: 'Cấm vĩnh viễn',
+    // Alias cũ — chỉ để hiển thị nếu còn data/cache; không gửi lên API.
+    SUSPENDED: 'Tạm khóa',
 };
 
 export const ACCOUNT_STATUS_OPTIONS = [
     { value: '', label: 'Tất cả trạng thái' },
     { value: ACCOUNT_STATUS.ACTIVE, label: ACCOUNT_STATUS_LABELS.ACTIVE },
     { value: ACCOUNT_STATUS.INACTIVE, label: ACCOUNT_STATUS_LABELS.INACTIVE },
-    { value: ACCOUNT_STATUS.SUSPENDED, label: ACCOUNT_STATUS_LABELS.SUSPENDED },
     { value: ACCOUNT_STATUS.BANNED, label: ACCOUNT_STATUS_LABELS.BANNED },
 ];
 
@@ -60,9 +60,12 @@ export const DASHBOARD_STAFF_ROLE_FILTER_OPTIONS = [
     ...DASHBOARD_STAFF_ROLE_OPTIONS,
 ];
 
-/** Role được phép dùng thao tác Đổi role (không áp dụng Candidate/Recruiter). */
+/** Role được phép dùng thao tác Đổi role (không áp dụng Candidate/Recruiter/Admin). */
 export const canChangeAccountRole = (currentRole) =>
-    INTERNAL_STAFF_ROLES.includes(currentRole);
+    INTERNAL_STAFF_ROLES.includes(currentRole) && currentRole !== USER_ROLES.ADMIN;
+
+/** Tài khoản role Admin: chỉ xem — không khóa / cấm / thu hồi phiên / đổi role. */
+export const isViewOnlyAdminAccount = (role) => role === USER_ROLES.ADMIN;
 
 /**
  * Dropdown đổi role: chỉ internal staff hợp lệ.
@@ -81,12 +84,11 @@ export const getAccountStatusTone = (status) => {
     switch (status) {
         case ACCOUNT_STATUS.ACTIVE:
             return 'active';
-        case ACCOUNT_STATUS.SUSPENDED:
-            return 'suspended';
         case ACCOUNT_STATUS.BANNED:
             return 'banned';
         case ACCOUNT_STATUS.INACTIVE:
-            return 'inactive';
+        case 'SUSPENDED': // legacy
+            return 'suspended';
         default:
             return 'unknown';
     }
@@ -99,16 +101,16 @@ export const formatAccountDateTime = (value) => {
     return date.toLocaleString('vi-VN');
 };
 
-/** Actions status khả dụng theo status hiện tại */
+/** Actions status khả dụng theo status hiện tại (chỉ enum BE). */
 export const getStatusActionsForAccount = (status) => {
     switch (status) {
         case ACCOUNT_STATUS.ACTIVE:
-        case ACCOUNT_STATUS.INACTIVE:
             return [
-                { status: ACCOUNT_STATUS.SUSPENDED, label: 'Tạm khóa', variant: 'warning' },
+                { status: ACCOUNT_STATUS.INACTIVE, label: 'Tạm khóa', variant: 'warning' },
                 { status: ACCOUNT_STATUS.BANNED, label: 'Cấm vĩnh viễn', variant: 'danger' },
             ];
-        case ACCOUNT_STATUS.SUSPENDED:
+        case ACCOUNT_STATUS.INACTIVE:
+        case 'SUSPENDED': // legacy
             return [
                 { status: ACCOUNT_STATUS.ACTIVE, label: 'Mở khóa (Restore)', variant: 'primary' },
                 { status: ACCOUNT_STATUS.BANNED, label: 'Cấm vĩnh viễn', variant: 'danger' },

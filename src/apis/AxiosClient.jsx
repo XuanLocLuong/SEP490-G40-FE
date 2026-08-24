@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { getAuth, setAuth, clearAuth } from '../utils/Auth.jsx';
-import { markSessionExpired, clearSessionExpiredFlag } from '../utils/sessionExpiredStorage.js';
+import {
+    markSessionExpired,
+    markAccountLocked,
+    clearSessionExpiredFlag,
+} from '../utils/sessionExpiredStorage.js';
 import { ROUTES } from '../routes/path.js';
 import { rememberPostLoginPath } from '../utils/authRedirect.js';
 
@@ -50,8 +54,9 @@ const isProtectedAppPath = (path = '') =>
  * Session chết:
  * - Logout chủ động / trang public: clear lặng, về Landing (không hiện “hết hạn”).
  * - Đang ở trang nội bộ (đã login): mới mark flag + đá Login để hiện form lỗi.
+ * @param {{ accountLock?: boolean }} [opts]
  */
-const redirectToLoginAfterSessionExpired = () => {
+const redirectToLoginAfterSessionExpired = ({ accountLock = false } = {}) => {
     if (suppressSessionExpiredRedirect) {
         clearAuth();
         clearSessionExpiredFlag();
@@ -73,7 +78,8 @@ const redirectToLoginAfterSessionExpired = () => {
         return;
     }
 
-    markSessionExpired();
+    if (accountLock) markAccountLocked();
+    else markSessionExpired();
     if (path !== ROUTES.LOGIN && !path.startsWith(`${ROUTES.LOGIN}/`)) {
         window.location.href = ROUTES.LOGIN;
     }
@@ -161,7 +167,11 @@ axiosClient.interceptors.response.use(
             return axiosClient(originalRequest);
         } catch (refreshError) {
             processQueue(refreshError, null);
-            redirectToLoginAfterSessionExpired();
+            const lockKey =
+                refreshError?.response?.data?.message || refreshError?.response?.data?.code;
+            redirectToLoginAfterSessionExpired({
+                accountLock: lockKey === 'ACCOUNT_LOCK',
+            });
             return Promise.reject(refreshError);
         } finally {
             isRefreshing = false;

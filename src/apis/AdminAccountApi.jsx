@@ -21,6 +21,16 @@ export const getAdminAccountApiErrorMessage = (error, fallback = 'Có lỗi xả
             'Không được đổi role của tài khoản Candidate / Recruiter. Chỉ đổi được giữa các role nội bộ.',
     };
     if (typeof code === 'string' && map[code]) return map[code];
+
+    const rawMessage = error?.response?.data?.message;
+    if (
+        typeof rawMessage === 'string' &&
+        rawMessage.includes('AccountStatus') &&
+        rawMessage.includes('SUSPENDED')
+    ) {
+        return 'Trạng thái không hợp lệ. Tạm khóa phải dùng mã INACTIVE.';
+    }
+
     if (typeof code === 'string' && code.trim() && !code.startsWith('{') && Number.isNaN(Number(code))) {
         return code;
     }

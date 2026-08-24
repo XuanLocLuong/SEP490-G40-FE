@@ -9,6 +9,7 @@ const AUTH_ERROR_MESSAGES = {
     USERNAME_OR_EMAIL_REQUIRED: 'Vui lòng nhập email.',
     'Incorrect username/email or password!': 'Email hoặc mật khẩu không đúng.',
     'User is disabled': 'Tài khoản của bạn đang bị khoá hoặc chưa được kích hoạt. Vui lòng liên hệ hỗ trợ.',
+    ACCOUNT_LOCK: 'Tài khoản đã bị khóa/cấm. Vui lòng liên hệ hỗ trợ.',
     'Invalid refresh token': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
     'Refresh token is expired': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
     'Refresh token is invalid or expired': 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
@@ -21,11 +22,14 @@ const DEFAULT_MESSAGE = 'Đã có lỗi xảy ra. Vui lòng thử lại.';
 const VALIDATION_FALLBACK_MESSAGE =
     'Thông tin bạn nhập chưa hợp lệ. Vui lòng kiểm tra lại email và mật khẩu (tối thiểu 6 ký tự).';
 
-export function getAuthErrorMessage(error) {
-    const backendMessage = error?.response?.data?.message;
+const LOGIN_FALLBACK_MESSAGE = 'Đăng nhập thất bại. Vui lòng kiểm tra lại email/mật khẩu.';
+
+export function getAuthErrorMessage(error, { loginFallback = false } = {}) {
+    const backendMessage =
+        error?.response?.data?.message || error?.response?.data?.code || '';
 
     if (!backendMessage) {
-        return DEFAULT_MESSAGE;
+        return loginFallback ? LOGIN_FALLBACK_MESSAGE : DEFAULT_MESSAGE;
     }
 
     if (AUTH_ERROR_MESSAGES[backendMessage]) {
@@ -36,5 +40,5 @@ export function getAuthErrorMessage(error) {
         return VALIDATION_FALLBACK_MESSAGE;
     }
 
-    return DEFAULT_MESSAGE;
+    return loginFallback ? LOGIN_FALLBACK_MESSAGE : DEFAULT_MESSAGE;
 }

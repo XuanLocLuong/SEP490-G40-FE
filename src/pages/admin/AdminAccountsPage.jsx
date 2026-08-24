@@ -21,6 +21,7 @@ import {
     canChangeAccountRole,
     getStatusActionsForAccount,
     getUserRoleLabel,
+    isViewOnlyAdminAccount,
 } from '../../utils/adminAccountDisplay.js';
 import '../../assets/styles/AdminAccountsPageStyle.css';
 
@@ -123,6 +124,7 @@ const AdminAccountsPage = () => {
     );
 
     const canChangeRole = canChangeAccountRole(detail?.role);
+    const isAdminViewOnly = isViewOnlyAdminAccount(detail?.role);
 
     const handleSearch = (e) => {
         e?.preventDefault?.();
@@ -365,65 +367,74 @@ const AdminAccountsPage = () => {
                                 </div>
                             </dl>
 
-                            <div className="admin-accounts-detail__actions">
-                                {statusActions.map((action) => (
+                            {!isAdminViewOnly ? (
+                                <div className="admin-accounts-detail__actions">
+                                    {statusActions.map((action) => (
+                                        <button
+                                            key={action.status}
+                                            type="button"
+                                            className={`admin-accounts-btn admin-accounts-btn--${action.variant}`}
+                                            onClick={() =>
+                                                setActionModal({
+                                                    mode: 'status',
+                                                    title: action.label,
+                                                    confirmLabel: action.label,
+                                                    variant:
+                                                        action.variant === 'warning'
+                                                            ? 'danger'
+                                                            : action.variant,
+                                                    statusOptions: [action],
+                                                    initialStatus: action.status,
+                                                })
+                                            }
+                                        >
+                                            {action.label}
+                                        </button>
+                                    ))}
                                     <button
-                                        key={action.status}
                                         type="button"
-                                        className={`admin-accounts-btn admin-accounts-btn--${action.variant}`}
+                                        className="admin-accounts-btn admin-accounts-btn--ghost"
                                         onClick={() =>
                                             setActionModal({
-                                                mode: 'status',
-                                                title: action.label,
-                                                confirmLabel: action.label,
-                                                variant:
-                                                    action.variant === 'warning' ? 'danger' : action.variant,
-                                                statusOptions: [action],
-                                                initialStatus: action.status,
+                                                mode: 'revoke',
+                                                title: 'Thu hồi phiên đăng nhập',
+                                                confirmLabel: 'Thu hồi phiên',
+                                                variant: 'danger',
                                             })
                                         }
                                     >
-                                        {action.label}
+                                        Thu hồi phiên
                                     </button>
-                                ))}
-                                <button
-                                    type="button"
-                                    className="admin-accounts-btn admin-accounts-btn--ghost"
-                                    onClick={() =>
-                                        setActionModal({
-                                            mode: 'revoke',
-                                            title: 'Thu hồi phiên đăng nhập',
-                                            confirmLabel: 'Thu hồi phiên',
-                                            variant: 'danger',
-                                        })
-                                    }
-                                >
-                                    Thu hồi phiên
-                                </button>
-                                <button
-                                    type="button"
-                                    className="admin-accounts-btn admin-accounts-btn--ghost"
-                                    disabled={!canChangeRole || roleOptions.length === 0}
-                                    title={
-                                        !canChangeRole
-                                            ? 'Không được đổi role tài khoản Candidate / Recruiter'
-                                            : roleOptions.length === 0
-                                              ? 'Không còn role nội bộ khác để đổi'
-                                              : 'Đổi role nội bộ'
-                                    }
-                                    onClick={() =>
-                                        setActionModal({
-                                            mode: 'role',
-                                            title: 'Đổi role',
-                                            confirmLabel: 'Đổi role',
-                                            variant: 'primary',
-                                            roleOptions,
-                                        })
-                                    }
-                                >
-                                    Đổi role
-                                </button>
-                            </div>
+                                    <button
+                                        type="button"
+                                        className="admin-accounts-btn admin-accounts-btn--ghost"
+                                        disabled={!canChangeRole || roleOptions.length === 0}
+                                        title={
+                                            !canChangeRole
+                                                ? 'Không được đổi role tài khoản Candidate / Recruiter / Admin'
+                                                : roleOptions.length === 0
+                                                  ? 'Không còn role nội bộ khác để đổi'
+                                                  : 'Đổi role nội bộ'
+                                        }
+                                        onClick={() =>
+                                            setActionModal({
+                                                mode: 'role',
+                                                title: 'Đổi role',
+                                                confirmLabel: 'Đổi role',
+                                                variant: 'primary',
+                                                roleOptions,
+                                            })
+                                        }
+                                    >
+                                        Đổi role
+                                    </button>
+                                </div>
+                            ) : (
+                                <p className="admin-accounts-detail__placeholder">
+                                    Tài khoản Admin chỉ xem — không thể khóa, cấm, thu hồi phiên hoặc
+                                    đổi role.
+                                </p>
+                            )}
 
                             <div className="admin-accounts-detail__restrictions">
                                 <h3>Lịch sử hạn chế</h3>
