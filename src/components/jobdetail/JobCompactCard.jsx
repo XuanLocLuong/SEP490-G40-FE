@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    formatSalary,
     formatLocation,
     formatVacancyLabel,
     formatJobShiftsLabel,
@@ -10,6 +9,7 @@ import {
     hasHiredJob,
     hasInvitedToJob,
 } from '../../utils/formatters.js';
+import { formatJobSalary } from '../../utils/jobSalaryDisplay.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
 import { formatJobTypeLabels } from '../../utils/jobTypeDisplay.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
@@ -106,7 +106,7 @@ const JobCompactCard = ({ job, active = false, searchSuffix = '', nearMe = false
                         </span>
                     )}
                     <span className="job-compact-card__meta-item job-compact-card__salary">
-                        {formatSalary(job.salaryMin, job.salaryMax)}
+                        {formatJobSalary(job.salaryMin, job.salaryMax)}
                     </span>
                     {shiftsLabel && (
                         <span

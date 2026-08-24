@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import RichTextContent from '../common/RichTextContent.jsx';
 import {
-    formatSalary,
     formatLocation,
     formatLocationAddressDetail,
     formatApplicationDeadline,
@@ -14,9 +13,20 @@ import {
     getBusinessInitial,
     isPrimarySkill,
 } from '../../utils/formatters.js';
+import { formatJobSalary } from '../../utils/jobSalaryDisplay.js';
 import { getJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import { getEducationLevelLabel, getGenderLabel } from '../../utils/profileFormat.js';
+import { JOB_POST_MIN_AGE } from '../../constants/jobPost.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
-import { CheckCircleIcon, MapPinIcon, ClockIcon, UsersIcon } from '../common/icons.jsx';
+import {
+    CalendarIcon,
+    CheckCircleIcon,
+    ClockIcon,
+    GraduationCapIcon,
+    MapPinIcon,
+    UserCircleIcon,
+    UsersIcon,
+} from '../common/icons.jsx';
 import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
 import JobPrimaryCta from '../job/JobPrimaryCta.jsx';
 import JobBookmarkButton from '../job/JobBookmarkButton.jsx';
@@ -24,6 +34,24 @@ import JobReportButton from '../job/JobReportButton.jsx';
 import JobChatButton from '../job/JobChatButton.jsx';
 
 const APPLY_DISABLED_TITLE = 'Tin tuyển dụng đã hết vị trí.';
+
+const formatAgeRequirement = (job) => {
+    const hasMinAge = job.minAge != null && job.minAge !== '';
+    const hasMaxAge = job.maxAge != null && job.maxAge !== '';
+    const minAge = Number(job.minAge);
+    const maxAge = Number(job.maxAge);
+
+    if (hasMinAge && hasMaxAge && Number.isFinite(minAge) && Number.isFinite(maxAge)) {
+        return `${minAge}–${maxAge} tuổi`;
+    }
+    if (hasMinAge && Number.isFinite(minAge)) {
+        return `Từ ${minAge} tuổi`;
+    }
+    if (hasMaxAge && Number.isFinite(maxAge)) {
+        return `Đến ${maxAge} tuổi`;
+    }
+    return `Từ ${JOB_POST_MIN_AGE} tuổi`;
+};
 
 const BusinessLogo = ({ name, logoUrl }) => {
     const [imgFailed, setImgFailed] = useState(false);
@@ -84,6 +112,14 @@ const JobDetailPanel = ({
     }
 
     const jobTypeLabels = getJobTypeLabels(job.jobType, jobTypeOptions);
+    const educationRequirement = job.minEducationLevel
+        ? getEducationLevelLabel(job.minEducationLevel)
+        : 'Không yêu cầu';
+    const genderRequirement =
+        job.genderRequirement && !['ANY', 'ALL'].includes(job.genderRequirement)
+            ? getGenderLabel(job.genderRequirement)
+            : 'Không yêu cầu';
+    const ageRequirement = formatAgeRequirement(job);
 
     const businessName = job.business?.name || 'Công ty';
     const businessId = job.business?.id;
@@ -92,7 +128,7 @@ const JobDetailPanel = ({
     const showVerified = trustScore != null && Number(trustScore) >= 70;
     const shiftGroups = groupShiftsForDisplay(job.shifts);
     const scheduleSummary = formatScheduleSummary(shiftGroups);
-    const showShiftSection = sectionsOnly ? shiftGroups.length > 0 : shiftGroups.length > 1;
+    const showShiftSection = shiftGroups.length > 0;
     const locationSummary = formatLocation(job.location);
     const locationDetail = formatLocationAddressDetail(job.location);
     const postedLabel = showPostedLabel
@@ -181,6 +217,23 @@ const JobDetailPanel = ({
 
             <h1 className="job-detail-panel__title">{job.title}</h1>
 
+            <div className="job-detail-panel__headline-meta">
+                <strong className="job-detail-panel__headline-salary">
+                    {formatJobSalary(job.salaryMin, job.salaryMax)}
+                </strong>
+                <span className="job-detail-panel__headline-location">
+                    <MapPinIcon width={17} height={17} />
+                    <span>
+                        {locationSummary}
+                        {locationDetail && (
+                            <span className="job-detail-panel__headline-location-detail">
+                                {locationDetail}
+                            </span>
+                        )}
+                    </span>
+                </span>
+            </div>
+
             {(vacancyLabel || job.urgent) && (
                 <div className="job-detail-panel__badges">
                     {vacancyLabel && (
@@ -224,28 +277,38 @@ const JobDetailPanel = ({
 
             <div className="job-detail-panel__stats">
                 <div className="job-detail-panel__stat">
-                    <span className="job-detail-panel__stat-label">Mức lương</span>
-                    <strong className="job-detail-panel__stat-value job-detail-panel__stat-value--salary">
-                        {formatSalary(job.salaryMin, job.salaryMax)}
+                    <span className="job-detail-panel__stat-label">Học vấn tối thiểu</span>
+                    <strong className="job-detail-panel__stat-value">
+                        <GraduationCapIcon width={18} height={18} />
+                        {educationRequirement}
                     </strong>
                 </div>
                 <div className="job-detail-panel__stat">
-                    <span className="job-detail-panel__stat-label">Địa điểm</span>
+                    <span className="job-detail-panel__stat-label">Giới tính</span>
                     <strong className="job-detail-panel__stat-value">
-                        <MapPinIcon width={16} height={16} />
-                        <span>
-                            {locationSummary}
-                            {locationDetail && (
-                                <span className="job-detail-panel__stat-sub">{locationDetail}</span>
-                            )}
-                        </span>
+                        <UserCircleIcon width={18} height={18} />
+                        {genderRequirement}
                     </strong>
                 </div>
                 <div className="job-detail-panel__stat">
-                    <span className="job-detail-panel__stat-label">Thời gian</span>
+                    <span className="job-detail-panel__stat-label">Độ tuổi</span>
                     <strong className="job-detail-panel__stat-value">
-                        <ClockIcon width={16} height={16} />
-                        {scheduleSummary}
+                        <CalendarIcon width={18} height={18} />
+                        {ageRequirement}
+                    </strong>
+                </div>
+                <div className="job-detail-panel__stat">
+                    <span className="job-detail-panel__stat-label">Thời gian làm việc</span>
+                    <strong className="job-detail-panel__stat-value">
+                        <ClockIcon width={18} height={18} />
+                        {shiftGroups.length === 1 ? (
+                            <span className="job-detail-panel__schedule-value">
+                                <span>{shiftGroups[0].days.join(', ')}</span>
+                                <span>{shiftGroups[0].range}</span>
+                            </span>
+                        ) : (
+                            scheduleSummary
+                        )}
                     </strong>
                 </div>
             </div>
@@ -329,16 +392,19 @@ const JobDetailPanel = ({
             )}
 
             {jobTypeLabels.length > 0 && (
-                <div className="job-detail-panel__footer-meta">
-                    {jobTypeLabels.map((label, index) => (
-                        <span
-                            key={`${label}-${index}`}
-                            className="job-detail-panel__tag job-detail-panel__tag--type"
-                        >
-                            {label}
-                        </span>
-                    ))}
-                </div>
+                <section className="job-detail-panel__section">
+                    <h3 className="job-detail-panel__section-title">Lĩnh vực</h3>
+                    <div className="job-detail-panel__tags">
+                        {jobTypeLabels.map((label, index) => (
+                            <span
+                                key={`${label}-${index}`}
+                                className="job-detail-panel__tag job-detail-panel__tag--type"
+                            >
+                                {label}
+                            </span>
+                        ))}
+                    </div>
+                </section>
             )}
         </article>
     );

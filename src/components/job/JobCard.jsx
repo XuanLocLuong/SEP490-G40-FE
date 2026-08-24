@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-    formatSalary,
     formatLocation,
     formatRelativeTime,
     formatJobShiftsLabel,
@@ -10,6 +9,7 @@ import {
     hasHiredJob,
     hasInvitedToJob,
 } from '../../utils/formatters.js';
+import { formatJobSalary } from '../../utils/jobSalaryDisplay.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
 import { formatJobTypeLabels } from '../../utils/jobTypeDisplay.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
@@ -251,8 +251,6 @@ const JobCard = ({
                 </div>
             </div>
 
-            <p className="job-card__salary">{formatSalary(job.salaryMin, job.salaryMax)}</p>
-
             <div className="job-card__footer">
                 <div className="job-card__footer-meta">
                     {(isPreview || job.createdAt) && (
@@ -263,6 +261,8 @@ const JobCard = ({
                     )}
                 </div>
             </div>
+
+            <p className="job-card__salary">{formatJobSalary(job.salaryMin, job.salaryMax)}</p>
 
             {isPreview ? (
                 <div className="job-card__actions">

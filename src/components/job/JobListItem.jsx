@@ -1,5 +1,4 @@
 import {
-    formatSalary,
     formatLocation,
     formatRelativeTime,
     formatJobShiftsLabel,
@@ -9,6 +8,7 @@ import {
     hasHiredJob,
     hasInvitedToJob,
 } from '../../utils/formatters.js';
+import { formatJobSalary } from '../../utils/jobSalaryDisplay.js';
 import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
 import { getJobTypeLabels } from '../../utils/jobTypeDisplay.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
@@ -139,7 +139,7 @@ const JobListItem = ({ job, nearMe = false }) => {
 
             <div className="job-list-item__info">
                 <span className="job-list-item__info-item job-list-item__salary">
-                    {formatSalary(job.salaryMin, job.salaryMax)}
+                    {formatJobSalary(job.salaryMin, job.salaryMax)}
                 </span>
                 <span className="job-list-item__info-item">
                     <MapPinIcon width={16} height={16} />
