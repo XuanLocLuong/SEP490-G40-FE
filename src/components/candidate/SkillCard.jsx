@@ -1,48 +1,50 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import ProfileModal from './ProfileModal.jsx';
 import { CloseIcon, PlusIcon } from './profileIcons.jsx';
 import RequiredMark from './RequiredMark.jsx';
 
-// SECTION 6 — Skill: render tag + ô "Thêm kỹ năng" có autocomplete từ GET /skills.
-// Apply bắt buộc ít nhất 1 kỹ năng.
+const skillKey = (skill) => String(skill?.id ?? skill?.name ?? '');
+
+// SECTION 6 — Skill: tag đã chọn + nút mở popup chọn từ catalog GET /skills.
+// Chỉ cập nhật draft; lưu thật ở FooterAction "Lưu hồ sơ".
 const SkillCard = ({ skills, catalog, onChange }) => {
-    const [query, setQuery] = useState('');
-    const [focused, setFocused] = useState(false);
-    const blurTimer = useRef(null);
+    const [open, setOpen] = useState(false);
+    const [draftSkills, setDraftSkills] = useState([]);
 
-    const selectedIds = useMemo(() => new Set(skills.map((s) => String(s.id ?? s.name))), [skills]);
+    const draftIds = useMemo(() => new Set(draftSkills.map(skillKey)), [draftSkills]);
 
-    const suggestions = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        return catalog
-            .filter((s) => !selectedIds.has(String(s.id ?? s.name)))
-            .filter((s) => (q ? s.name.toLowerCase().includes(q) : true));
-    }, [catalog, query, selectedIds]);
+    const skillsMissing = skills.length === 0;
 
-    const addSkill = (skill) => {
-        if (!skill) return;
-        const key = String(skill.id ?? skill.name);
-        if (selectedIds.has(key)) return;
-        onChange([...skills, skill]);
-        setQuery('');
+    const handleOpen = () => {
+        setDraftSkills(skills);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setDraftSkills([]);
+    };
+
+    const toggleDraftSkill = (skill) => {
+        const key = skillKey(skill);
+        if (!key) return;
+        setDraftSkills((prev) => {
+            if (prev.some((s) => skillKey(s) === key)) {
+                return prev.filter((s) => skillKey(s) !== key);
+            }
+            return [...prev, skill];
+        });
+    };
+
+    const handleApply = () => {
+        onChange(draftSkills);
+        handleClose();
     };
 
     const removeSkill = (skill) => {
-        const key = String(skill.id ?? skill.name);
-        onChange(skills.filter((s) => String(s.id ?? s.name) !== key));
+        const key = skillKey(skill);
+        onChange(skills.filter((s) => skillKey(s) !== key));
     };
-
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            // Backend chỉ nhận skillIds dạng số từ danh mục có sẵn — không hỗ trợ
-            // kỹ năng tự do, nên chỉ thêm khi có gợi ý khớp trong catalog.
-            if (suggestions.length > 0) {
-                addSkill(suggestions[0]);
-            }
-        }
-    };
-
-    const skillsMissing = skills.length === 0;
 
     return (
         <section className={'cp-card' + (skillsMissing ? ' cp-card--missing-required' : '')}>
@@ -60,7 +62,7 @@ const SkillCard = ({ skills, catalog, onChange }) => {
             {skills.length > 0 && (
                 <div className="cp-tags cp-tags--gap">
                     {skills.map((skill) => (
-                        <span key={skill.id ?? skill.name} className="cp-tag cp-tag--skill">
+                        <span key={skillKey(skill)} className="cp-tag cp-tag--skill">
                             {skill.name}
                             <button
                                 type="button"
@@ -75,50 +77,60 @@ const SkillCard = ({ skills, catalog, onChange }) => {
                 </div>
             )}
 
-            <div className="cp-skill-input">
-                <div className="cp-skill-input__wrap">
-                    <PlusIcon className="cp-skill-input__icon" width={16} height={16} />
-                    <input
-                        type="text"
-                        className="cp-skill-input__field"
-                        placeholder="Thêm kỹ năng..."
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        onFocus={() => setFocused(true)}
-                        onBlur={() => {
-                            blurTimer.current = setTimeout(() => setFocused(false), 150);
-                        }}
-                    />
-                </div>
+            <button type="button" className="cp-skill-add-btn" onClick={handleOpen}>
+                <PlusIcon width={16} height={16} aria-hidden="true" />
+                Thêm kỹ năng
+            </button>
 
-                {focused && suggestions.length > 0 && (
-                    <ul className="cp-autocomplete">
-                        {suggestions.map((s) => (
-                            <li key={s.id ?? s.name}>
+            <ProfileModal
+                open={open}
+                title="Thêm kỹ năng"
+                onClose={handleClose}
+                footer={
+                    <>
+                        <button type="button" className="cp-btn cp-btn--ghost" onClick={handleClose}>
+                            Hủy
+                        </button>
+                        <button type="button" className="cp-btn cp-btn--primary" onClick={handleApply}>
+                            Áp dụng
+                        </button>
+                    </>
+                }
+            >
+                <p className="cp-skill-picker__hint">
+                    Bấm để chọn hoặc bỏ chọn. Chỉ áp dụng vào hồ sơ khi bấm Áp dụng — lưu hệ thống
+                    bằng Lưu hồ sơ.
+                </p>
+
+                {catalog.length === 0 ? (
+                    <p className="cp-empty-text">Không tải được danh mục kỹ năng.</p>
+                ) : (
+                    <div className="cp-skill-picker" role="listbox" aria-multiselectable="true">
+                        {catalog.map((skill) => {
+                            const key = skillKey(skill);
+                            const selected = draftIds.has(key);
+                            return (
                                 <button
+                                    key={key}
                                     type="button"
-                                    className="cp-autocomplete__item"
-                                    onMouseDown={(e) => {
-                                        // Tránh blur input trước click → mất chọn skill.
-                                        e.preventDefault();
-                                        if (blurTimer.current) {
-                                            clearTimeout(blurTimer.current);
-                                            blurTimer.current = null;
-                                        }
-                                    }}
-                                    onClick={() => {
-                                        addSkill(s);
-                                        setFocused(false);
-                                    }}
+                                    role="option"
+                                    aria-selected={selected}
+                                    className={
+                                        'cp-skill-chip' + (selected ? ' cp-skill-chip--selected' : '')
+                                    }
+                                    onClick={() => toggleDraftSkill(skill)}
                                 >
-                                    {s.name}
+                                    {skill.name}
                                 </button>
-                            </li>
-                        ))}
-                    </ul>
+                            );
+                        })}
+                    </div>
                 )}
-            </div>
+
+                {draftSkills.length > 0 && (
+                    <p className="cp-skill-picker__count">Đã chọn {draftSkills.length} kỹ năng</p>
+                )}
+            </ProfileModal>
         </section>
     );
 };
