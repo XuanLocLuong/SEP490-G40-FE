@@ -212,6 +212,12 @@ export const XIcon = (props) => (
     </svg>
 );
 
+export const MenuIcon = (props) => (
+    <svg {...base} {...props}>
+        <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+);
+
 export const UserCircleIcon = (props) => (
     <svg {...base} {...props}>
         <circle cx="12" cy="12" r="9" />

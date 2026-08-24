@@ -12,6 +12,7 @@ export const APPLY_REQUIRED_PROFILE_FIELD_LABELS = {
     educationLevel: 'Trình độ học vấn',
     skills: 'Kỹ năng (ít nhất 1)',
     preferredJobType: 'Lĩnh vực mong muốn',
+    preferredLocation: 'Địa điểm tìm việc',
 };
 
 export const getMissingProfileFieldLabel = (key) =>
@@ -32,4 +33,31 @@ export const getProfileIncompleteMessage = (missingFields) => {
         return 'Hồ sơ của bạn chưa đủ thông tin bắt buộc.';
     }
     return `Hồ sơ của bạn chưa đủ thông tin bắt buộc (${labels.join(', ')}).`;
+};
+
+const hasText = (value) => Boolean(String(value ?? '').trim());
+
+/**
+ * Draft hồ sơ (shape FE nested) đã đủ field bắt buộc để apply.
+ * Dùng để chỉ hiện popup "Quay lại tin tuyển dụng" khi đủ điều kiện.
+ */
+export const isCandidateDraftReadyToApply = (draft) => {
+    if (!draft) return false;
+
+    const personal = draft.personalInfo || {};
+    const pref = draft.jobPreference || {};
+    const edu = draft.education || {};
+
+    if (!hasText(draft.fullName)) return false;
+    if (!hasText(draft.email)) return false;
+    if (!hasText(personal.phone)) return false;
+    if (!personal.birthday) return false;
+    if (!hasText(personal.gender)) return false;
+    if (!hasText(personal.address)) return false;
+    if (!hasText(edu.educationLevel)) return false;
+    if (!Array.isArray(draft.skills) || draft.skills.length === 0) return false;
+    if (!Array.isArray(pref.jobTypes) || pref.jobTypes.length === 0) return false;
+    if (pref.latitude == null || pref.longitude == null) return false;
+
+    return true;
 };

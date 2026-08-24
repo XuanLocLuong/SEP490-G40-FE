@@ -24,27 +24,44 @@ import '../../assets/styles/CandidateApplicationHistoryPageStyle.css';
 
 const PAGE_SIZE = 10;
 
+/** Chỉ status BE nhận trên GET /applications/me (không gồm CANCELLED — BE typeMismatch 400). */
 const STATUS_TABS = [
     { value: 'PENDING', label: 'Chờ phản hồi' },
-    { value: 'ACCEPTED', label: 'Đã chấp nhận' },
-    { value: 'REJECTED', label: 'Đã từ chối' },
-    { value: 'HIRED', label: 'Đã trúng tuyển' },
-    { value: 'CANCELLED', label: 'Đã hủy' },
+    { value: 'REJECTED', label: 'Bị NTD từ chối' },
+    { value: 'ACCEPTED', label: 'Chờ xác nhận nhận việc' },
+    { value: 'HIRED', label: 'Đã nhận việc' },
 ];
 
-/** Tạm ẩn tab Đã hủy + nút Hủy đơn. Giữ action/API, bật lại khi cho phép hủy. */
+/** Tạm ẩn nút Hủy đơn. Giữ action/API, bật lại khi cho phép hủy. */
 const SHOW_CANCEL_APPLICATION_UI = false;
+
+const EMPTY_COUNTS = {
+    PENDING: 0,
+    ACCEPTED: 0,
+    REJECTED: 0,
+    HIRED: 0,
+};
+
+const unwrapApplicationPage = (res) => {
+    const pageData = res?.data?.data ?? res?.data;
+    return {
+        content: pageData?.content ?? [],
+        totalElements: Number(pageData?.totalElements) || 0,
+        totalPages: Number(pageData?.totalPages) || 0,
+        currentPage: pageData?.currentPage ?? 0,
+    };
+};
 
 const getStatusUi = (status) => {
     switch (status) {
         case 'PENDING':
             return { label: 'Chờ phản hồi', tone: 'pending' };
         case 'ACCEPTED':
-            return { label: 'Đã chấp nhận', tone: 'accepted' };
+            return { label: 'Chờ xác nhận nhận việc', tone: 'accepted' };
         case 'REJECTED':
-            return { label: 'Đã từ chối', tone: 'rejected' };
+            return { label: 'Bị NTD từ chối', tone: 'rejected' };
         case 'HIRED':
-            return { label: 'Đã trúng tuyển', tone: 'hired' };
+            return { label: 'Đã nhận việc', tone: 'hired' };
         case 'CANCELLED':
             return { label: 'Đã hủy', tone: 'cancelled' };
         case 'COMPLETED':
@@ -101,56 +118,49 @@ const CandidateApplicationHistoryPage = () => {
     const [loading, setLoading] = useState(false);
     const [listError, setListError] = useState('');
 
-    const [counts, setCounts] = useState({
-        PENDING: 0,
-        ACCEPTED: 0,
-        REJECTED: 0,
-        HIRED: 0,
-        CANCELLED: 0,
-    });
+    const [counts, setCounts] = useState(EMPTY_COUNTS);
 
     const loadCounts = useCallback(async () => {
-        const statuses = STATUS_TABS.map((t) => t.value);
-        const results = await Promise.all(
-            statuses.map(async (status) => {
-                const res = await getMyApplications({ page: 0, size: 1, status });
-                return { status, totalElements: res?.data?.data?.totalElements ?? 0 };
-            })
+        const settled = await Promise.allSettled(
+            STATUS_TABS.map(async (tab) => {
+                const res = await getMyApplications({ page: 0, size: 1, status: tab.value });
+                return { status: tab.value, totalElements: unwrapApplicationPage(res).totalElements };
+            }),
         );
 
-        const next = { PENDING: 0, ACCEPTED: 0, REJECTED: 0, HIRED: 0, CANCELLED: 0 };
-        results.forEach((r) => {
-            next[r.status] = r.totalElements;
+        const next = { ...EMPTY_COUNTS };
+        settled.forEach((result) => {
+            if (result.status === 'fulfilled') {
+                next[result.value.status] = result.value.totalElements;
+            }
         });
         setCounts(next);
     }, []);
 
-    const loadPage = useCallback(
-        async (pageNum, status) => {
-            setLoading(true);
-            setListError('');
-            try {
-                const res = await getMyApplications({
-                    page: pageNum,
-                    size: PAGE_SIZE,
-                    status,
-                });
-                const pageData = res?.data?.data ?? res?.data;
-                setApplications(pageData?.content ?? []);
-                setTotalPages(pageData?.totalPages ?? 0);
-                setTotalElements(pageData?.totalElements ?? 0);
-                setPage(pageData?.currentPage ?? pageNum);
-            } catch (err) {
-                setListError(err?.message || 'Không thể tải lịch sử ứng tuyển.');
-                setApplications([]);
-                setTotalPages(0);
-                setTotalElements(0);
-            } finally {
-                setLoading(false);
-            }
-        },
-        [setApplications]
-    );
+    const loadPage = useCallback(async (pageNum, status) => {
+        setLoading(true);
+        setListError('');
+        try {
+            const res = await getMyApplications({
+                page: pageNum,
+                size: PAGE_SIZE,
+                status,
+            });
+            const pageData = unwrapApplicationPage(res);
+            setApplications(pageData.content);
+            setTotalPages(pageData.totalPages);
+            setTotalElements(pageData.totalElements);
+            setPage(pageData.currentPage ?? pageNum);
+            setCounts((prev) => ({ ...prev, [status]: pageData.totalElements }));
+        } catch (err) {
+            setListError(err?.message || 'Không thể tải lịch sử ứng tuyển.');
+            setApplications([]);
+            setTotalPages(0);
+            setTotalElements(0);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         if (!isCandidate) return;
@@ -353,7 +363,8 @@ const CandidateApplicationHistoryPage = () => {
             await cancelApplication(cancelTarget.applicationId);
             toast.success('Đã hủy đơn. Bạn có thể ứng tuyển lại tin này bất cứ lúc nào.');
             setCancelTarget(null);
-            setActiveStatus('CANCELLED');
+            setActiveStatus('PENDING');
+            await loadPage(0, 'PENDING');
             await loadCounts();
         } catch (err) {
             const message =
@@ -399,9 +410,7 @@ const CandidateApplicationHistoryPage = () => {
             </header>
 
             <div className="cah-summary">
-                {STATUS_TABS.filter(
-                    (t) => SHOW_CANCEL_APPLICATION_UI || t.value !== 'CANCELLED'
-                ).map((t) => {
+                {STATUS_TABS.map((t) => {
                     const isActive = t.value === activeStatus;
                     const tone = getStatusUi(t.value).tone;
                     return (

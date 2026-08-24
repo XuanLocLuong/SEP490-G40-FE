@@ -24,7 +24,7 @@
 
 .cah-summary {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
     margin-bottom: 18px;
 }
@@ -75,7 +75,8 @@
 
 .cah-summary__label {
     margin-top: 6px;
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1.35;
     color: var(--color-text-muted);
     font-weight: 650;
 }
