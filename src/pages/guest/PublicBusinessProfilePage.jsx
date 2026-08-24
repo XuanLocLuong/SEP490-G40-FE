@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import JobCard from '../../components/job/JobCard.jsx';
 import RichTextContent from '../../components/common/RichTextContent.jsx';
 import GalleryLightbox from '../../components/common/GalleryLightbox.jsx';
@@ -93,6 +93,7 @@ const buildMapsUrl = (location) => {
 const PublicBusinessProfilePage = () => {
     const { businessId } = useParams();
     const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { auth } = useAuth();
 
     const profileBack = useMemo(
@@ -115,7 +116,19 @@ const PublicBusinessProfilePage = () => {
     const [profileLoading, setProfileLoading] = useState(true);
     const [profileError, setProfileError] = useState('');
 
-    const [activeTab, setActiveTab] = useState(TABS.ABOUT);
+    const requestedTab = searchParams.get('tab');
+    const activeTab = Object.values(TABS).includes(requestedTab)
+        ? requestedTab
+        : TABS.ABOUT;
+    const setActiveTab = (tab) => {
+        const nextParams = new URLSearchParams(searchParams);
+        if (tab === TABS.ABOUT) {
+            nextParams.delete('tab');
+        } else {
+            nextParams.set('tab', tab);
+        }
+        setSearchParams(nextParams, { replace: true, state: location.state });
+    };
     const [jobsSubTab, setJobsSubTab] = useState(JOB_SUBTABS.OPEN);
 
     const [jobs, setJobs] = useState([]);
@@ -167,7 +180,6 @@ const PublicBusinessProfilePage = () => {
         setReviewsError('');
         setGalleryLightboxIndex(null);
         setJobsSubTab(JOB_SUBTABS.OPEN);
-        setActiveTab(TABS.ABOUT);
     }, [businessId]);
 
     useEffect(() => {
