@@ -114,11 +114,15 @@ export const toUpdatePayload = (draft) => {
     const edu = draft.education || {};
 
     const toNumberOrNull = (v) => (v === '' || v == null ? null : Number(v));
+    const isBlankSalary = (v) => v === '' || v == null || String(v).trim() === '';
 
     // Địa chỉ text chỉ từ Thông tin cá nhân. Lat/lng chỉ từ Nhu cầu tìm việc.
     // (pref.location chỉ là nhãn reverse-geocode trên UI, không PUT vào address.)
     const personalAddress =
         personal.address == null ? '' : String(personal.address).trim();
+
+    const salaryMinBlank = isBlankSalary(pref.salaryMin);
+    const salaryMaxBlank = isBlankSalary(pref.salaryMax);
 
     return {
         bio: draft.bio ?? null,
@@ -134,8 +138,11 @@ export const toUpdatePayload = (draft) => {
 
         // Gửi mã lĩnh vực (FNB_SERVICE,...). Chuỗi rỗng "" = xóa hết (BE: null = không đổi).
         preferredJobType: toArray(pref.jobTypes).join(JOB_TYPES_SEPARATOR),
-        expectedSalaryMin: toNumberOrNull(pref.salaryMin),
-        expectedSalaryMax: toNumberOrNull(pref.salaryMax),
+        // Lương: null = không đổi; xóa ô → clearExpectedSalary* = true (BE flag).
+        expectedSalaryMin: salaryMinBlank ? null : toNumberOrNull(pref.salaryMin),
+        expectedSalaryMax: salaryMaxBlank ? null : toNumberOrNull(pref.salaryMax),
+        clearExpectedSalaryMin: salaryMinBlank ? true : undefined,
+        clearExpectedSalaryMax: salaryMaxBlank ? true : undefined,
 
         address: personalAddress,
         latitude: pref.latitude ?? null,
