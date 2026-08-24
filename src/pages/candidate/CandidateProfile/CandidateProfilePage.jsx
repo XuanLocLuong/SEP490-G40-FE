@@ -27,6 +27,7 @@ import {
     peekUnsavedCandidateProfileDraft,
     setUnsavedCandidateProfileDraft,
 } from '../../../utils/candidateProfileDraftStorage.js';
+import { isCandidateDraftReadyToApply } from '../../../utils/applyProfileFields.js';
 import { ROUTES, getJobDetailPath } from '../../../routes/path.js';
 import '../../../assets/styles/CandidateProfile.css';
 
@@ -167,8 +168,10 @@ const CandidateProfilePage = () => {
 
     if (!draft) return <ProfileSkeleton />;
 
-    const offerReturnToJobIfNeeded = () => {
+    const offerReturnToJobIfNeeded = (savedDraft) => {
         if (returnJobPrompt) return;
+        // Chỉ gợi ý quay lại tin khi đã đủ field bắt buộc để apply.
+        if (!isCandidateDraftReadyToApply(savedDraft)) return;
         const pending = peekPendingApplyReturn();
         if (pending?.jobId) setReturnJobPrompt(pending);
     };
@@ -218,7 +221,7 @@ const CandidateProfilePage = () => {
 
         setDraft(next);
         const ok = await updateProfile(next);
-        if (ok) offerReturnToJobIfNeeded();
+        if (ok) offerReturnToJobIfNeeded(next);
         return ok;
     };
 
@@ -231,7 +234,7 @@ const CandidateProfilePage = () => {
         const ok = await updateProfile(draft);
         if (ok) {
             clearUnsavedCandidateProfileDraft();
-            offerReturnToJobIfNeeded();
+            offerReturnToJobIfNeeded(draft);
         }
         return ok;
     };
