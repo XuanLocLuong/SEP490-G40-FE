@@ -25,6 +25,7 @@ const normalizeExperience = (exp = {}) => ({
 
 export const mapPublicProfileFromApi = (data = {}) => ({
     id: data.id,
+    userId: data.userId ?? null,
     fullName: data.fullName || '',
     avatarUrl: data.avatarUrl || '',
     verified: Boolean(data.verified),
