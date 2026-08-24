@@ -1,69 +1,30 @@
 import { useEffect, useState } from 'react';
-import recruiterJobApi from '../apis/RecruiterJobApi.jsx';
 import { JOB_TYPE_OPTIONS } from '../constants/jobPost.js';
+import {
+    fetchJobTypeOptions,
+    normalizeJobTypeOptions,
+} from '../utils/jobTypeDisplay.js';
 
-const normalizeJobTypeOptions = (list) => {
-    if (!Array.isArray(list)) return [];
-    return list
-        .map((item) => {
-            if (!item) return null;
-            if (typeof item === 'string') {
-                return { value: item, label: item };
-            }
-            const value = item.value || item.name || item.code;
-            if (!value) return null;
-            return {
-                value: String(value),
-                label: item.label || String(value),
-            };
-        })
-        .filter(Boolean);
-};
-
-let cachedJobTypeOptions = null;
-let cachedJobTypeOptionsAt = 0;
-let jobTypeOptionsRequest = null;
-const JOB_TYPE_CACHE_TTL_MS = 5 * 60 * 1000;
-
-const loadJobTypeOptions = async () => {
-    if (
-        cachedJobTypeOptions &&
-        Date.now() - cachedJobTypeOptionsAt < JOB_TYPE_CACHE_TTL_MS
-    ) {
-        return cachedJobTypeOptions;
-    }
-
-    if (!jobTypeOptionsRequest) {
-        jobTypeOptionsRequest = recruiterJobApi
-            .getJobTypes()
-            .then(normalizeJobTypeOptions)
-            .then((list) => {
-                if (list.length > 0) {
-                    cachedJobTypeOptions = list;
-                    cachedJobTypeOptionsAt = Date.now();
-                }
-                return list;
-            })
-            .finally(() => {
-                jobTypeOptionsRequest = null;
-            });
-    }
-
-    return jobTypeOptionsRequest;
-};
+export {
+    fetchJobTypeOptions,
+    invalidateJobTypeOptionsCache,
+} from '../utils/jobTypeDisplay.js';
 
 /**
  * Load JobType từ GET /api/v1/jobs/types.
  * Fallback JOB_TYPE_OPTIONS nếu API lỗi / empty.
+ *
+ * @param {{ forceOnMount?: boolean }} [opts]
+ *   forceOnMount: bỏ cache khi mount (trang đăng/sửa tin — tránh chip cũ sau admin tắt).
  */
-export const useJobTypeOptions = () => {
-    const [options, setOptions] = useState(cachedJobTypeOptions || JOB_TYPE_OPTIONS);
+export const useJobTypeOptions = ({ forceOnMount = false } = {}) => {
+    const [options, setOptions] = useState(() => normalizeJobTypeOptions(JOB_TYPE_OPTIONS));
 
     useEffect(() => {
         let cancelled = false;
         (async () => {
             try {
-                const list = await loadJobTypeOptions();
+                const list = await fetchJobTypeOptions({ force: forceOnMount });
                 if (!cancelled && list.length > 0) {
                     setOptions(list);
                 }
@@ -74,7 +35,7 @@ export const useJobTypeOptions = () => {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [forceOnMount]);
 
     return options;
 };

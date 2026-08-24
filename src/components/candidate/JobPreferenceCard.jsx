@@ -3,7 +3,12 @@ import ProfileModal from './ProfileModal.jsx';
 import RequiredMark from './RequiredMark.jsx';
 import { PencilIcon, TargetIcon, WalletIcon, MapPinIcon } from './profileIcons.jsx';
 import { formatSalaryRange } from '../../utils/profileFormat.js';
-import { getJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import {
+    formatRemovedJobTypeLabels,
+    getActiveJobTypeOptions,
+    getInactiveSelectedJobTypes,
+    getJobTypeLabels,
+} from '../../utils/jobTypeDisplay.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import { reverseGeocodeLatLng } from '../../utils/reverseGeocode.js';
 import LocationPicker from '../../modules/location/LocationPicker.jsx';
@@ -13,11 +18,16 @@ import LocationPicker from '../../modules/location/LocationPicker.jsx';
 const JobPreferenceCard = ({ preference, onSave, saving }) => {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState(preference);
-    const jobTypeOptions = useJobTypeOptions();
+    const jobTypeOptions = useJobTypeOptions({ forceOnMount: true });
+    const activeJobTypeOptions = getActiveJobTypeOptions(jobTypeOptions);
+    const inactiveSelected = getInactiveSelectedJobTypes(preference.jobTypes, jobTypeOptions);
+    const inactiveLabels = formatRemovedJobTypeLabels(inactiveSelected, jobTypeOptions);
     const jobTypeLabels = getJobTypeLabels(
         (preference.jobTypes || []).join(','),
         jobTypeOptions
     );
+    const formInactiveSelected = getInactiveSelectedJobTypes(form.jobTypes, jobTypeOptions);
+    const formInactiveLabels = formatRemovedJobTypeLabels(formInactiveSelected, jobTypeOptions);
 
     const [showMap, setShowMap] = useState(false);
     const [formError, setFormError] = useState('');
@@ -88,11 +98,25 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
         });
     };
 
+    const removeInactiveType = (value) => {
+        setForm((prev) => ({
+            ...prev,
+            jobTypes: (prev.jobTypes || []).filter((t) => t !== value),
+        }));
+    };
+
     const handleSubmit = async () => {
         setFormError('');
 
-        const min = form.salaryMin === '' ? null : Number(form.salaryMin);
-        const max = form.salaryMax === '' ? null : Number(form.salaryMax);
+        const isBlankSalary = (v) => v === '' || v == null || String(v).trim() === '';
+        const toSalaryNumber = (v) => {
+            if (isBlankSalary(v)) return null;
+            const n = Number(v);
+            return Number.isFinite(n) ? n : null;
+        };
+
+        const min = toSalaryNumber(form.salaryMin);
+        const max = toSalaryNumber(form.salaryMax);
         if (min != null && max != null && min > max) {
             setFormError('Lương tối thiểu phải nhỏ hơn hoặc bằng lương tối đa.');
             return;
@@ -113,11 +137,13 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
 
         const ok = await onSave({
             jobTypes: form.jobTypes || [],
-            salaryMin: form.salaryMin === '' ? null : form.salaryMin,
-            salaryMax: form.salaryMax === '' ? null : form.salaryMax,
+            salaryMin: isBlankSalary(form.salaryMin) ? null : form.salaryMin,
+            salaryMax: isBlankSalary(form.salaryMax) ? null : form.salaryMax,
             salaryUnit: 'giờ',
             locationRadiusKm:
-                form.locationRadiusKm === '' ? null : form.locationRadiusKm,
+                form.locationRadiusKm === '' || form.locationRadiusKm == null
+                    ? null
+                    : form.locationRadiusKm,
             // Nhãn UI only — toUpdatePayload không PUT field này vào address.
             location,
             latitude: lat,
@@ -154,17 +180,35 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                 </span>
                 {hasTypes ? (
                     <div className="cp-tags">
-                        {jobTypeLabels.map((label, index) => (
-                            <span
-                                key={`${preference.jobTypes[index] || label}-${index}`}
-                                className="cp-tag cp-tag--soft"
-                            >
-                                {label}
-                            </span>
-                        ))}
+                        {(preference.jobTypes || []).map((code, index) => {
+                            const isInactive = inactiveSelected.includes(code);
+                            const label = isInactive
+                                ? inactiveLabels[inactiveSelected.indexOf(code)] ||
+                                  jobTypeLabels[index] ||
+                                  code
+                                : jobTypeLabels[index] || code;
+                            return (
+                                <span
+                                    key={`${code}-${index}`}
+                                    className={
+                                        'cp-tag' +
+                                        (isInactive ? ' cp-tag--inactive' : ' cp-tag--soft')
+                                    }
+                                    title={isInactive ? 'Lĩnh vực đã bị vô hiệu hóa' : undefined}
+                                >
+                                    {isInactive ? `${label} (đã vô hiệu)` : label}
+                                </span>
+                            );
+                        })}
                     </div>
                 ) : (
                     <span className="cp-empty-text">Chưa chọn lĩnh vực</span>
+                )}
+                {inactiveSelected.length > 0 && (
+                    <p className="cp-field-hint cp-field-hint--warn">
+                        Có lĩnh vực đã bị vô hiệu hóa — mở sửa để gỡ, hoặc Lưu hồ sơ để hệ thống tự
+                        gỡ.
+                    </p>
                 )}
             </div>
 
@@ -214,7 +258,7 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                         <RequiredMark />
                     </label>
                     <div className="cp-choice-grid">
-                        {jobTypeOptions.map((opt) => {
+                        {activeJobTypeOptions.map((opt) => {
                             const active = (form.jobTypes || []).includes(opt.value);
                             return (
                                 <button
@@ -227,7 +271,24 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
                                 </button>
                             );
                         })}
+                        {formInactiveSelected.map((code, index) => (
+                            <button
+                                type="button"
+                                key={`inactive-${code}`}
+                                className="cp-choice cp-choice--inactive"
+                                title="Lĩnh vực đã bị vô hiệu hóa — bấm để gỡ"
+                                onClick={() => removeInactiveType(code)}
+                            >
+                                {formInactiveLabels[index] || code} (đã vô hiệu)
+                            </button>
+                        ))}
                     </div>
+                    {formInactiveSelected.length > 0 && (
+                        <p className="cp-field-hint cp-field-hint--warn">
+                            Có lĩnh vực đã bị vô hiệu hóa — bấm chip đỏ để gỡ, hoặc lưu để hệ thống
+                            tự gỡ.
+                        </p>
+                    )}
                 </div>
 
                 <div className="cp-form-row">

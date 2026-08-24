@@ -2,11 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import * as service from '../services/candidateProfileService.js';
 import { getProfileSaveErrorMessage, getAvatarErrorMessage } from '../utils/profileErrorMessages.js';
+import { rememberSkillLabels } from '../utils/skillDisplay.js';
+
 // Hook trung tâm cho Candidate Profile.
 // Trả về: profile, skills catalog, loading/error/saving + các action.
 export const useCandidateProfile = () => {
     const [profile, setProfile] = useState(null);
     const [skills, setSkills] = useState([]);
+    const [skillsCatalogReady, setSkillsCatalogReady] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
@@ -16,6 +19,7 @@ export const useCandidateProfile = () => {
         setError(null);
         try {
             const data = await service.fetchProfile();
+            rememberSkillLabels(data?.skills);
             setProfile(data);
             return data;
         } catch (err) {
@@ -30,12 +34,15 @@ export const useCandidateProfile = () => {
     const loadSkills = useCallback(async () => {
         try {
             const data = await service.fetchSkills();
+            rememberSkillLabels(data);
             setSkills(data);
+            setSkillsCatalogReady(true);
             return data;
         } catch {
-            // Catalog kỹ năng lỗi không chặn cả trang — chỉ tắt autocomplete.
+            // Catalog lỗi — không prune theo catalog rỗng.
             setSkills([]);
-            return [];
+            setSkillsCatalogReady(false);
+            return null;
         }
     }, []);
 
@@ -94,6 +101,7 @@ export const useCandidateProfile = () => {
     return {
         profile,
         skills,
+        skillsCatalogReady,
         loading,
         saving,
         error,

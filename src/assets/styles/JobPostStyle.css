@@ -459,6 +459,17 @@
     color: #1d4ed8;
 }
 
+.job-post-form__chip--inactive {
+    background: #fff1f2;
+    border-color: #fb7185;
+    color: #be123c;
+    text-decoration: line-through;
+}
+
+.job-post-form__hint--warn {
+    color: #b45309;
+}
+
 .job-post-form__salary-hint {
     margin: -6px 0 0;
     font-size: 0.85rem;

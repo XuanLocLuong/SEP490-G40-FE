@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCandidateProfile } from '../../../hooks/useCandidateProfile.js';
@@ -28,6 +28,19 @@ import {
     setUnsavedCandidateProfileDraft,
 } from '../../../utils/candidateProfileDraftStorage.js';
 import { isCandidateDraftReadyToApply } from '../../../utils/applyProfileFields.js';
+import {
+    buildInactiveJobTypesRemovedMessage,
+    fetchJobTypeOptions,
+    INACTIVE_JOB_TYPES_TOAST_ID,
+    pruneInactiveJobTypes,
+    rememberJobTypeLabels,
+} from '../../../utils/jobTypeDisplay.js';
+import {
+    buildInactiveSkillsRemovedMessage,
+    INACTIVE_SKILLS_PROFILE_TOAST_ID,
+    pruneInactiveSkills,
+    rememberSkillLabels,
+} from '../../../utils/skillDisplay.js';
 import { ROUTES, getJobDetailPath } from '../../../routes/path.js';
 import '../../../assets/styles/CandidateProfile.css';
 
@@ -65,8 +78,18 @@ const mergeDraftSkills = (fromServer, prevDraft, oldBaseline, storedSkills) => {
 const CandidateProfilePage = () => {
     const navigate = useNavigate();
     const { updateProfile: updateAuthProfile } = useAuth();
-    const { profile, skills, loading, saving, error, loadProfile, updateProfile, uploadAvatar } =
-        useCandidateProfile();
+    const {
+        profile,
+        skills,
+        skillsCatalogReady,
+        loading,
+        saving,
+        error,
+        loadProfile,
+        loadSkills,
+        updateProfile,
+        uploadAvatar,
+    } = useCandidateProfile();
     const {
         slots: availabilitySlots,
         startDate: availabilityStartDate,
@@ -88,6 +111,62 @@ const CandidateProfilePage = () => {
     const [syncedPhone, setSyncedPhone] = useState(null);
     const [returnJobPrompt, setReturnJobPrompt] = useState(null);
 
+    /** Refetch catalog rồi gỡ lĩnh vực / kỹ năng đã tắt khỏi draft trước khi PUT. */
+    const prepareDraftForSave = useCallback(
+        async (currentDraft, { notify = true } = {}) => {
+            if (!currentDraft) return currentDraft;
+
+            let nextDraft = currentDraft;
+
+            const options = await fetchJobTypeOptions({ force: true });
+            const typesPruned = pruneInactiveJobTypes(
+                nextDraft.jobPreference?.jobTypes,
+                options,
+            );
+            if (typesPruned.removed.length > 0) {
+                nextDraft = {
+                    ...nextDraft,
+                    jobPreference: {
+                        ...(nextDraft.jobPreference || {}),
+                        jobTypes: typesPruned.nextTypes,
+                    },
+                };
+                if (notify) {
+                    toast.warning(
+                        buildInactiveJobTypesRemovedMessage(typesPruned.removed, options),
+                        {
+                            autoClose: 7000,
+                            toastId: INACTIVE_JOB_TYPES_TOAST_ID,
+                        },
+                    );
+                }
+            }
+
+            const catalog = await loadSkills();
+            if (catalog) {
+                rememberSkillLabels(nextDraft.skills);
+                const skillsPruned = pruneInactiveSkills(nextDraft.skills, catalog);
+                if (skillsPruned.removed.length > 0) {
+                    nextDraft = { ...nextDraft, skills: skillsPruned.nextSkills };
+                    if (notify) {
+                        toast.warning(
+                            buildInactiveSkillsRemovedMessage(skillsPruned.removed, catalog, {
+                                context: 'profile',
+                            }),
+                            {
+                                autoClose: 7000,
+                                toastId: INACTIVE_SKILLS_PROFILE_TOAST_ID,
+                            },
+                        );
+                    }
+                }
+            }
+
+            return nextDraft;
+        },
+        [loadSkills],
+    );
+
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -102,6 +181,70 @@ const CandidateProfilePage = () => {
             cancelled = true;
         };
     }, []);
+
+    // Khi profile từ BE có lĩnh vực đã tắt: gỡ khỏi draft + toast (giống đăng tin).
+    useEffect(() => {
+        if (!profile?.jobPreference?.jobTypes?.length) return undefined;
+
+        let cancelled = false;
+        (async () => {
+            const options = await fetchJobTypeOptions({ force: true });
+            if (cancelled) return;
+
+            rememberJobTypeLabels(options);
+            const { removed } = pruneInactiveJobTypes(
+                profile.jobPreference.jobTypes,
+                options,
+            );
+            if (removed.length === 0) return;
+
+            setDraft((prev) => {
+                if (!prev?.jobPreference) return prev;
+                const pruned = pruneInactiveJobTypes(prev.jobPreference.jobTypes, options);
+                if (pruned.removed.length === 0) return prev;
+                return {
+                    ...prev,
+                    jobPreference: {
+                        ...prev.jobPreference,
+                        jobTypes: pruned.nextTypes,
+                    },
+                };
+            });
+
+            toast.warning(buildInactiveJobTypesRemovedMessage(removed, options), {
+                autoClose: 7000,
+                toastId: INACTIVE_JOB_TYPES_TOAST_ID,
+            });
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [profile]);
+
+    // Catalog UV chỉ còn skill active — gỡ skill đã tắt khỏi draft.
+    useEffect(() => {
+        if (!skillsCatalogReady || !profile?.skills?.length) return;
+
+        rememberSkillLabels(profile.skills);
+        const { removed } = pruneInactiveSkills(profile.skills, skills);
+        if (removed.length === 0) return;
+
+        setDraft((prev) => {
+            if (!prev?.skills?.length) return prev;
+            const pruned = pruneInactiveSkills(prev.skills, skills);
+            if (pruned.removed.length === 0) return prev;
+            return { ...prev, skills: pruned.nextSkills };
+        });
+
+        toast.warning(
+            buildInactiveSkillsRemovedMessage(removed, skills, { context: 'profile' }),
+            {
+                autoClose: 7000,
+                toastId: INACTIVE_SKILLS_PROFILE_TOAST_ID,
+            },
+        );
+    }, [profile, skills, skillsCatalogReady]);
 
     if (profile !== syncedProfile) {
         const fromServer = withPhone(profile, accountPhone);
@@ -206,7 +349,7 @@ const CandidateProfilePage = () => {
 
     // Cập nhật 1 phần rồi lưu ngay (dùng cho các modal section) -> PUT full draft.
     const saveSection = async (patch) => {
-        const next = {
+        let next = {
             ...draft,
             ...patch,
             personalInfo: patch.personalInfo
@@ -219,6 +362,8 @@ const CandidateProfilePage = () => {
             if (!phoneOk) return false;
         }
 
+        // PUT gửi full preferredJobType — luôn prune trước khi lưu.
+        next = await prepareDraftForSave(next, { notify: true });
         setDraft(next);
         const ok = await updateProfile(next);
         if (ok) offerReturnToJobIfNeeded(next);
@@ -231,10 +376,12 @@ const CandidateProfilePage = () => {
     const handleSaveAll = async () => {
         const phoneOk = await savePhoneIfNeeded(draft.personalInfo);
         if (!phoneOk) return false;
-        const ok = await updateProfile(draft);
+        const next = await prepareDraftForSave(draft, { notify: true });
+        setDraft(next);
+        const ok = await updateProfile(next);
         if (ok) {
             clearUnsavedCandidateProfileDraft();
-            offerReturnToJobIfNeeded(draft);
+            offerReturnToJobIfNeeded(next);
         }
         return ok;
     };
@@ -320,6 +467,7 @@ const CandidateProfilePage = () => {
             <SkillCard
                 skills={draft.skills}
                 catalog={skills}
+                catalogReady={skillsCatalogReady}
                 onChange={(next) => patchDraft({ skills: next })}
             />
 

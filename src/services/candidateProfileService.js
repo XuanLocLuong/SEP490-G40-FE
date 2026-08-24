@@ -49,8 +49,12 @@ const resolveJobTypeCodesFromProfile = (data) => {
 
 const normalizeSkill = (raw) => {
     if (raw == null) return null;
-    if (typeof raw === 'string') return { id: raw, name: raw };
-    return { id: raw.id, name: raw.name };
+    if (typeof raw === 'string') return { id: raw, name: raw, active: true };
+    const active =
+        raw.active == null && raw.isActive == null
+            ? true
+            : Boolean(raw.active ?? raw.isActive);
+    return { id: raw.id, name: raw.name, active };
 };
 
 // ---- GET: backend (flat) -> UI (nested) ----

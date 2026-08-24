@@ -14,6 +14,15 @@ import {
     parseSalaryInput,
     sameSkillId,
 } from '../../../services/jobPostService.js';
+import {
+    formatRemovedJobTypeLabels,
+    getActiveJobTypeOptions,
+    getInactiveSelectedJobTypes,
+} from '../../../utils/jobTypeDisplay.js';
+import {
+    formatRemovedSkillLabels,
+    getInactiveSelectedSkillIds,
+} from '../../../utils/skillDisplay.js';
 import RequiredMark from '../../common/RequiredMark.jsx';
 import RichTextEditor from '../../common/RichTextEditor.jsx';
 import DateTimeInput24h from '../../common/DateTimeInput24h.jsx';
@@ -32,7 +41,12 @@ const JobPostForm = ({
     educationLevelOptions = [],
 }) => {
     const minApplicationDeadline = getMinApplicationDeadline();
-    const jobTypeOptions = useJobTypeOptions();
+    const jobTypeOptions = useJobTypeOptions({ forceOnMount: true });
+    const activeJobTypeOptions = getActiveJobTypeOptions(jobTypeOptions);
+    const inactiveSelected = getInactiveSelectedJobTypes(form.jobTypes, jobTypeOptions);
+    const inactiveLabels = formatRemovedJobTypeLabels(inactiveSelected, jobTypeOptions);
+    const inactiveSkillIds = getInactiveSelectedSkillIds(form.skillIds, skillsCatalog);
+    const inactiveSkillLabels = formatRemovedSkillLabels(inactiveSkillIds, skillsCatalog);
 
     const setField = (field, value) => {
         onChange({ ...form, [field]: value });
@@ -53,6 +67,13 @@ const JobPostForm = ({
         setField('skillIds', next);
     };
 
+    const removeInactiveSkill = (skillId) => {
+        setField(
+            'skillIds',
+            (form.skillIds || []).filter((id) => !sameSkillId(id, skillId)),
+        );
+    };
+
     const toggleJobType = (value) => {
         const current = form.jobTypes || [];
         const exists = current.includes(value);
@@ -61,6 +82,13 @@ const JobPostForm = ({
             ? current.filter((code) => code !== value)
             : [...current, value];
         setField('jobTypes', next);
+    };
+
+    const removeInactiveJobType = (value) => {
+        setField(
+            'jobTypes',
+            (form.jobTypes || []).filter((code) => code !== value),
+        );
     };
 
     const handleEducationModeChange = (mode) => {
@@ -98,7 +126,7 @@ const JobPostForm = ({
                         <RequiredMark />
                     </span>
                     <div className="job-post-form__chips">
-                        {jobTypeOptions.map((opt) => {
+                        {activeJobTypeOptions.map((opt) => {
                             const active = (form.jobTypes || []).includes(opt.value);
                             const atMax =
                                 !active &&
@@ -108,8 +136,9 @@ const JobPostForm = ({
                                     key={opt.value}
                                     type="button"
                                     disabled={disabled || atMax}
-                                    className={`job-post-form__chip${active ? ' job-post-form__chip--active' : ''
-                                        }`}
+                                    className={`job-post-form__chip${
+                                        active ? ' job-post-form__chip--active' : ''
+                                    }`}
                                     onClick={() => toggleJobType(opt.value)}
                                     onBlur={blur('jobTypes')}
                                 >
@@ -117,10 +146,28 @@ const JobPostForm = ({
                                 </button>
                             );
                         })}
+                        {inactiveSelected.map((code, index) => (
+                            <button
+                                key={`inactive-${code}`}
+                                type="button"
+                                disabled={disabled}
+                                className="job-post-form__chip job-post-form__chip--inactive"
+                                title="Ngành nghề đã bị vô hiệu hóa"
+                                onClick={() => removeInactiveJobType(code)}
+                            >
+                                {inactiveLabels[index] || code} (đã vô hiệu)
+                            </button>
+                        ))}
                     </div>
                     <p className="job-post-form__hint">
                         Chọn 1–{JOB_POST_MAX_JOB_TYPES} ngành nghề phù hợp với tin tuyển dụng.
                     </p>
+                    {inactiveSelected.length > 0 && (
+                        <p className="job-post-form__hint job-post-form__hint--warn">
+                            Có ngành nghề đã bị vô hiệu hóa — bấm chip đỏ để gỡ, hoặc lưu để hệ
+                            thống tự gỡ.
+                        </p>
+                    )}
                     {errors.jobTypes && (
                         <p className="job-post-form__error">{errors.jobTypes}</p>
                     )}
@@ -358,7 +405,25 @@ const JobPostForm = ({
                                 </button>
                             );
                         })}
+                        {inactiveSkillIds.map((skillId, index) => (
+                            <button
+                                key={`inactive-skill-${skillId}`}
+                                type="button"
+                                disabled={disabled}
+                                className="job-post-form__chip job-post-form__chip--inactive"
+                                title="Kỹ năng đã bị vô hiệu hóa"
+                                onClick={() => removeInactiveSkill(skillId)}
+                            >
+                                {inactiveSkillLabels[index] || skillId} (đã vô hiệu)
+                            </button>
+                        ))}
                     </div>
+                )}
+                {inactiveSkillIds.length > 0 && (
+                    <p className="job-post-form__hint job-post-form__hint--warn">
+                        Có kỹ năng đã bị vô hiệu hóa — bấm chip đỏ để gỡ, hoặc lưu để hệ thống tự
+                        gỡ.
+                    </p>
                 )}
                 {errors.skillIds && (
                     <p className="job-post-form__error">{errors.skillIds}</p>

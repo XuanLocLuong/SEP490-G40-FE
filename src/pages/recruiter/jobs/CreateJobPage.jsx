@@ -14,6 +14,19 @@ import {
     validateJobForm,
     validateJobFormField,
 } from '../../../services/jobPostService.js';
+import {
+    buildInactiveJobTypesRemovedMessage,
+    fetchJobTypeOptions,
+    INACTIVE_JOB_TYPES_TOAST_ID,
+    pruneInactiveJobTypes,
+} from '../../../utils/jobTypeDisplay.js';
+import {
+    buildInactiveSkillsRemovedMessage,
+    fetchActiveSkillsCatalog,
+    INACTIVE_SKILLS_TOAST_ID,
+    pruneInactiveSkillIds,
+    rememberSkillLabels,
+} from '../../../utils/skillDisplay.js';
 import { EDITABLE_JOB_STATUSES, JOB_POST_ACTION, JOB_STATUS_LABELS } from '../../../constants/jobPost.js';
 import JobPostForm from '../../../components/recruiter/jobs/JobPostForm.jsx';
 import JobPreviewPanel from '../../../components/recruiter/jobs/JobPreviewPanel.jsx';
@@ -99,6 +112,51 @@ const CreateJobPage = () => {
     const [skillsLoading, setSkillsLoading] = useState(false);
     const [educationLevelOptions, setEducationLevelOptions] = useState([]);
 
+    const syncFormJobTypesWithCatalog = useCallback(async (currentForm, { notify = true } = {}) => {
+        const options = await fetchJobTypeOptions({ force: true });
+        const { nextTypes, removed } = pruneInactiveJobTypes(currentForm?.jobTypes, options);
+        if (removed.length === 0) {
+            return currentForm;
+        }
+
+        const nextForm = { ...currentForm, jobTypes: nextTypes };
+        setForm(nextForm);
+        if (notify) {
+            toast.warning(buildInactiveJobTypesRemovedMessage(removed, options), {
+                autoClose: 7000,
+                toastId: INACTIVE_JOB_TYPES_TOAST_ID,
+            });
+        }
+        return nextForm;
+    }, []);
+
+    const syncFormSkillsWithCatalog = useCallback(async (currentForm, { notify = true } = {}) => {
+        let catalog = [];
+        try {
+            catalog = await fetchActiveSkillsCatalog({ force: true });
+            setSkillsCatalog(catalog);
+        } catch {
+            setSkillsCatalog([]);
+            toast.warn('Không tải được danh sách kỹ năng. Bạn vẫn có thể đăng tin.');
+            return currentForm;
+        }
+
+        const { nextIds, removed } = pruneInactiveSkillIds(currentForm?.skillIds, catalog);
+        if (removed.length === 0) {
+            return currentForm;
+        }
+
+        const nextForm = { ...currentForm, skillIds: nextIds };
+        setForm(nextForm);
+        if (notify) {
+            toast.warning(buildInactiveSkillsRemovedMessage(removed, catalog), {
+                autoClose: 7000,
+                toastId: INACTIVE_SKILLS_TOAST_ID,
+            });
+        }
+        return nextForm;
+    }, []);
+
     const loadPage = useCallback(async () => {
         setLoading(true);
         setSkillsLoading(true);
@@ -115,8 +173,8 @@ const CreateJobPage = () => {
             const businessId = guard.businessId ?? null;
 
             try {
-                const skills = await recruiterJobApi.getActiveSkills();
-                setSkillsCatalog(Array.isArray(skills) ? skills : []);
+                const skills = await fetchActiveSkillsCatalog({ force: true });
+                setSkillsCatalog(skills);
             } catch {
                 setSkillsCatalog([]);
                 toast.warn('Không tải được danh sách kỹ năng. Bạn vẫn có thể đăng tin.');
@@ -143,17 +201,27 @@ const CreateJobPage = () => {
                 }
 
                 setJobStatus(status);
-                setForm({
+                // Giữ tên skill từ detail (kể cả đã tắt) để toast prune.
+                rememberSkillLabels(detail?.requiredSkills);
+                const mappedForm = {
                     ...mapJobDetailToForm(detail),
                     locationId: businessLocationId,
                     businessId: businessId ?? detail.businessId ?? detail.business?.id ?? null,
+                };
+                setForm(mappedForm);
+                // Sync catalog mới nhất — gỡ lĩnh vực / kỹ năng đã tắt khỏi form + preview.
+                const afterTypes = await syncFormJobTypesWithCatalog(mappedForm, {
+                    notify: true,
                 });
+                await syncFormSkillsWithCatalog(afterTypes, { notify: true });
             } else {
                 setForm({
                     ...emptyJobForm(),
                     locationId: businessLocationId,
                     businessId,
                 });
+                // Làm mới cache lĩnh vực khi vào tạo tin (tránh chip cũ sau admin tắt).
+                await fetchJobTypeOptions({ force: true });
             }
         } catch (err) {
             toast.error(getRecruiterJobApiErrorMessage(err, 'Không thể tải trang đăng tin.'));
@@ -162,7 +230,7 @@ const CreateJobPage = () => {
             setLoading(false);
             setSkillsLoading(false);
         }
-    }, [auth, navigate, isEdit, jobId]);
+    }, [auth, navigate, isEdit, jobId, syncFormJobTypesWithCatalog, syncFormSkillsWithCatalog]);
 
     useEffect(() => {
         loadPage();
@@ -199,7 +267,11 @@ const CreateJobPage = () => {
     };
 
     const handleSave = async (action) => {
-        const validation = validateJobForm(form, action);
+        // Trước lưu/đăng: refetch lĩnh vực + kỹ năng, tự gỡ mục đã vô hiệu hóa.
+        let syncedForm = await syncFormJobTypesWithCatalog(form, { notify: true });
+        syncedForm = await syncFormSkillsWithCatalog(syncedForm, { notify: true });
+
+        const validation = validateJobForm(syncedForm, action);
         setErrors(validation.errors);
 
         if (!validation.valid) {
@@ -207,7 +279,7 @@ const CreateJobPage = () => {
             return;
         }
 
-        const payload = buildSavePayload(form, action, guardData?.businessId);
+        const payload = buildSavePayload(syncedForm, action, guardData?.businessId);
         setSaving(true);
         setSavingAction(action);
 
