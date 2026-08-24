@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { getProfile } from '../../apis/CandidateProfileApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
@@ -17,6 +17,8 @@ import {
     StarIcon,
     ReviewsIcon,
     EyeIcon,
+    MenuIcon,
+    XIcon,
 } from '../common/icons.jsx';
 import {
     CANDIDATE_HOME_NAV_ITEMS,
@@ -67,6 +69,7 @@ const CandidateHeader = () => {
         HOME_SECTION_IDS_LIST,
         { enabled: isOnHome }
     );
+    const [navOpen, setNavOpen] = useState(false);
 
     const dropdownItems = useMemo(
         () =>
@@ -98,8 +101,26 @@ const CandidateHeader = () => {
         };
     }, [updateProfile]);
 
+    useEffect(() => {
+        setNavOpen(false);
+    }, [location.pathname, location.search]);
+
+    useEffect(() => {
+        if (!navOpen) return undefined;
+        const onKey = (e) => {
+            if (e.key === 'Escape') setNavOpen(false);
+        };
+        document.addEventListener('keydown', onKey);
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.body.style.overflow = '';
+        };
+    }, [navOpen]);
+
     const handleHomeNavClick = (event, item) => {
         event.preventDefault();
+        setNavOpen(false);
 
         if (isOnHome) {
             activateSection(item.id);
@@ -120,14 +141,49 @@ const CandidateHeader = () => {
         });
     };
 
+    const renderNavLinks = (className) =>
+        CANDIDATE_HOME_NAV_ITEMS.map((item) => {
+            const href = item.listPath || ROUTES.CANDIDATE_HOME;
+            const active = isOnHome
+                ? activeSectionId === item.id
+                : isListPathActive(item.listPath, location.pathname, location.search);
+
+            return (
+                <a
+                    key={item.id}
+                    href={href}
+                    className={`${className}${active ? ' active' : ''}`}
+                    onClick={(event) => handleHomeNavClick(event, item)}
+                >
+                    {item.label}
+                </a>
+            );
+        });
+
     return (
-        <header className={`site-header${headerHidden ? ' site-header--hidden' : ''}`}>
+        <header
+            className={`site-header${headerHidden ? ' site-header--hidden' : ''}${
+                navOpen ? ' site-header--nav-open' : ''
+            }`}
+        >
             <div className="site-header__inner">
                 <div className="site-header__left">
+                    <button
+                        type="button"
+                        className="site-header__menu-btn"
+                        aria-expanded={navOpen}
+                        aria-controls="candidate-header-drawer"
+                        aria-label={navOpen ? 'Đóng menu' : 'Mở menu'}
+                        onClick={() => setNavOpen((open) => !open)}
+                    >
+                        {navOpen ? <XIcon width={22} height={22} /> : <MenuIcon width={22} height={22} />}
+                    </button>
+
                     <NavLink
                         to={ROUTES.CANDIDATE_HOME}
                         className="site-header__logo"
                         onClick={() => {
+                            setNavOpen(false);
                             clearActiveSection();
                             if (isOnHome) {
                                 window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
@@ -137,24 +193,11 @@ const CandidateHeader = () => {
                         <SiteHeaderBrand />
                     </NavLink>
 
-                    <nav className="site-header__nav site-header__nav--role" aria-label="Khám phá việc làm">
-                        {CANDIDATE_HOME_NAV_ITEMS.map((item) => {
-                            const href = item.listPath || ROUTES.CANDIDATE_HOME;
-                            const active = isOnHome
-                                ? activeSectionId === item.id
-                                : isListPathActive(item.listPath, location.pathname, location.search);
-
-                            return (
-                                <a
-                                    key={item.id}
-                                    href={href}
-                                    className={`site-header__nav-link${active ? ' active' : ''}`}
-                                    onClick={(event) => handleHomeNavClick(event, item)}
-                                >
-                                    {item.label}
-                                </a>
-                            );
-                        })}
+                    <nav
+                        className="site-header__nav site-header__nav--role site-header__nav--desktop"
+                        aria-label="Khám phá việc làm"
+                    >
+                        {renderNavLinks('site-header__nav-link')}
                     </nav>
                 </div>
 
@@ -175,6 +218,24 @@ const CandidateHeader = () => {
                     />
                 </div>
             </div>
+
+            {navOpen ? (
+                <>
+                    <button
+                        type="button"
+                        className="site-header__drawer-backdrop"
+                        aria-label="Đóng menu"
+                        onClick={() => setNavOpen(false)}
+                    />
+                    <nav
+                        id="candidate-header-drawer"
+                        className="site-header__drawer"
+                        aria-label="Khám phá việc làm"
+                    >
+                        {renderNavLinks('site-header__drawer-link')}
+                    </nav>
+                </>
+            ) : null}
         </header>
     );
 };

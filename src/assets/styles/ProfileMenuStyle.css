@@ -109,6 +109,18 @@
     left: auto;
     right: 0;
     width: 220px;
+    z-index: 30;
+}
+
+.profile-menu--header {
+    position: relative;
+    z-index: 4;
+}
+
+@media (max-width: 1024px) {
+    .profile-menu--header .profile-menu__text {
+        display: none;
+    }
 }
 
 .profile-menu__item {

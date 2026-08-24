@@ -704,11 +704,9 @@ const ApplicantsPage = () => {
                                                     {bucket.title}
                                                 </h2>
                                                 <span className="applicants-col__count">{count}</span>
-                                                {bucket.hint ? (
-                                                    <span className="applicants-col__hint">
-                                                        {bucket.hint}
-                                                    </span>
-                                                ) : null}
+                                                <span className="applicants-col__hint">
+                                                    {bucket.hint || '\u00A0'}
+                                                </span>
                                             </header>
                                             {items.length === 0 ? (
                                                 <p className="applicants-col__empty">{bucket.empty}</p>
