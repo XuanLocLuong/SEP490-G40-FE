@@ -17,7 +17,7 @@ const CandidatePublicProfilePage = () => {
 
     const backTo = location.state?.backTo;
     const candidateUserId =
-        location.state?.candidateUserId ?? location.state?.userId ?? null;
+        profile?.userId ?? location.state?.candidateUserId ?? location.state?.userId ?? null;
     const showBackToApplicants =
         backTo?.path && typeof backTo.label === 'string' && backTo.label.trim().length > 0;
     const backClassName =
