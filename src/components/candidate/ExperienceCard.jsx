@@ -12,6 +12,43 @@ const EMPTY_EXP = {
     endDate: '',
 };
 
+/** YYYY-MM-DD hôm nay (local). */
+const getLocalToday = () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+};
+
+/** Ngày tối đa cho startDate: phải < hôm nay; nếu có endDate thì ≤ endDate. */
+const getStartDateMax = (endDate) => {
+    const today = getLocalToday();
+    const yesterdayDate = new Date(`${today}T00:00:00`);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const y = yesterdayDate.getFullYear();
+    const m = String(yesterdayDate.getMonth() + 1).padStart(2, '0');
+    const d = String(yesterdayDate.getDate()).padStart(2, '0');
+    const yesterday = `${y}-${m}-${d}`;
+    if (endDate && endDate < yesterday) return endDate;
+    return yesterday;
+};
+
+const isStartDateInPast = (startDate) => Boolean(startDate) && startDate < getLocalToday();
+
+const validateWorkHistoryDates = ({ startDate, endDate }) => {
+    if (!startDate) {
+        return 'Vui lòng chọn ngày bắt đầu.';
+    }
+    if (!isStartDateInPast(startDate)) {
+        return 'Ngày bắt đầu phải trước hôm nay.';
+    }
+    if (endDate && startDate > endDate) {
+        return 'Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.';
+    }
+    return '';
+};
+
 const renderPeriod = (exp) => {
     const start = formatDate(exp.startDate);
     const end = exp.endDate ? formatDate(exp.endDate) : 'Hiện tại';
@@ -25,6 +62,8 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
     const [form, setForm] = useState(EMPTY_EXP);
     const [dateError, setDateError] = useState('');
     const [deleteTarget, setDeleteTarget] = useState(null);
+
+    const startDateMax = getStartDateMax(form.endDate);
 
     const openAdd = () => {
         setEditingId(null);
@@ -51,14 +90,16 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
         form.jobTitle.trim() &&
         form.organization.trim() &&
         form.startDate &&
+        isStartDateInPast(form.startDate) &&
         (!form.endDate || form.startDate <= form.endDate);
 
     const handleSubmit = async () => {
-        if (!form.jobTitle.trim() || !form.organization.trim() || !form.startDate) {
+        if (!form.jobTitle.trim() || !form.organization.trim()) {
             return;
         }
-        if (form.endDate && form.startDate > form.endDate) {
-            setDateError('Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.');
+        const dateMessage = validateWorkHistoryDates(form);
+        if (dateMessage) {
+            setDateError(dateMessage);
             return;
         }
 
@@ -185,12 +226,13 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
                             type="date"
                             className="cp-input"
                             value={form.startDate}
-                            max={form.endDate || undefined}
+                            max={startDateMax}
                             onChange={(e) => {
                                 setDateError('');
                                 setForm((p) => ({ ...p, startDate: e.target.value }));
                             }}
                         />
+                        <span className="cp-input-hint">Phải trước hôm nay</span>
                     </div>
                     <div className="cp-form-group">
                         <label className="cp-form-label">Ngày kết thúc</label>
@@ -204,7 +246,9 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
                                 setForm((p) => ({ ...p, endDate: e.target.value }));
                             }}
                         />
-                        <span className="cp-input-hint">Để trống nếu đang làm</span>
+                        <span className="cp-input-hint">
+                            Để trống nếu đang làm (được chọn ngày tương lai)
+                        </span>
                     </div>
                 </div>
                 {dateError && <span className="cp-input-error">{dateError}</span>}
