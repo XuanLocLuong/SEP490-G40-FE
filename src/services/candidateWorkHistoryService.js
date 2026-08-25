@@ -35,10 +35,15 @@ export const toWorkHistoryPayload = ({
 });
 
 export const getWorkHistoryErrorMessage = (error, fallback = 'Không lưu được kinh nghiệm làm việc.') => {
-    const code = error?.response?.data?.message;
-    if (code === 'WORK_HISTORY_NOT_FOUND') {
-        return 'Không tìm thấy kinh nghiệm làm việc này.';
-    }
+    const code = error?.response?.data?.message || error?.response?.data?.code;
+    const map = {
+        WORK_HISTORY_NOT_FOUND: 'Không tìm thấy kinh nghiệm làm việc này.',
+        START_DATE_NOT_IN_PAST: 'Ngày bắt đầu phải trước hôm nay.',
+        START_DATE_AFTER_END_DATE: 'Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.',
+        END_DATE_REQUIRED: 'Vui lòng chọn ngày kết thúc.',
+        END_DATE_NOT_IN_PAST: 'Ngày kết thúc không hợp lệ.',
+    };
+    if (typeof code === 'string' && map[code]) return map[code];
     if (error?.response?.status === 400) {
         return 'Dữ liệu kinh nghiệm không hợp lệ. Kiểm tra các trường bắt buộc và khoảng thời gian.';
     }

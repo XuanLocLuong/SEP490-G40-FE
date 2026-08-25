@@ -125,7 +125,8 @@ const JobDetailPanel = ({
     const businessId = job.business?.id;
     const businessLogoUrl = job.business?.logoUrl || null;
     const trustScore = job.business?.trustScore;
-    const showVerified = trustScore != null && Number(trustScore) >= 70;
+    const badge = job.business?.badge;
+    const showVerified = badge === "BUSINESS_VERIFIED";
     const shiftGroups = groupShiftsForDisplay(job.shifts);
     const scheduleSummary = formatScheduleSummary(shiftGroups);
     const showShiftSection = shiftGroups.length > 0;
