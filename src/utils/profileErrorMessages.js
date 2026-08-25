@@ -19,7 +19,7 @@ const DEFAULT_SAVE_ERROR = 'Lưu hồ sơ thất bại. Vui lòng thử lại.';
 const DEFAULT_AVATAR_ERROR = 'Tải ảnh đại diện thất bại. Vui lòng thử lại.';
 
 const resolveErrorKey = (error) =>
-    error?.response?.data?.code || error?.response?.data?.message || '';
+    error?.response?.data?.message || '';
 
 export const getProfileSaveErrorMessage = (error) => {
     const key = resolveErrorKey(error);
