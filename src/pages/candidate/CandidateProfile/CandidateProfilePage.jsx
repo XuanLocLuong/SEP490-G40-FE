@@ -91,6 +91,7 @@ const CandidateProfilePage = () => {
         updateProfile,
         uploadAvatar,
         uploadCv,
+        deleteCv,
     } = useCandidateProfile();
     const {
         slots: availabilitySlots,
@@ -397,6 +398,13 @@ const CandidateProfilePage = () => {
 
     const handleAvatar = (file) => uploadAvatar(file);
     const handleCv = (file) => uploadCv(file);
+    const handleDeleteCv = async () => {
+        const ok = await deleteCv();
+        if (ok) {
+            setDraft((prev) => (prev ? { ...prev, cvLink: null } : prev));
+        }
+        return ok;
+    };
 
     const handleScheduleSetup = () => {
         navigate(ROUTES.CANDIDATE_AVAILABILITY, {
@@ -465,6 +473,7 @@ const CandidateProfilePage = () => {
                     <CvCard
                         cvLink={draft.cvLink || profile?.cvLink}
                         onUploadCv={handleCv}
+                        onDeleteCv={handleDeleteCv}
                         saving={saving}
                     />
                 </div>

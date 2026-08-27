@@ -21,7 +21,7 @@ export const uploadAvatar = (file) => {
     });
 };
 
-// POST /api/v1/candidate/profile/cv — multipart/form-data (PDF, DOC, DOCX <= 5MB).
+// POST /api/v1/candidate/profile/cv — multipart/form-data (chỉ nhận PDF <= 5MB).
 export const uploadCv = (file) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -29,6 +29,9 @@ export const uploadCv = (file) => {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
 };
+
+// DELETE /api/v1/candidate/profile/cv — gỡ bỏ CV mặc định
+export const deleteCv = () => axiosClient.delete(`${PROFILE_BASE}/cv`);
 
 // GET /api/v1/candidate/profile/skills — ĐÚNG path thật (KHÔNG phải /api/v1/skills).
 export const getSkills = () => axiosClient.get(`${PROFILE_BASE}/skills`);

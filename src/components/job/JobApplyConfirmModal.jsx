@@ -7,7 +7,7 @@ import { formatShiftGroupLine } from '../../utils/formatters.js';
 import '../../assets/styles/JobApplyModalStyle.css';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
+const ALLOWED_EXTENSIONS = ['.pdf'];
 
 const isAllowedExtension = (filename = '') => {
     const lower = filename.toLowerCase();
@@ -68,7 +68,7 @@ const JobApplyConfirmModal = ({
         }
 
         if (!isAllowedExtension(file.name)) {
-            setFileError('Định dạng CV không hợp lệ (hỗ trợ PDF, DOC, DOCX).');
+            setFileError('Định dạng CV không hợp lệ. Chỉ chấp nhận file PDF (.pdf).');
             setSelectedFile(null);
             return;
         }
@@ -269,12 +269,12 @@ const JobApplyConfirmModal = ({
                                                 <input
                                                     ref={fileInputRef}
                                                     type="file"
-                                                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                                    accept=".pdf,application/pdf"
                                                     onChange={handleFileChange}
                                                     style={{ fontSize: '12px' }}
                                                 />
                                                 <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#64748b' }}>
-                                                    Chấp nhận PDF, DOC, DOCX (tối đa 5MB)
+                                                    Chỉ hỗ trợ định dạng .PDF (tối đa 5MB)
                                                 </p>
                                                 {fileError && (
                                                     <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#dc2626' }}>

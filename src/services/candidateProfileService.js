@@ -149,6 +149,7 @@ export const toUpdatePayload = (draft) => {
         expectedSalaryMax: salaryMaxBlank ? null : toNumberOrNull(pref.salaryMax),
         clearExpectedSalaryMin: salaryMinBlank ? true : undefined,
         clearExpectedSalaryMax: salaryMaxBlank ? true : undefined,
+        clearCv: draft.clearCv ? true : undefined,
 
         address: personalAddress,
         latitude: pref.latitude ?? null,
@@ -188,6 +189,11 @@ export const uploadCv = async (file) => {
         return { cvLink: data.cvLink || data.url, profile: data.profile ? normalizeProfile(data.profile) : null };
     }
     return { cvLink: data };
+};
+
+export const deleteCv = async () => {
+    await api.deleteCv();
+    return { cvLink: null };
 };
 
 export const fetchSkills = async () => {

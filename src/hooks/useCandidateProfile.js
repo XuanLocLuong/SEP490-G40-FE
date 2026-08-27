@@ -104,12 +104,28 @@ export const useCandidateProfile = () => {
         } catch (err) {
             const msg = err?.response?.data?.message;
             if (msg === 'CV_INVALID_FORMAT') {
-                toast.error('Định dạng CV không hợp lệ (hỗ trợ PDF, DOC, DOCX).');
+                toast.error('Định dạng CV không hợp lệ. Chỉ chấp nhận file PDF (.pdf).');
             } else if (msg === 'CV_FILE_TOO_LARGE') {
                 toast.error('Dung lượng CV quá lớn (tối đa 5MB).');
             } else {
                 toast.error(msg || 'Không thể tải lên CV. Vui lòng thử lại.');
             }
+            return false;
+        } finally {
+            setSaving(false);
+        }
+    }, []);
+
+    const deleteCv = useCallback(async () => {
+        setSaving(true);
+        try {
+            await service.deleteCv();
+            setProfile((prev) => (prev ? { ...prev, cvLink: null } : prev));
+            toast.success('Đã gỡ bỏ file CV mặc định.');
+            return true;
+        } catch (err) {
+            const msg = err?.response?.data?.message;
+            toast.error(msg || 'Không thể gỡ bỏ CV. Vui lòng thử lại.');
             return false;
         } finally {
             setSaving(false);
@@ -136,6 +152,7 @@ export const useCandidateProfile = () => {
         updateProfile,
         uploadAvatar,
         uploadCv,
+        deleteCv,
         setProfile,
     };
 };

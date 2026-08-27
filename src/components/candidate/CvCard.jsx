@@ -1,26 +1,29 @@
 import { useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import ConfirmModal from '../common/ConfirmModal.jsx';
 import { FileTextIcon } from '../common/icons.jsx';
-import { UploadCloudIcon } from './profileIcons.jsx';
+import { TrashIcon, UploadCloudIcon } from './profileIcons.jsx';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
+const ALLOWED_EXTENSIONS = ['.pdf'];
 
 const isAllowedExtension = (filename = '') => {
     const lower = filename.toLowerCase();
     return ALLOWED_EXTENSIONS.some((ext) => lower.endsWith(ext));
 };
 
-const CvCard = ({ cvLink, onUploadCv, saving }) => {
+const CvCard = ({ cvLink, onUploadCv, onDeleteCv, saving }) => {
     const fileInputRef = useRef(null);
     const [dragging, setDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
     const handleFile = async (file) => {
         if (!file) return;
 
         if (!isAllowedExtension(file.name)) {
-            toast.error('Định dạng CV không hợp lệ. Chỉ chấp nhận file PDF, DOC, DOCX.');
+            toast.error('Định dạng CV không hợp lệ. Chỉ chấp nhận file PDF (.pdf).');
             return;
         }
 
@@ -62,7 +65,18 @@ const CvCard = ({ cvLink, onUploadCv, saving }) => {
         if (file) handleFile(file);
     };
 
-    const isBusy = saving || uploading;
+    const handleConfirmDelete = async () => {
+        if (!onDeleteCv) return;
+        setDeleting(true);
+        try {
+            await onDeleteCv();
+            setConfirmDeleteOpen(false);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const isBusy = saving || uploading || deleting;
 
     return (
         <section className="cp-card">
@@ -133,15 +147,39 @@ const CvCard = ({ cvLink, onUploadCv, saving }) => {
                             </div>
                         </div>
 
-                        <button
-                            type="button"
-                            className="cp-btn cp-btn--ghost"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isBusy}
-                            style={{ flexShrink: 0, fontSize: '13px' }}
-                        >
-                            {uploading ? 'Đang tải lên...' : 'Thay đổi CV'}
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                            <button
+                                type="button"
+                                className="cp-btn cp-btn--ghost"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isBusy}
+                                style={{ fontSize: '13px' }}
+                            >
+                                {uploading ? 'Đang tải lên...' : 'Thay đổi CV'}
+                            </button>
+
+                            {onDeleteCv ? (
+                                <button
+                                    type="button"
+                                    className="cp-btn cp-btn--ghost"
+                                    onClick={() => setConfirmDeleteOpen(true)}
+                                    disabled={isBusy}
+                                    style={{
+                                        fontSize: '13px',
+                                        color: '#dc2626',
+                                        borderColor: '#fecaca',
+                                        background: '#fff',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                    }}
+                                    title="Gỡ bỏ file CV này khỏi hồ sơ"
+                                >
+                                    <TrashIcon width={14} height={14} />
+                                    {deleting ? 'Đang gỡ...' : 'Gỡ bỏ'}
+                                </button>
+                            ) : null}
+                        </div>
                     </div>
                 </div>
             ) : (
@@ -170,7 +208,7 @@ const CvCard = ({ cvLink, onUploadCv, saving }) => {
                             : 'Kéo thả file CV vào đây hoặc bấm để chọn file'}
                     </p>
                     <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
-                        Hỗ trợ PDF, DOC, DOCX (Tối đa 5MB)
+                        Chỉ hỗ trợ định dạng .PDF (Tối đa 5MB)
                     </p>
                 </div>
             )}
@@ -178,10 +216,25 @@ const CvCard = ({ cvLink, onUploadCv, saving }) => {
             <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                accept=".pdf,application/pdf"
                 style={{ display: 'none' }}
                 onChange={handleFileInputChange}
             />
+
+            <ConfirmModal
+                open={confirmDeleteOpen}
+                title="Gỡ bỏ CV mặc định"
+                confirmLabel="Gỡ bỏ"
+                cancelLabel="Hủy"
+                variant="danger"
+                loading={deleting}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => !deleting && setConfirmDeleteOpen(false)}
+            >
+                <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: 1.5 }}>
+                    Bạn có chắc chắn muốn gỡ bỏ file CV này khỏi hồ sơ không? Sau khi gỡ bỏ, bạn có thể tải lên file CV mới bất kỳ lúc nào.
+                </p>
+            </ConfirmModal>
         </section>
     );
 };

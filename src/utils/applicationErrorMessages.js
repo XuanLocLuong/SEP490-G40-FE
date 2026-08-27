@@ -10,7 +10,7 @@ const REASON_MESSAGES = {
     EMAIL_NOT_VERIFIED: 'Bạn cần xác thực email trước khi ứng tuyển.',
     JOB_NOT_FOUND: 'Không tìm thấy tin tuyển dụng này.',
     CANDIDATE_PROFILE_NOT_FOUND: 'Không tìm thấy hồ sơ ứng viên của bạn.',
-    CV_INVALID_FORMAT: 'Định dạng CV không hợp lệ (hỗ trợ PDF, DOC, DOCX).',
+    CV_INVALID_FORMAT: 'Định dạng CV không hợp lệ. Chỉ chấp nhận file PDF (.pdf).',
     CV_FILE_TOO_LARGE: 'Dung lượng CV quá lớn (tối đa 5MB).',
     INVALID_APPLICATION_SOURCE: 'Nguồn ứng tuyển không hợp lệ.',
 };
