@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import {
-    CalendarIcon,
     CheckCircleIcon,
     MapPinIcon,
     StarIcon,
@@ -9,22 +8,8 @@ import { getCandidatePublicProfilePath } from '../../../routes/path.js';
 import { formatSalary } from '../../../utils/formatters.js';
 import { getInitials, isValidAvatarUrl } from '../../../utils/profileFormat.js';
 
-const DAY_LABELS = {
-    MONDAY: 'T2',
-    TUESDAY: 'T3',
-    WEDNESDAY: 'T4',
-    THURSDAY: 'T5',
-    FRIDAY: 'T6',
-    SATURDAY: 'T7',
-    SUNDAY: 'CN',
-    2: 'T2',
-    3: 'T3',
-    4: 'T4',
-    5: 'T5',
-    6: 'T6',
-    7: 'T7',
-    8: 'CN',
-};
+const CONTENT_SCORE_HINT =
+    'Dựa trên job ứng viên đã lưu, ứng tuyển hoặc được mời';
 
 const toScore = (value) => {
     const score = Number(value);
@@ -36,15 +21,6 @@ const formatDistance = (value) => {
     const distance = Number(value);
     if (!Number.isFinite(distance)) return 'Chưa xác định khoảng cách';
     return `Cách nơi làm việc ${distance.toFixed(distance < 10 ? 1 : 0)} km`;
-};
-
-const formatTime = (value) => String(value || '').slice(0, 5);
-
-const formatAvailability = (shift) => {
-    const day = DAY_LABELS[String(shift?.dayOfWeek || '').toUpperCase()] || shift?.dayOfWeek;
-    const start = formatTime(shift?.startTime);
-    const end = formatTime(shift?.endTime);
-    return [day, start && end ? `${start}–${end}` : ''].filter(Boolean).join(' · ');
 };
 
 const CandidateAvatar = ({ candidate }) => {
@@ -68,11 +44,16 @@ const CandidateAvatar = ({ candidate }) => {
     );
 };
 
-const ScoreRow = ({ label, value }) => {
+const ScoreRow = ({ label, value, hint }) => {
     const score = toScore(value);
     return (
         <div className="candidate-recommendation-card__score-row">
-            <span>{label}</span>
+            <span
+                className="candidate-recommendation-card__score-label"
+                title={hint || undefined}
+            >
+                {label}
+            </span>
             <div
                 className="candidate-recommendation-card__score-track"
                 role="progressbar"
@@ -100,12 +81,10 @@ const CandidateRecommendationCard = ({
 }) => {
     const matchScore = toScore(candidate.matchScore);
     const salary = formatSalary(candidate.expectedSalaryMin, candidate.expectedSalaryMax);
-    const availability = Array.isArray(candidate.availability)
-        ? candidate.availability.slice(0, 4)
-        : [];
     const skills = Array.isArray(candidate.skills) ? candidate.skills.slice(0, 6) : [];
     const rating = Number(candidate.rating);
     const trustScore = Number(candidate.trustScore);
+    const showRating = Number.isFinite(rating) && rating > 0;
     const canSelect = typeof onToggleSelect === 'function' && !sent;
 
     return (
@@ -130,15 +109,15 @@ const CandidateRecommendationCard = ({
                 <div className="candidate-recommendation-card__identity">
                     <h2>{candidate.fullName || 'Ứng viên JobLink'}</h2>
                     <div className="candidate-recommendation-card__meta">
-                        {Number.isFinite(rating) && (
+                        {showRating ? (
                             <span>
                                 <StarIcon width={15} height={15} />
                                 {rating.toFixed(1)}
                             </span>
-                        )}
-                        {Number.isFinite(trustScore) && (
+                        ) : null}
+                        {Number.isFinite(trustScore) ? (
                             <span>Điểm uy tín {Math.round(trustScore)}</span>
-                        )}
+                        ) : null}
                     </div>
                     <p>
                         <MapPinIcon width={15} height={15} />
@@ -154,8 +133,14 @@ const CandidateRecommendationCard = ({
             <section className="candidate-recommendation-card__section">
                 <h3>Vì sao phù hợp</h3>
                 <ScoreRow label="Lịch làm" value={candidate.scheduleScore} />
-                <ScoreRow label="Kỹ năng" value={candidate.skillScore} />
                 <ScoreRow label="Khoảng cách" value={candidate.distanceScore} />
+                <ScoreRow label="Kỹ năng" value={candidate.skillScore} />
+                <ScoreRow
+                    label="Lịch sử quan tâm"
+                    value={candidate.contentScore}
+                    hint={CONTENT_SCORE_HINT}
+                />
+                <ScoreRow label="Khớp lương" value={candidate.salaryScore} />
             </section>
 
             <section className="candidate-recommendation-card__section">
@@ -168,26 +153,6 @@ const CandidateRecommendationCard = ({
                     ) : (
                         <span className="candidate-recommendation-card__empty-text">
                             Chưa cập nhật kỹ năng
-                        </span>
-                    )}
-                </div>
-            </section>
-
-            <section className="candidate-recommendation-card__section">
-                <h3>
-                    <CalendarIcon width={16} height={16} />
-                    Ca có thể làm
-                </h3>
-                <div className="candidate-recommendation-card__availability">
-                    {availability.length > 0 ? (
-                        availability.map((shift) => (
-                            <span key={shift.id ?? formatAvailability(shift)}>
-                                {formatAvailability(shift)}
-                            </span>
-                        ))
-                    ) : (
-                        <span className="candidate-recommendation-card__empty-text">
-                            Chưa cập nhật lịch rảnh
                         </span>
                     )}
                 </div>

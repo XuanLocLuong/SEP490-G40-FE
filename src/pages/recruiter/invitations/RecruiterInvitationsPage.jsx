@@ -18,10 +18,11 @@ import {
     ROUTES,
 } from '../../../routes/path.js';
 import { openChatPanel, RECRUITMENT_CHANGED_EVENT } from '../../../utils/chatEvents.js';
+import { RECRUITMENT_CARD_GRID_PAGE_SIZE } from '../../../constants/recruitmentCardGrid.js';
+import { buildRecruitmentPageItems } from '../../../utils/recruitmentPagination.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 import '../../../assets/styles/RecruiterInvitationsStyle.css';
 
-const PAGE_SIZE = 9;
 const DEFAULT_STATUS = 'SENT';
 
 const canManageInvitations = (job) => job?.status === 'OPEN';
@@ -222,7 +223,7 @@ const RecruiterInvitationsPage = () => {
             const pageData = await getInvitations(selectedJobId, {
                 status: statusFilter,
                 page,
-                size: PAGE_SIZE,
+                size: RECRUITMENT_CARD_GRID_PAGE_SIZE,
             });
             setInvitations(pageData.content.filter((item) => item.status !== 'CANCELLED'));
             setTotalPages(pageData.totalPages);
@@ -346,23 +347,10 @@ const RecruiterInvitationsPage = () => {
     const hasMorePages = page + 1 < totalPages;
     const showJobSelect = hasSelectedJob && !readOnly && hasOpenJobs;
 
-    const pageItems = useMemo(() => {
-        if (totalPages <= 1) return [];
-        if (totalPages <= 4) {
-            return Array.from({ length: totalPages }, (_, i) => i);
-        }
-        const last = totalPages - 1;
-        const set = new Set([0, last, page, page - 1, page + 1, page - 2, page + 2]);
-        const sorted = [...set].filter((p) => p >= 0 && p <= last).sort((a, b) => a - b);
-        const items = [];
-        let prev = null;
-        sorted.forEach((p) => {
-            if (prev != null && p - prev > 1) items.push('ellipsis');
-            items.push(p);
-            prev = p;
-        });
-        return items;
-    }, [page, totalPages]);
+    const pageItems = useMemo(
+        () => buildRecruitmentPageItems(page, totalPages),
+        [page, totalPages]
+    );
 
     const goToPage = (nextPage) => {
         if (listLoading) return;

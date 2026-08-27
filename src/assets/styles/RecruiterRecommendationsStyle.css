@@ -313,14 +313,25 @@
     font-weight: 650;
 }
 
+.candidate-recommendation-card__score-hint {
+    margin: -4px 0 10px;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+
 .candidate-recommendation-card__score-row {
     display: grid;
-    grid-template-columns: 84px minmax(80px, 1fr) 38px;
+    grid-template-columns: 108px minmax(72px, 1fr) 38px;
     gap: 9px;
     align-items: center;
     margin-top: 7px;
     color: var(--color-text-muted);
     font-size: 0.78rem;
+}
+
+.candidate-recommendation-card__score-label {
+    line-height: 1.25;
 }
 
 .candidate-recommendation-card__score-row strong {
@@ -343,15 +354,13 @@
     background: linear-gradient(90deg, #60a5fa, var(--color-primary));
 }
 
-.candidate-recommendation-card__chips,
-.candidate-recommendation-card__availability {
+.candidate-recommendation-card__chips {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
 }
 
-.candidate-recommendation-card__chips > span,
-.candidate-recommendation-card__availability > span {
+.candidate-recommendation-card__chips > span {
     padding: 4px 8px;
     border-radius: 999px;
     color: #1e40af;
@@ -359,13 +368,7 @@
     font-size: 0.75rem;
 }
 
-.candidate-recommendation-card__availability > span {
-    color: #475569;
-    background: #f1f5f9;
-}
-
-.candidate-recommendation-card__chips .candidate-recommendation-card__empty-text,
-.candidate-recommendation-card__availability .candidate-recommendation-card__empty-text {
+.candidate-recommendation-card__chips .candidate-recommendation-card__empty-text {
     padding: 0;
     color: var(--color-text-muted);
     background: transparent;

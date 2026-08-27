@@ -30,12 +30,19 @@ import {
     ROUTES,
 } from '../../../routes/path.js';
 import {
+    RECRUITMENT_CARD_GRID_PAGE_SIZE,
+    DEFAULT_MATCH_BUCKET_KEY,
+} from '../../../constants/recruitmentCardGrid.js';
+import {
+    buildRecruitmentPageItems,
+    paginateItems,
+} from '../../../utils/recruitmentPagination.js';
+import {
     openChatPanel,
     RECRUITMENT_CHANGED_EVENT,
 } from '../../../utils/chatEvents.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 
-const COLUMN_PREVIEW = 5;
 const DEFAULT_STATUS_MANAGE = 'PENDING';
 const DEFAULT_STATUS_READONLY = 'ALL';
 
@@ -69,7 +76,9 @@ const ApplicantsPage = () => {
     const [matchData, setMatchData] = useState(EMPTY_MATCH_DATA);
     const [listLoading, setListLoading] = useState(false);
     const [listError, setListError] = useState('');
-    const [expandedBuckets, setExpandedBuckets] = useState(() => new Set());
+    const [activeMatchTab, setActiveMatchTab] = useState(DEFAULT_MATCH_BUCKET_KEY);
+    const [pendingPageByTab, setPendingPageByTab] = useState({});
+    const [statusListPage, setStatusListPage] = useState(0);
 
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [chatLoadingId, setChatLoadingId] = useState(null);
@@ -266,7 +275,9 @@ const ApplicantsPage = () => {
 
         setListLoading(true);
         setListError('');
-        setExpandedBuckets(new Set());
+        setActiveMatchTab(DEFAULT_MATCH_BUCKET_KEY);
+        setPendingPageByTab({});
+        setStatusListPage(0);
         try {
             const data = await recruiterApplicationService.getApplications(selectedJobId, {
                 status: statusFilter,
@@ -376,16 +387,19 @@ const ApplicantsPage = () => {
     };
 
     const handleStatusChange = (value) => {
+        setStatusListPage(0);
         updateParams({ status: value === DEFAULT_STATUS_READONLY ? 'ALL' : value });
     };
 
-    const toggleBucketExpand = (key) => {
-        setExpandedBuckets((prev) => {
-            const next = new Set(prev);
-            if (next.has(key)) next.delete(key);
-            else next.add(key);
-            return next;
-        });
+    const goToPendingPage = (nextPage) => {
+        setPendingPageByTab((prev) => ({
+            ...prev,
+            [activeMatchTab]: nextPage,
+        }));
+    };
+
+    const goToStatusListPage = (nextPage) => {
+        setStatusListPage(nextPage);
     };
 
     const renderApplicationCard = (application) => (
@@ -557,6 +571,75 @@ const ApplicantsPage = () => {
     const emptyNoJobs = !pageLoading && !jobIdParam && !hasOpenJobs;
     const showManageDropdown = hasSelectedJob && !readOnly && hasOpenJobs;
 
+    const activeMatchBucket = useMemo(
+        () => MATCH_BUCKETS.find((bucket) => bucket.key === activeMatchTab) ?? MATCH_BUCKETS[0],
+        [activeMatchTab]
+    );
+
+    const pendingItems = matchData[activeMatchBucket.key] || [];
+    const pendingPage = pendingPageByTab[activeMatchTab] ?? 0;
+    const pendingPagination = useMemo(
+        () => paginateItems(pendingItems, pendingPage, RECRUITMENT_CARD_GRID_PAGE_SIZE),
+        [pendingItems, pendingPage]
+    );
+
+    const statusListItems = matchData.applications || [];
+    const statusListPagination = useMemo(
+        () => paginateItems(statusListItems, statusListPage, RECRUITMENT_CARD_GRID_PAGE_SIZE),
+        [statusListItems, statusListPage]
+    );
+
+    const renderClientPagination = (currentPage, totalPages, onGoToPage, ariaLabel) => {
+        if (totalPages <= 1) return null;
+        const pageNavItems = buildRecruitmentPageItems(currentPage, totalPages);
+        return (
+            <nav className="applicants-page__pagination" aria-label={ariaLabel}>
+                <button
+                    type="button"
+                    className="applicants-page__page-btn applicants-page__page-btn--nav"
+                    disabled={currentPage <= 0}
+                    onClick={() => onGoToPage(currentPage - 1)}
+                    aria-label="Trang trước"
+                >
+                    ‹
+                </button>
+                {pageNavItems.map((item, index) =>
+                    item === 'ellipsis' ? (
+                        <span
+                            key={`e-${index}`}
+                            className="applicants-page__page-ellipsis"
+                            aria-hidden="true"
+                        >
+                            …
+                        </span>
+                    ) : (
+                        <button
+                            key={item}
+                            type="button"
+                            className={`applicants-page__page-btn${
+                                item === currentPage ? ' is-active' : ''
+                            }`}
+                            aria-current={item === currentPage ? 'page' : undefined}
+                            aria-label={`Trang ${item + 1}`}
+                            onClick={() => onGoToPage(item)}
+                        >
+                            {item + 1}
+                        </button>
+                    )
+                )}
+                <button
+                    type="button"
+                    className="applicants-page__page-btn applicants-page__page-btn--nav"
+                    disabled={currentPage + 1 >= totalPages}
+                    onClick={() => onGoToPage(currentPage + 1)}
+                    aria-label="Trang sau"
+                >
+                    ›
+                </button>
+            </nav>
+        );
+    };
+
     return (
         <div className="applicants-page">
             {showBackLink && backNav && (
@@ -698,68 +781,89 @@ const ApplicantsPage = () => {
                                 )}
 
                             {statusFilter === 'PENDING' ? (
-                            <div className="applicants-page__columns">
-                                {MATCH_BUCKETS.map((bucket) => {
-                                    const items = matchData[bucket.key] || [];
-                                    const count =
-                                        matchData[`${bucket.key}Count`] ?? items.length;
-                                    const expanded = expandedBuckets.has(bucket.key);
-                                    const visible = expanded
-                                        ? items
-                                        : items.slice(0, COLUMN_PREVIEW);
-                                    const hiddenCount = Math.max(0, items.length - COLUMN_PREVIEW);
+                                <>
+                                    <div
+                                        className="applicants-page__match-tabs"
+                                        role="tablist"
+                                        aria-label="Mức độ phù hợp"
+                                    >
+                                        {MATCH_BUCKETS.map((bucket) => {
+                                            const count =
+                                                matchData[`${bucket.key}Count`] ??
+                                                (matchData[bucket.key] || []).length;
+                                            return (
+                                                <button
+                                                    key={bucket.key}
+                                                    type="button"
+                                                    role="tab"
+                                                    aria-selected={activeMatchTab === bucket.key}
+                                                    className={`applicants-page__match-tab applicants-page__match-tab--${bucket.key}${
+                                                        activeMatchTab === bucket.key
+                                                            ? ' is-active'
+                                                            : ''
+                                                    }`}
+                                                    onClick={() => setActiveMatchTab(bucket.key)}
+                                                >
+                                                    <span className="applicants-page__match-tab-label">
+                                                        <span className="applicants-page__match-tab-title">
+                                                            {bucket.title}
+                                                        </span>
+                                                        {bucket.hint ? (
+                                                            <span className="applicants-page__match-tab-hint">
+                                                                {bucket.hint}
+                                                            </span>
+                                                        ) : null}
+                                                    </span>
+                                                    <span className="applicants-page__match-tab-count">
+                                                        {count}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
 
-                                    return (
-                                        <section
-                                            key={bucket.key}
-                                            className={`applicants-col applicants-col--${bucket.key}`}
-                                        >
-                                            <header className="applicants-col__header">
-                                                <h2 className="applicants-col__title">
-                                                    {bucket.title}
-                                                </h2>
-                                                <span className="applicants-col__count">{count}</span>
-                                                <span className="applicants-col__hint">
-                                                    {bucket.hint || '\u00A0'}
-                                                </span>
-                                            </header>
-                                            {items.length === 0 ? (
-                                                <p className="applicants-col__empty">{bucket.empty}</p>
-                                            ) : (
-                                                <div className="applicants-col__list">
-                                                    {visible.map(renderApplicationCard)}
+                                    <section
+                                        className={`applicants-page__match-panel applicants-page__match-panel--${activeMatchBucket.key}`}
+                                        role="tabpanel"
+                                        aria-label={activeMatchBucket.title}
+                                    >
+                                        {pendingItems.length === 0 ? (
+                                            <p className="applicants-page__match-empty">
+                                                {activeMatchBucket.empty}
+                                            </p>
+                                        ) : (
+                                            <>
+                                                <div className="applicants-page__grid">
+                                                    {pendingPagination.pageItems.map(
+                                                        renderApplicationCard
+                                                    )}
                                                 </div>
-                                            )}
-                                            {hiddenCount > 0 && !expanded ? (
-                                                <button
-                                                    type="button"
-                                                    className="applicants-col__more"
-                                                    onClick={() => toggleBucketExpand(bucket.key)}
-                                                >
-                                                    Xem thêm ({hiddenCount})
-                                                </button>
-                                            ) : null}
-                                            {expanded && items.length > COLUMN_PREVIEW ? (
-                                                <button
-                                                    type="button"
-                                                    className="applicants-col__more"
-                                                    onClick={() => toggleBucketExpand(bucket.key)}
-                                                >
-                                                    Thu gọn
-                                                </button>
-                                            ) : null}
-                                        </section>
-                                    );
-                                })}
-                            </div>
-                            ) : (matchData.applications || []).length === 0 ? (
+                                                {renderClientPagination(
+                                                    pendingPagination.currentPage,
+                                                    pendingPagination.totalPages,
+                                                    goToPendingPage,
+                                                    'Phân trang ứng viên chờ duyệt'
+                                                )}
+                                            </>
+                                        )}
+                                    </section>
+                                </>
+                            ) : statusListItems.length === 0 ? (
                                 <div className="applicants-page__empty">
                                     <p>Không có ứng viên ở trạng thái này.</p>
                                 </div>
                             ) : (
-                                <div className="applicants-page__grid">
-                                    {(matchData.applications || []).map(renderApplicationCard)}
-                                </div>
+                                <>
+                                    <div className="applicants-page__grid">
+                                        {statusListPagination.pageItems.map(renderApplicationCard)}
+                                    </div>
+                                    {renderClientPagination(
+                                        statusListPagination.currentPage,
+                                        statusListPagination.totalPages,
+                                        goToStatusListPage,
+                                        'Phân trang ứng viên'
+                                    )}
+                                </>
                             )}
                         </>
                     )}
