@@ -39,13 +39,35 @@ export const REPORT_REASON_LABELS_VI = {
     },
 };
 
+const dynamicReasonsCache = new Map();
+
+export const registerReportReasons = (reasons) => {
+    if (Array.isArray(reasons)) {
+        reasons.forEach((r) => {
+            const code = String(r?.code || '').toUpperCase();
+            if (code) {
+                dynamicReasonsCache.set(code, {
+                    code: r.code,
+                    name: r.name,
+                    description: r.description,
+                });
+            }
+        });
+    }
+};
+
 export const getReportReasonDisplay = (reason) => {
-    const code = String(reason?.code || '').toUpperCase();
+    const code = typeof reason === 'string' ? reason.toUpperCase() : String(reason?.code || '').toUpperCase();
+    const dynamicReason = dynamicReasonsCache.get(code);
     const mapped = REPORT_REASON_LABELS_VI[code];
+
+    const rawName = typeof reason === 'object' && reason?.name ? reason.name : null;
+    const rawDescription = typeof reason === 'object' && reason?.description ? reason.description : null;
+
     return {
-        code: reason?.code,
-        name: mapped?.name || reason?.name || code,
-        description: mapped?.description || reason?.description || '',
+        code: typeof reason === 'object' ? reason?.code : code,
+        name: rawName || dynamicReason?.name || mapped?.name || code,
+        description: rawDescription || dynamicReason?.description || mapped?.description || '',
     };
 };
 
@@ -74,8 +96,13 @@ export const validateJobReportForm = ({ reportReasonCodes, description, evidence
 };
 
 export const loadReportReasons = async () => {
-    const list = await fetchReportReasons();
-    return sortReportReasons(list);
+    try {
+        const list = await fetchReportReasons();
+        registerReportReasons(list);
+        return sortReportReasons(list);
+    } catch {
+        return [];
+    }
 };
 
 export const loadJobReportStatus = (jobId) => fetchJobReportStatus(jobId);

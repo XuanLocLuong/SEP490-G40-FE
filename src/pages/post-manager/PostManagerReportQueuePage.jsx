@@ -20,6 +20,7 @@ import {
     REPORT_DECISION_MESSAGES,
     matchesReportSearch,
 } from '../../utils/reportReviewDisplay.js';
+import { loadReportReasons } from '../../services/jobReportService.js';
 import '../../assets/styles/PostManagerReviewQueuePageStyle.css';
 import '../../assets/styles/PostManagerReportQueuePageStyle.css';
 
@@ -100,29 +101,52 @@ const PostManagerReportQueuePage = () => {
 
     const loadPenaltyRules = useCallback(async () => {
         try {
-            const res = await getReportPenaltyRules();
-            setPenaltyRules(unwrapData(res) || {});
+            const [rulesRes] = await Promise.allSettled([
+                getReportPenaltyRules(),
+                loadReportReasons(),
+            ]);
+            if (rulesRes.status === 'fulfilled') {
+                setPenaltyRules(unwrapData(rulesRes.value) || {});
+            } else {
+                setPenaltyRules({});
+            }
         } catch {
             setPenaltyRules({});
         }
     }, []);
 
     useEffect(() => {
-        if (!isPostManager) return;
-        loadQueue(0);
-        loadPenaltyRules();
+        if (!isPostManager) return undefined;
+        let cancelled = false;
+        Promise.resolve().then(() => {
+            if (!cancelled) {
+                loadQueue(0);
+                loadPenaltyRules();
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
     }, [isPostManager, loadQueue, loadPenaltyRules]);
 
     useEffect(() => {
-        if (!isPostManager) return;
-        loadDetail(selectedJobId);
-        setReason('');
-        setSelectedCategories([]);
-        setAiAnalysis(null);
-        setAiError('');
-        setActiveReportId(null);
-        setJobContentOpen(false);
-        setBlockConfirmOpen(false);
+        if (!isPostManager) return undefined;
+        let cancelled = false;
+        Promise.resolve().then(() => {
+            if (!cancelled) {
+                loadDetail(selectedJobId);
+                setReason('');
+                setSelectedCategories([]);
+                setAiAnalysis(null);
+                setAiError('');
+                setActiveReportId(null);
+                setJobContentOpen(false);
+                setBlockConfirmOpen(false);
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
     }, [isPostManager, selectedJobId, loadDetail]);
 
     const filteredItems = useMemo(

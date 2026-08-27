@@ -123,6 +123,22 @@ const TrustScoreRuleDetailModal = ({
                                         </dd>
                                     </div>
                                 ) : null}
+                                {rule.ruleType === 'RESOLVED_REPORT_ADJUSTMENT' && (rule.reasonName || rule.reasonDescription) ? (
+                                    <>
+                                        {rule.reasonName ? (
+                                            <div className="admin-trust-detail-grid__full">
+                                                <dt>Lý do hiển thị cho User</dt>
+                                                <dd>{rule.reasonName}</dd>
+                                            </div>
+                                        ) : null}
+                                        {rule.reasonDescription ? (
+                                            <div className="admin-trust-detail-grid__full">
+                                                <dt>Mô tả lý do cho User</dt>
+                                                <dd>{rule.reasonDescription}</dd>
+                                            </div>
+                                        ) : null}
+                                    </>
+                                ) : null}
                             </dl>
 
                             {isSystem ? (

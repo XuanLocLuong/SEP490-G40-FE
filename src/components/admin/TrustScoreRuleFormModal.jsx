@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { getReportEventTypes } from '../../apis/AdminTrustScoreRuleApi.jsx';
 import {
     APPLIES_TO_OPTIONS,
     CONFIGURABLE_RULE_TYPES,
@@ -24,6 +25,31 @@ const EMPTY = {
     requiredDays: '90',
     requiresHiredActivity: true,
     reason: '',
+    reasonName: '',
+    reasonDescription: '',
+};
+
+const buildInitialForm = (mode, initialRule) => {
+    if (mode === 'edit' && initialRule) {
+        const conditions = parseConditions(initialRule.conditions);
+        return {
+            ruleCode: initialRule.ruleCode || '',
+            eventType: initialRule.eventType || '',
+            ruleType: initialRule.ruleType || TRUST_SCORE_RULE_TYPES.REVIEW_ADJUSTMENT,
+            displayName: initialRule.displayName || '',
+            description: initialRule.description || '',
+            scoreValue:
+                initialRule.scoreValue != null ? String(initialRule.scoreValue) : '',
+            appliesTo: initialRule.appliesTo || TRUST_TARGET_TYPES.BOTH,
+            active: initialRule.active !== false,
+            requiredDays: String(conditions.requiredDays || 90),
+            requiresHiredActivity: Boolean(conditions.requiresHiredActivity),
+            reason: '',
+            reasonName: initialRule.reasonName || '',
+            reasonDescription: initialRule.reasonDescription || '',
+        };
+    }
+    return EMPTY;
 };
 
 const TrustScoreRuleFormModal = ({
@@ -34,32 +60,50 @@ const TrustScoreRuleFormModal = ({
     onSubmit,
     onCancel,
 }) => {
-    const [form, setForm] = useState(EMPTY);
+    const bodyRef = useRef(null);
+    const [prevKey, setPrevKey] = useState({
+        open,
+        mode,
+        id: initialRule?.id,
+        version: initialRule?.version,
+    });
+    const [form, setForm] = useState(() => buildInitialForm(mode, initialRule));
+    const [reportEventTypes, setReportEventTypes] = useState([]);
     const [error, setError] = useState('');
+
+    const currentKey = {
+        open,
+        mode,
+        id: initialRule?.id,
+        version: initialRule?.version,
+    };
+    if (
+        prevKey.open !== currentKey.open ||
+        prevKey.mode !== currentKey.mode ||
+        prevKey.id !== currentKey.id ||
+        prevKey.version !== currentKey.version
+    ) {
+        setPrevKey(currentKey);
+        setForm(buildInitialForm(mode, initialRule));
+        setError('');
+    }
 
     useEffect(() => {
         if (!open) return;
-        setError('');
-        if (mode === 'edit' && initialRule) {
-            const conditions = parseConditions(initialRule.conditions);
-            setForm({
-                ruleCode: initialRule.ruleCode || '',
-                eventType: initialRule.eventType || '',
-                ruleType: initialRule.ruleType || TRUST_SCORE_RULE_TYPES.REVIEW_ADJUSTMENT,
-                displayName: initialRule.displayName || '',
-                description: initialRule.description || '',
-                scoreValue:
-                    initialRule.scoreValue != null ? String(initialRule.scoreValue) : '',
-                appliesTo: initialRule.appliesTo || TRUST_TARGET_TYPES.BOTH,
-                active: initialRule.active !== false,
-                requiredDays: String(conditions.requiredDays || 90),
-                requiresHiredActivity: Boolean(conditions.requiresHiredActivity),
-                reason: '',
+        let isMounted = true;
+        getReportEventTypes()
+            .then((data) => {
+                if (isMounted && Array.isArray(data)) {
+                    setReportEventTypes(data);
+                }
+            })
+            .catch(() => {
+                /* fallback to defaults */
             });
-        } else {
-            setForm(EMPTY);
-        }
-    }, [open, mode, initialRule]);
+        return () => {
+            isMounted = false;
+        };
+    }, [open]);
 
     const configurableTypeOptions = useMemo(
         () =>
@@ -95,11 +139,33 @@ const TrustScoreRuleFormModal = ({
                 } else if (value === TRUST_SCORE_RULE_TYPES.RESOLVED_REPORT_ADJUSTMENT) {
                     next.eventType = 'REPORT_SCAM';
                     next.scoreValue = '-10';
+                    next.reasonName = '';
+                    next.reasonDescription = '';
                 }
             }
             return next;
         });
         setError('');
+    };
+
+    const handleReportEventTypeChange = (raw) => {
+        const val = raw.toUpperCase();
+        setForm((prev) => {
+            const next = { ...prev, eventType: val };
+            if (!prev.reasonName) {
+                const found = reportEventTypes.find((r) => r.eventType === val);
+                if (found?.reasonName) {
+                    next.reasonName = found.reasonName;
+                }
+            }
+            return next;
+        });
+        setError('');
+    };
+
+    const raiseError = (msg) => {
+        setError(msg);
+        bodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleSubmit = (e) => {
@@ -111,46 +177,46 @@ const TrustScoreRuleFormModal = ({
         const scoreNum = Number(form.scoreValue);
 
         if (mode === 'create' && !ruleCode) {
-            setError('Mã quy tắc là bắt buộc.');
+            raiseError('Mã quy tắc là bắt buộc.');
             return;
         }
         if (!eventType) {
-            setError('Loại sự kiện là bắt buộc.');
+            raiseError('Loại sự kiện là bắt buộc.');
             return;
         }
         if (!displayName) {
-            setError('Tên hiển thị là bắt buộc.');
+            raiseError('Tên hiển thị là bắt buộc.');
             return;
         }
         if (!Number.isFinite(scoreNum)) {
-            setError(isWarning ? 'Ngưỡng cảnh báo không hợp lệ.' : 'Giá trị điểm không hợp lệ.');
+            raiseError(isWarning ? 'Ngưỡng cảnh báo không hợp lệ.' : 'Giá trị điểm không hợp lệ.');
             return;
         }
         if (!isWarning && scoreNum === 0) {
-            setError('Giá điểm điều chỉnh không được bằng 0.');
+            raiseError('Giá điểm điều chỉnh không được bằng 0.');
             return;
         }
         if (isWarning && (scoreNum < 0 || scoreNum > 100)) {
-            setError('Ngưỡng cảnh báo phải từ 0 đến 100.');
+            raiseError('Ngưỡng cảnh báo phải từ 0 đến 100.');
             return;
         }
         if (!isWarning && (scoreNum < -100 || scoreNum > 100)) {
-            setError('Điểm điều chỉnh phải trong khoảng -100 đến 100 (khác 0).');
+            raiseError('Điểm điều chỉnh phải trong khoảng -100 đến 100 (khác 0).');
             return;
         }
         if (isRehab && scoreNum <= 0) {
-            setError('Quy tắc phục hồi chỉ chấp nhận điểm dương.');
+            raiseError('Quy tắc phục hồi chỉ chấp nhận điểm dương.');
             return;
         }
         if (isRehab) {
             const days = Number(form.requiredDays);
             if (!Number.isInteger(days) || days < 1 || days > 3650) {
-                setError('Số ngày yêu cầu phải từ 1 đến 3650.');
+                raiseError('Số ngày yêu cầu phải từ 1 đến 3650.');
                 return;
             }
         }
         if (!reason) {
-            setError('Lý do thay đổi là bắt buộc.');
+            raiseError('Lý do thay đổi là bắt buộc.');
             return;
         }
 
@@ -169,6 +235,11 @@ const TrustScoreRuleFormModal = ({
                 : null,
             reason,
         };
+
+        if (isReport) {
+            payload.reasonName = form.reasonName?.trim() || null;
+            payload.reasonDescription = form.reasonDescription?.trim() || null;
+        }
 
         if (mode === 'create') {
             payload.ruleCode = ruleCode;
@@ -208,107 +279,182 @@ const TrustScoreRuleFormModal = ({
                     </button>
                 </div>
 
-                <div className="admin-skills-modal__body">
-                    <label className="admin-skills-field">
-                        <span>
-                            Mã quy tắc <span className="required-mark">*</span>
-                        </span>
-                        <input
-                            value={form.ruleCode}
-                            onChange={(e) => patch('ruleCode', e.target.value.toUpperCase())}
-                            placeholder="VD: REVIEW_5_STAR_BONUS"
-                            disabled={loading || mode === 'edit'}
-                            autoFocus={mode === 'create'}
-                        />
-                        {mode === 'edit' ? (
-                            <small className="admin-trust-hint">
-                                Mã quy tắc không thể sửa sau khi tạo.
-                            </small>
-                        ) : null}
-                    </label>
+                {error ? (
+                    <div className="admin-skills-modal__error-banner" role="alert">
+                        <span style={{ fontSize: '15px' }}>⚠️</span>
+                        <span>{error}</span>
+                    </div>
+                ) : null}
 
-                    <label className="admin-skills-field">
-                        <span>
-                            Loại quy tắc <span className="required-mark">*</span>
-                        </span>
-                        <select
-                            value={form.ruleType}
-                            onChange={(e) => patch('ruleType', e.target.value)}
-                            disabled={loading}
-                        >
-                            {configurableTypeOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                <div className="admin-skills-modal__body" ref={bodyRef}>
+                    <div className="admin-skills-form-grid-2">
+                        <label className="admin-skills-field">
+                            <span>
+                                Mã quy tắc <span className="required-mark">*</span>
+                            </span>
+                            <input
+                                value={form.ruleCode}
+                                onChange={(e) => patch('ruleCode', e.target.value.toUpperCase())}
+                                placeholder="VD: REVIEW_5_STAR_BONUS"
+                                disabled={loading || mode === 'edit'}
+                                autoFocus={mode === 'create'}
+                            />
+                            {mode === 'edit' ? (
+                                <small className="admin-trust-hint">
+                                    Mã quy tắc không thể sửa sau khi tạo.
+                                </small>
+                            ) : null}
+                        </label>
 
-                    <label className="admin-skills-field">
-                        <span>
-                            Loại sự kiện <span className="required-mark">*</span>
-                        </span>
-                        {isReview ? (
+                        <label className="admin-skills-field">
+                            <span>
+                                Loại quy tắc <span className="required-mark">*</span>
+                            </span>
                             <select
-                                value={form.eventType}
-                                onChange={(e) => patch('eventType', e.target.value)}
+                                value={form.ruleType}
+                                onChange={(e) => patch('ruleType', e.target.value)}
                                 disabled={loading}
                             >
-                                {REVIEW_EVENT_OPTIONS.map((opt) => (
+                                {configurableTypeOptions.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
                                         {opt.label}
                                     </option>
                                 ))}
                             </select>
-                        ) : null}
-                        {isWarning ? (
-                            <select
-                                value={form.eventType}
-                                onChange={(e) => patch('eventType', e.target.value)}
-                                disabled={loading}
-                            >
-                                {WARNING_EVENT_OPTIONS.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>
-                                        {opt.label}
-                                    </option>
-                                ))}
-                            </select>
-                        ) : null}
-                        {isRehab ? (
-                            <input value="REHABILITATION" disabled />
-                        ) : null}
-                        {isReport ? (
-                            <>
-                                <input
-                                    list="trust-report-events"
+                        </label>
+                    </div>
+
+                    <div className="admin-skills-form-grid-2">
+                        <label className="admin-skills-field">
+                            <span>
+                                Loại sự kiện <span className="required-mark">*</span>
+                            </span>
+                            {isReview ? (
+                                <select
                                     value={form.eventType}
-                                    onChange={(e) => patch('eventType', e.target.value.toUpperCase())}
-                                    placeholder="VD: REPORT_SCAM"
+                                    onChange={(e) => patch('eventType', e.target.value)}
                                     disabled={loading}
-                                />
-                                <datalist id="trust-report-events">
-                                    {REPORT_EVENT_SUGGESTIONS.map((code) => (
-                                        <option key={code} value={code} />
+                                >
+                                    {REVIEW_EVENT_OPTIONS.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>
+                                            {opt.label}
+                                        </option>
                                     ))}
-                                </datalist>
-                            </>
-                        ) : null}
-                    </label>
+                                </select>
+                            ) : null}
+                            {isWarning ? (
+                                <select
+                                    value={form.eventType}
+                                    onChange={(e) => patch('eventType', e.target.value)}
+                                    disabled={loading}
+                                >
+                                    {WARNING_EVENT_OPTIONS.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : null}
+                            {isRehab ? (
+                                <input value="REHABILITATION" disabled />
+                            ) : null}
+                            {isReport ? (
+                                <>
+                                    <input
+                                        list="trust-report-events"
+                                        value={form.eventType}
+                                        onChange={(e) => handleReportEventTypeChange(e.target.value)}
+                                        placeholder="VD: REPORT_SCAM"
+                                        disabled={loading || mode === 'edit'}
+                                    />
+                                    {mode === 'edit' ? (
+                                        <small className="admin-trust-hint">
+                                            Loại sự kiện báo cáo vi phạm là bất biến, không thể thay đổi sau khi tạo.
+                                        </small>
+                                    ) : (
+                                        <datalist id="trust-report-events">
+                                            {reportEventTypes.length > 0
+                                                ? reportEventTypes.map((item) => (
+                                                      <option
+                                                          key={item.eventType}
+                                                          value={item.eventType}
+                                                          label={
+                                                              item.reasonName
+                                                                  ? `${item.reasonName} (${item.reasonCode})`
+                                                                  : item.eventType
+                                                          }
+                                                      >
+                                                          {item.reasonName || item.eventType}
+                                                      </option>
+                                                  ))
+                                                : REPORT_EVENT_SUGGESTIONS.map((code) => (
+                                                      <option key={code} value={code} />
+                                                  ))}
+                                        </datalist>
+                                    )}
+                                </>
+                            ) : null}
+                        </label>
+
+                        <label className="admin-skills-field">
+                            <span>
+                                Đối tượng áp dụng <span className="required-mark">*</span>
+                            </span>
+                            <select
+                                value={isWarning ? TRUST_TARGET_TYPES.BOTH : form.appliesTo}
+                                onChange={(e) => patch('appliesTo', e.target.value)}
+                                disabled={loading || isWarning}
+                            >
+                                {APPLIES_TO_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
+                            </select>
+                            {isWarning ? (
+                                <small className="admin-trust-hint">
+                                    Ngưỡng cảnh báo luôn áp dụng cho cả hai đối tượng.
+                                </small>
+                            ) : null}
+                        </label>
+                    </div>
+
+                    <div className="admin-skills-form-grid-2">
+                        <label className="admin-skills-field">
+                            <span>
+                                Tên quy tắc (Admin) <span className="required-mark">*</span>
+                            </span>
+                            <input
+                                value={form.displayName}
+                                onChange={(e) => patch('displayName', e.target.value)}
+                                placeholder="VD: Thưởng đánh giá 5 sao / Phạt lừa đảo"
+                                disabled={loading}
+                            />
+                        </label>
+
+                        <label className="admin-skills-field">
+                            <span>
+                                {isWarning ? 'Ngưỡng điểm (0–100)' : 'Giá trị điểm'}{' '}
+                                <span className="required-mark">*</span>
+                            </span>
+                            <input
+                                type="number"
+                                value={form.scoreValue}
+                                onChange={(e) => patch('scoreValue', e.target.value)}
+                                disabled={loading}
+                            />
+                            <small className="admin-trust-hint">
+                                {isWarning
+                                    ? 'Không cộng/trừ điểm; chỉ làm ngưỡng.'
+                                    : isRehab
+                                      ? 'Điểm cộng khi phục hồi (số dương).'
+                                      : 'Dương = cộng, âm = trừ.'}
+                            </small>
+                        </label>
+                    </div>
 
                     <label className="admin-skills-field">
-                        <span>
-                            Tên hiển thị <span className="required-mark">*</span>
-                        </span>
-                        <input
-                            value={form.displayName}
-                            onChange={(e) => patch('displayName', e.target.value)}
-                            placeholder="VD: Thưởng đánh giá 5 sao"
-                            disabled={loading}
-                        />
-                    </label>
-
-                    <label className="admin-skills-field">
-                        <span>Mô tả</span>
+                        <span>Mô tả quy tắc (Admin)</span>
                         <textarea
                             value={form.description}
                             onChange={(e) => patch('description', e.target.value)}
@@ -317,47 +463,39 @@ const TrustScoreRuleFormModal = ({
                         />
                     </label>
 
-                    <label className="admin-skills-field">
-                        <span>
-                            {isWarning ? 'Ngưỡng điểm (0–100)' : 'Giá trị điểm'}{' '}
-                            <span className="required-mark">*</span>
-                        </span>
-                        <input
-                            type="number"
-                            value={form.scoreValue}
-                            onChange={(e) => patch('scoreValue', e.target.value)}
-                            disabled={loading}
-                        />
-                        <small className="admin-trust-hint">
-                            {isWarning
-                                ? 'Không cộng/trừ điểm; chỉ dùng làm ngưỡng cảnh báo.'
-                                : isRehab
-                                  ? 'Chỉ chấp nhận số dương (điểm cộng khi phục hồi).'
-                                  : 'Số dương = cộng điểm, số âm = trừ điểm (không được = 0).'}
-                        </small>
-                    </label>
+                    {isReport ? (
+                        <>
+                            <label className="admin-skills-field">
+                                <span>
+                                    Tên lý do hiển thị cho Người dùng (reasonName)
+                                </span>
+                                <input
+                                    value={form.reasonName}
+                                    onChange={(e) => patch('reasonName', e.target.value)}
+                                    placeholder="VD: Lừa đảo, yêu cầu đặt cọc (để trống sẽ tự suy từ mã)"
+                                    maxLength={255}
+                                    disabled={loading}
+                                />
+                                <small className="admin-trust-hint">
+                                    Tên hiển thị trong danh sách chọn lý do khi ứng viên/NTD gửi báo cáo (khác với Tên quy tắc nội bộ).
+                                </small>
+                            </label>
 
-                    <label className="admin-skills-field">
-                        <span>
-                            Đối tượng áp dụng <span className="required-mark">*</span>
-                        </span>
-                        <select
-                            value={isWarning ? TRUST_TARGET_TYPES.BOTH : form.appliesTo}
-                            onChange={(e) => patch('appliesTo', e.target.value)}
-                            disabled={loading || isWarning}
-                        >
-                            {APPLIES_TO_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </option>
-                            ))}
-                        </select>
-                        {isWarning ? (
-                            <small className="admin-trust-hint">
-                                Ngưỡng cảnh báo luôn áp dụng cho cả hai đối tượng.
-                            </small>
-                        ) : null}
-                    </label>
+                            <label className="admin-skills-field">
+                                <span>
+                                    Mô tả lý do hiển thị cho Người dùng (reasonDescription)
+                                </span>
+                                <textarea
+                                    value={form.reasonDescription}
+                                    onChange={(e) => patch('reasonDescription', e.target.value)}
+                                    placeholder="VD: Nghi ngờ lừa đảo, gian lận hoặc yêu cầu chuyển khoản/đặt cọc..."
+                                    maxLength={1000}
+                                    rows={2}
+                                    disabled={loading}
+                                />
+                            </label>
+                        </>
+                    ) : null}
 
                     {isRehab ? (
                         <>
@@ -418,8 +556,6 @@ const TrustScoreRuleFormModal = ({
                             disabled={loading}
                         />
                     </label>
-
-                    {error ? <p className="admin-skills-modal__error">{error}</p> : null}
                 </div>
 
                 <div className="admin-skills-modal__footer">

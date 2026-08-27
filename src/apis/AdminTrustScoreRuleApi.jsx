@@ -14,6 +14,8 @@ const ERROR_MESSAGES = {
         'Loại quy tắc hệ thống không thể cấu hình từ màn này.',
     TRUST_SCORE_WARNING_THRESHOLDS_INVALID:
         'Thứ tự ngưỡng cảnh báo không hợp lệ (Rủi ro cao < Công khai < Nhẹ).',
+    REPORT_TRUST_EVENT_TYPE_IMMUTABLE:
+        'Không thể thay đổi loại sự kiện (eventType) của quy tắc báo cáo vi phạm khi chỉnh sửa.',
 };
 
 export const getTrustScoreRuleApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') => {
@@ -39,6 +41,12 @@ export const searchTrustScoreRules = async (params) => {
 /** GET /trust-scores/rules/{id} */
 export const getTrustScoreRuleDetail = async (id) => {
     const response = await axiosClient.get(`${BASE}/${id}`);
+    return unwrap(response);
+};
+
+/** GET /trust-scores/rules/report-event-types */
+export const getReportEventTypes = async () => {
+    const response = await axiosClient.get(`${BASE}/report-event-types`);
     return unwrap(response);
 };
 
