@@ -113,8 +113,14 @@ const JobApplyButton = ({
 
         setApplying(true);
         try {
+            const selectedCvLink =
+                cvMode === 'PROFILE'
+                    ? preview?.profileCvLink || preview?.cvLink || null
+                    : null;
+
             await applyToJob(jobId, {
                 source: 'ORGANIC',
+                cvLink: selectedCvLink,
                 file: cvMode === 'UPLOAD' ? file : null,
             });
             setApplied(true);

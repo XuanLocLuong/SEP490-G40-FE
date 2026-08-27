@@ -61,10 +61,12 @@ const CandidatePublicProfilePage = () => {
         );
     }
 
+    const effectiveCvLink = location.state?.applicationCvLink || profile?.cvLink || '';
+
     return (
         <div className="cpp-page">
             {backLink}
-            <CandidateProfileHeader profile={profile} />
+            <CandidateProfileHeader profile={profile} cvLink={effectiveCvLink} />
             <CandidatePublicResume profile={profile} />
             <CandidateReviewsAccordion userId={candidateUserId} />
         </div>

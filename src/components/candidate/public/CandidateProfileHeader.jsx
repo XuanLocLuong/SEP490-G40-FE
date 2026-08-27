@@ -1,7 +1,8 @@
 import UserAvatar from '../../common/UserAvatar.jsx';
-import { CheckCircleIcon } from '../../common/icons.jsx';
+import { CheckCircleIcon, FileTextIcon } from '../../common/icons.jsx';
 
-const CandidateProfileHeader = ({ profile }) => {
+const CandidateProfileHeader = ({ profile, cvLink }) => {
+    const effectiveCvLink = cvLink || profile?.cvLink;
     const trustValue = profile.trustScore != null ? Math.round(profile.trustScore) : '—';
 
     return (
@@ -26,6 +27,18 @@ const CandidateProfileHeader = ({ profile }) => {
                         {profile.openToWork && (
                             <span className="cpp-badge cpp-badge--open">Đang tìm việc</span>
                         )}
+                        {effectiveCvLink ? (
+                            <a
+                                href={effectiveCvLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="cpp-badge cpp-badge--cv"
+                                title="Mở file CV đính kèm (PDF)"
+                            >
+                                <FileTextIcon width={13} height={13} />
+                                File CV đính kèm
+                            </a>
+                        ) : null}
                     </div>
                 </div>
             </div>

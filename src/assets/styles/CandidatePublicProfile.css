@@ -90,6 +90,21 @@
     color: #ea580c;
 }
 
+.cpp-badge--cv {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.cpp-badge--cv:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #166534;
+}
+
 .cpp-hero__trust {
     background: #f8fafc;
     border: 1px solid var(--color-border);

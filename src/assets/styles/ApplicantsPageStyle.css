@@ -727,6 +727,26 @@
     color: #334155;
 }
 
+.application-card__btn--cv {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.application-card__btn--cv:hover:not(:disabled) {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #166534;
+}
+
 .application-card__btn--chat {
     flex: 0 0 auto;
     display: inline-flex;

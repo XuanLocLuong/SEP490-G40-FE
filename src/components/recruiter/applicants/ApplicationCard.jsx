@@ -1,6 +1,6 @@
 import { getBusinessInitial } from '../../../utils/formatters.js';
 import { isValidAvatarUrl } from '../../../utils/profileFormat.js';
-import { ChatIcon } from '../../common/icons.jsx';
+import { ChatIcon, FileTextIcon } from '../../common/icons.jsx';
 import {
     formatAppliedRelativeTime,
     getApplicationStatusLabel,
@@ -95,6 +95,18 @@ const ApplicationCard = ({
                 >
                     Xem hồ sơ
                 </button>
+                {application.cvLink ? (
+                    <a
+                        href={application.cvLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn application-card__btn application-card__btn--cv"
+                        title="Mở file CV đính kèm của ứng viên trong tab mới"
+                    >
+                        <FileTextIcon width={15} height={15} />
+                        <span>Xem CV</span>
+                    </a>
+                ) : null}
                 {application.status === 'REJECTED' && (application.rejectReason || application.note) ? (
                     <button
                         type="button"

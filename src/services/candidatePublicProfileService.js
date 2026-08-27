@@ -35,6 +35,7 @@ export const mapPublicProfileFromApi = (data = {}) => ({
         : isValidAvatarUrl(data.profilePicture)
           ? data.profilePicture
           : '',
+    cvLink: data.cvLink || data.cvUrl || '',
     verified: Boolean(data.verified),
     headline: data.headline || '',
     about: data.about || '',

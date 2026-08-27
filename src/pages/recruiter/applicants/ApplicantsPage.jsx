@@ -481,6 +481,7 @@ const ApplicantsPage = () => {
         navigate(getCandidatePublicProfilePath(candidateId), {
             state: {
                 candidateUserId: application?.candidateUserId ?? null,
+                applicationCvLink: application?.cvLink ?? null,
                 backTo: {
                     path: `${ROUTES.RECRUITER_APPLICANTS}${backQuery}`,
                     label: 'Quay lại danh sách ứng viên',
@@ -576,14 +577,20 @@ const ApplicantsPage = () => {
         [activeMatchTab]
     );
 
-    const pendingItems = matchData[activeMatchBucket.key] || [];
+    const pendingItems = useMemo(
+        () => matchData[activeMatchBucket.key] || [],
+        [matchData, activeMatchBucket.key]
+    );
     const pendingPage = pendingPageByTab[activeMatchTab] ?? 0;
     const pendingPagination = useMemo(
         () => paginateItems(pendingItems, pendingPage, RECRUITMENT_CARD_GRID_PAGE_SIZE),
         [pendingItems, pendingPage]
     );
 
-    const statusListItems = matchData.applications || [];
+    const statusListItems = useMemo(
+        () => matchData.applications || [],
+        [matchData.applications]
+    );
     const statusListPagination = useMemo(
         () => paginateItems(statusListItems, statusListPage, RECRUITMENT_CARD_GRID_PAGE_SIZE),
         [statusListItems, statusListPage]
