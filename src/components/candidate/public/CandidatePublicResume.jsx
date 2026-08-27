@@ -1,14 +1,10 @@
-import { formatDate, getEducationLevelLabel } from '../../../utils/profileFormat.js';
+import {
+    formatExperiencePeriod,
+    getEducationLevelLabel,
+} from '../../../utils/profileFormat.js';
 import { getJobTypeLabels } from '../../../utils/jobTypeDisplay.js';
 import { useEducationLevelOptions } from '../../../hooks/useEducationLevelOptions.js';
 import { useJobTypeOptions } from '../../../hooks/useJobTypeOptions.js';
-
-const renderPeriod = (exp) => {
-    const start = formatDate(exp.startDate);
-    const end = exp.endDate ? formatDate(exp.endDate) : 'Hiện tại';
-    if (!start && !exp.endDate) return '';
-    return `${start || '?'} - ${end}`;
-};
 
 /**
  * Public candidate "Hồ sơ" — CV-style view (personal + work history merged).
@@ -86,8 +82,8 @@ const CandidatePublicResume = ({ profile }) => {
                                             )}
                                             <div className="cpp-resume-exp__meta">
                                                 <strong>{exp.jobTitle || 'Vị trí'}</strong>
-                                                {renderPeriod(exp) && (
-                                                    <span>{renderPeriod(exp)}</span>
+                                                {formatExperiencePeriod(exp) && (
+                                                    <span>{formatExperiencePeriod(exp)}</span>
                                                 )}
                                             </div>
                                             {exp.description && (

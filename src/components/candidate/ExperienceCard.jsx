@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
 import ConfirmModal from '../common/ConfirmModal.jsx';
+import RequiredMark from './RequiredMark.jsx';
 import { PlusIcon, PencilIcon, TrashIcon } from './profileIcons.jsx';
 import { InfoIcon } from '../common/icons.jsx';
-import { formatDate } from '../../utils/profileFormat.js';
+import { formatDate, formatExperiencePeriod } from '../../utils/profileFormat.js';
 
 const EMPTY_EXP = {
     jobTitle: '',
@@ -51,12 +52,6 @@ const validateWorkHistoryDates = ({ startDate, endDate }) => {
     return '';
 };
 
-const renderPeriod = (exp) => {
-    const start = formatDate(exp.startDate);
-    const end = exp.endDate ? formatDate(exp.endDate) : 'Hiện tại';
-    if (!start && !exp.endDate) return '';
-    return `${start || '?'} - ${end}`;
-};
 
 const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
     const [open, setOpen] = useState(false);
@@ -143,7 +138,7 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
             ) : (
                 <ul className="cp-list">
                     {experiences.map((exp, index) => {
-                        const period = renderPeriod(exp);
+                        const period = formatExperiencePeriod(exp);
                         return (
                             <li key={exp.id ?? index} className="cp-exp-item">
                                 <div className="cp-exp-item__head">
@@ -237,7 +232,7 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
                 )}
                 <div className="cp-form-group">
                     <label className="cp-form-label">
-                        Vị trí {isJobLink ? '' : '*'}
+                        Vị trí {isJobLink ? '' : <RequiredMark />}
                     </label>
                     <input
                         type="text"
@@ -250,7 +245,7 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
                 </div>
                 <div className="cp-form-group">
                     <label className="cp-form-label">
-                        Nơi làm việc {isJobLink ? '' : '*'}
+                        Nơi làm việc {isJobLink ? '' : <RequiredMark />}
                     </label>
                     <input
                         type="text"
@@ -261,44 +256,52 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
                         onChange={(e) => setForm((p) => ({ ...p, organization: e.target.value }))}
                     />
                 </div>
-                <div className="cp-form-row">
+                {isJobLink ? (
                     <div className="cp-form-group">
-                        <label className="cp-form-label">
-                            Ngày bắt đầu {isJobLink ? '' : '*'}
-                        </label>
+                        <label className="cp-form-label">Ngày trúng tuyển</label>
                         <input
-                            type="date"
+                            type="text"
                             className="cp-input"
-                            value={form.startDate}
-                            max={isJobLink ? undefined : startDateMax}
-                            disabled={isJobLink}
-                            onChange={(e) => {
-                                setDateError('');
-                                setForm((p) => ({ ...p, startDate: e.target.value }));
-                            }}
+                            value={formatDate(form.startDate) || 'Chưa cập nhật'}
+                            disabled
                         />
-                        {!isJobLink && <span className="cp-input-hint">Phải trước hôm nay</span>}
                     </div>
-                    <div className="cp-form-group">
-                        <label className="cp-form-label">Ngày kết thúc</label>
-                        <input
-                            type="date"
-                            className="cp-input"
-                            value={form.endDate || ''}
-                            min={form.startDate || undefined}
-                            disabled={isJobLink}
-                            onChange={(e) => {
-                                setDateError('');
-                                setForm((p) => ({ ...p, endDate: e.target.value }));
-                            }}
-                        />
-                        {!isJobLink && (
+                ) : (
+                    <div className="cp-form-row">
+                        <div className="cp-form-group">
+                            <label className="cp-form-label">
+                                Ngày bắt đầu <RequiredMark />
+                            </label>
+                            <input
+                                type="date"
+                                className="cp-input"
+                                value={form.startDate}
+                                max={startDateMax}
+                                onChange={(e) => {
+                                    setDateError('');
+                                    setForm((p) => ({ ...p, startDate: e.target.value }));
+                                }}
+                            />
+                            <span className="cp-input-hint">Phải trước hôm nay</span>
+                        </div>
+                        <div className="cp-form-group">
+                            <label className="cp-form-label">Ngày kết thúc</label>
+                            <input
+                                type="date"
+                                className="cp-input"
+                                value={form.endDate || ''}
+                                min={form.startDate || undefined}
+                                onChange={(e) => {
+                                    setDateError('');
+                                    setForm((p) => ({ ...p, endDate: e.target.value }));
+                                }}
+                            />
                             <span className="cp-input-hint">
-                                Để trống nếu đang làm (được chọn ngày tương lai)
+                                Không bắt buộc (được chọn ngày tương lai)
                             </span>
-                        )}
+                        </div>
                     </div>
-                </div>
+                )}
                 {!isJobLink && dateError && <span className="cp-input-error">{dateError}</span>}
                 <div className="cp-form-group">
                     <label className="cp-form-label">Mô tả công việc</label>

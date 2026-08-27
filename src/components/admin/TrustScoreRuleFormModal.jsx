@@ -137,7 +137,7 @@ const TrustScoreRuleFormModal = ({
                     next.eventType = 'REVIEW_5_STAR';
                     next.scoreValue = '5';
                 } else if (value === TRUST_SCORE_RULE_TYPES.RESOLVED_REPORT_ADJUSTMENT) {
-                    next.eventType = 'REPORT_SCAM';
+                    next.eventType = 'REPORT_';
                     next.scoreValue = '-10';
                     next.reasonName = '';
                     next.reasonDescription = '';
@@ -149,7 +149,20 @@ const TrustScoreRuleFormModal = ({
     };
 
     const handleReportEventTypeChange = (raw) => {
-        const val = raw.toUpperCase();
+        let val = raw.toUpperCase();
+        if (!val.startsWith('REPORT_')) {
+            if (val.startsWith('REPORT')) {
+                val = 'REPORT_' + val.slice(6).replace(/^_*/, '');
+            } else if (val) {
+                val = 'REPORT_' + val.replace(/^_+/, '');
+            } else {
+                val = 'REPORT_';
+            }
+        }
+        if (val.startsWith('REPORT__')) {
+            val = 'REPORT_' + val.slice(7).replace(/^_*/, '');
+        }
+
         setForm((prev) => {
             const next = { ...prev, eventType: val };
             if (!prev.reasonName) {
@@ -183,6 +196,16 @@ const TrustScoreRuleFormModal = ({
         if (!eventType) {
             raiseError('Loại sự kiện là bắt buộc.');
             return;
+        }
+        if (isReport) {
+            if (eventType === 'REPORT_' || eventType.trim() === 'REPORT_') {
+                raiseError('Vui lòng nhập tên loại sự kiện báo cáo sau tiền tố "REPORT_" (VD: REPORT_FAKE_JOB).');
+                return;
+            }
+            if (!eventType.startsWith('REPORT_')) {
+                raiseError('Loại sự kiện báo cáo bắt buộc phải bắt đầu bằng "REPORT_".');
+                return;
+            }
         }
         if (!displayName) {
             raiseError('Tên hiển thị là bắt buộc.');
@@ -220,8 +243,13 @@ const TrustScoreRuleFormModal = ({
             return;
         }
 
+        const finalEventType =
+            isReport && !eventType.startsWith('REPORT_')
+                ? `REPORT_${eventType}`
+                : eventType;
+
         const payload = {
-            eventType,
+            eventType: finalEventType,
             ruleType: form.ruleType,
             displayName,
             description: form.description.trim() || null,
@@ -364,7 +392,7 @@ const TrustScoreRuleFormModal = ({
                                         list="trust-report-events"
                                         value={form.eventType}
                                         onChange={(e) => handleReportEventTypeChange(e.target.value)}
-                                        placeholder="VD: REPORT_SCAM"
+                                        placeholder="VD: REPORT_FAKE_JOB"
                                         disabled={loading || mode === 'edit'}
                                     />
                                     {mode === 'edit' ? (
@@ -372,25 +400,30 @@ const TrustScoreRuleFormModal = ({
                                             Loại sự kiện báo cáo vi phạm là bất biến, không thể thay đổi sau khi tạo.
                                         </small>
                                     ) : (
-                                        <datalist id="trust-report-events">
-                                            {reportEventTypes.length > 0
-                                                ? reportEventTypes.map((item) => (
-                                                      <option
-                                                          key={item.eventType}
-                                                          value={item.eventType}
-                                                          label={
-                                                              item.reasonName
-                                                                  ? `${item.reasonName} (${item.reasonCode})`
-                                                                  : item.eventType
-                                                          }
-                                                      >
-                                                          {item.reasonName || item.eventType}
-                                                      </option>
-                                                  ))
-                                                : REPORT_EVENT_SUGGESTIONS.map((code) => (
-                                                      <option key={code} value={code} />
-                                                  ))}
-                                        </datalist>
+                                        <>
+                                            <small className="admin-trust-hint">
+                                                Bắt buộc bắt đầu bằng tiền tố <strong>REPORT_</strong>. Bạn có thể chọn từ gợi ý hoặc tự nhập mới.
+                                            </small>
+                                            <datalist id="trust-report-events">
+                                                {reportEventTypes.length > 0
+                                                    ? reportEventTypes.map((item) => (
+                                                          <option
+                                                              key={item.eventType}
+                                                              value={item.eventType}
+                                                              label={
+                                                                  item.reasonName
+                                                                      ? `${item.reasonName} (${item.reasonCode})`
+                                                                      : item.eventType
+                                                              }
+                                                          >
+                                                              {item.reasonName || item.eventType}
+                                                          </option>
+                                                      ))
+                                                    : REPORT_EVENT_SUGGESTIONS.map((code) => (
+                                                          <option key={code} value={code} />
+                                                      ))}
+                                            </datalist>
+                                        </>
                                     )}
                                 </>
                             ) : null}

@@ -81,6 +81,22 @@ export const toMonthInputValue = (value) => {
     return date.toISOString().slice(0, 7);
 };
 
+// Hiển thị khoảng thời gian kinh nghiệm làm việc:
+// - JobLink: "Ngày trúng tuyển: dd/MM/yyyy"
+// - Manual: "dd/MM/yyyy - dd/MM/yyyy" hoặc "dd/MM/yyyy" nếu không có ngày kết thúc.
+export const formatExperiencePeriod = (exp) => {
+    if (!exp) return '';
+    if (exp.source === 'JOB_LINK') {
+        const start = formatDate(exp.startDate);
+        return start ? `Ngày trúng tuyển: ${start}` : '';
+    }
+    const start = formatDate(exp.startDate);
+    const end = exp.endDate ? formatDate(exp.endDate) : '';
+    if (!start && !end) return '';
+    if (start && end) return `${start} - ${end}`;
+    return start || end;
+};
+
 // Định dạng lương "25k - 30k /giờ". Không có dữ liệu => ''.
 // salaryUnit nếu còn trong data cũ sẽ bị bỏ qua — luôn hiển thị /giờ.
 export const formatSalaryRange = ({ salaryMin, salaryMax } = {}) => {
