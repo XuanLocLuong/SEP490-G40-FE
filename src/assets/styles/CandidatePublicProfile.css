@@ -310,20 +310,52 @@
     white-space: pre-wrap;
 }
 
-.cpp-resume-edu__school {
-    margin: 0 0 6px;
-    font-size: 14px;
+/* ---- Education Card in Resume Side ---- */
+.cpp-resume-edu-card {
+    background: #ffffff;
+    border: 1.5px solid #dbeafe;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cpp-resume-edu__level-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.cpp-resume-edu__level {
+    margin: 0;
+    font-size: 1.1rem;
     font-weight: 800;
-    color: var(--color-text);
+    color: var(--color-primary, #2563eb);
+    letter-spacing: -0.01em;
+}
+
+.cpp-resume-edu__school {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--color-text, #1e293b);
     text-transform: uppercase;
     letter-spacing: 0.02em;
 }
 
 .cpp-resume-edu__line {
-    margin: 0 0 4px;
+    margin: 0;
     font-size: 13px;
     line-height: 1.5;
-    color: var(--color-text);
+    color: var(--color-text, #334155);
+}
+
+.cpp-resume-edu__label {
+    font-weight: 600;
+    color: var(--color-text-muted, #64748b);
 }
 
 .cpp-resume-skills {
@@ -490,12 +522,33 @@
 
 .cpp-skill-tag {
     display: inline-flex;
-    padding: 6px 12px;
+    align-items: center;
+    padding: 6px 14px;
     border-radius: 999px;
-    background: #eef4ff;
-    color: var(--color-primary);
+    background: #ffffff;
+    border: 1.5px solid #bfdbfe;
+    color: #1d4ed8;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+    transition: all 0.15s ease;
+}
+
+.cpp-skill-tag:hover {
+    border-color: var(--color-primary);
+    background: #f8fbff;
+    transform: translateY(-1px);
+}
+
+.cpp-skill-tag--job-type {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+.cpp-skill-tag--job-type:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
 }
 
 /* ---- Work history ---- */

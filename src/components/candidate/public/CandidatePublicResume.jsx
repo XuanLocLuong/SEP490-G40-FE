@@ -104,34 +104,42 @@ const CandidatePublicResume = ({ profile }) => {
 
                     <aside className="cpp-resume__side">
                         <div className="cpp-resume__block">
-                            <h3 className="cpp-resume__capsule">Học vấn</h3>
+                            <h3 className="cpp-resume__capsule">Trình độ học vấn</h3>
                             {!hasEducation ? (
-                                <p className="cpp-empty-text">Chưa cập nhật học vấn.</p>
+                                <p className="cpp-empty-text">Chưa cập nhật trình độ học vấn.</p>
                             ) : (
-                                <div className="cpp-resume-edu">
+                                <div className="cpp-resume-edu-card">
+                                    {educationLevelLabel ? (
+                                        <div className="cpp-resume-edu__level-row">
+                                            <span className="cpp-resume-edu__level">
+                                                {educationLevelLabel}
+                                            </span>
+                                        </div>
+                                    ) : null}
                                     {profile.university && (
                                         <p className="cpp-resume-edu__school">
                                             {profile.university}
                                         </p>
                                     )}
-                                    {educationLevelLabel && (
-                                        <p className="cpp-resume-edu__line">
-                                            {educationLevelLabel}
-                                        </p>
-                                    )}
                                     {profile.major && (
-                                        <p className="cpp-resume-edu__line">{profile.major}</p>
+                                        <p className="cpp-resume-edu__line">
+                                            <span className="cpp-resume-edu__label">Chuyên ngành:</span> {profile.major}
+                                        </p>
                                     )}
                                     {profile.academicYear && (
                                         <p className="cpp-resume-edu__line">
-                                            Năm học: {profile.academicYear}
+                                            <span className="cpp-resume-edu__label">Năm học:</span> {profile.academicYear}
                                         </p>
                                     )}
                                     {profile.gpa != null && profile.gpa !== '' && (
-                                        <p className="cpp-resume-edu__line">GPA: {profile.gpa}</p>
+                                        <p className="cpp-resume-edu__line">
+                                            <span className="cpp-resume-edu__label">GPA:</span> {profile.gpa}
+                                        </p>
                                     )}
                                     {profile.city && (
-                                        <p className="cpp-resume-edu__line">{profile.city}</p>
+                                        <p className="cpp-resume-edu__line">
+                                            <span className="cpp-resume-edu__label">Khu vực:</span> {profile.city}
+                                        </p>
                                     )}
                                 </div>
                             )}
@@ -142,24 +150,16 @@ const CandidatePublicResume = ({ profile }) => {
                             {skills.length === 0 ? (
                                 <p className="cpp-empty-text">Chưa cập nhật kỹ năng.</p>
                             ) : (
-                                <ul className="cpp-resume-skills">
+                                <div className="cpp-skill-tags">
                                     {skills.map((skill) => (
-                                        <li
+                                        <span
                                             key={skill.id ?? skill.name}
-                                            className="cpp-resume-skills__item"
-                                            title={skill.description || undefined}
+                                            className="cpp-skill-tag"
                                         >
-                                            <span className="cpp-resume-skills__name">
-                                                {skill.name}
-                                            </span>
-                                            {skill.description ? (
-                                                <span className="cpp-resume-skills__desc">
-                                                    {skill.description}
-                                                </span>
-                                            ) : null}
-                                        </li>
+                                            {skill.name}
+                                        </span>
                                     ))}
-                                </ul>
+                                </div>
                             )}
                         </div>
 
@@ -168,7 +168,7 @@ const CandidatePublicResume = ({ profile }) => {
                                 <h3 className="cpp-resume__capsule">Loại việc mong muốn</h3>
                                 <div className="cpp-skill-tags">
                                     {preferredJobLabels.map((label) => (
-                                        <span key={label} className="cpp-skill-tag">
+                                        <span key={label} className="cpp-skill-tag cpp-skill-tag--job-type">
                                             {label}
                                         </span>
                                     ))}

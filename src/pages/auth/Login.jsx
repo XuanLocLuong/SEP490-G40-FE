@@ -26,7 +26,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [googleRole, setGoogleRole] = useState(USER_ROLES.CANDIDATE);
-    const [error, setError] = useState('');
+    const [error, setError] = useState(() => peekSessionExpiredMessage() || '');
     const [emailNotice, setEmailNotice] = useState(() => peekEmailVerificationNotice());
 
     const { login } = useAuth();
@@ -39,11 +39,6 @@ const Login = () => {
     };
 
     useEffect(() => {
-        const message = peekSessionExpiredMessage();
-        if (!message) return undefined;
-
-        setError(message);
-
         // Delay clear so React StrictMode remount vẫn còn flag để gắn lại lỗi trên form.
         const timer = window.setTimeout(() => clearSessionExpiredFlag(), 800);
         return () => window.clearTimeout(timer);
@@ -95,28 +90,34 @@ const Login = () => {
             <AuthCard title="Chào mừng trở lại 👋">
                 {error && <div className="auth-card__error">{error}</div>}
 
-                <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError('Đăng nhập Google bị huỷ hoặc thất bại.')}
-                />
+                <div className="google-login-wrap">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError('Đăng nhập Google bị huỷ hoặc thất bại.')}
+                        width="388"
+                        size="large"
+                        shape="rectangular"
+                        logo_alignment="left"
+                    />
+                </div>
 
                 {/* Role chỉ áp dụng nếu Google account đăng nhập lần đầu (BE tự tạo mới) */}
-                <div style={{ margin: '10px 0 4px', fontSize: 13 }}>
-                    <label style={{ marginRight: 16 }}>
+                <div className="google-role-select">
+                    <label className="google-role-select__item">
                         <input
                             type="radio"
                             checked={googleRole === USER_ROLES.CANDIDATE}
                             onChange={() => setGoogleRole(USER_ROLES.CANDIDATE)}
-                        />{' '}
-                        Ứng viên
+                        />
+                        <span>Ứng viên</span>
                     </label>
-                    <label>
+                    <label className="google-role-select__item">
                         <input
                             type="radio"
                             checked={googleRole === USER_ROLES.RECRUITER}
                             onChange={() => setGoogleRole(USER_ROLES.RECRUITER)}
-                        />{' '}
-                        Nhà tuyển dụng
+                        />
+                        <span>Nhà tuyển dụng</span>
                     </label>
                 </div>
 

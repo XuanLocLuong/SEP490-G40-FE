@@ -267,10 +267,16 @@ const Register = () => {
                     </button>
                 </div>
 
-                <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError('Đăng ký Google bị huỷ hoặc thất bại.')}
-                />
+                <div className="google-login-wrap">
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError('Đăng ký Google bị huỷ hoặc thất bại.')}
+                        width="388"
+                        size="large"
+                        shape="rectangular"
+                        logo_alignment="left"
+                    />
+                </div>
 
                 <div className="auth-divider">HOẶC</div>
 

@@ -132,6 +132,47 @@
 }
 
 /* ---- Google button + divider ---- */
+.google-login-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.google-login-wrap > div,
+.google-login-wrap iframe {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.google-role-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    margin: 12px 0 6px;
+    font-size: 13.5px;
+    color: var(--color-text);
+}
+
+.google-role-select__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    user-select: none;
+}
+
+.google-role-select__item input[type='radio'] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}
+
 .btn--google {
     width: 100%;
     display: flex;
