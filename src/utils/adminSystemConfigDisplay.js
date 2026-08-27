@@ -271,7 +271,7 @@ export const buildSystemConfigUiSections = (items = [], getMeta) => {
     const buckets = new Map();
 
     items.forEach((item) => {
-        const meta = getMeta(item.configKey, item.configGroup);
+        const meta = getMeta(item.configKey, item.configGroup, item);
         const group = meta.group || 'Khác';
         if (!buckets.has(group)) buckets.set(group, []);
         buckets.get(group).push({ item, meta });

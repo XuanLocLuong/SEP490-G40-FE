@@ -194,37 +194,110 @@
 .admin-config-param__label {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     min-width: 0;
 }
 
+.admin-config-param__header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
 .admin-config-param__label strong {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 750;
     line-height: 1.35;
+    color: #0f172a;
+}
+
+.admin-config-param--json .admin-config-param__label strong {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1e293b;
 }
 
 .admin-config-param__label small {
-    font-size: 10px;
-    color: #94a3b8;
+    font-size: 11px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #64748b;
     word-break: break-all;
 }
 
 .admin-config-param__desc {
     margin-top: 4px;
-    font-size: 12px;
-    color: var(--color-text-muted);
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 12.5px;
+    color: #475569;
+    line-height: 1.45;
+}
+
+.admin-config-param__affected {
+    margin-top: 2px;
+    font-size: 11.5px;
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    align-self: flex-start;
+    line-height: 1.35;
+}
+
+.admin-config-param__meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.admin-config-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    line-height: 1.3;
+}
+
+.admin-config-pill--default {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+.admin-config-pill--default strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.admin-config-pill--range {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.admin-config-pill--range strong {
+    color: #475569;
+    font-weight: 700;
+}
+
+.admin-config-pill--json {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    font-weight: 700;
+    font-size: 10.5px;
+    padding: 1px 6px;
+    border-radius: 999px;
 }
 
 .admin-config-param__editor {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 

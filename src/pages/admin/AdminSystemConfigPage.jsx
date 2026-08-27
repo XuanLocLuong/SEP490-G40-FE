@@ -72,7 +72,7 @@ const AdminSystemConfigPage = () => {
     const initDrafts = useCallback((list) => {
         const next = {};
         list.forEach((item) => {
-            const meta = getSystemConfigUiMeta(item.configKey, item.configGroup);
+            const meta = getSystemConfigUiMeta(item.configKey, item.configGroup, item);
             const forceJson = meta.isJson || String(item.dataType || '').toUpperCase() === CONFIG_DATA_TYPE.JSON;
             next[item.configKey] = cloneConfigDraftValue(item.currentValue, item.dataType, forceJson);
         });
@@ -97,7 +97,15 @@ const AdminSystemConfigPage = () => {
     }, [initDrafts]);
 
     useEffect(() => {
-        loadList();
+        let isMounted = true;
+        (async () => {
+            if (isMounted) {
+                await loadList();
+            }
+        })();
+        return () => {
+            isMounted = false;
+        };
     }, [loadList]);
 
     const sections = useMemo(
@@ -105,29 +113,14 @@ const AdminSystemConfigPage = () => {
         [items]
     );
 
-    useEffect(() => {
-        if (!sections.length) return;
-        setCollapsed((prev) => {
-            const next = { ...prev };
-            let changed = false;
-            sections.forEach((section, index) => {
-                if (!(section.group in next)) {
-                    next[section.group] = index !== 0;
-                    changed = true;
-                }
-            });
-            return changed ? next : prev;
-        });
-    }, [sections]);
-
-    const toggleGroup = (group) => {
-        setCollapsed((prev) => ({ ...prev, [group]: !prev[group] }));
+    const toggleGroup = (group, currentlyCollapsed) => {
+        setCollapsed((prev) => ({ ...prev, [group]: !currentlyCollapsed }));
     };
 
     const dirtyKeys = useMemo(() => {
         return items
             .filter((item) => {
-                const meta = getSystemConfigUiMeta(item.configKey, item.configGroup);
+                const meta = getSystemConfigUiMeta(item.configKey, item.configGroup, item);
                 const forceJson = meta.isJson || String(item.dataType || '').toUpperCase() === CONFIG_DATA_TYPE.JSON;
                 const dataType = forceJson ? CONFIG_DATA_TYPE.JSON : item.dataType;
                 return !areConfigValuesEqual(drafts[item.configKey], item.currentValue, dataType);
@@ -141,7 +134,7 @@ const AdminSystemConfigPage = () => {
         const map = {};
         dirtyKeys.forEach((key) => {
             const item = items.find((row) => row.configKey === key);
-            const group = getSystemConfigUiMeta(key, item?.configGroup).group;
+            const group = getSystemConfigUiMeta(key, item?.configGroup, item).group;
             map[group] = (map[group] || 0) + 1;
         });
         return map;
@@ -182,7 +175,7 @@ const AdminSystemConfigPage = () => {
         const payloads = [];
 
         for (const item of toSave) {
-            const meta = getSystemConfigUiMeta(item.configKey, item.configGroup);
+            const meta = getSystemConfigUiMeta(item.configKey, item.configGroup, item);
             const forceJson = meta.isJson || String(item.dataType || '').toUpperCase() === CONFIG_DATA_TYPE.JSON;
             const configForValidate = forceJson
                 ? { ...item, dataType: CONFIG_DATA_TYPE.JSON }
@@ -262,8 +255,22 @@ const AdminSystemConfigPage = () => {
                     onChange={(e) => setScalarDraft(item.configKey, e.target.value === 'true')}
                     aria-label={meta.label}
                 >
-                    <option value="true">Bật</option>
-                    <option value="false">Tắt</option>
+                    <option value="true">Bật (true)</option>
+                    <option value="false">Tắt (false)</option>
+                </select>
+            );
+        }
+
+        if (item.configKey === 'TOP_RECRUITER_ACCOUNT_AGE_REFERENCE') {
+            return (
+                <select
+                    className="admin-config-inline__control"
+                    value={value ?? 'VERIFIED_AT'}
+                    onChange={(e) => setScalarDraft(item.configKey, e.target.value)}
+                    aria-label={meta.label}
+                >
+                    <option value="VERIFIED_AT">VERIFIED_AT (Tính từ ngày xác thực)</option>
+                    <option value="CREATED_AT">CREATED_AT (Tính từ ngày tạo tài khoản)</option>
                 </select>
             );
         }
@@ -452,9 +459,11 @@ const AdminSystemConfigPage = () => {
                 <p className="admin-config-page__empty">Chưa có cấu hình nào được phép quản lý.</p>
             ) : (
                 <div className="admin-config-dashboard">
-                    {sections.map(({ group, rows }) => {
+                    {sections.map(({ group, rows }, sectionIndex) => {
                         const Icon = resolveGroupIcon(rows);
-                        const isCollapsed = Boolean(collapsed[group]);
+                        const isCollapsed = collapsed[group] !== undefined
+                            ? Boolean(collapsed[group])
+                            : sectionIndex !== 0;
                         const groupDirty = dirtyCountByGroup[group] || 0;
                         const hasJson = rows.some(
                             ({ item, meta }) =>
@@ -470,7 +479,7 @@ const AdminSystemConfigPage = () => {
                                 <button
                                     type="button"
                                     className="admin-config-dash-card__head"
-                                    onClick={() => toggleGroup(group)}
+                                    onClick={() => toggleGroup(group, isCollapsed)}
                                     aria-expanded={!isCollapsed}
                                 >
                                     <span className="admin-config-dash-card__icon" aria-hidden>
@@ -504,14 +513,24 @@ const AdminSystemConfigPage = () => {
                                                     className={`admin-config-param${forceJson ? ' admin-config-param--json' : ' admin-config-param--tile'}${isDirty ? ' is-dirty' : ''}`}
                                                 >
                                                     <div className="admin-config-param__label">
-                                                        <strong>{meta.label}</strong>
+                                                        <div className="admin-config-param__header-row">
+                                                            <strong>{meta.label}</strong>
+                                                            {forceJson && (
+                                                                <span className="admin-config-pill admin-config-pill--json">JSON</span>
+                                                            )}
+                                                        </div>
                                                         <small>{item.configKey}</small>
                                                         {item.description ? (
                                                             <span
                                                                 className="admin-config-param__desc"
-                                                                title={item.affectedFunctions || item.description}
+                                                                title={item.affectedFunctions ? `${item.description} (Ảnh hưởng: ${item.affectedFunctions})` : item.description}
                                                             >
                                                                 {item.description}
+                                                            </span>
+                                                        ) : null}
+                                                        {item.affectedFunctions ? (
+                                                            <span className="admin-config-param__affected">
+                                                                ⚙️ {item.affectedFunctions}
                                                             </span>
                                                         ) : null}
                                                     </div>
@@ -523,10 +542,16 @@ const AdminSystemConfigPage = () => {
                                                         {forceJson ? (
                                                             renderJsonDefaultGrid(item)
                                                         ) : (
-                                                            <span className="admin-config-param__default">
-                                                                Mặc định: {formatDefaultHint(item.defaultValue)}
-                                                                {item.allowedRange ? ` · Phạm vi: ${item.allowedRange}` : ''}
-                                                            </span>
+                                                            <div className="admin-config-param__meta-row">
+                                                                <span className="admin-config-pill admin-config-pill--default">
+                                                                    Mặc định: <strong>{formatDefaultHint(item.defaultValue)}{meta.unit ? ` ${meta.unit}` : ''}</strong>
+                                                                </span>
+                                                                {item.allowedRange ? (
+                                                                    <span className="admin-config-pill admin-config-pill--range">
+                                                                        Phạm vi: <strong>{item.allowedRange}</strong>
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </li>
@@ -555,9 +580,14 @@ const AdminSystemConfigPage = () => {
                     Sẽ gọi cập nhật từng key đã đổi (cùng một lý do). Thay đổi áp dụng ngay sau khi lưu.
                 </p>
                 <ul className="admin-config-save-keys">
-                    {dirtyKeys.map((key) => (
-                        <li key={key}>{getSystemConfigUiMeta(key).label} <small>({key})</small></li>
-                    ))}
+                    {dirtyKeys.map((key) => {
+                        const rowItem = items.find((row) => row.configKey === key);
+                        return (
+                            <li key={key}>
+                                {getSystemConfigUiMeta(key, rowItem?.configGroup, rowItem).label} <small>({key})</small>
+                            </li>
+                        );
+                    })}
                 </ul>
                 <label className="admin-accounts__field">
                     <span>Lý do thay đổi</span>
