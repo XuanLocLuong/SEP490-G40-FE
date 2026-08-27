@@ -1,4 +1,8 @@
-import { CONFIG_UI_GROUP_ORDER } from '../constants/adminSystemConfigUiMap.js';
+import {
+    CONFIG_UI_GROUP_ORDER,
+    SYSTEM_CONFIG_SUB_GROUPS,
+    SYSTEM_CONFIG_SUB_GROUP_ORDER,
+} from '../constants/adminSystemConfigUiMap.js';
 
 export const CONFIG_DATA_TYPE = {
     NUMBER: 'NUMBER',
@@ -292,4 +296,252 @@ export const buildSystemConfigUiSections = (items = [], getMeta) => {
     });
 
     return ordered;
+};
+
+/**
+ * Phân chia danh sách cấu hình của nhóm 'Khám phá và Xu hướng' thành các nhóm con logic.
+ */
+export const buildSystemConfigSubSections = (rows = []) => {
+    if (!rows.length) return [];
+
+    const rowMap = new Map();
+    rows.forEach((r) => rowMap.set(r.item.configKey, r));
+
+    const usedKeys = new Set();
+    const subSections = [];
+
+    SYSTEM_CONFIG_SUB_GROUP_ORDER.forEach((subGroupId) => {
+        const def = SYSTEM_CONFIG_SUB_GROUPS[subGroupId];
+        if (!def) return;
+
+        const subRows = [];
+        def.keys.forEach((key) => {
+            if (rowMap.has(key)) {
+                subRows.push(rowMap.get(key));
+                usedKeys.add(key);
+            }
+        });
+
+        if (subRows.length > 0) {
+            subSections.push({
+                subGroupId,
+                def,
+                rows: subRows,
+            });
+        }
+    });
+
+    // Các tham số chưa phân nhóm (nếu có)
+    const remainingRows = rows.filter((r) => !usedKeys.has(r.item.configKey));
+    if (remainingRows.length > 0) {
+        subSections.push({
+            subGroupId: 'OTHER_SUB_GROUP',
+            def: {
+                id: 'OTHER_SUB_GROUP',
+                title: 'Các tham số khác',
+                description: '',
+                type: 'general',
+            },
+            rows: remainingRows,
+        });
+    }
+
+    return subSections;
+};
+
+/**
+ * Validate toàn bộ các ràng buộc logic liên nhóm (Cross-field Hard Constraints).
+ * Trả về { isValid: boolean, errors: { subGroupId: string, message: string }[], groupStatuses: Record<string, any> }
+ */
+export const validateSystemConfigConstraints = (drafts = {}, items = []) => {
+    const errors = [];
+    const groupStatuses = {};
+
+    const getVal = (key, fallback = 0) => {
+        if (drafts[key] !== undefined && drafts[key] !== '' && drafts[key] !== null) {
+            const n = Number(drafts[key]);
+            return Number.isNaN(n) ? fallback : n;
+        }
+        const item = items.find((i) => i.configKey === key);
+        if (item && item.currentValue !== undefined && item.currentValue !== '' && item.currentValue !== null) {
+            const n = Number(item.currentValue);
+            return Number.isNaN(n) ? fallback : n;
+        }
+        return fallback;
+    };
+
+    const calcSum = (keys) => {
+        const sum = keys.reduce((acc, key) => acc + getVal(key, 0), 0);
+        return Math.round(sum * 100) / 100;
+    };
+
+    // 1. Nhóm 1.1: Trọng số Matching (sum = 100)
+    const matchingSum = calcSum(SYSTEM_CONFIG_SUB_GROUPS.MATCHING_WEIGHTS.keys);
+    const matchingValid = Math.abs(matchingSum - 100) < 0.001;
+    groupStatuses.MATCHING_WEIGHTS = {
+        sum: matchingSum,
+        isValid: matchingValid,
+        diff: Math.round((matchingSum - 100) * 100) / 100,
+    };
+    if (!matchingValid) {
+        errors.push({
+            subGroupId: 'MATCHING_WEIGHTS',
+            message: `Tổng trọng số Khớp lệnh Đề xuất (Matching) phải bằng đúng 100% (Hiện tại: ${matchingSum}% · ${matchingSum > 100 ? `Đang dư +${groupStatuses.MATCHING_WEIGHTS.diff}%` : `Đang thiếu ${groupStatuses.MATCHING_WEIGHTS.diff}%`}).`,
+        });
+    }
+
+    // 2. Nhóm 1.2: Trọng số Cold Start (sum = 100)
+    const coldStartSum = calcSum(SYSTEM_CONFIG_SUB_GROUPS.COLD_START_WEIGHTS.keys);
+    const coldStartValid = Math.abs(coldStartSum - 100) < 0.001;
+    groupStatuses.COLD_START_WEIGHTS = {
+        sum: coldStartSum,
+        isValid: coldStartValid,
+        diff: Math.round((coldStartSum - 100) * 100) / 100,
+    };
+    if (!coldStartValid) {
+        errors.push({
+            subGroupId: 'COLD_START_WEIGHTS',
+            message: `Tổng trọng số Người dùng mới (Cold Start) phải bằng đúng 100% (Hiện tại: ${coldStartSum}% · ${coldStartSum > 100 ? `Đang dư +${groupStatuses.COLD_START_WEIGHTS.diff}%` : `Đang thiếu ${groupStatuses.COLD_START_WEIGHTS.diff}%`}).`,
+        });
+    }
+
+    // 3. Nhóm 1.3: Trọng số Top Recruiter Ranking (sum = 100)
+    const topRecruiterSum = calcSum(SYSTEM_CONFIG_SUB_GROUPS.TOP_RECRUITER_WEIGHTS.keys);
+    const topRecruiterValid = Math.abs(topRecruiterSum - 100) < 0.001;
+    groupStatuses.TOP_RECRUITER_WEIGHTS = {
+        sum: topRecruiterSum,
+        isValid: topRecruiterValid,
+        diff: Math.round((topRecruiterSum - 100) * 100) / 100,
+    };
+    if (!topRecruiterValid) {
+        errors.push({
+            subGroupId: 'TOP_RECRUITER_WEIGHTS',
+            message: `Tổng 7 trọng số Bảng xếp hạng NTD hàng đầu phải bằng đúng 100% (Hiện tại: ${topRecruiterSum}% · ${topRecruiterSum > 100 ? `Đang dư +${groupStatuses.TOP_RECRUITER_WEIGHTS.diff}%` : `Đang thiếu ${groupStatuses.TOP_RECRUITER_WEIGHTS.diff}%`}).`,
+        });
+    }
+
+    // 4. Nhóm 2.1: Độ phủ Lịch làm việc (0.0 -> 1.0, r1 >= r2 >= r3 >= rf)
+    const schedR1 = getVal('RECOMMENDATION_SCHEDULE_COVERAGE_ROUND_1', 1.0);
+    const schedR2 = getVal('RECOMMENDATION_SCHEDULE_COVERAGE_ROUND_2', 0.9);
+    const schedR3 = getVal('RECOMMENDATION_SCHEDULE_COVERAGE_ROUND_3', 0.8);
+    const schedRf = getVal('RECOMMENDATION_SCHEDULE_COVERAGE_FINAL', 0.7);
+
+    const schedValues = [schedR1, schedR2, schedR3, schedRf];
+    if (schedValues.some((v) => v < 0 || v > 1)) {
+        errors.push({
+            subGroupId: 'SCHEDULE_COVERAGE',
+            message: 'Độ phủ lịch làm việc: Các giá trị phải nằm trong khoảng từ 0.0 đến 1.0.',
+        });
+    }
+    if (schedR2 > schedR1) {
+        errors.push({
+            subGroupId: 'SCHEDULE_COVERAGE',
+            message: `Độ phủ lịch làm việc: Vòng 2 (${schedR2}) không được lớn hơn Vòng 1 (${schedR1}).`,
+        });
+    }
+    if (schedR3 > schedR2) {
+        errors.push({
+            subGroupId: 'SCHEDULE_COVERAGE',
+            message: `Độ phủ lịch làm việc: Vòng 3 (${schedR3}) không được lớn hơn Vòng 2 (${schedR2}).`,
+        });
+    }
+    if (schedRf > schedR3) {
+        errors.push({
+            subGroupId: 'SCHEDULE_COVERAGE',
+            message: `Độ phủ lịch làm việc: Vòng cuối (${schedRf}) không được lớn hơn Vòng 3 (${schedR3}).`,
+        });
+    }
+
+    // 5. Nhóm 2.2: Độ phủ Kỹ năng (0.0 -> 1.0, s1 >= s2 >= s3 >= sf)
+    const skillR1 = getVal('RECOMMENDATION_SKILL_COVERAGE_ROUND_1', 0.5);
+    const skillR2 = getVal('RECOMMENDATION_SKILL_COVERAGE_ROUND_2', 0.3);
+    const skillR3 = getVal('RECOMMENDATION_SKILL_COVERAGE_ROUND_3', 0.1);
+    const skillRf = getVal('RECOMMENDATION_SKILL_COVERAGE_FINAL', 0.0);
+
+    const skillValues = [skillR1, skillR2, skillR3, skillRf];
+    if (skillValues.some((v) => v < 0 || v > 1)) {
+        errors.push({
+            subGroupId: 'SKILL_COVERAGE',
+            message: 'Độ phủ kỹ năng: Các giá trị phải nằm trong khoảng từ 0.0 đến 1.0.',
+        });
+    }
+    if (skillR2 > skillR1) {
+        errors.push({
+            subGroupId: 'SKILL_COVERAGE',
+            message: `Độ phủ kỹ năng: Vòng 2 (${skillR2}) không được lớn hơn Vòng 1 (${skillR1}).`,
+        });
+    }
+    if (skillR3 > skillR2) {
+        errors.push({
+            subGroupId: 'SKILL_COVERAGE',
+            message: `Độ phủ kỹ năng: Vòng 3 (${skillR3}) không được lớn hơn Vòng 2 (${skillR2}).`,
+        });
+    }
+    if (skillRf > skillR3) {
+        errors.push({
+            subGroupId: 'SKILL_COVERAGE',
+            message: `Độ phủ kỹ năng: Vòng cuối (${skillRf}) không được lớn hơn Vòng 3 (${skillR3}).`,
+        });
+    }
+
+    // 6. Nhóm 3: Bán kính tìm kiếm (km)
+    const minRad = getVal('RECOMMENDATION_MIN_RADIUS_KM', 1.0);
+    const defRad = getVal('DEFAULT_SEARCH_RADIUS_KM', 5.0);
+    const maxRad = getVal('RECOMMENDATION_MAX_RADIUS_KM', 15.0);
+    const stepRad = getVal('SEARCH_RADIUS_EXPANSION_STEP_KM', 2.0);
+
+    if (minRad <= 0 || defRad <= 0 || maxRad <= 0) {
+        errors.push({
+            subGroupId: 'SEARCH_RADIUS',
+            message: 'Bán kính địa lý: Các giá trị bán kính phải lớn hơn 0 km.',
+        });
+    }
+    if (stepRad <= 0) {
+        errors.push({
+            subGroupId: 'SEARCH_RADIUS',
+            message: 'Bán kính địa lý: Bước mở rộng bán kính phải lớn hơn 0 km.',
+        });
+    }
+    if (minRad > defRad) {
+        errors.push({
+            subGroupId: 'SEARCH_RADIUS',
+            message: `Bán kính địa lý: Bán kính tối thiểu (${minRad} km) không được lớn hơn Bán kính mặc định (${defRad} km).`,
+        });
+    }
+    if (defRad > maxRad) {
+        errors.push({
+            subGroupId: 'SEARCH_RADIUS',
+            message: `Bán kính địa lý: Bán kính mặc định (${defRad} km) không được lớn hơn Bán kính tối đa (${maxRad} km).`,
+        });
+    }
+    if (minRad > maxRad) {
+        errors.push({
+            subGroupId: 'SEARCH_RADIUS',
+            message: `Bán kính địa lý: Bán kính tối thiểu (${minRad} km) không được lớn hơn Bán kính tối đa (${maxRad} km).`,
+        });
+    }
+
+    // 7. Nhóm 4: Hành vi & Xu hướng (>= 0)
+    const behaviorKeys = [
+        'DISCOVERY_BEHAVIOR_WEIGHT_APPLY',
+        'DISCOVERY_BEHAVIOR_WEIGHT_SAVE',
+        'DISCOVERY_BEHAVIOR_WEIGHT_VIEW',
+        'TRENDING_WEIGHT_APPLY',
+        'TRENDING_WEIGHT_SAVE',
+        'TRENDING_WEIGHT_VIEW',
+    ];
+    for (const bKey of behaviorKeys) {
+        if (getVal(bKey, 0) < 0) {
+            errors.push({
+                subGroupId: 'DISCOVERY_AND_TRENDING',
+                message: `Hệ số tương tác: ${bKey} không được là số âm.`,
+            });
+        }
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors,
+        groupStatuses,
+    };
 };

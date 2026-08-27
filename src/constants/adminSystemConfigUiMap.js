@@ -436,6 +436,140 @@ export const getSystemConfigJsonFieldLabel = (fieldKey) => {
     return `${vi} (${key})`;
 };
 
+export const SYSTEM_CONFIG_SUB_GROUPS = {
+    MATCHING_WEIGHTS: {
+        id: 'MATCHING_WEIGHTS',
+        title: '1. Trọng số Khớp lệnh Đề xuất (Matching)',
+        description: 'Dùng để tính % điểm phù hợp giữa Ứng viên và Việc làm',
+        type: 'sum100',
+        targetSum: 100,
+        keys: [
+            'RECOMMENDATION_WEIGHT_SCHEDULE',
+            'RECOMMENDATION_WEIGHT_DISTANCE',
+            'RECOMMENDATION_WEIGHT_SKILL',
+            'RECOMMENDATION_WEIGHT_TRUST',
+            'RECOMMENDATION_WEIGHT_SALARY',
+            'RECOMMENDATION_WEIGHT_CONTENT',
+        ],
+    },
+    COLD_START_WEIGHTS: {
+        id: 'COLD_START_WEIGHTS',
+        title: '2. Trọng số Người dùng mới (Cold Start)',
+        description: 'Dùng tính điểm gợi ý cho ứng viên mới chưa có lịch sử hoạt động',
+        type: 'sum100',
+        targetSum: 100,
+        keys: [
+            'RECOMMENDATION_COLD_START_WEIGHT_JOB_TYPE',
+            'RECOMMENDATION_COLD_START_WEIGHT_DISTANCE',
+            'RECOMMENDATION_COLD_START_WEIGHT_SALARY',
+            'RECOMMENDATION_COLD_START_WEIGHT_TRUST',
+            'RECOMMENDATION_COLD_START_WEIGHT_TRENDING',
+        ],
+    },
+    TOP_RECRUITER_WEIGHTS: {
+        id: 'TOP_RECRUITER_WEIGHTS',
+        title: '3. Trọng số Xếp hạng NTD Hàng đầu (Top Recruiter Ranking - UC-54)',
+        description: 'Dùng để tính điểm xếp hạng 7 tiêu chí cho Doanh nghiệp tuyển dụng hàng đầu',
+        type: 'sum100',
+        targetSum: 100,
+        keys: [
+            'TOP_RECRUITER_WEIGHT_TRUST_SCORE',
+            'TOP_RECRUITER_VERIFIED_BONUS',
+            'TOP_RECRUITER_WEIGHT_AVERAGE_RATING',
+            'TOP_RECRUITER_WEIGHT_VALID_REVIEWS',
+            'TOP_RECRUITER_WEIGHT_SUCCESSFUL_HIRES',
+            'TOP_RECRUITER_WEIGHT_ACTIVE_JOBS',
+            'TOP_RECRUITER_WEIGHT_ACCOUNT_AGE',
+        ],
+    },
+    SCHEDULE_COVERAGE: {
+        id: 'SCHEDULE_COVERAGE',
+        title: '4. Độ phủ Lịch làm việc theo Vòng lọc (Schedule Coverage: 0.0 → 1.0)',
+        description: 'Tỷ lệ trùng khớp tối thiểu: Vòng 1 (1.0) ≥ Vòng 2 (0.9) ≥ Vòng 3 (0.8) ≥ Vòng cuối (0.7) ≥ 0.0',
+        type: 'coverage',
+        keys: [
+            'RECOMMENDATION_SCHEDULE_COVERAGE_ROUND_1',
+            'RECOMMENDATION_SCHEDULE_COVERAGE_ROUND_2',
+            'RECOMMENDATION_SCHEDULE_COVERAGE_ROUND_3',
+            'RECOMMENDATION_SCHEDULE_COVERAGE_FINAL',
+        ],
+    },
+    SKILL_COVERAGE: {
+        id: 'SKILL_COVERAGE',
+        title: '5. Độ phủ Kỹ năng theo Vòng lọc (Skill Coverage: 0.0 → 1.0)',
+        description: 'Tỷ lệ trùng khớp tối thiểu: Vòng 1 (0.5) ≥ Vòng 2 (0.3) ≥ Vòng 3 (0.1) ≥ Vòng cuối (0.0) ≥ 0.0',
+        type: 'coverage',
+        keys: [
+            'RECOMMENDATION_SKILL_COVERAGE_ROUND_1',
+            'RECOMMENDATION_SKILL_COVERAGE_ROUND_2',
+            'RECOMMENDATION_SKILL_COVERAGE_ROUND_3',
+            'RECOMMENDATION_SKILL_COVERAGE_FINAL',
+        ],
+    },
+    SEARCH_RADIUS: {
+        id: 'SEARCH_RADIUS',
+        title: '6. Bán kính Địa lý Đề xuất (Search Radius: km)',
+        description: 'Ràng buộc: Bán kính tối thiểu ≤ Bán kính mặc định ≤ Bán kính tối đa (> 0 km)',
+        type: 'radius',
+        keys: [
+            'RECOMMENDATION_MIN_RADIUS_KM',
+            'DEFAULT_SEARCH_RADIUS_KM',
+            'SEARCH_RADIUS_EXPANSION_STEP_KM',
+            'RECOMMENDATION_MAX_RADIUS_KM',
+        ],
+    },
+    TOP_RECRUITER_CRITERIA: {
+        id: 'TOP_RECRUITER_CRITERIA',
+        title: '7. Điều kiện đủ & Mốc chuẩn hóa NTD Hàng đầu',
+        description: 'Ngưỡng tối thiểu và mốc trần chuẩn hóa cho thuật toán xếp hạng UC-54',
+        type: 'general',
+        keys: [
+            'TOP_RECRUITER_RANKING_ACTIVE',
+            'TOP_RECRUITER_MIN_TRUST_SCORE',
+            'TOP_RECRUITER_MIN_SUCCESSFUL_HIRES',
+            'TOP_RECRUITER_MIN_ACCOUNT_AGE_DAYS',
+            'TOP_RECRUITER_ACCOUNT_AGE_REFERENCE',
+            'TOP_RECRUITER_MIN_VALID_REVIEWS',
+            'TOP_RECRUITER_RESULT_LIMIT',
+            'TOP_RECRUITER_REVIEW_COUNT_CAP',
+            'TOP_RECRUITER_SUCCESSFUL_HIRE_CAP',
+            'TOP_RECRUITER_ACTIVE_JOB_CAP',
+            'TOP_RECRUITER_ACCOUNT_AGE_DAYS_CAP',
+        ],
+    },
+    DISCOVERY_AND_TRENDING: {
+        id: 'DISCOVERY_AND_TRENDING',
+        title: '8. Trọng số Khám phá, Hành vi & Xu hướng (Discovery & Trending)',
+        description: 'Điểm cộng xu hướng và tương tác người dùng (Ứng tuyển ≥ Lưu việc ≥ Xem việc ≥ 0)',
+        type: 'general',
+        keys: [
+            'DISCOVERY_WEIGHT_LOCATION',
+            'DISCOVERY_WEIGHT_JOB_TYPE',
+            'DISCOVERY_WEIGHT_PREFERRED_JOB_TYPE',
+            'DISCOVERY_WEIGHT_SALARY',
+            'DISCOVERY_WEIGHT_SCHEDULE',
+            'DISCOVERY_BEHAVIOR_WEIGHT_APPLY',
+            'DISCOVERY_BEHAVIOR_WEIGHT_SAVE',
+            'DISCOVERY_BEHAVIOR_WEIGHT_VIEW',
+            'RECOMMENDATION_MINIMUM_POOL_SIZE',
+            'TRENDING_WEIGHT_APPLY',
+            'TRENDING_WEIGHT_SAVE',
+            'TRENDING_WEIGHT_VIEW',
+        ],
+    },
+};
+
+export const SYSTEM_CONFIG_SUB_GROUP_ORDER = [
+    'MATCHING_WEIGHTS',
+    'COLD_START_WEIGHTS',
+    'TOP_RECRUITER_WEIGHTS',
+    'SCHEDULE_COVERAGE',
+    'SKILL_COVERAGE',
+    'SEARCH_RADIUS',
+    'TOP_RECRUITER_CRITERIA',
+    'DISCOVERY_AND_TRENDING',
+];
+
 export const getSystemConfigUiMeta = (configKey, beConfigGroup, beItem) => {
     const mapped = SYSTEM_CONFIG_UI_MAP[configKey];
     const group = beConfigGroup?.trim() || mapped?.group || 'Khác';

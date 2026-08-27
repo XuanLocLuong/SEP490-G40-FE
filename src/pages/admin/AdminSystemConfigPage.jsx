@@ -21,12 +21,15 @@ import { ROUTES } from '../../routes/path.js';
 import {
     CONFIG_DATA_TYPE,
     areConfigValuesEqual,
+    buildSystemConfigSubSections,
     buildSystemConfigUiSections,
     cloneConfigDraftValue,
     formatConfigDefaultFieldDisplay,
     getJsonConfigDefaultEntries,
+    parseAllowedRange,
     toApiConfigNewValue,
     validateConfigDraftValue,
+    validateSystemConfigConstraints,
 } from '../../utils/adminSystemConfigDisplay.js';
 import '../../assets/styles/AdminAccountsPageStyle.css';
 import '../../assets/styles/AdminSystemConfigPageStyle.css';
@@ -154,9 +157,17 @@ const AdminSystemConfigPage = () => {
         }));
     };
 
+    const validation = useMemo(() => {
+        return validateSystemConfigConstraints(drafts, items);
+    }, [drafts, items]);
+
     const openSaveModal = () => {
         if (dirtyCount === 0) {
             toast.info('Chưa có thay đổi nào để lưu.');
+            return;
+        }
+        if (!validation.isValid) {
+            toast.error(validation.errors[0]?.message || 'Có ràng buộc cấu hình chưa hợp lệ. Vui lòng kiểm tra lại.');
             return;
         }
         setReason('');
@@ -168,6 +179,11 @@ const AdminSystemConfigPage = () => {
         const trimmed = reason.trim();
         if (!trimmed) {
             setReasonError('Vui lòng nhập lý do.');
+            return;
+        }
+
+        if (!validation.isValid) {
+            setReasonError(validation.errors[0]?.message || 'Vui lòng sửa các lỗi ràng buộc trước khi lưu.');
             return;
         }
 
@@ -275,12 +291,29 @@ const AdminSystemConfigPage = () => {
             );
         }
 
+        let inputMin;
+        let inputMax;
+        let inputStep = 'any';
+
+        if (type === CONFIG_DATA_TYPE.NUMBER) {
+            const range = parseAllowedRange(item.allowedRange);
+            if (range?.min != null) inputMin = range.min;
+            if (range?.max != null) inputMax = range.max;
+            if (item.allowedRange === '0-1') {
+                inputStep = '0.05';
+            } else if (item.allowedRange === '0-100') {
+                inputStep = '1';
+            }
+        }
+
         return (
             <div className="admin-config-inline__input-wrap">
                 <input
                     className="admin-config-inline__control"
                     type={type === CONFIG_DATA_TYPE.NUMBER ? 'number' : 'text'}
-                    step="any"
+                    min={inputMin}
+                    max={inputMax}
+                    step={inputStep}
                     value={value ?? ''}
                     onChange={(e) => {
                         const raw = e.target.value;
@@ -444,7 +477,8 @@ const AdminSystemConfigPage = () => {
                         type="button"
                         className="admin-accounts-btn admin-accounts-btn--primary"
                         onClick={openSaveModal}
-                        disabled={loading || saving || dirtyCount === 0}
+                        disabled={loading || saving || dirtyCount === 0 || !validation.isValid}
+                        title={!validation.isValid ? 'Vui lòng sửa các lỗi ràng buộc trước khi lưu' : ''}
                     >
                         Lưu cấu hình{dirtyCount > 0 ? ` (${dirtyCount})` : ''}
                     </button>
@@ -452,6 +486,23 @@ const AdminSystemConfigPage = () => {
             </header>
 
             {error ? <p className="admin-config-page__error" role="alert">{error}</p> : null}
+
+            {!validation.isValid && items.length > 0 ? (
+                <div className="admin-config-global-alert" role="alert">
+                    <div className="admin-config-global-alert__header">
+                        <span className="admin-config-global-alert__icon" aria-hidden>⚠️</span>
+                        <div className="admin-config-global-alert__titles">
+                            <strong>Phát hiện {validation.errors.length} vi phạm ràng buộc logic cấu hình:</strong>
+                            <p>Các nhóm trọng số cần đạt đúng 100% và tuân thủ thứ tự vòng lọc để đảm bảo thuật toán tính điểm chạy chuẩn xác.</p>
+                        </div>
+                    </div>
+                    <ul className="admin-config-global-alert__list">
+                        {validation.errors.map((err, idx) => (
+                            <li key={idx}>{err.message}</li>
+                        ))}
+                    </ul>
+                </div>
+            ) : null}
 
             {loading && items.length === 0 ? (
                 <p className="admin-config-page__empty">Đang tải cấu hình…</p>
@@ -470,6 +521,8 @@ const AdminSystemConfigPage = () => {
                                 meta.isJson
                                 || String(item.dataType || '').toUpperCase() === CONFIG_DATA_TYPE.JSON
                         );
+                        const isDiscoveryGroup = group === 'Khám phá và Xu hướng';
+                        const subSections = isDiscoveryGroup ? buildSystemConfigSubSections(rows) : [];
 
                         return (
                             <section
@@ -488,7 +541,7 @@ const AdminSystemConfigPage = () => {
                                     <div className="admin-config-dash-card__titles">
                                         <h2>{group}</h2>
                                         <p>
-                                            {rows.length} tham số
+                                            {rows.length} tham số{isDiscoveryGroup ? ` · ${subSections.length} nhóm nghiệp vụ` : ''}
                                             {groupDirty > 0 ? ` · ${groupDirty} chưa lưu` : ''}
                                         </p>
                                     </div>
@@ -501,63 +554,161 @@ const AdminSystemConfigPage = () => {
                                 </button>
 
                                 {!isCollapsed && (
-                                    <ul className="admin-config-dash-card__list">
-                                        {rows.map(({ item, meta }) => {
-                                            const forceJson = meta.isJson
-                                                || String(item.dataType || '').toUpperCase() === CONFIG_DATA_TYPE.JSON;
-                                            const isDirty = dirtyKeys.includes(item.configKey);
+                                    isDiscoveryGroup ? (
+                                        <div className="admin-config-sub-container">
+                                            {subSections.map(({ subGroupId, def, rows: subRows }) => {
+                                                const status = validation.groupStatuses[subGroupId];
+                                                const isSumType = def.type === 'sum100';
 
-                                            return (
-                                                <li
-                                                    key={item.configKey}
-                                                    className={`admin-config-param${forceJson ? ' admin-config-param--json' : ' admin-config-param--tile'}${isDirty ? ' is-dirty' : ''}`}
-                                                >
-                                                    <div className="admin-config-param__label">
-                                                        <div className="admin-config-param__header-row">
-                                                            <strong>{meta.label}</strong>
-                                                            {forceJson && (
-                                                                <span className="admin-config-pill admin-config-pill--json">JSON</span>
-                                                            )}
-                                                        </div>
-                                                        <small>{item.configKey}</small>
-                                                        {item.description ? (
-                                                            <span
-                                                                className="admin-config-param__desc"
-                                                                title={item.affectedFunctions ? `${item.description} (Ảnh hưởng: ${item.affectedFunctions})` : item.description}
-                                                            >
-                                                                {item.description}
-                                                            </span>
-                                                        ) : null}
-                                                        {item.affectedFunctions ? (
-                                                            <span className="admin-config-param__affected">
-                                                                ⚙️ {item.affectedFunctions}
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-
-                                                    <div className="admin-config-param__editor">
-                                                        {forceJson
-                                                            ? renderJsonFields(item, meta)
-                                                            : renderScalarInput(item, meta)}
-                                                        {forceJson ? (
-                                                            renderJsonDefaultGrid(item)
-                                                        ) : (
-                                                            <div className="admin-config-param__meta-row">
-                                                                <span className="admin-config-pill admin-config-pill--default">
-                                                                    Mặc định: <strong>{formatDefaultHint(item.defaultValue)}{meta.unit ? ` ${meta.unit}` : ''}</strong>
-                                                                </span>
-                                                                {item.allowedRange ? (
-                                                                    <span className="admin-config-pill admin-config-pill--range">
-                                                                        Phạm vi: <strong>{item.allowedRange}</strong>
-                                                                    </span>
+                                                return (
+                                                    <div key={subGroupId} className="admin-config-sub-section">
+                                                        <div className="admin-config-sub-head">
+                                                            <div className="admin-config-sub-head__titles">
+                                                                <h3>{def.title}</h3>
+                                                                {def.description ? (
+                                                                    <p className="admin-config-sub-head__desc">{def.description}</p>
                                                                 ) : null}
                                                             </div>
-                                                        )}
+                                                            {isSumType && status ? (
+                                                                <div className="admin-config-sub-head__badge-wrap">
+                                                                    <span
+                                                                        className={`admin-config-sum-badge ${
+                                                                            status.isValid
+                                                                                ? 'admin-config-sum-badge--valid'
+                                                                                : 'admin-config-sum-badge--invalid'
+                                                                        }`}
+                                                                    >
+                                                                        {status.isValid
+                                                                            ? `✓ Tổng: ${status.sum}% / 100% (Chuẩn)`
+                                                                            : `⚠️ Tổng: ${status.sum}% / 100% (${
+                                                                                status.diff > 0
+                                                                                    ? `Dư +${status.diff}%`
+                                                                                    : `Thiếu ${status.diff}%`
+                                                                            })`}
+                                                                    </span>
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+                                                        <ul className="admin-config-dash-card__list">
+                                                            {subRows.map(({ item, meta }) => {
+                                                                const forceJson = meta.isJson
+                                                                    || String(item.dataType || '').toUpperCase() === CONFIG_DATA_TYPE.JSON;
+                                                                const isDirty = dirtyKeys.includes(item.configKey);
+
+                                                                return (
+                                                                    <li
+                                                                        key={item.configKey}
+                                                                        className={`admin-config-param${forceJson ? ' admin-config-param--json' : ' admin-config-param--tile'}${isDirty ? ' is-dirty' : ''}`}
+                                                                    >
+                                                                        <div className="admin-config-param__label">
+                                                                            <div className="admin-config-param__header-row">
+                                                                                <strong>{meta.label}</strong>
+                                                                                {forceJson && (
+                                                                                    <span className="admin-config-pill admin-config-pill--json">JSON</span>
+                                                                                )}
+                                                                            </div>
+                                                                            <small>{item.configKey}</small>
+                                                                            {item.description ? (
+                                                                                <span
+                                                                                    className="admin-config-param__desc"
+                                                                                    title={item.affectedFunctions ? `${item.description} (Ảnh hưởng: ${item.affectedFunctions})` : item.description}
+                                                                                >
+                                                                                    {item.description}
+                                                                                </span>
+                                                                            ) : null}
+                                                                            {item.affectedFunctions ? (
+                                                                                <span className="admin-config-param__affected">
+                                                                                    ⚙️ {item.affectedFunctions}
+                                                                                </span>
+                                                                            ) : null}
+                                                                        </div>
+
+                                                                        <div className="admin-config-param__editor">
+                                                                            {forceJson
+                                                                                ? renderJsonFields(item, meta)
+                                                                                : renderScalarInput(item, meta)}
+                                                                            {forceJson ? (
+                                                                                renderJsonDefaultGrid(item)
+                                                                            ) : (
+                                                                                <div className="admin-config-param__meta-row">
+                                                                                    <span className="admin-config-pill admin-config-pill--default">
+                                                                                        Mặc định: <strong>{formatDefaultHint(item.defaultValue)}{meta.unit ? ` ${meta.unit}` : ''}</strong>
+                                                                                    </span>
+                                                                                    {item.allowedRange ? (
+                                                                                        <span className="admin-config-pill admin-config-pill--range">
+                                                                                            Phạm vi: <strong>{item.allowedRange}</strong>
+                                                                                        </span>
+                                                                                    ) : null}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </li>
+                                                                );
+                                                            })}
+                                                        </ul>
                                                     </div>
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <ul className="admin-config-dash-card__list">
+                                            {rows.map(({ item, meta }) => {
+                                                const forceJson = meta.isJson
+                                                    || String(item.dataType || '').toUpperCase() === CONFIG_DATA_TYPE.JSON;
+                                                const isDirty = dirtyKeys.includes(item.configKey);
+
+                                                return (
+                                                    <li
+                                                        key={item.configKey}
+                                                        className={`admin-config-param${forceJson ? ' admin-config-param--json' : ' admin-config-param--tile'}${isDirty ? ' is-dirty' : ''}`}
+                                                    >
+                                                        <div className="admin-config-param__label">
+                                                            <div className="admin-config-param__header-row">
+                                                                <strong>{meta.label}</strong>
+                                                                {forceJson && (
+                                                                    <span className="admin-config-pill admin-config-pill--json">JSON</span>
+                                                                )}
+                                                            </div>
+                                                            <small>{item.configKey}</small>
+                                                            {item.description ? (
+                                                                <span
+                                                                    className="admin-config-param__desc"
+                                                                    title={item.affectedFunctions ? `${item.description} (Ảnh hưởng: ${item.affectedFunctions})` : item.description}
+                                                                >
+                                                                    {item.description}
+                                                                </span>
+                                                            ) : null}
+                                                            {item.affectedFunctions ? (
+                                                                <span className="admin-config-param__affected">
+                                                                    ⚙️ {item.affectedFunctions}
+                                                                </span>
+                                                            ) : null}
+                                                        </div>
+
+                                                        <div className="admin-config-param__editor">
+                                                            {forceJson
+                                                                ? renderJsonFields(item, meta)
+                                                                : renderScalarInput(item, meta)}
+                                                            {forceJson ? (
+                                                                renderJsonDefaultGrid(item)
+                                                            ) : (
+                                                                <div className="admin-config-param__meta-row">
+                                                                    <span className="admin-config-pill admin-config-pill--default">
+                                                                        Mặc định: <strong>{formatDefaultHint(item.defaultValue)}{meta.unit ? ` ${meta.unit}` : ''}</strong>
+                                                                    </span>
+                                                                    {item.allowedRange ? (
+                                                                        <span className="admin-config-pill admin-config-pill--range">
+                                                                            Phạm vi: <strong>{item.allowedRange}</strong>
+                                                                        </span>
+                                                                    ) : null}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    )
                                 )}
                             </section>
                         );
