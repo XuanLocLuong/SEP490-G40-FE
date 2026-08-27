@@ -226,7 +226,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--color-text-muted);
+    background: var(--color-primary-light, #dbeafe);
+    color: var(--color-primary, #2563eb);
+    font-weight: 700;
+    font-size: 22px;
 }
 
 .candidate-recommendation-card__identity {

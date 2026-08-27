@@ -19,6 +19,7 @@ import {
     formatLocation,
     getBusinessInitial,
 } from '../../utils/formatters.js';
+import { isValidAvatarUrl } from '../../utils/profileFormat.js';
 import { useAuth } from '../../contexts/authContext.js';
 import { resolveBusinessProfileBack } from '../../utils/businessNavReturn.js';
 import { buildHomeScrollState } from '../../utils/jobNavReturn.js';
@@ -730,7 +731,7 @@ const trustWarningMessage =
                                             className="public-business__review-item"
                                         >
                                             <div className="public-business__review-top">
-                                                {review.reviewerProfilePicture ? (
+                                                {isValidAvatarUrl(review.reviewerProfilePicture) ? (
                                                     <img
                                                         src={review.reviewerProfilePicture}
                                                         alt=""

@@ -45,12 +45,21 @@ export const MATCH_BUCKETS = [
 ];
 
 export const REJECTION_REASONS = [
-    { value: 'INSUFFICIENT_EXPERIENCE', label: 'Không đủ kinh nghiệm' },
-    { value: 'SKILL_MISMATCH', label: 'Kỹ năng không phù hợp' },
-    { value: 'INVALID_PROFILE', label: 'Hồ sơ chưa đầy đủ' },
-    { value: 'POSITION_FILLED', label: 'Đã đủ vị trí' },
-    { value: 'OTHER', label: 'Khác' },
+    { value: 'INSUFFICIENT_EXPERIENCE', label: 'Chưa đủ kinh nghiệm yêu cầu' },
+    { value: 'SKILL_MISMATCH', label: 'Kỹ năng chưa phù hợp' },
+    { value: 'POSITION_FILLED', label: 'Vị trí tuyển dụng đã đủ người' },
+    { value: 'CANDIDATE_WITHDREW', label: 'Ứng viên đã rút đơn' },
+    { value: 'INVALID_PROFILE', label: 'Thông tin hồ sơ chưa hợp lệ' },
+    { value: 'OFFER_DECLINED', label: 'Ứng viên từ chối nhận việc' },
+    { value: 'OFFER_EXPIRED', label: 'Lời mời nhận việc đã hết hạn' },
+    { value: 'OTHER', label: 'Lý do khác' },
 ];
+
+export const getRejectionReasonLabel = (reason) => {
+    if (!reason) return 'Chưa có lý do cụ thể';
+    const found = REJECTION_REASONS.find((r) => r.value === reason);
+    return found ? found.label : reason;
+};
 
 const STATUS_LABELS = {
     PENDING: 'Chờ duyệt',
@@ -96,6 +105,8 @@ export const mapApplicationItem = (item) => ({
     distanceScore: item?.distanceScore ?? null,
     distanceKm: item?.distanceKm ?? null,
     trustScore: item?.trustScore ?? null,
+    rejectReason: item?.rejectReason ?? null,
+    note: item?.note ?? null,
     criticalMismatchReasons: Array.isArray(item?.criticalMismatchReasons)
         ? item.criticalMismatchReasons.filter(Boolean)
         : [],

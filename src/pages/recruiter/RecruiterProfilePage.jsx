@@ -41,7 +41,7 @@ import RichTextEditor from '../../components/common/RichTextEditor.jsx';
 import RecruiterAddressModal from '../../components/recruiter/RecruiterAddressModal.jsx';
 import ReadonlyMapPreview from '../../components/recruiter/ReadonlyMapPreview.jsx';
 import HiringHistoryTab from '../../components/recruiter/HiringHistoryTab.jsx';
-import { clampPercent } from '../../utils/profileFormat.js';
+import { clampPercent, isValidAvatarUrl } from '../../utils/profileFormat.js';
 import { plainTextLength } from '../../utils/richTextUtils.js';
 import {
     formatBusinessTypeLabel,
@@ -163,8 +163,6 @@ const formatReviewDate = (value) => {
         year: 'numeric',
     });
 };
-
-const isBusinessVerifiedBadge = (badge) => badge === 'BUSINESS_VERIFIED';
 
 const isPendingManualVerification = (status) =>
     status === 'BUSINESS_MANUALLY' ||
@@ -1805,7 +1803,7 @@ const RecruiterProfilePage = () => {
                                             className="recruiter-profile__review-card"
                                         >
                                             <div className="recruiter-profile__review-top">
-                                                {review.candidateAvatar ? (
+                                                {isValidAvatarUrl(review.candidateAvatar) ? (
                                                     <img
                                                         src={review.candidateAvatar}
                                                         alt=""

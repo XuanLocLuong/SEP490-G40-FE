@@ -11,6 +11,7 @@ import JobPreferenceCard from '../../../components/candidate/JobPreferenceCard.j
 import BioCard from '../../../components/candidate/BioCard.jsx';
 import PersonalInfoCard from '../../../components/candidate/PersonalInfoCard.jsx';
 import EducationCard from '../../../components/candidate/EducationCard.jsx';
+import CvCard from '../../../components/candidate/CvCard.jsx';
 import SkillCard from '../../../components/candidate/SkillCard.jsx';
 import ExperienceCard from '../../../components/candidate/ExperienceCard.jsx';
 import AvailabilityCard from '../../../components/candidate/AvailabilityCard.jsx';
@@ -89,6 +90,7 @@ const CandidateProfilePage = () => {
         loadSkills,
         updateProfile,
         uploadAvatar,
+        uploadCv,
     } = useCandidateProfile();
     const {
         slots: availabilitySlots,
@@ -230,6 +232,7 @@ const CandidateProfilePage = () => {
         const { removed } = pruneInactiveSkills(profile.skills, skills);
         if (removed.length === 0) return;
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDraft((prev) => {
             if (!prev?.skills?.length) return prev;
             const pruned = pruneInactiveSkills(prev.skills, skills);
@@ -393,6 +396,7 @@ const CandidateProfilePage = () => {
     };
 
     const handleAvatar = (file) => uploadAvatar(file);
+    const handleCv = (file) => uploadCv(file);
 
     const handleScheduleSetup = () => {
         navigate(ROUTES.CANDIDATE_AVAILABILITY, {
@@ -418,18 +422,20 @@ const CandidateProfilePage = () => {
         setReturnJobPrompt(null);
     };
 
-    const returnJobTitle = returnJobPrompt?.jobTitle?.trim();
+    const returnJobTitle = returnJobPrompt?.jobTitle || '';
 
     return (
         <div className="cp-page">
-            <ProfileHeader profile={draft} onUploadAvatar={handleAvatar} saving={saving} />
+            <ProfileHeader
+                profile={draft}
+                onUploadAvatar={handleAvatar}
+                saving={saving}
+            />
 
-            <p className="cp-apply-legend" role="note">
-                <span className="cp-required" aria-hidden="true">
-                    *
-                </span>{' '}
-                Trường bắt buộc để có thể ứng tuyển việc làm.
-            </p>
+            <div className="cp-section-title">
+                <h2>Hồ sơ cá nhân</h2>
+                <p>Thông tin cơ bản để nhà tuyển dụng liên hệ với bạn</p>
+            </div>
 
             <div className="cp-grid">
                 <div className="cp-col">
@@ -454,6 +460,11 @@ const CandidateProfilePage = () => {
                     <EducationCard
                         education={draft.education}
                         onSave={(education) => saveSection({ education })}
+                        saving={saving}
+                    />
+                    <CvCard
+                        cvLink={draft.cvLink || profile?.cvLink}
+                        onUploadCv={handleCv}
                         saving={saving}
                     />
                 </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { REJECTION_REASONS } from '../../../services/recruiterApplicationService.js';
 import '../../../assets/styles/ApplicationRejectModal.css';
 
@@ -10,15 +10,15 @@ const ApplicationRejectModal = ({
     onConfirm,
     onCancel,
 }) => {
+    const [prevAppId, setPrevAppId] = useState(null);
     const [reason, setReason] = useState(REJECTION_REASONS[0]?.value || 'OTHER');
     const [note, setNote] = useState('');
 
-    useEffect(() => {
-        if (open) {
-            setReason(REJECTION_REASONS[0]?.value || 'OTHER');
-            setNote('');
-        }
-    }, [open, application?.id]);
+    if (open && application?.id !== prevAppId) {
+        setPrevAppId(application?.id ?? null);
+        setReason(REJECTION_REASONS[0]?.value || 'OTHER');
+        setNote('');
+    }
 
     if (!open || !application) return null;
 

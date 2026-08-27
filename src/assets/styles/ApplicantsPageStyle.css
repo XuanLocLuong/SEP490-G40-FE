@@ -646,6 +646,20 @@
     color: #9f1239;
 }
 
+.application-card__btn--reject-reason {
+    flex: 1 1 auto;
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+    white-space: nowrap;
+}
+
+.application-card__btn--reject-reason:hover:not(:disabled) {
+    background: #ffe4e6;
+    border-color: #fda4af;
+    color: #9f1239;
+}
+
 .application-card__btn:disabled {
     opacity: 0.55;
     cursor: not-allowed;

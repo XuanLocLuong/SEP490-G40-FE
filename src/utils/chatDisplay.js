@@ -347,3 +347,5 @@ export const unwrapPageContent = (res) => {
     if (Array.isArray(page?.content)) return page.content;
     return [];
 };
+
+export { isValidAvatarUrl } from './profileFormat.js';

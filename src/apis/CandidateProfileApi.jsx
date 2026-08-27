@@ -21,6 +21,15 @@ export const uploadAvatar = (file) => {
     });
 };
 
+// POST /api/v1/candidate/profile/cv — multipart/form-data (PDF, DOC, DOCX <= 5MB).
+export const uploadCv = (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axiosClient.post(`${PROFILE_BASE}/cv`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+};
+
 // GET /api/v1/candidate/profile/skills — ĐÚNG path thật (KHÔNG phải /api/v1/skills).
 export const getSkills = () => axiosClient.get(`${PROFILE_BASE}/skills`);
 

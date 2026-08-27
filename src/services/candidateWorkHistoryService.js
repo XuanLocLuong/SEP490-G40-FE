@@ -18,6 +18,7 @@ export const normalizeWorkHistory = (raw = {}) => ({
     startDate: toDateOrEmpty(raw.startDate),
     endDate: raw.endDate ? toDateOrEmpty(raw.endDate) : null,
     description: raw.description || '',
+    source: raw.source || 'MANUAL',
 });
 
 export const toWorkHistoryPayload = ({
@@ -38,6 +39,7 @@ export const getWorkHistoryErrorMessage = (error, fallback = 'Không lưu đư�
     const code = error?.response?.data?.message || error?.response?.data?.code;
     const map = {
         WORK_HISTORY_NOT_FOUND: 'Không tìm thấy kinh nghiệm làm việc này.',
+        CANNOT_DELETE_JOB_LINK_WORK_HISTORY: 'Không thể xóa kinh nghiệm làm việc được ghi nhận từ JobLink.',
         START_DATE_NOT_IN_PAST: 'Ngày bắt đầu phải trước hôm nay.',
         START_DATE_AFTER_END_DATE: 'Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.',
         END_DATE_REQUIRED: 'Vui lòng chọn ngày kết thúc.',

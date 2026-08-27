@@ -5,6 +5,7 @@ import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/R
 import ApplicationCard from '../../../components/recruiter/applicants/ApplicationCard.jsx';
 import JobPickerCombobox from '../../../components/recruiter/applicants/JobPickerCombobox.jsx';
 import ApplicationRejectModal from '../../../components/recruiter/applicants/ApplicationRejectModal.jsx';
+import ApplicationRejectDetailModal from '../../../components/recruiter/applicants/ApplicationRejectDetailModal.jsx';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
 import ReviewSubmitModal from '../../../components/review/ReviewSubmitModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
@@ -74,6 +75,7 @@ const ApplicantsPage = () => {
     const [chatLoadingId, setChatLoadingId] = useState(null);
     const [acceptTarget, setAcceptTarget] = useState(null);
     const [rejectTarget, setRejectTarget] = useState(null);
+    const [viewRejectReasonTarget, setViewRejectReasonTarget] = useState(null);
     const [reviewTarget, setReviewTarget] = useState(null);
     const [reviewBusy, setReviewBusy] = useState(false);
     const [reviewMode, setReviewMode] = useState('edit');
@@ -192,26 +194,30 @@ const ApplicantsPage = () => {
     useEffect(() => {
         let cancelled = false;
 
-        if (!jobIdParam) {
-            setFocusJob(null);
-            setFocusJobLoading(false);
-            setFocusJobError(false);
-            return undefined;
-        }
-
-        const inOpenList = openJobs.some((job) => String(job.id) === jobIdParam);
-        if (inOpenList) {
-            setFocusJob(null);
-            setFocusJobLoading(false);
-            setFocusJobError(false);
-            return undefined;
-        }
-
-        if (jobsLoading) {
-            return undefined;
-        }
-
         (async () => {
+            if (!jobIdParam) {
+                if (!cancelled) {
+                    setFocusJob(null);
+                    setFocusJobLoading(false);
+                    setFocusJobError(false);
+                }
+                return;
+            }
+
+            const inOpenList = openJobs.some((job) => String(job.id) === jobIdParam);
+            if (inOpenList) {
+                if (!cancelled) {
+                    setFocusJob(null);
+                    setFocusJobLoading(false);
+                    setFocusJobError(false);
+                }
+                return;
+            }
+
+            if (jobsLoading) {
+                return;
+            }
+
             setFocusJobLoading(true);
             setFocusJobError(false);
             try {
@@ -284,7 +290,15 @@ const ApplicantsPage = () => {
     ]);
 
     useEffect(() => {
-        loadApplications();
+        let isMounted = true;
+        (async () => {
+            if (isMounted) {
+                await loadApplications();
+            }
+        })();
+        return () => {
+            isMounted = false;
+        };
     }, [loadApplications]);
 
     const applications = useMemo(() => flattenApplicationBuckets(matchData), [matchData]);
@@ -388,6 +402,7 @@ const ApplicantsPage = () => {
             onViewProfile={handleViewProfile}
             onChat={handleChat}
             onReview={handleOpenReview}
+            onViewRejectReason={setViewRejectReasonTarget}
         />
     );
 
@@ -784,6 +799,13 @@ const ApplicantsPage = () => {
                 loading={Boolean(actionLoadingId)}
                 onCancel={() => !actionLoadingId && setRejectTarget(null)}
                 onConfirm={handleRejectConfirm}
+            />
+
+            <ApplicationRejectDetailModal
+                open={Boolean(viewRejectReasonTarget)}
+                application={viewRejectReasonTarget}
+                jobTitle={selectedJob?.title}
+                onClose={() => setViewRejectReasonTarget(null)}
             />
 
             <ReviewSubmitModal

@@ -1,3 +1,5 @@
+import { isValidAvatarUrl } from '../utils/profileFormat.js';
+
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
 const normalizeSkill = (skill = {}) => ({
@@ -21,13 +23,18 @@ const normalizeExperience = (exp = {}) => ({
     startDate: toDateOrEmpty(exp.startDate),
     endDate: exp.endDate ? toDateOrEmpty(exp.endDate) : null,
     description: exp.description || '',
+    source: exp.source || 'MANUAL',
 });
 
 export const mapPublicProfileFromApi = (data = {}) => ({
     id: data.id,
     userId: data.userId ?? null,
     fullName: data.fullName || '',
-    avatarUrl: data.avatarUrl || '',
+    avatarUrl: isValidAvatarUrl(data.avatarUrl)
+        ? data.avatarUrl
+        : isValidAvatarUrl(data.profilePicture)
+          ? data.profilePicture
+          : '',
     verified: Boolean(data.verified),
     headline: data.headline || '',
     about: data.about || '',

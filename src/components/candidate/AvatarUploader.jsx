@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { CameraIcon } from './profileIcons.jsx';
-import { getInitials } from '../../utils/profileFormat.js';
+import { getInitials, isValidAvatarUrl } from '../../utils/profileFormat.js';
 
 const MAX_AVATAR_MB = 5;
 // Backend (CandidateProfileService.ALLOWED_IMAGE_MIME_TYPES) chỉ nhận jpeg/jpg/png.
@@ -30,10 +30,12 @@ const AvatarUploader = ({ name, avatarUrl, onUpload, disabled }) => {
         onUpload?.(file);
     };
 
+    const hasImage = isValidAvatarUrl(avatarUrl);
+
     return (
         <div className="cp-avatar">
             <div className="cp-avatar__frame">
-                {avatarUrl ? (
+                {hasImage ? (
                     <img className="cp-avatar__img" src={avatarUrl} alt={name || 'Avatar'} />
                 ) : (
                     <span className="cp-avatar__initials">{getInitials(name)}</span>

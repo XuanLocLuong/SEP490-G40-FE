@@ -1,6 +1,7 @@
 import {
     formatChatListTime,
     getInitials,
+    isValidAvatarUrl,
     previewLastMessage,
 } from '../../utils/chatDisplay.js';
 
@@ -68,7 +69,7 @@ const ChatConversationList = ({
                                     onClick={() => onSelect(conv)}
                                 >
                                     <span className="chat-panel__avatar" aria-hidden="true">
-                                        {conv.otherPartyAvatar ? (
+                                        {isValidAvatarUrl(conv.otherPartyAvatar) ? (
                                             <img src={conv.otherPartyAvatar} alt="" />
                                         ) : (
                                             getInitials(conv.otherPartyName)

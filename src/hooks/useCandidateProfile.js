@@ -90,6 +90,32 @@ export const useCandidateProfile = () => {
         }
     }, []);
 
+    const uploadCv = useCallback(async (file) => {
+        setSaving(true);
+        try {
+            const result = await service.uploadCv(file);
+            if (result.profile) {
+                setProfile(result.profile);
+            } else if (result.cvLink) {
+                setProfile((prev) => (prev ? { ...prev, cvLink: result.cvLink } : prev));
+            }
+            toast.success('Đã tải lên CV thành công.');
+            return result.cvLink || true;
+        } catch (err) {
+            const msg = err?.response?.data?.message;
+            if (msg === 'CV_INVALID_FORMAT') {
+                toast.error('Định dạng CV không hợp lệ (hỗ trợ PDF, DOC, DOCX).');
+            } else if (msg === 'CV_FILE_TOO_LARGE') {
+                toast.error('Dung lượng CV quá lớn (tối đa 5MB).');
+            } else {
+                toast.error(msg || 'Không thể tải lên CV. Vui lòng thử lại.');
+            }
+            return false;
+        } finally {
+            setSaving(false);
+        }
+    }, []);
+
     // Fetch dữ liệu khi mount — đây là use case hợp lệ của effect (đồng bộ với
     // hệ thống ngoài/backend). setState nằm trong callback async của loadProfile.
     useEffect(() => {
@@ -109,6 +135,7 @@ export const useCandidateProfile = () => {
         loadSkills,
         updateProfile,
         uploadAvatar,
+        uploadCv,
         setProfile,
     };
 };

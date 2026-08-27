@@ -3,7 +3,7 @@ import {
     fetchCandidateReviews,
     getReviewApiErrorMessage,
 } from '../../services/candidateReviewsService.js';
-import { formatDate } from '../../utils/profileFormat.js';
+import { formatDate, isValidAvatarUrl } from '../../utils/profileFormat.js';
 
 const PAGE_SIZE = 20;
 
@@ -143,7 +143,7 @@ const CandidateReceivedReviewsPanel = ({
                     {reviews.map((review) => (
                         <li key={review.id} className="cpp-review-item">
                             <div className="cpp-review-item__top">
-                                {review.reviewerProfilePicture ? (
+                                {isValidAvatarUrl(review.reviewerProfilePicture) ? (
                                     <img
                                         src={review.reviewerProfilePicture}
                                         alt=""

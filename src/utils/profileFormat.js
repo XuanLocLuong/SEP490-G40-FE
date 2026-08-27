@@ -112,3 +112,28 @@ export const clampPercent = (value) => {
     if (Number.isNaN(num)) return 0;
     return Math.max(0, Math.min(100, Math.round(num)));
 };
+
+// Kiểm tra URL avatar có phải là ảnh thật do người dùng upload không (loại bỏ các link mặc định/placeholder từ BE)
+export const isValidAvatarUrl = (url) => {
+    if (!url || typeof url !== 'string') return false;
+    const trimmed = url.trim();
+    if (!trimmed) return false;
+    const lower = trimmed.toLowerCase();
+    if (
+        lower === 'null' ||
+        lower === 'undefined' ||
+        lower === 'none' ||
+        lower === 'default' ||
+        lower.includes('default-avatar') ||
+        lower.includes('default_avatar') ||
+        lower.includes('assets/default')
+    ) {
+        return false;
+    }
+    return (
+        trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('blob:') ||
+        trimmed.startsWith('data:')
+    );
+};

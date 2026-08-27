@@ -4,10 +4,10 @@ import {
     CheckCircleIcon,
     MapPinIcon,
     StarIcon,
-    UserCircleIcon,
 } from '../../common/icons.jsx';
 import { getCandidatePublicProfilePath } from '../../../routes/path.js';
 import { formatSalary } from '../../../utils/formatters.js';
+import { getInitials, isValidAvatarUrl } from '../../../utils/profileFormat.js';
 
 const DAY_LABELS = {
     MONDAY: 'T2',
@@ -48,7 +48,7 @@ const formatAvailability = (shift) => {
 };
 
 const CandidateAvatar = ({ candidate }) => {
-    if (candidate.profilePicture) {
+    if (isValidAvatarUrl(candidate.profilePicture)) {
         return (
             <img
                 className="candidate-recommendation-card__avatar"
@@ -63,7 +63,7 @@ const CandidateAvatar = ({ candidate }) => {
             className="candidate-recommendation-card__avatar candidate-recommendation-card__avatar--placeholder"
             aria-hidden="true"
         >
-            <UserCircleIcon width={34} height={34} />
+            {getInitials(candidate.fullName || candidate.name)}
         </span>
     );
 };

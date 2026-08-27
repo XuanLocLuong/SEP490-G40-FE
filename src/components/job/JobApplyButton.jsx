@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { applyToJob, previewApply } from '../../apis/ApplicationApi.jsx';
+import { getProfile } from '../../apis/CandidateProfileApi.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
@@ -32,11 +33,8 @@ const JobApplyButton = ({
 
     const buttonLabel = label ?? (auth ? 'Ứng tuyển ngay' : guestLabel);
 
-    if (auth && auth.role !== USER_ROLES.CANDIDATE) {
-        return null;
-    }
-
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setApplied(Boolean(initialApplied));
         setModalOpen(false);
         setPreview(null);
@@ -57,16 +55,34 @@ const JobApplyButton = ({
         setPreview(null);
 
         try {
-            const res = await previewApply(jobId);
-            const nextPreview = res.data.data;
-            setPreview(nextPreview);
+            const [previewRes, profileRes] = await Promise.allSettled([
+                previewApply(jobId),
+                getProfile(),
+            ]);
 
-            // Nếu BE báo đã ứng tuyển rồi thì tự chuyển UI sang trạng thái "Đã ứng tuyển"
-            // để không cần hiển thị modal blocking.
-            if (nextPreview?.alreadyApplied) {
-                setApplied(true);
-                closeModal();
-                return;
+            if (previewRes.status === 'fulfilled') {
+                const nextPreview = previewRes.value?.data?.data || {};
+                const profileData =
+                    profileRes.status === 'fulfilled'
+                        ? profileRes.value?.data?.data
+                        : null;
+
+                const combinedPreview = {
+                    ...nextPreview,
+                    profileCvLink: nextPreview?.cvLink || profileData?.cvLink || '',
+                };
+
+                setPreview(combinedPreview);
+
+                // Nếu BE báo đã ứng tuyển rồi thì tự chuyển UI sang trạng thái "Đã ứng tuyển"
+                // để không cần hiển thị modal blocking.
+                if (nextPreview?.alreadyApplied) {
+                    setApplied(true);
+                    closeModal();
+                    return;
+                }
+            } else {
+                throw previewRes.reason;
             }
         } catch (err) {
             closeModal();
@@ -92,12 +108,15 @@ const JobApplyButton = ({
         await openPreview();
     };
 
-    const handleConfirm = async () => {
+    const handleConfirm = async ({ cvMode, file } = {}) => {
         if (!preview?.eligible || applying) return;
 
         setApplying(true);
         try {
-            await applyToJob(jobId);
+            await applyToJob(jobId, {
+                source: 'ORGANIC',
+                file: cvMode === 'UPLOAD' ? file : null,
+            });
             setApplied(true);
             toast.success('Ứng tuyển thành công.');
             onApplied?.();
@@ -108,6 +127,10 @@ const JobApplyButton = ({
             setApplying(false);
         }
     };
+
+    if (auth && auth.role !== USER_ROLES.CANDIDATE) {
+        return null;
+    }
 
     const buttonTitle = applied
         ? 'Bạn đã ứng tuyển công việc này rồi.'

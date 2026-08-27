@@ -86,6 +86,13 @@ const redirectToLoginAfterSessionExpired = ({ accountLock = false } = {}) => {
 };
 
 axiosClient.interceptors.request.use((config) => {
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+        if (config.headers) {
+            delete config.headers['Content-Type'];
+            delete config.headers['content-type'];
+        }
+    }
+
     const url = config.url || '';
     const isAuthEndpoint = url.includes('/auth/');
     const auth = getAuth();

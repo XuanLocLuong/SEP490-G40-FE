@@ -70,9 +70,19 @@ const CandidatePublicResume = ({ profile }) => {
                                             className="cpp-resume-exp__item"
                                         >
                                             {exp.organization && (
-                                                <p className="cpp-resume-exp__org">
-                                                    {exp.organization}
-                                                </p>
+                                                <div className="cpp-resume-exp__org-wrap">
+                                                    <p className="cpp-resume-exp__org">
+                                                        {exp.organization}
+                                                    </p>
+                                                    {exp.source === 'JOB_LINK' && (
+                                                        <span
+                                                            className="cpp-resume-exp__badge"
+                                                            title="Kinh nghiệm được xác thực từ JobLink"
+                                                        >
+                                                            JobLink
+                                                        </span>
+                                                    )}
+                                                </div>
                                             )}
                                             <div className="cpp-resume-exp__meta">
                                                 <strong>{exp.jobTitle || 'Vị trí'}</strong>

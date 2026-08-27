@@ -1,4 +1,5 @@
 import * as api from '../apis/CandidateProfileApi.jsx';
+import { isValidAvatarUrl } from '../utils/profileFormat.js';
 
 // ---------------------------------------------------------------------------
 // Adapter DUY NHẤT dịch giữa shape backend THẬT (flat: CandidateProfileResponseDTO /
@@ -65,7 +66,8 @@ export const normalizeProfile = (raw) => {
         id: data.profileId ?? null,
         fullName: data.fullName || '',
         email: data.email || '',
-        avatarUrl: data.profilePicture || '',
+        avatarUrl: isValidAvatarUrl(data.profilePicture) ? data.profilePicture : '',
+        cvLink: data.cvLink || '',
         bio: data.bio || '',
         trustScore: data.trustScore ?? null,
         status: data.openToWork ? 'SEEKING' : 'NOT_SEEKING',
@@ -177,6 +179,15 @@ export const uploadAvatar = async (file) => {
         return { avatarUrl: data.url };
     }
     return {};
+};
+
+export const uploadCv = async (file) => {
+    const res = await api.uploadCv(file);
+    const data = unwrap(res);
+    if (data && (data.cvLink || data.url)) {
+        return { cvLink: data.cvLink || data.url, profile: data.profile ? normalizeProfile(data.profile) : null };
+    }
+    return { cvLink: data };
 };
 
 export const fetchSkills = async () => {

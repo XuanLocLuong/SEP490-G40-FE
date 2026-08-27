@@ -1,4 +1,5 @@
 import { getBusinessInitial } from '../../../utils/formatters.js';
+import { isValidAvatarUrl } from '../../../utils/profileFormat.js';
 import { ChatIcon } from '../../common/icons.jsx';
 import {
     formatAppliedRelativeTime,
@@ -18,6 +19,7 @@ const ApplicationCard = ({
     onViewProfile,
     onChat,
     onReview,
+    onViewRejectReason,
 }) => {
     const canDecide = !readOnly && application.status === 'PENDING';
     const tone = getApplicationStatusTone(application.status);
@@ -27,7 +29,7 @@ const ApplicationCard = ({
     return (
         <article className="application-card">
             <div className="application-card__header">
-                {application.candidateAvatar ? (
+                {isValidAvatarUrl(application.candidateAvatar) ? (
                     <img
                         src={application.candidateAvatar}
                         alt=""
@@ -93,6 +95,16 @@ const ApplicationCard = ({
                 >
                     Xem hồ sơ
                 </button>
+                {application.status === 'REJECTED' && (application.rejectReason || application.note) ? (
+                    <button
+                        type="button"
+                        className="btn application-card__btn application-card__btn--reject-reason"
+                        title="Xem chi tiết lý do từ chối đã gửi"
+                        onClick={() => onViewRejectReason?.(application)}
+                    >
+                        Lý do từ chối
+                    </button>
+                ) : null}
                 {canReview ? (
                     <button
                         type="button"

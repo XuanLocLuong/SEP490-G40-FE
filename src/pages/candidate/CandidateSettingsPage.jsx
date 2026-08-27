@@ -14,13 +14,14 @@ import { setEmailVerificationNotice } from '../../utils/emailVerificationNoticeS
 import { getAuthErrorMessage } from '../../utils/authErrorMessages.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
+import { isValidAvatarUrl } from '../../utils/profileFormat.js';
 import '../../assets/styles/AccountSettingsStyle.css';
 
 const PHONE_PATTERN = /^(\+84|0)[35789][0-9]{8}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_AVATAR_SIZE = 10 * 1024 * 1024;
 
-const hasProfilePicture = (url) => Boolean(url?.trim());
+const hasProfilePicture = (url) => isValidAvatarUrl(url);
 
 const mapUserFromApi = (data) => ({
     fullName: data?.fullName || '',

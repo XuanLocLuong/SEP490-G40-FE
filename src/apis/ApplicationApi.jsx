@@ -5,8 +5,16 @@ const BASE = `${API_PREFIX}/applications`;
 // GET /applications/jobs/{jobId}/preview — check điều kiện trước khi apply thật.
 export const previewApply = (jobId) => axiosClient.get(`${BASE}/jobs/${jobId}/preview`);
 
-// POST /applications/jobs/{jobId} — apply thật, không có body.
-export const applyToJob = (jobId) => axiosClient.post(`${BASE}/jobs/${jobId}`);
+// POST /applications/jobs/{jobId} — apply thật (multipart/form-data)
+export const applyToJob = (jobId, { source, cvLink, file } = {}) => {
+    const formData = new FormData();
+    if (source) formData.append('source', source);
+    if (cvLink) formData.append('cvLink', cvLink);
+    if (file) formData.append('file', file);
+    return axiosClient.post(`${BASE}/jobs/${jobId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+};
 
 // GET /applications/me — lịch sử ứng tuyển, params: { page, size, status, fromDate, toDate }.
 export const getMyApplications = (params) => axiosClient.get(`${BASE}/me`, { params });

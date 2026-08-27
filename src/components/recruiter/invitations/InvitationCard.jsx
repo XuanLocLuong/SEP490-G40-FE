@@ -1,4 +1,5 @@
 import { getBusinessInitial } from '../../../utils/formatters.js';
+import { isValidAvatarUrl } from '../../../utils/profileFormat.js';
 import { ChatIcon } from '../../common/icons.jsx';
 import {
     formatInvitationSentTime,
@@ -17,7 +18,7 @@ const InvitationCard = ({ invitation, onViewProfile, onChat, chatLoading = false
     return (
         <article className="application-card">
             <div className="application-card__header">
-                {invitation.candidateAvatar ? (
+                {isValidAvatarUrl(invitation.candidateAvatar) ? (
                     <img
                         src={invitation.candidateAvatar}
                         alt=""

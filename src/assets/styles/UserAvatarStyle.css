@@ -2,6 +2,16 @@
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
-    display: block;
-    background: #c4c4c4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.user-avatar--placeholder {
+    background: var(--color-primary-light, #dbeafe);
+    color: var(--color-primary, #2563eb);
+    font-weight: 700;
+    user-select: none;
+    line-height: 1;
 }

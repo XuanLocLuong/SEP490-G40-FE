@@ -39,6 +39,7 @@ import {
     getActionCandidateProfileId,
     getActionInvitationId,
     getInitials,
+    isValidAvatarUrl,
     groupStickyActions,
     normalizeChatAction,
     unwrapData,
@@ -771,7 +772,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         <section className={`chat-panel__thread${compact ? ' chat-panel__thread--compact' : ''}`}>
             <header className="chat-panel__thread-head">
                 <span className="chat-panel__avatar chat-panel__avatar--lg" aria-hidden="true">
-                    {conversation.otherPartyAvatar ? (
+                    {isValidAvatarUrl(conversation.otherPartyAvatar) ? (
                         <img src={conversation.otherPartyAvatar} alt="" />
                     ) : (
                         getInitials(conversation.otherPartyName)

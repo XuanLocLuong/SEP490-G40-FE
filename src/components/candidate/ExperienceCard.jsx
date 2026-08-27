@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ProfileModal from './ProfileModal.jsx';
 import ConfirmModal from '../common/ConfirmModal.jsx';
 import { PlusIcon, PencilIcon, TrashIcon } from './profileIcons.jsx';
+import { InfoIcon } from '../common/icons.jsx';
 import { formatDate } from '../../utils/profileFormat.js';
 
 const EMPTY_EXP = {
@@ -10,6 +11,7 @@ const EMPTY_EXP = {
     description: '',
     startDate: '',
     endDate: '',
+    source: 'MANUAL',
 };
 
 /** YYYY-MM-DD hôm nay (local). */
@@ -81,26 +83,32 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
             description: exp.description || '',
             startDate: exp.startDate || '',
             endDate: exp.endDate || '',
+            source: exp.source || 'MANUAL',
         });
         setDateError('');
         setOpen(true);
     };
 
-    const canSubmit =
-        form.jobTitle.trim() &&
-        form.organization.trim() &&
-        form.startDate &&
-        isStartDateInPast(form.startDate) &&
-        (!form.endDate || form.startDate <= form.endDate);
+    const isJobLink = form.source === 'JOB_LINK';
+
+    const canSubmit = isJobLink
+        ? true
+        : form.jobTitle.trim() &&
+          form.organization.trim() &&
+          form.startDate &&
+          isStartDateInPast(form.startDate) &&
+          (!form.endDate || form.startDate <= form.endDate);
 
     const handleSubmit = async () => {
-        if (!form.jobTitle.trim() || !form.organization.trim()) {
-            return;
-        }
-        const dateMessage = validateWorkHistoryDates(form);
-        if (dateMessage) {
-            setDateError(dateMessage);
-            return;
+        if (!isJobLink) {
+            if (!form.jobTitle.trim() || !form.organization.trim()) {
+                return;
+            }
+            const dateMessage = validateWorkHistoryDates(form);
+            if (dateMessage) {
+                setDateError(dateMessage);
+                return;
+            }
         }
 
         const ok = await onSave(editingId, {
@@ -139,26 +147,40 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
                         return (
                             <li key={exp.id ?? index} className="cp-exp-item">
                                 <div className="cp-exp-item__head">
-                                    <h3 className="cp-exp-item__company">
-                                        {exp.organization || 'Chưa rõ nơi làm việc'}
-                                    </h3>
+                                    <div className="cp-exp-item__title-wrap">
+                                        <h3 className="cp-exp-item__company">
+                                            {exp.organization || 'Chưa rõ nơi làm việc'}
+                                        </h3>
+                                        {exp.source === 'JOB_LINK' && (
+                                            <span
+                                                className="cp-exp-badge cp-exp-badge--joblink"
+                                                title="Kinh nghiệm được tự động xác thực từ JobLink"
+                                            >
+                                                JobLink
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="cp-edu-item__actions">
                                         <button
                                             type="button"
                                             className="cp-icon-btn cp-icon-btn--sm"
                                             onClick={() => openEdit(exp)}
-                                            aria-label="Sửa"
+                                            aria-label={exp.source === 'JOB_LINK' ? 'Chỉnh sửa mô tả' : 'Sửa'}
+                                            title={exp.source === 'JOB_LINK' ? 'Chỉnh sửa mô tả' : 'Sửa'}
                                         >
                                             <PencilIcon width={15} height={15} />
                                         </button>
-                                        <button
-                                            type="button"
-                                            className="cp-icon-btn cp-icon-btn--sm cp-icon-btn--danger"
-                                            onClick={() => setDeleteTarget(exp)}
-                                            aria-label="Xóa"
-                                        >
-                                            <TrashIcon width={15} height={15} />
-                                        </button>
+                                        {exp.source !== 'JOB_LINK' && (
+                                            <button
+                                                type="button"
+                                                className="cp-icon-btn cp-icon-btn--sm cp-icon-btn--danger"
+                                                onClick={() => setDeleteTarget(exp)}
+                                                aria-label="Xóa"
+                                                title="Xóa"
+                                            >
+                                                <TrashIcon width={15} height={15} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                                 <p className="cp-exp-item__meta">
@@ -177,7 +199,13 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
 
             <ProfileModal
                 open={open}
-                title={editingId ? 'Chỉnh sửa kinh nghiệm' : 'Thêm kinh nghiệm'}
+                title={
+                    editingId
+                        ? isJobLink
+                            ? 'Chỉnh sửa mô tả kinh nghiệm (JobLink)'
+                            : 'Chỉnh sửa kinh nghiệm'
+                        : 'Thêm kinh nghiệm'
+                }
                 onClose={() => setOpen(false)}
                 footer={
                     <>
@@ -199,65 +227,85 @@ const ExperienceCard = ({ experiences, onSave, onDelete, saving, loading }) => {
                     </>
                 }
             >
+                {isJobLink && (
+                    <div className="cp-joblink-notice">
+                        <InfoIcon width={18} height={18} />
+                        <span>
+                            Kinh nghiệm này được tự động ghi nhận khi bạn trúng tuyển việc làm trên JobLink. Bạn có thể cập nhật thêm phần <strong>Mô tả công việc</strong> bên dưới.
+                        </span>
+                    </div>
+                )}
                 <div className="cp-form-group">
-                    <label className="cp-form-label">Vị trí *</label>
+                    <label className="cp-form-label">
+                        Vị trí {isJobLink ? '' : '*'}
+                    </label>
                     <input
                         type="text"
                         className="cp-input"
                         placeholder="VD: Barista"
                         value={form.jobTitle}
+                        disabled={isJobLink}
                         onChange={(e) => setForm((p) => ({ ...p, jobTitle: e.target.value }))}
                     />
                 </div>
                 <div className="cp-form-group">
-                    <label className="cp-form-label">Nơi làm việc *</label>
+                    <label className="cp-form-label">
+                        Nơi làm việc {isJobLink ? '' : '*'}
+                    </label>
                     <input
                         type="text"
                         className="cp-input"
                         placeholder="VD: Highlands Coffee"
                         value={form.organization}
+                        disabled={isJobLink}
                         onChange={(e) => setForm((p) => ({ ...p, organization: e.target.value }))}
                     />
                 </div>
                 <div className="cp-form-row">
                     <div className="cp-form-group">
-                        <label className="cp-form-label">Ngày bắt đầu *</label>
+                        <label className="cp-form-label">
+                            Ngày bắt đầu {isJobLink ? '' : '*'}
+                        </label>
                         <input
                             type="date"
                             className="cp-input"
                             value={form.startDate}
-                            max={startDateMax}
+                            max={isJobLink ? undefined : startDateMax}
+                            disabled={isJobLink}
                             onChange={(e) => {
                                 setDateError('');
                                 setForm((p) => ({ ...p, startDate: e.target.value }));
                             }}
                         />
-                        <span className="cp-input-hint">Phải trước hôm nay</span>
+                        {!isJobLink && <span className="cp-input-hint">Phải trước hôm nay</span>}
                     </div>
                     <div className="cp-form-group">
                         <label className="cp-form-label">Ngày kết thúc</label>
                         <input
                             type="date"
                             className="cp-input"
-                            value={form.endDate}
+                            value={form.endDate || ''}
                             min={form.startDate || undefined}
+                            disabled={isJobLink}
                             onChange={(e) => {
                                 setDateError('');
                                 setForm((p) => ({ ...p, endDate: e.target.value }));
                             }}
                         />
-                        <span className="cp-input-hint">
-                            Để trống nếu đang làm (được chọn ngày tương lai)
-                        </span>
+                        {!isJobLink && (
+                            <span className="cp-input-hint">
+                                Để trống nếu đang làm (được chọn ngày tương lai)
+                            </span>
+                        )}
                     </div>
                 </div>
-                {dateError && <span className="cp-input-error">{dateError}</span>}
+                {!isJobLink && dateError && <span className="cp-input-error">{dateError}</span>}
                 <div className="cp-form-group">
-                    <label className="cp-form-label">Mô tả</label>
+                    <label className="cp-form-label">Mô tả công việc</label>
                     <textarea
                         className="cp-input cp-textarea"
                         rows={3}
-                        placeholder="Mô tả công việc, thành tích..."
+                        placeholder="Mô tả công việc, trách nhiệm, thành tích..."
                         value={form.description}
                         onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                     />

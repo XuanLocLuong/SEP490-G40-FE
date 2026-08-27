@@ -15,18 +15,19 @@ import LocationPicker from '../../modules/location/LocationPicker.jsx';
 
 // SECTION 2 — Job Preference: lĩnh vực, lương, tâm tìm việc (lat/lng + bán kính).
 // Apply: lat/lng bắt buộc (cặp); address text nằm ở Thông tin cá nhân.
-const JobPreferenceCard = ({ preference, onSave, saving }) => {
+const JobPreferenceCard = ({ preference = {}, onSave, saving }) => {
+    const safePref = preference || {};
     const [open, setOpen] = useState(false);
-    const [form, setForm] = useState(preference);
+    const [form, setForm] = useState(safePref);
     const jobTypeOptions = useJobTypeOptions({ forceOnMount: true });
     const activeJobTypeOptions = getActiveJobTypeOptions(jobTypeOptions);
-    const inactiveSelected = getInactiveSelectedJobTypes(preference.jobTypes, jobTypeOptions);
+    const inactiveSelected = getInactiveSelectedJobTypes(safePref.jobTypes, jobTypeOptions);
     const inactiveLabels = formatRemovedJobTypeLabels(inactiveSelected, jobTypeOptions);
     const jobTypeLabels = getJobTypeLabels(
-        (preference.jobTypes || []).join(','),
+        (safePref.jobTypes || []).join(','),
         jobTypeOptions
     );
-    const formInactiveSelected = getInactiveSelectedJobTypes(form.jobTypes, jobTypeOptions);
+    const formInactiveSelected = getInactiveSelectedJobTypes(form?.jobTypes, jobTypeOptions);
     const formInactiveLabels = formatRemovedJobTypeLabels(formInactiveSelected, jobTypeOptions);
 
     const [showMap, setShowMap] = useState(false);
@@ -41,9 +42,10 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
     // Nhãn địa điểm từ tọa độ (chỉ view — không ghi vào address BE).
     useEffect(() => {
         let cancelled = false;
-        const lat = preference.latitude;
-        const lng = preference.longitude;
+        const lat = safePref.latitude;
+        const lng = safePref.longitude;
         if (lat == null || lng == null) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLocationLabel('');
             return undefined;
         }
@@ -54,7 +56,7 @@ const JobPreferenceCard = ({ preference, onSave, saving }) => {
         return () => {
             cancelled = true;
         };
-    }, [preference.latitude, preference.longitude]);
+    }, [safePref.latitude, safePref.longitude]);
 
     const handleLocationChange = (loc) => {
         if (reverseGeocodeTimerRef.current) {

@@ -9,7 +9,14 @@ import {
 import JobDetailModal from '../../components/job/JobDetailModal.jsx';
 import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 import ReviewSubmitModal from '../../components/review/ReviewSubmitModal.jsx';
-import { CalendarIcon, ChatIcon, ClockIcon } from '../../components/common/icons.jsx';
+import ApplicationRejectReasonModal from '../../components/candidate/ApplicationRejectReasonModal.jsx';
+import {
+    AlertCircleIcon,
+    CalendarIcon,
+    ChatIcon,
+    ClockIcon,
+    FileTextIcon,
+} from '../../components/common/icons.jsx';
 import {
     getMyApplicationReview,
     getReviewApiErrorMessage,
@@ -164,6 +171,7 @@ const CandidateApplicationHistoryPage = () => {
 
     useEffect(() => {
         if (!isCandidate) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadCounts().catch(() => {
             // Không chặn trang nếu không tải được counts.
         });
@@ -171,6 +179,7 @@ const CandidateApplicationHistoryPage = () => {
 
     useEffect(() => {
         if (!isCandidate) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadPage(0, activeStatus);
     }, [activeStatus, isCandidate, loadPage]);
 
@@ -219,6 +228,7 @@ const CandidateApplicationHistoryPage = () => {
     const [actionLoadingId, setActionLoadingId] = useState(null);
     const [detailJobId, setDetailJobId] = useState(null);
     const [cancelTarget, setCancelTarget] = useState(null);
+    const [rejectTarget, setRejectTarget] = useState(null);
 
     // Đánh giá DN sau HIRED (reuse ReviewSubmitModal / ReviewApi như recruiter)
     const [reviewTarget, setReviewTarget] = useState(null);
@@ -448,6 +458,7 @@ const CandidateApplicationHistoryPage = () => {
                     const ui = getStatusUi(item.status);
                     const isPending = item.status === 'PENDING';
                     const isAccepted = item.status === 'ACCEPTED';
+                    const isRejected = item.status === 'REJECTED';
                     const isCancelled = item.status === 'CANCELLED';
                     const isHired = item.status === 'HIRED';
                     const appKey = item.applicationId != null ? String(item.applicationId) : '';
@@ -503,21 +514,48 @@ const CandidateApplicationHistoryPage = () => {
                             </div>
 
                             <div className="cah-item__actions">
-                                {item.jobId && item.recruiterId ? (
-                                    <button
-                                        type="button"
-                                        className="cah-btn cah-btn--ghost"
-                                        title="Nhắn tin với nhà tuyển dụng"
-                                        onClick={() =>
-                                            openChatPanel({
-                                                jobId: item.jobId,
-                                                otherUserId: item.recruiterId,
-                                            })
-                                        }
-                                    >
-                                        <ChatIcon width={16} height={16} />
-                                        Chat
-                                    </button>
+                                {item.cvLink || (item.jobId && item.recruiterId) || (isRejected && (item.rejectReason || item.note)) ? (
+                                    <div className="cah-action-row">
+                                        {item.cvLink ? (
+                                            <a
+                                                href={item.cvLink}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="cah-btn cah-btn--ghost"
+                                                title="Xem CV đã đính kèm khi ứng tuyển"
+                                            >
+                                                <FileTextIcon width={16} height={16} />
+                                                Xem CV
+                                            </a>
+                                        ) : null}
+                                        {item.jobId && item.recruiterId ? (
+                                            <button
+                                                type="button"
+                                                className="cah-btn cah-btn--ghost"
+                                                title="Nhắn tin với nhà tuyển dụng"
+                                                onClick={() =>
+                                                    openChatPanel({
+                                                        jobId: item.jobId,
+                                                        otherUserId: item.recruiterId,
+                                                    })
+                                                }
+                                            >
+                                                <ChatIcon width={16} height={16} />
+                                                Chat
+                                            </button>
+                                        ) : null}
+                                        {isRejected && (item.rejectReason || item.note) ? (
+                                            <button
+                                                type="button"
+                                                className="cah-btn cah-btn--danger-ghost"
+                                                title="Xem chi tiết lý do từ chối từ nhà tuyển dụng"
+                                                onClick={() => setRejectTarget(item)}
+                                            >
+                                                <AlertCircleIcon width={16} height={16} />
+                                                Lý do từ chối
+                                            </button>
+                                        ) : null}
+                                    </div>
                                 ) : null}
                                 {item.jobId ? (
                                     <button
@@ -583,7 +621,7 @@ const CandidateApplicationHistoryPage = () => {
                                         title={
                                             hasReviewed
                                                 ? 'Xem đánh giá đã gửi'
-                                                : 'Đánh giá doanh nghiệp (sau 24h kể từ khi trúng tuyển)'
+                                                : 'Đánh giá doanh nghiệp'
                                         }
                                         onClick={() => handleOpenReview(item)}
                                     >
@@ -652,6 +690,12 @@ const CandidateApplicationHistoryPage = () => {
                 initialComment={reviewDraft.comment}
                 onClose={() => setReviewTarget(null)}
                 onSubmit={handleSubmitReview}
+            />
+
+            <ApplicationRejectReasonModal
+                open={Boolean(rejectTarget)}
+                application={rejectTarget}
+                onClose={() => setRejectTarget(null)}
             />
         </div>
     );
