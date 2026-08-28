@@ -9,7 +9,6 @@ import { useJobTypeOptions } from '../../../hooks/useJobTypeOptions.js';
 import {
     formatLocationDisplay,
     formatSalaryInputDisplay,
-    getMinApplicationDeadline,
     JOB_POST_MAX_REQUIRED_CANDIDATES,
     parseSalaryInput,
     sameSkillId,
@@ -25,7 +24,6 @@ import {
 } from '../../../utils/skillDisplay.js';
 import RequiredMark from '../../common/RequiredMark.jsx';
 import RichTextEditor from '../../common/RichTextEditor.jsx';
-import DateTimeInput24h from '../../common/DateTimeInput24h.jsx';
 import JobShiftFields from './JobShiftFields.jsx';
 
 const JobPostForm = ({
@@ -40,8 +38,12 @@ const JobPostForm = ({
     skillsLoading = false,
     educationLevelOptions = [],
 }) => {
-    const minApplicationDeadline = getMinApplicationDeadline();
     const jobTypeOptions = useJobTypeOptions({ forceOnMount: true });
+    const minDeadlineDate = (() => {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    })();
     const activeJobTypeOptions = getActiveJobTypeOptions(jobTypeOptions);
     const inactiveSelected = getInactiveSelectedJobTypes(form.jobTypes, jobTypeOptions);
     const inactiveLabels = formatRemovedJobTypeLabels(inactiveSelected, jobTypeOptions);
@@ -248,26 +250,36 @@ const JobPostForm = ({
                     )}
                 </div>
 
-                <div className="job-post-form__row">
+                <div className="job-post-form__row job-post-form__row--deadline-urgent">
                     <div className="job-post-form__field job-post-form__field--deadline">
                         <label htmlFor="application-deadline">
                             Hạn nộp hồ sơ
                             <RequiredMark />
                         </label>
-                        <DateTimeInput24h
-                            id="application-deadline"
-                            value={form.applicationDeadline}
-                            min={minApplicationDeadline}
-                            disabled={disabled}
-                            onChange={(next) => setField('applicationDeadline', next)}
-                            onBlur={blur('applicationDeadline')}
-                        />
+                        <div className="job-post-form__deadline-row">
+                            <input
+                                id="application-deadline"
+                                type="date"
+                                className="job-post-form__deadline-date"
+                                value={(form.applicationDeadline || '').split('T')[0]}
+                                min={minDeadlineDate}
+                                disabled={disabled}
+                                onChange={(e) => setField('applicationDeadline', e.target.value)}
+                                onBlur={blur('applicationDeadline')}
+                            />
+                            <span className="job-post-form__deadline-time" aria-hidden="true">
+                                23:59
+                            </span>
+                        </div>
                         {errors.applicationDeadline && (
                             <p className="job-post-form__error">{errors.applicationDeadline}</p>
                         )}
                     </div>
-                    <div className="job-post-form__field job-post-form__field--checkbox">
-                        <label>
+                    <div className="job-post-form__field job-post-form__field--urgent">
+                        <span className="job-post-form__urgent-spacer" aria-hidden="true">
+                            &nbsp;
+                        </span>
+                        <label className="job-post-form__urgent-label">
                             <input
                                 type="checkbox"
                                 checked={Boolean(form.isUrgent)}
