@@ -4,12 +4,8 @@ import { WEEKDAYS, getWeekdayShort } from './availabilityConstants.js';
 
 const formatTimeDisplay = (time) => {
     if (!time) return '';
-    const [hourText, minute = '00'] = String(time).split(':');
-    const hour = Number(hourText);
-    if (Number.isNaN(hour)) return time;
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
-    return `${String(hour12).padStart(2, '0')}:${minute} ${period}`;
+    const [hour = '00', minute = '00'] = String(time).split(':');
+    return `${hour.padStart(2, '0')}:${minute.slice(0, 2).padStart(2, '0')}`;
 };
 
 const formatDateDisplay = (value) => {
