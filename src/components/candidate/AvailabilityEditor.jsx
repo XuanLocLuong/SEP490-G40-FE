@@ -47,49 +47,64 @@ const AvailabilityEditor = ({
                 ) : (
                     slots.map((slot, index) => (
                         <div key={slot.clientId || slot.id || index} className="availability-slot">
-                            <div className="availability-slot__days" aria-label="Chọn thứ trong tuần">
-                                {WEEKDAYS.map((day) => (
-                                    <button
-                                        key={day.value}
-                                        type="button"
-                                        className={
-                                            'availability-day' +
-                                            ((slot.days || []).includes(day.value)
-                                                ? ' availability-day--active'
-                                                : '')
-                                        }
-                                        onClick={() => !readOnly && toggleDay(index, day.value)}
-                                        aria-label={day.label}
-                                        aria-pressed={(slot.days || []).includes(day.value)}
-                                        disabled={readOnly}
-                                    >
-                                        {getWeekdayShort(day.value)}
-                                    </button>
-                                ))}
+                            <div className="availability-slot__days" aria-label="Các thứ trong tuần">
+                                {WEEKDAYS.map((day) =>
+                                    readOnly ? (
+                                        <span
+                                            key={day.value}
+                                            className={
+                                                'availability-day availability-day--readonly' +
+                                                ((slot.days || []).includes(day.value)
+                                                    ? ' availability-day--active'
+                                                    : '')
+                                            }
+                                        >
+                                            {getWeekdayShort(day.value)}
+                                        </span>
+                                    ) : (
+                                        <button
+                                            key={day.value}
+                                            type="button"
+                                            className={
+                                                'availability-day' +
+                                                ((slot.days || []).includes(day.value)
+                                                    ? ' availability-day--active'
+                                                    : '')
+                                            }
+                                            onClick={() => toggleDay(index, day.value)}
+                                            aria-label={day.label}
+                                            aria-pressed={(slot.days || []).includes(day.value)}
+                                        >
+                                            {getWeekdayShort(day.value)}
+                                        </button>
+                                    )
+                                )}
                             </div>
 
-                            <div className="availability-slot__time">
-                                <label>
-                                    <span>Từ</span>
-                                    <input
-                                        type="time"
-                                        value={slot.start || ''}
-                                        onChange={(e) => updateSlot(index, { start: e.target.value })}
-                                        readOnly={readOnly}
-                                        disabled={readOnly}
-                                    />
-                                </label>
-                                <label>
-                                    <span>Đến</span>
-                                    <input
-                                        type="time"
-                                        value={slot.end || ''}
-                                        onChange={(e) => updateSlot(index, { end: e.target.value })}
-                                        readOnly={readOnly}
-                                        disabled={readOnly}
-                                    />
-                                </label>
-                                {!readOnly ? (
+                            {readOnly ? (
+                                <div className="availability-slot__time availability-slot__time--readonly">
+                                    <span>
+                                        {slot.start} – {slot.end}
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="availability-slot__time">
+                                    <label>
+                                        <span>Từ</span>
+                                        <input
+                                            type="time"
+                                            value={slot.start || ''}
+                                            onChange={(e) => updateSlot(index, { start: e.target.value })}
+                                        />
+                                    </label>
+                                    <label>
+                                        <span>Đến</span>
+                                        <input
+                                            type="time"
+                                            value={slot.end || ''}
+                                            onChange={(e) => updateSlot(index, { end: e.target.value })}
+                                        />
+                                    </label>
                                     <button
                                         type="button"
                                         className="availability-slot__delete"
@@ -98,8 +113,8 @@ const AvailabilityEditor = ({
                                     >
                                         <TrashIcon width={18} height={18} />
                                     </button>
-                                ) : null}
-                            </div>
+                                </div>
+                            )}
 
                             {errors[index] && <p className="availability-slot__error">{errors[index]}</p>}
                         </div>

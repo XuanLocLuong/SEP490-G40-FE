@@ -423,10 +423,35 @@
     color: #fff;
 }
 
+.availability-day--readonly {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+}
+
+.availability-day--readonly:hover {
+    background: #e7f0fb;
+}
+
+.availability-day--readonly.availability-day--active:hover {
+    background: var(--color-primary);
+}
+
 .availability-slot__time {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.availability-slot__time--readonly {
+    padding: 8px 16px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md, 8px);
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 15px;
 }
 
 .availability-slot__time label {

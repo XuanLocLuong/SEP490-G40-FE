@@ -20,7 +20,7 @@ const EXACT_TITLES = {
 
     [ROUTES.CANDIDATE_HOME]: 'Trang chủ ứng viên',
     [ROUTES.CANDIDATE_PROFILE]: 'Hồ sơ ứng viên',
-    [ROUTES.CANDIDATE_AVAILABILITY]: 'Lịch rảnh',
+    [ROUTES.CANDIDATE_AVAILABILITY]: 'Thời gian có thể đi làm',
     [ROUTES.CANDIDATE_INVITATIONS]: 'Lời mời ứng tuyển',
     [ROUTES.CANDIDATE_APPLICATION_HISTORY]: 'Lịch sử ứng tuyển',
     [ROUTES.CANDIDATE_TRUST_SCORE]: 'Điểm uy tín',

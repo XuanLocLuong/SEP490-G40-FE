@@ -661,7 +661,13 @@
     color: var(--color-text-muted);
 }
 
-/* ---- Availability empty ---- */
+.cp-availability-card__subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--color-text-muted, #64748b);
+}
+
 .cp-availability-card__head-actions {
     display: flex;
     align-items: center;

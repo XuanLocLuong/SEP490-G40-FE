@@ -20,13 +20,13 @@ const ScheduleModeBanner = ({
                     }`}
                 >
                     {isManual
-                        ? 'Chế độ: Tự nhập lịch rảnh'
-                        : 'Chế độ: Tự động tính từ lịch bận + việc đã nhận'}
+                        ? 'Chế độ: Tự nhập thời gian đi làm'
+                        : 'Chế độ: Tự động tính từ Thời khóa biểu + Việc đã nhận'}
                 </span>
                 <p>
                     {isManual
-                        ? 'Bạn đang chỉnh lịch rảnh trực tiếp. Hệ thống đã ngưng áp dụng lịch bận và việc đã nhận khi sang chế độ này. Muốn tính lại từ lịch bận / việc đã nhận: bật chế độ tự động rồi áp dụng lại.'
-                        : 'Lịch rảnh được hệ thống tính từ lịch bận đang áp dụng và các việc đã nhận đang áp dụng.'}
+                        ? 'Bạn đang tự điều chỉnh thời gian đi làm trực tiếp. Hệ thống sẽ ngưng áp dụng lịch bận khi ở chế độ này. Muốn hệ thống tính tự động: bấm Bật chế độ tự động.'
+                        : 'Thời gian đi làm được hệ thống tự động tính từ lịch bận (thời khóa biểu) và các việc đã nhận đang áp dụng.'}
                 </p>
                 {totalHiredJobCount > 0 ? (
                     <p className="schedule-mode-banner__meta">
@@ -57,7 +57,7 @@ const ScheduleModeBanner = ({
                         disabled={modeSwitching}
                         title={
                             !timetableApplied
-                                ? 'Sau khi bật tự động, nhớ áp dụng lịch bận (và việc đã nhận) để tính lại lịch rảnh'
+                                ? 'Sau khi bật tự động, nhớ áp dụng lịch bận (và việc đã nhận) để tính lại thời gian đi làm'
                                 : undefined
                         }
                     >

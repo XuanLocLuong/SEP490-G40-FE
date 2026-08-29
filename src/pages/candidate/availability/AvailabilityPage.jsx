@@ -30,6 +30,11 @@ import ScheduleModeBanner from '../../../components/candidate/ScheduleModeBanner
 import ScheduleDateRangeFields from '../../../components/candidate/ScheduleDateRangeFields.jsx';
 import TimetableSection from '../../../components/candidate/TimetableSection.jsx';
 import HiredJobsScheduleSection from '../../../components/candidate/HiredJobsScheduleSection.jsx';
+import {
+    AvailabilitySummaryRow,
+    formatDateRange,
+} from '../../../components/candidate/AvailabilityCard.jsx';
+import { CalendarIcon } from '../../../components/candidate/profileIcons.jsx';
 import { createEmptyAvailabilitySlot } from '../../../components/candidate/availabilityConstants.js';
 import {
     fetchAvailability,
@@ -55,17 +60,15 @@ import {
 import '../../../assets/styles/AvailabilityPageStyle.css';
 
 const TABS = {
-    SCAN: 'scan',
+    AVAILABILITY: 'availability',
     TIMETABLE: 'timetable',
     JOBS: 'jobs',
-    AVAILABILITY: 'availability',
 };
 
 const TAB_ITEMS = [
-    { id: TABS.SCAN, label: 'Quét lịch bận' },
+    { id: TABS.AVAILABILITY, label: 'Thời gian có thể đi làm' },
     { id: TABS.TIMETABLE, label: 'Lịch bận' },
     { id: TABS.JOBS, label: 'Việc đã nhận' },
-    { id: TABS.AVAILABILITY, label: 'Lịch rảnh' },
 ];
 
 const AvailabilityPage = () => {
@@ -83,7 +86,7 @@ const AvailabilityPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const initialTab = searchParams.get('tab');
     const [activeTab, setActiveTab] = useState(
-        Object.values(TABS).includes(initialTab) ? initialTab : TABS.TIMETABLE,
+        Object.values(TABS).includes(initialTab) ? initialTab : TABS.AVAILABILITY,
     );
 
     const [scheduleMode, setScheduleMode] = useState(null);
@@ -129,6 +132,7 @@ const AvailabilityPage = () => {
     const [modeSwitching, setModeSwitching] = useState(false);
 
     const isCalculated = isCalculatedScheduleMode(scheduleMode);
+    const dateRangeLabel = formatDateRange(availabilityStartDate, availabilityEndDate);
     const hasAvailabilitySlots = availabilitySlots.length > 0;
     const renderedAvailabilitySlots = useMemo(
         () => (hasAvailabilitySlots ? availabilitySlots : [createEmptyAvailabilitySlot()]),
@@ -139,6 +143,19 @@ const AvailabilityPage = () => {
             timetableSlots.length > 0 ? timetableSlots : [createEmptyAvailabilitySlot()],
         [timetableSlots],
     );
+
+    const visibleTabs = useMemo(() => {
+        if (!isCalculated) {
+            return TAB_ITEMS.filter((tab) => tab.id === TABS.AVAILABILITY);
+        }
+        return TAB_ITEMS;
+    }, [isCalculated]);
+
+    useEffect(() => {
+        if (!isCalculated && activeTab !== TABS.AVAILABILITY) {
+            setActiveTab(TABS.AVAILABILITY);
+        }
+    }, [isCalculated, activeTab]);
 
     const loadAll = useCallback(async () => {
         setLoading(true);
@@ -358,12 +375,12 @@ const AvailabilityPage = () => {
                 await loadAll();
                 if (stillManual) {
                     toast.info(
-                        'Đã lưu lịch bận. Đang ở chế độ tự nhập — bật chế độ tự động hoặc áp dụng lịch bận để tính lại lịch rảnh.',
+                        'Đã lưu lịch bận. Đang ở chế độ tự nhập — bật chế độ tự động hoặc áp dụng lịch bận để tính lại thời gian đi làm.',
                     );
                     switchTab(TABS.TIMETABLE);
                 } else {
                     toast.success(
-                        'Đã quét và lưu lịch bận. Lịch rảnh được cập nhật nếu đang chế độ tự động.',
+                        'Đã quét và lưu lịch bận thành công. Thời gian có thể đi làm đã được tự động cập nhật.',
                     );
                     switchTab(TABS.AVAILABILITY);
                 }
@@ -382,7 +399,7 @@ const AvailabilityPage = () => {
             setOcrEndDate(parsed.endDate || availabilityEndDate || timetableEndDate || '');
             switchTab(TABS.AVAILABILITY);
             toast.info(
-                'AI gợi ý khung rảnh (không phải ca bận). Lưu sẽ ghi lịch rảnh thủ công (tự nhập).',
+                'AI gợi ý khung giờ đi làm từ lịch bận. Bạn có thể kiểm tra và lưu lại.',
             );
         } catch (error) {
             toast.error(getScheduleApiErrorMessage(error, 'Quét lịch bận thất bại.'));
@@ -557,7 +574,7 @@ const AvailabilityPage = () => {
             ) : null}
 
             <nav className="schedule-tabs" aria-label="Quản lý lịch">
-                {TAB_ITEMS.map((tab) => (
+                {visibleTabs.map((tab) => (
                     <button
                         key={tab.id}
                         type="button"
@@ -568,69 +585,6 @@ const AvailabilityPage = () => {
                     </button>
                 ))}
             </nav>
-
-            {activeTab === TABS.SCAN ? (
-                <>
-                    <UploadTimetable
-                        file={file}
-                        previewUrl={previewUrl}
-                        uploading={uploading}
-                        onFileChange={handleFileChange}
-                        onUpload={handleUpload}
-                    />
-                    {ocrSlots ? (
-                        <div className="availability-card scan-pending-hint">
-                            <p>
-                                Đã có gợi ý lịch rảnh từ lần quét gần nhất. Mở tab{' '}
-                                <strong>Lịch rảnh</strong> để xem và lưu.
-                            </p>
-                            <button
-                                type="button"
-                                className="availability-btn availability-btn--primary"
-                                onClick={() => switchTab(TABS.AVAILABILITY)}
-                            >
-                                Xem gợi ý lịch rảnh
-                            </button>
-                        </div>
-                    ) : null}
-                </>
-            ) : null}
-
-            {activeTab === TABS.TIMETABLE ? (
-                <TimetableSection
-                    timetable={timetable}
-                    loading={loading}
-                    saving={saving}
-                    toggling={timetableToggling}
-                    slots={renderedTimetableSlots}
-                    startDate={timetableStartDate}
-                    endDate={timetableEndDate}
-                    rangeError={timetableRangeError}
-                    slotErrors={timetableSlotErrors}
-                    onSlotsChange={(next) => {
-                        setTimetableSlots(next);
-                        setTimetableSlotErrors({});
-                    }}
-                    onRangeChange={({ startDate: nextStart, endDate: nextEnd }) => {
-                        setTimetableStartDate(nextStart);
-                        setTimetableEndDate(nextEnd);
-                        setTimetableRangeError('');
-                    }}
-                    onSave={handleSaveTimetable}
-                    onApply={handleApplyTimetable}
-                    onUnapply={handleUnapplyTimetable}
-                />
-            ) : null}
-
-            {activeTab === TABS.JOBS ? (
-                <HiredJobsScheduleSection
-                    jobs={hiredJobs}
-                    loading={loading}
-                    togglingId={jobTogglingId}
-                    isCalculatedMode={isCalculated}
-                    onToggle={handleToggleJob}
-                />
-            ) : null}
 
             {activeTab === TABS.AVAILABILITY ? (
                 loading ? (
@@ -660,23 +614,73 @@ const AvailabilityPage = () => {
                         }}
                         saving={saving}
                     />
+                ) : isCalculated ? (
+                    <section className="availability-card cp-availability-card">
+                        <div className="availability-card__header">
+                            <div>
+                                <h2>Thời gian có thể đi làm</h2>
+                                <p>
+                                    Hệ thống đang tự động tính giờ đi làm từ Lịch bận và Việc đã nhận đang áp dụng.
+                                </p>
+                            </div>
+                        </div>
+
+                        {dateRangeLabel ? (
+                            <p className="cp-availability-summary__range">
+                                Áp dụng: {dateRangeLabel}
+                            </p>
+                        ) : null}
+
+                        {availabilitySlots.length === 0 ? (
+                            <div className="cp-availability-empty">
+                                <CalendarIcon width={26} height={26} className="cp-availability-empty__icon" />
+                                <p className="cp-availability-empty__text">
+                                    Chưa có thời gian đi làm. Hãy áp dụng lịch bận (TKB) hoặc việc đã nhận ở các tab bên cạnh.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="cp-availability-summary">
+                                {availabilitySlots.map((slot, index) => (
+                                    <AvailabilitySummaryRow
+                                        key={slot.clientId || slot.id || index}
+                                        slot={slot}
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="availability-page__footer" style={{ marginTop: '24px' }}>
+                            <button
+                                type="button"
+                                className="availability-btn availability-btn--ghost"
+                                onClick={leaveToBack}
+                            >
+                                ← {back.label}
+                            </button>
+                            <button
+                                type="button"
+                                className="availability-btn availability-btn--secondary"
+                                onClick={handleSwitchToManual}
+                                disabled={modeSwitching}
+                            >
+                                {modeSwitching ? 'Đang chuyển...' : 'Chuyển sang tự chỉnh sửa'}
+                            </button>
+                        </div>
+                    </section>
                 ) : (
                     <>
                         <section className="availability-card availability-range">
                             <div className="availability-card__header">
                                 <div>
-                                    <h2>Lịch rảnh (kết quả cuối)</h2>
+                                    <h2>Thời gian có thể đi làm</h2>
                                     <p>
-                                        {isCalculated
-                                            ? 'Đang ở chế độ tự động — chỉ xem. Muốn sửa tay: chuyển sang tự nhập và lưu lại.'
-                                            : 'Chế độ tự nhập — bạn có thể chỉnh sửa và lưu trực tiếp.'}
+                                        Chế độ tự nhập — bạn có thể chọn ngày và điều chỉnh các khung giờ đi làm trực tiếp.
                                     </p>
                                 </div>
                             </div>
                             <ScheduleDateRangeFields
                                 startDate={availabilityStartDate}
                                 endDate={availabilityEndDate}
-                                disabled={isCalculated}
                                 onChange={({ startDate: nextStart, endDate: nextEnd }) => {
                                     setAvailabilityStartDate(nextStart);
                                     setAvailabilityEndDate(nextEnd);
@@ -687,61 +691,82 @@ const AvailabilityPage = () => {
                         </section>
 
                         <AvailabilityEditor
-                            slots={isCalculated ? availabilitySlots : renderedAvailabilitySlots}
+                            slots={renderedAvailabilitySlots}
                             onChange={(next) => {
                                 setAvailabilitySlots(next);
                                 setSlotErrors({});
                             }}
                             errors={slotErrors}
-                            readOnly={isCalculated}
-                            title={
-                                isCalculated
-                                    ? 'Khung giờ rảnh (tự động tính)'
-                                    : 'Khung giờ rảnh (tự nhập)'
-                            }
-                            emptyText={
-                                isCalculated
-                                    ? 'Chưa có lịch rảnh. Hãy áp dụng lịch bận và/hoặc việc đã nhận.'
-                                    : 'Chưa có khung giờ. Thêm thủ công hoặc quét ảnh ở tab Quét lịch bận.'
-                            }
+                            title="Khung giờ có thể đi làm trong tuần (Tự nhập)"
+                            emptyText="Chưa có khung giờ đi làm. Thêm khung giờ bên dưới hoặc sang tab Lịch bận để quét ảnh TKB."
+                            addButtonLabel="Thêm khung giờ đi làm"
                         />
 
-                        {!isCalculated ? (
-                            <div className="availability-page__footer">
-                                <button
-                                    type="button"
-                                    className="availability-btn availability-btn--ghost"
-                                    onClick={leaveToBack}
-                                    disabled={saving}
-                                >
-                                    ← {back.label}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="availability-btn availability-btn--primary"
-                                    onClick={handleSaveAvailability}
-                                    disabled={saving}
-                                >
-                                    {saving
-                                        ? 'Đang lưu...'
-                                        : hasActiveAvailability
-                                          ? 'Cập nhật lịch rảnh'
-                                          : 'Lưu lịch rảnh (tự nhập)'}
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="availability-page__footer">
-                                <button
-                                    type="button"
-                                    className="availability-btn availability-btn--ghost"
-                                    onClick={leaveToBack}
-                                >
-                                    ← {back.label}
-                                </button>
-                            </div>
-                        )}
+                        <div className="availability-page__footer">
+                            <button
+                                type="button"
+                                className="availability-btn availability-btn--ghost"
+                                onClick={leaveToBack}
+                                disabled={saving}
+                            >
+                                ← {back.label}
+                            </button>
+                            <button
+                                type="button"
+                                className="availability-btn availability-btn--primary"
+                                onClick={handleSaveAvailability}
+                                disabled={saving}
+                            >
+                                {saving
+                                    ? 'Đang lưu...'
+                                    : hasActiveAvailability
+                                      ? 'Cập nhật thời gian đi làm'
+                                      : 'Lưu thời gian đi làm'}
+                            </button>
+                        </div>
                     </>
                 )
+            ) : null}
+
+            {activeTab === TABS.TIMETABLE ? (
+                <TimetableSection
+                    timetable={timetable}
+                    loading={loading}
+                    saving={saving}
+                    toggling={timetableToggling}
+                    slots={renderedTimetableSlots}
+                    startDate={timetableStartDate}
+                    endDate={timetableEndDate}
+                    rangeError={timetableRangeError}
+                    slotErrors={timetableSlotErrors}
+                    onSlotsChange={(next) => {
+                        setTimetableSlots(next);
+                        setTimetableSlotErrors({});
+                    }}
+                    onRangeChange={({ startDate: nextStart, endDate: nextEnd }) => {
+                        setTimetableStartDate(nextStart);
+                        setTimetableEndDate(nextEnd);
+                        setTimetableRangeError('');
+                    }}
+                    onSave={handleSaveTimetable}
+                    onApply={handleApplyTimetable}
+                    onUnapply={handleUnapplyTimetable}
+                    file={file}
+                    previewUrl={previewUrl}
+                    uploading={uploading}
+                    onFileChange={handleFileChange}
+                    onUpload={handleUpload}
+                />
+            ) : null}
+
+            {activeTab === TABS.JOBS ? (
+                <HiredJobsScheduleSection
+                    jobs={hiredJobs}
+                    loading={loading}
+                    togglingId={jobTogglingId}
+                    isCalculatedMode={isCalculated}
+                    onToggle={handleToggleJob}
+                />
             ) : null}
         </div>
     );
