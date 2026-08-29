@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     getMyApplications,
@@ -122,11 +123,24 @@ const BusinessLogo = ({ name, logoUrl }) => {
 
 const CandidateApplicationHistoryPage = () => {
     const { auth } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const activeRole = auth?.role;
     const isCandidate = activeRole === USER_ROLES.CANDIDATE;
 
-    const [activeStatus, setActiveStatus] = useState(STATUS_TABS[0].value);
+    const tabParam = (searchParams.get('tab') || searchParams.get('status') || '').toUpperCase();
+    const initialStatus = STATUS_TABS.some((t) => t.value === tabParam)
+        ? tabParam
+        : STATUS_TABS[0].value;
+
+    const [activeStatus, setActiveStatus] = useState(initialStatus);
+
+    useEffect(() => {
+        const currentParam = (searchParams.get('tab') || searchParams.get('status') || '').toUpperCase();
+        if (currentParam && STATUS_TABS.some((t) => t.value === currentParam)) {
+            setActiveStatus(currentParam);
+        }
+    }, [searchParams]);
     const [applications, setApplications] = useState([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);

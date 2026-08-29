@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     acceptInvitation,
@@ -64,9 +64,12 @@ const BusinessLogo = ({ name, logoUrl }) => {
     );
 };
 
+const VALID_TABS = ['SENT', 'ACCEPTED', 'REJECTED', 'INACTIVE'];
+
 const CandidateInvitationsPage = () => {
     const { auth } = useAuth();
     const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
     const isCandidate = auth?.role === USER_ROLES.CANDIDATE;
     const jobTypeOptions = useJobTypeOptions();
     const back = useMemo(
@@ -74,7 +77,10 @@ const CandidateInvitationsPage = () => {
         [location.state],
     );
 
-    const [activeTab, setActiveTab] = useState('SENT');
+    const tabParam = (searchParams.get('tab') || '').toUpperCase();
+    const initialTab = VALID_TABS.includes(tabParam) ? tabParam : 'SENT';
+
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [items, setItems] = useState([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -88,8 +94,21 @@ const CandidateInvitationsPage = () => {
     });
 
     const [actionLoadingId, setActionLoadingId] = useState(null);
-    const [detailId, setDetailId] = useState(null);
+    const [detailId, setDetailId] = useState(
+        searchParams.get('invitationId') ? Number(searchParams.get('invitationId')) : null
+    );
     const [rejectTarget, setRejectTarget] = useState(null);
+
+    useEffect(() => {
+        const currentTab = (searchParams.get('tab') || '').toUpperCase();
+        if (currentTab && VALID_TABS.includes(currentTab)) {
+            setActiveTab(currentTab);
+        }
+        const currentInvId = searchParams.get('invitationId');
+        if (currentInvId) {
+            setDetailId(Number(currentInvId));
+        }
+    }, [searchParams]);
 
     const loadCounts = useCallback(async () => {
         const [sent, accepted, rejected, ...inactivePages] = await Promise.all([

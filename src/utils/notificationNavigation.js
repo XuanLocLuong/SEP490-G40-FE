@@ -4,7 +4,9 @@ import {
     getCandidatePublicProfilePath,
     getRecruiterApplicantsPath,
     getRecruiterEditJobPath,
+    getRecruiterInvitationsPath,
     getRecruiterMyJobsPath,
+    getJobDetailPath,
 } from '../routes/path.js';
 import { USER_ROLES } from './Constants.jsx';
 
@@ -19,32 +21,78 @@ export const getNotificationTargetPath = (notification, role) => {
     if (!notification?.action) return null;
     const refId = notification.referenceId;
     const isRecruiter = role === USER_ROLES.RECRUITER;
+    const type = notificationTypeOf(notification);
 
     switch (notification.action) {
+        case 'VIEW_JOB':
+            if (refId == null) return ROUTES.JOB_LIST;
+            return getJobDetailPath(refId);
+
         case 'VIEW_INVITATION_DETAIL':
-            // Candidate: invitations list. Recruiter: no invitation inbox → applicants.
-            return isRecruiter
-                ? ROUTES.RECRUITER_APPLICANTS
-                : ROUTES.CANDIDATE_INVITATIONS;
+            if (isRecruiter) {
+                if (refId == null) return ROUTES.RECRUITER_INVITATIONS;
+                if (type === 'INVITATION_ACCEPTED') {
+                    return `${getRecruiterInvitationsPath(refId)}&status=ACCEPTED`;
+                }
+                if (type === 'INVITATION_REJECTED') {
+                    return `${getRecruiterInvitationsPath(refId)}&status=REJECTED`;
+                }
+                return getRecruiterInvitationsPath(refId);
+            }
+            if (role === USER_ROLES.CANDIDATE) {
+                if (type === 'INVITATION_EXPIRED' || type === 'INVITATION_INVALIDATED') {
+                    return refId != null
+                        ? `${ROUTES.CANDIDATE_INVITATIONS}?tab=INACTIVE&invitationId=${refId}`
+                        : `${ROUTES.CANDIDATE_INVITATIONS}?tab=INACTIVE`;
+                }
+                return refId != null
+                    ? `${ROUTES.CANDIDATE_INVITATIONS}?tab=SENT&invitationId=${refId}`
+                    : ROUTES.CANDIDATE_INVITATIONS;
+            }
+            return null;
 
         case 'VIEW_APPLICATION_DETAIL':
-            // Candidate: application history. Recruiter: applicants (refId is applicationId).
-            return isRecruiter
-                ? ROUTES.RECRUITER_APPLICANTS
-                : ROUTES.CANDIDATE_APPLICATION_HISTORY;
+            if (isRecruiter) {
+                if (refId == null) return ROUTES.RECRUITER_APPLICANTS;
+                return getRecruiterApplicantsPath(refId);
+            }
+            if (role === USER_ROLES.CANDIDATE) {
+                if (type === 'APPLICATION_ACCEPTED') {
+                    return refId != null
+                        ? `${ROUTES.CANDIDATE_APPLICATION_HISTORY}?tab=ACCEPTED&applicationId=${refId}`
+                        : `${ROUTES.CANDIDATE_APPLICATION_HISTORY}?tab=ACCEPTED`;
+                }
+                if (type === 'APPLICATION_REJECTED' || type === 'OFFER_EXPIRED') {
+                    return refId != null
+                        ? `${ROUTES.CANDIDATE_APPLICATION_HISTORY}?tab=REJECTED&applicationId=${refId}`
+                        : `${ROUTES.CANDIDATE_APPLICATION_HISTORY}?tab=REJECTED`;
+                }
+                return refId != null
+                    ? `${ROUTES.CANDIDATE_APPLICATION_HISTORY}?applicationId=${refId}`
+                    : ROUTES.CANDIDATE_APPLICATION_HISTORY;
+            }
+            return null;
 
         case 'VIEW_JOB_APPLICATIONS':
             if (refId == null) return ROUTES.RECRUITER_APPLICANTS;
+            if (type === 'OFFER_CONFIRMED') {
+                return `${getRecruiterApplicantsPath(refId)}&status=HIRED`;
+            }
+            if (type === 'OFFER_DECLINED' || type === 'OFFER_EXPIRED') {
+                return `${getRecruiterApplicantsPath(refId)}&status=ALL`;
+            }
             return getRecruiterApplicantsPath(refId);
 
         case 'VIEW_MY_JOB_DETAIL': {
             if (refId == null) return ROUTES.RECRUITER_MY_JOBS;
-            const type = notificationTypeOf(notification);
             if (type === 'JOB_REVISION_REQUESTED') {
                 return getRecruiterEditJobPath(refId);
             }
             if (type === 'JOB_REVIEW_REJECTED') {
-                return ROUTES.RECRUITER_MY_JOBS;
+                return getRecruiterMyJobsPath({ tab: 'rejected', jobId: refId });
+            }
+            if (type === 'JOB_BLOCKED') {
+                return getRecruiterMyJobsPath({ tab: 'closed', jobId: refId });
             }
             // JOB_APPROVED: danh sách tin của tôi, tab Đang tuyển.
             return getRecruiterMyJobsPath({ tab: 'open', jobId: refId });
@@ -52,6 +100,11 @@ export const getNotificationTargetPath = (notification, role) => {
 
         case 'VIEW_REVIEWS':
             if (role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_REVIEWS;
+            return null;
+
+        case 'VIEW_TRUST_SCORE':
+            if (role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_TRUST_SCORE;
+            if (isRecruiter) return ROUTES.RECRUITER_TRUST_SCORE;
             return null;
 
         case 'VIEW_BUSINESS_PROFILE':
@@ -69,9 +122,17 @@ export const getNotificationTargetPath = (notification, role) => {
 
         case 'VIEW_SCHEDULE':
         case 'SCHEDULE_UPDATED_BY_JOB':
+            if (role === USER_ROLES.CANDIDATE) {
+                return `${ROUTES.CANDIDATE_AVAILABILITY}?tab=jobs`;
+            }
+            return null;
+
+        case 'UPDATE_SCHEDULE':
         case 'SCHEDULE_EXPIRED':
         case 'SCHEDULE_UPDATE_REMINDER':
-            if (role === USER_ROLES.CANDIDATE) return ROUTES.CANDIDATE_AVAILABILITY;
+            if (role === USER_ROLES.CANDIDATE) {
+                return `${ROUTES.CANDIDATE_AVAILABILITY}?tab=availability`;
+            }
             return null;
 
         case 'VIEW_VERIFICATION':
