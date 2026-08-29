@@ -67,32 +67,20 @@ export const formatSalaryInputDisplay = (value) => {
     return Number(digits).toLocaleString('vi-VN');
 };
 
-/** Giá trị min cho hạn nộp — không chọn quá khứ */
-export const getMinApplicationDeadline = () => {
-    const now = new Date();
-    now.setSeconds(0, 0);
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-};
-
-/** "YYYY-MM-DDTHH:mm" → { date, time } */
-export const splitDateTimeLocal = (value) => {
-    if (!value) return { date: '', time: '' };
-    const [date = '', time = ''] = String(value).split('T');
-    return { date, time: time.slice(0, 5) };
-};
-
-/** Ghép ngày + giờ 24h thành "YYYY-MM-DDTHH:mm" */
-export const joinDateTimeLocal = (date, time) => {
-    if (!date) return '';
-    const normalizedTime = time?.includes(':') ? time.slice(0, 5) : '08:00';
-    return `${date}T${normalizedTime}`;
+/** "YYYY-MM-DD" → ISO gửi BE, hạn cố định 23:59 giờ local */
+const toDeadlineIso = (value) => {
+    if (!value) return null;
+    const date = String(value).split('T')[0];
+    if (!date) return null;
+    const deadline = new Date(`${date}T23:59:00`);
+    if (Number.isNaN(deadline.getTime())) return null;
+    return deadline.toISOString();
 };
 
 const isPastApplicationDeadline = (value) => {
-    if (!value) return false;
-    const deadline = new Date(value);
-    return !Number.isNaN(deadline.getTime()) && deadline.getTime() <= Date.now();
+    const iso = toDeadlineIso(value);
+    if (!iso) return false;
+    return new Date(iso).getTime() <= Date.now();
 };
 
 /** BE trả "07:00:00" — input type="time" cần "07:00" */
@@ -192,7 +180,12 @@ export const mapJobDetailToForm = (detail) => {
     if (!detail) return emptyJobForm();
 
     const deadline = detail.applicationDeadline
-        ? new Date(detail.applicationDeadline).toISOString().slice(0, 16)
+        ? (() => {
+              const d = new Date(detail.applicationDeadline);
+              if (Number.isNaN(d.getTime())) return '';
+              const pad = (n) => String(n).padStart(2, '0');
+              return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+          })()
         : '';
 
     const minEducationCode = normalizeEducationLevelCode(detail.minEducationLevel);
@@ -252,9 +245,7 @@ export const buildSavePayload = (form, action, businessId) => {
         salaryMax: parseNumber(form.salaryMax),
         requiredCandidates: parseNumber(form.requiredCandidates) ?? 1,
         locationId: Number(form.locationId),
-        applicationDeadline: form.applicationDeadline
-            ? new Date(form.applicationDeadline).toISOString()
-            : null,
+        applicationDeadline: toDeadlineIso(form.applicationDeadline),
         isUrgent: Boolean(form.isUrgent),
         requiredSkills: toArray(form.skillIds).map((skillId) => ({ skillId })),
         jobShifts,
@@ -433,9 +424,7 @@ export const toPreviewJobDetail = (
     skillsCatalog = []
 ) => {
     const requiredCandidates = parseNumber(form.requiredCandidates) ?? 1;
-    const applicationDeadline = form.applicationDeadline
-        ? new Date(form.applicationDeadline).toISOString()
-        : null;
+    const applicationDeadline = toDeadlineIso(form.applicationDeadline);
 
     const requiredSkills = resolveSkillsFromCatalog(form.skillIds, skillsCatalog).map(
         (skill) => ({ id: skill.id, name: skill.name, weight: 1 })

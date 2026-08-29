@@ -98,7 +98,7 @@ const getJobMetrics = (job) => {
 
     return {
         viewCount: Math.max(0, Number(job.viewCount) || 0),
-        applicationCount: Math.max(0, Number(job.applicationCount) || 0),
+        pendingApplicationCount: Math.max(0, Number(job.pendingApplicationCount) || 0),
         hiredCount,
         requiredCandidates: required,
     };
@@ -513,9 +513,9 @@ const MyJobsPage = () => {
                         </div>
                         <div className="my-jobs-page__metric">
                             <span className="my-jobs-page__metric-value">
-                                {metrics.applicationCount}
+                                {metrics.pendingApplicationCount}
                             </span>
-                            <span className="my-jobs-page__metric-label">Ứng viên</span>
+                            <span className="my-jobs-page__metric-label">Ứng viên chờ duyệt</span>
                         </div>
                         <div className="my-jobs-page__metric">
                             <span className="my-jobs-page__metric-value">
