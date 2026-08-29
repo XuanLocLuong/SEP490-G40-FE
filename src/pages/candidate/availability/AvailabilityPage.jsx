@@ -347,6 +347,11 @@ const AvailabilityPage = () => {
             const data = res?.data?.data ?? res?.data ?? null;
             const parsed = normalizeScanResponse(data);
 
+            if (parsed.warningMessage) {
+                toast.warn(parsed.warningMessage);
+                return;
+            }
+
             if (parsed.isAutoSaved) {
                 const stillManual = resolveScheduleMode(scheduleMode) === SCHEDULE_MODES.MANUAL;
                 clearOcrPreview();

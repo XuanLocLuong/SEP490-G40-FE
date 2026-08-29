@@ -76,6 +76,7 @@ export const normalizeScanResponse = (data) => {
         endDate: normalizeDate(root.endDate),
         slots,
         isAutoSaved: Boolean(root.isAutoSaved ?? root.autoSaved),
+        warningMessage: root.warningMessage || null,
         imageUrl: root.imageUrl || '',
     };
 };

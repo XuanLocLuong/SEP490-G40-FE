@@ -34,7 +34,7 @@ const PAGE_SIZE = 10;
 /** Chỉ status BE nhận trên GET /applications/me (không gồm CANCELLED — BE typeMismatch 400). */
 const STATUS_TABS = [
     { value: 'PENDING', label: 'Chờ phản hồi' },
-    { value: 'REJECTED', label: 'Bị NTD từ chối' },
+    { value: 'REJECTED', label: 'Đã từ chối' },
     { value: 'ACCEPTED', label: 'Chờ xác nhận nhận việc' },
     { value: 'HIRED', label: 'Đã nhận việc' },
 ];
@@ -59,13 +59,22 @@ const unwrapApplicationPage = (res) => {
     };
 };
 
-const getStatusUi = (status) => {
+const getStatusUi = (status, rejectReason = null) => {
     switch (status) {
         case 'PENDING':
             return { label: 'Chờ phản hồi', tone: 'pending' };
         case 'ACCEPTED':
             return { label: 'Chờ xác nhận nhận việc', tone: 'accepted' };
         case 'REJECTED':
+            if (rejectReason === 'OFFER_DECLINED') {
+                return { label: 'Đã từ chối nhận việc', tone: 'rejected' };
+            }
+            if (rejectReason === 'CANDIDATE_WITHDREW') {
+                return { label: 'Đã rút đơn', tone: 'rejected' };
+            }
+            if (rejectReason === 'OFFER_EXPIRED') {
+                return { label: 'Lời mời hết hạn', tone: 'rejected' };
+            }
             return { label: 'Bị NTD từ chối', tone: 'rejected' };
         case 'HIRED':
             return { label: 'Đã nhận việc', tone: 'hired' };
@@ -455,7 +464,7 @@ const CandidateApplicationHistoryPage = () => {
                 )}
 
                 {applications.map((item) => {
-                    const ui = getStatusUi(item.status);
+                    const ui = getStatusUi(item.status, item.rejectReason);
                     const isPending = item.status === 'PENDING';
                     const isAccepted = item.status === 'ACCEPTED';
                     const isRejected = item.status === 'REJECTED';
@@ -548,7 +557,7 @@ const CandidateApplicationHistoryPage = () => {
                                             <button
                                                 type="button"
                                                 className="cah-btn cah-btn--danger-ghost"
-                                                title="Xem chi tiết lý do từ chối từ nhà tuyển dụng"
+                                                title="Xem chi tiết lý do từ chối"
                                                 onClick={() => setRejectTarget(item)}
                                             >
                                                 <AlertCircleIcon width={16} height={16} />

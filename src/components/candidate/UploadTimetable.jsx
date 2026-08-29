@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { UploadCloudIcon } from './profileIcons.jsx';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png'];
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 const UploadTimetable = ({ file, previewUrl, uploading, onFileChange, onUpload }) => {
     const inputRef = useRef(null);
@@ -12,6 +13,10 @@ const UploadTimetable = ({ file, previewUrl, uploading, onFileChange, onUpload }
         if (!nextFile) return;
         if (!ACCEPTED_TYPES.includes(nextFile.type)) {
             setError('Chỉ chấp nhận ảnh JPG hoặc PNG.');
+            return;
+        }
+        if (nextFile.size > MAX_FILE_SIZE_BYTES) {
+            setError('Dung lượng ảnh tối đa cho phép là 10 MB.');
             return;
         }
         setError('');

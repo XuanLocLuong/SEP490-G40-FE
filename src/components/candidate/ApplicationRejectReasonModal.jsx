@@ -16,6 +16,20 @@ const ApplicationRejectReasonModal = ({ open, application, onClose }) => {
 
     const reasonLabel = getRejectReasonLabel(application.rejectReason);
     const hasNote = Boolean(application.note?.trim());
+    const isCandidateAction =
+        application.rejectReason === 'OFFER_DECLINED' ||
+        application.rejectReason === 'CANDIDATE_WITHDREW';
+
+    const modalTitle = isCandidateAction
+        ? application.rejectReason === 'CANDIDATE_WITHDREW'
+            ? 'Chi tiết rút đơn ứng tuyển'
+            : 'Chi tiết từ chối nhận việc'
+        : 'Lý do từ chối ứng tuyển';
+
+    const noteLabel = isCandidateAction ? 'Ghi chú lý do:' : 'Ghi chú từ nhà tuyển dụng:';
+    const emptyNoteText = isCandidateAction
+        ? 'Không có ghi chú thêm.'
+        : 'Nhà tuyển dụng không để lại ghi chú thêm.';
 
     return (
         <div className="cah-modal-backdrop" role="dialog" aria-modal="true" onClick={onClose}>
@@ -26,7 +40,7 @@ const ApplicationRejectReasonModal = ({ open, application, onClose }) => {
                             <AlertCircleIcon width={22} height={22} />
                         </span>
                         <div>
-                            <h3 className="cah-modal-title">Lý do từ chối ứng tuyển</h3>
+                            <h3 className="cah-modal-title">{modalTitle}</h3>
                             <p className="cah-modal-subtitle">
                                 {[application.jobTitle, application.businessName]
                                     .filter(Boolean)
@@ -52,13 +66,11 @@ const ApplicationRejectReasonModal = ({ open, application, onClose }) => {
 
                     {hasNote ? (
                         <div className="cah-reason-card cah-reason-card--note">
-                            <span className="cah-reason-card__label">Ghi chú từ nhà tuyển dụng:</span>
+                            <span className="cah-reason-card__label">{noteLabel}</span>
                             <p className="cah-reason-card__note-text">{application.note}</p>
                         </div>
                     ) : (
-                        <p className="cah-reason-empty-note">
-                            Nhà tuyển dụng không để lại ghi chú thêm.
-                        </p>
+                        <p className="cah-reason-empty-note">{emptyNoteText}</p>
                     )}
                 </div>
 
