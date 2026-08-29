@@ -26,7 +26,7 @@ const ScheduleModeBanner = ({
                 <p>
                     {isManual
                         ? 'Bạn đang chỉnh lịch rảnh trực tiếp. Hệ thống đã ngưng áp dụng lịch bận và việc đã nhận khi sang chế độ này. Muốn tính lại từ lịch bận / việc đã nhận: bật chế độ tự động rồi áp dụng lại.'
-                        : 'Lịch rảnh được hệ thống tính từ lịch bận đang áp dụng và các việc đã nhận đang áp dụng (06:00–22:00, khoảng trống ≥ 2 giờ).'}
+                        : 'Lịch rảnh được hệ thống tính từ lịch bận đang áp dụng và các việc đã nhận đang áp dụng.'}
                 </p>
                 {totalHiredJobCount > 0 ? (
                     <p className="schedule-mode-banner__meta">
