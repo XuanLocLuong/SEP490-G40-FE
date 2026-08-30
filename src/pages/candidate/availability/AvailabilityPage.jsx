@@ -478,17 +478,17 @@ const AvailabilityPage = () => {
 
     const handleToggleJob = async (job) => {
         if (!job.isApplied && !isCalculated) {
-            toast.info('Chuyển sang chế độ tự động trước khi áp dụng lịch việc.');
+            toast.info('Chuyển sang chế độ tự động trước khi áp dụng lịch làm việc.');
             return;
         }
         setJobTogglingId(job.applicationId);
         try {
             if (job.isApplied) {
                 await unapplyHiredJobSchedule(job.applicationId);
-                toast.success('Đã ngưng áp dụng lịch việc.');
+                toast.success('Đã ngưng áp dụng lịch làm việc.');
             } else {
                 await applyHiredJobSchedule(job.applicationId);
-                toast.success('Đã áp dụng lịch việc. Lịch rảnh được tính lại.');
+                toast.success('Đã áp dụng lịch làm việc. Thời gian có thể đi làm đã được cập nhật.');
             }
             clearOcrPreview();
             await loadAll();

@@ -23,8 +23,8 @@ const HiredJobsScheduleSection = ({
                     <h2>Việc đã nhận</h2>
                     <p>
                         {isCalculatedMode
-                            ? 'Áp dụng để đưa ca làm vào tính lịch rảnh. Nếu xung đột với lịch bận / việc khác, ngưng áp dụng cái cũ trước.'
-                            : 'Đang ở chế độ tự nhập — áp dụng lịch việc chỉ dùng được khi bật chế độ tự động.'}
+                            ? 'Áp dụng để đưa ca làm vào tính thời gian có thể đi làm. Nếu xung đột với lịch bận / việc khác, ngưng áp dụng cái cũ trước.'
+                            : 'Đang ở chế độ tự nhập — áp dụng lịch làm việc chỉ dùng được khi bật chế độ tự động.'}
                     </p>
                 </div>
             </div>
@@ -74,7 +74,7 @@ const HiredJobsScheduleSection = ({
                                     }
                                     title={
                                         !isCalculatedMode && !job.isApplied
-                                            ? 'Chuyển sang chế độ tự động trước khi áp dụng lịch việc'
+                                            ? 'Chuyển sang chế độ tự động trước khi áp dụng lịch làm việc'
                                             : undefined
                                     }
                                     onClick={() => onToggle?.(job)}
@@ -83,7 +83,7 @@ const HiredJobsScheduleSection = ({
                                         ? 'Đang xử lý...'
                                         : job.isApplied
                                           ? 'Ngưng áp dụng'
-                                          : 'Áp dụng lịch việc'}
+                                          : 'Áp dụng lịch làm việc'}
                                 </button>
                             </li>
                         );
