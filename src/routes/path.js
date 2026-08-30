@@ -106,6 +106,8 @@ export const getMyJobsTabForStatus = (status) => {
             return 'pending';
         case 'REJECTED':
             return 'rejected';
+        case 'BLOCKED':
+            return 'blocked';
         case 'REVISION_REQUESTED':
             return 'revision';
         default:
