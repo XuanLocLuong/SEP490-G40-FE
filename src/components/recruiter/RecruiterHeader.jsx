@@ -45,7 +45,7 @@ const RecruiterHeader = () => {
 
                     <nav className="site-header__nav site-header__nav--role">
                         <NavLink to={ROUTES.TOP_RECRUITERS} className="site-header__nav-link">
-                            Top Recruiter
+                            Top 10 Nhà Tuyển Dụng
                         </NavLink>
                     </nav>
                 </div>

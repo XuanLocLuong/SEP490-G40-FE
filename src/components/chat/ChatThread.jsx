@@ -517,7 +517,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 'REJECT_APPLICATION'
             );
             if (applicationId == null) {
-                toast.error('Không tìm thấy đơn PENDING của ứng viên này.');
+                toast.error('Không tìm thấy đơn ứng tuyển đang chờ xử lý của ứng viên này.');
                 return;
             }
             await acceptApplication(applicationId);
@@ -550,7 +550,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 'REJECT_APPLICATION'
             );
             if (applicationId == null) {
-                toast.error('Không tìm thấy đơn PENDING của ứng viên này.');
+                toast.error('Không tìm thấy đơn ứng tuyển đang chờ xử lý của ứng viên này.');
                 return;
             }
             setRejectTarget({
@@ -686,7 +686,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                     conversation,
                 }));
             if (applicationId == null) {
-                toast.error('Không tìm thấy đơn HIRED để đánh giá.');
+                toast.error('Không tìm thấy đơn đã nhận việc để đánh giá.');
                 return;
             }
             setReviewAppId(applicationId);
