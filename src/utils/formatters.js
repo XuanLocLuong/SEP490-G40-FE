@@ -117,6 +117,7 @@ export const mapRecommendationToJob = (rec) => {
         salaryMin: rec.salaryMin,
         salaryMax: rec.salaryMax,
         urgent: rec.urgent,
+        saved: Boolean(rec.saved),
         location: rec.location,
         distanceKm: rec.distanceKm,
         business: {
@@ -132,7 +133,7 @@ export const mapRecommendationToJob = (rec) => {
 };
 
 /** Map interaction history row → JobCard-ish + interaction tag. */
-export const mapInteractionToJob = (row) => {
+export const mapInteractionToJob = (row, savedJobIds = null) => {
     if (!row) return null;
     return {
         id: row.jobId,
@@ -149,14 +150,25 @@ export const mapInteractionToJob = (row) => {
         },
         interactionLabel: INTERACTION_ACTION_LABELS[row.actionType] || row.actionType,
         interactionType: row.actionType,
+        saved:
+            row.actionType === 'SAVE' ||
+            Boolean(savedJobIds?.has?.(Number(row.jobId))),
         createdAt: row.createdAt,
         isApply: row.actionType === 'APPLY',
     };
 };
 
 /** Dedupe theo ưu tiên rồi map sang job card/list. */
-export const mapInteractionsToJobs = (rows) =>
-    dedupeInteractionsByPriority(rows).map(mapInteractionToJob).filter(Boolean);
+export const mapInteractionsToJobs = (rows = []) => {
+    const savedJobIds = new Set(
+        rows
+            .filter((row) => row?.actionType === 'SAVE')
+            .map((row) => Number(row.jobId))
+    );
+    return dedupeInteractionsByPriority(rows)
+        .map((row) => mapInteractionToJob(row, savedJobIds))
+        .filter(Boolean);
+};
 
 /**
  * Format salary range for job cards / detail.

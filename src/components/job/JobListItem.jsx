@@ -25,7 +25,7 @@ import JobPrimaryCta from './JobPrimaryCta.jsx';
 import JobDetailLink from './JobDetailLink.jsx';
 import '../../assets/styles/JobListItemStyle.css';
 
-const JobListItem = ({ job, nearMe = false }) => {
+const JobListItem = ({ job, nearMe = false, onSavedChange }) => {
     const jobTypeOptions = useJobTypeOptions();
     const businessName = job.business?.name || 'Công ty';
     const jobTypeLabels = getJobTypeLabels(job.jobType, jobTypeOptions);
@@ -65,7 +65,8 @@ const JobListItem = ({ job, nearMe = false }) => {
                 <JobBookmarkButton
                     jobId={job.id}
                     className="job-list-item__bookmark"
-                    initialSaved={job.interactionType === 'SAVE'}
+                    initialSaved={Boolean(job.saved)}
+                    onSavedChange={onSavedChange}
                 />
             </div>
 

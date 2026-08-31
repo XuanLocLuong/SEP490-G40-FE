@@ -101,6 +101,7 @@ const JobCard = ({
     detailSearch,
     /** Homepage section id — scroll back to this section after leaving detail */
     homeSectionId,
+    onSavedChange,
 }) => {
     const jobTypeOptions = useJobTypeOptions();
     const isPreview = variant === 'preview';
@@ -162,7 +163,8 @@ const JobCard = ({
                     <JobBookmarkButton
                         jobId={job.id}
                         className="job-card__bookmark"
-                        initialSaved={job.interactionType === 'SAVE'}
+                        initialSaved={Boolean(job.saved)}
+                        onSavedChange={onSavedChange}
                     />
                 )}
             </div>

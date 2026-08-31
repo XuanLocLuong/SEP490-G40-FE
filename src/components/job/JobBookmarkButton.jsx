@@ -5,18 +5,44 @@ import { saveJob, unsaveJob } from '../../apis/JobApi.jsx';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import { setBookmarkReturnPath } from '../../utils/bookmarkStorage.js';
+import {
+    emitJobBookmarkChanged,
+    JOB_BOOKMARK_CHANGED_EVENT,
+} from '../../utils/jobBookmarkEvents.js';
 import { BookmarkIcon } from '../common/icons.jsx';
 
-const JobBookmarkButton = ({ jobId, className, initialSaved = false }) => {
+const JobBookmarkButton = ({
+    jobId,
+    className,
+    initialSaved = false,
+    onSavedChange,
+}) => {
     const { auth } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const [saved, setSaved] = useState(initialSaved);
+    const [savedOverride, setSavedOverride] = useState(null);
     const [loading, setLoading] = useState(false);
+    const normalizedJobId = Number(jobId);
+    const normalizedInitialSaved = Boolean(initialSaved);
+    const saved =
+        savedOverride?.jobId === normalizedJobId &&
+        savedOverride?.baseSaved === normalizedInitialSaved
+            ? savedOverride.saved
+            : normalizedInitialSaved;
 
     useEffect(() => {
-        setSaved(initialSaved);
-    }, [initialSaved, jobId]);
+        const handleBookmarkChanged = (event) => {
+            if (Number(event.detail?.jobId) !== normalizedJobId) return;
+            setSavedOverride({
+                jobId: normalizedJobId,
+                baseSaved: normalizedInitialSaved,
+                saved: Boolean(event.detail?.saved),
+            });
+        };
+        window.addEventListener(JOB_BOOKMARK_CHANGED_EVENT, handleBookmarkChanged);
+        return () =>
+            window.removeEventListener(JOB_BOOKMARK_CHANGED_EVENT, handleBookmarkChanged);
+    }, [normalizedInitialSaved, normalizedJobId]);
 
     if (auth && auth.role !== USER_ROLES.CANDIDATE) {
         return null;
@@ -34,13 +60,19 @@ const JobBookmarkButton = ({ jobId, className, initialSaved = false }) => {
 
         setLoading(true);
         try {
+            const nextSaved = !saved;
             if (saved) {
                 await unsaveJob(jobId);
-                setSaved(false);
             } else {
                 await saveJob(jobId);
-                setSaved(true);
             }
+            setSavedOverride({
+                jobId: normalizedJobId,
+                baseSaved: normalizedInitialSaved,
+                saved: nextSaved,
+            });
+            emitJobBookmarkChanged(jobId, nextSaved);
+            onSavedChange?.(jobId, nextSaved);
         } catch {
             // Giữ nguyên trạng thái nếu API lỗi.
         } finally {
