@@ -19,6 +19,7 @@ import {
     buildJobListSearchParams,
     parseJobListSearchParams,
     parseJobListSection,
+    parseInteractionType,
 } from '../../utils/jobQuery.js';
 import { resolveJobDetailBack, buildHomeScrollState } from '../../utils/jobNavReturn.js';
 import { HOME_SCROLL_STATE_KEY } from '../../utils/homeSections.js';
@@ -74,6 +75,9 @@ const JobDetailPage = () => {
     const showSearch = !section || isSearchableJobListSection(section);
 
     const urlQuery = useMemo(() => {
+        if (section === JOB_LIST_SECTIONS.INTERACTIONS) {
+            return { actionType: parseInteractionType(searchParams) };
+        }
         if (section && !isSearchableJobListSection(section)) return null;
         const parsed = parseJobListSearchParams(searchParams);
         return applyCandidateScheduleAccess(parsed, isCandidate);
@@ -103,7 +107,9 @@ const JobDetailPage = () => {
             try {
                 const listSection = parseJobListSection(searchParams);
                 const parsedQuery =
-                    listSection && !isSearchableJobListSection(listSection)
+                    listSection === JOB_LIST_SECTIONS.INTERACTIONS
+                        ? { actionType: parseInteractionType(searchParams) }
+                        : listSection && !isSearchableJobListSection(listSection)
                         ? null
                         : applyCandidateScheduleAccess(
                               parseJobListSearchParams(searchParams),
