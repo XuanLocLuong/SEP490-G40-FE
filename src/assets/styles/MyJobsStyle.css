@@ -1,7 +1,7 @@
 .my-jobs-page {
-    max-width: 960px;
+    max-width: 1040px;
     margin: 0 auto;
-    padding: 24px 20px 48px;
+    padding: 24px 12px 48px;
 }
 
 .my-jobs-page__header {
@@ -85,6 +85,12 @@
     white-space: nowrap;
 }
 
+@media (min-width: 1024px) {
+    .my-jobs-page__tabs {
+        flex-wrap: nowrap;
+    }
+}
+
 .my-jobs-page__tab:hover {
     color: #0f172a;
 }
@@ -116,6 +122,10 @@
 
 .my-jobs-page__tab-dot--rejected {
     background: #ef4444;
+}
+
+.my-jobs-page__tab-dot--blocked {
+    background: #b91c1c;
 }
 
 .my-jobs-page__tab-dot--draft {
@@ -334,7 +344,7 @@
 }
 
 .my-jobs-page__notice {
-    margin: 12px 0 0;
+    margin: 12px 0 16px;
     padding: 10px 14px;
     border-radius: 10px;
     font-size: 0.875rem;
