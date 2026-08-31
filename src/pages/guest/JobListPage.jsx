@@ -15,6 +15,7 @@ import {
     fetchJobListPage,
     isSearchQuery,
     isSearchableJobListSection,
+    INTERACTION_TYPES,
     JOB_LIST_PAGE_SIZE,
     JOB_LIST_SECTIONS,
     JOB_LIST_SECTION_META,
@@ -22,10 +23,32 @@ import {
     buildJobListSearchParams,
     parseJobListSearchParams,
     parseJobListSection,
+    parseInteractionType,
 } from '../../utils/jobQuery.js';
 import { resolveJobListBack, buildHomeScrollState } from '../../utils/jobNavReturn.js';
 import { RECOMMENDATION_LOAD_ERROR_MESSAGE } from '../../utils/aiErrorMessage.js';
 import '../../assets/styles/JobListPageStyle.css';
+
+const INTERACTION_TABS = [
+    {
+        value: INTERACTION_TYPES.SAVED,
+        label: 'Đã lưu',
+        subtitle: 'Những việc làm bạn đang lưu để xem lại',
+        empty: 'Bạn chưa lưu việc làm nào.',
+    },
+    {
+        value: INTERACTION_TYPES.VIEWED,
+        label: 'Đã xem',
+        subtitle: 'Những việc làm bạn đã mở trang chi tiết',
+        empty: 'Bạn chưa xem việc làm nào.',
+    },
+    {
+        value: INTERACTION_TYPES.APPLIED,
+        label: 'Đã ứng tuyển',
+        subtitle: 'Những việc làm bạn đã ứng tuyển',
+        empty: 'Bạn chưa ứng tuyển việc làm nào.',
+    },
+];
 
 const JobListPage = () => {
     const { auth } = useAuth();
@@ -42,6 +65,15 @@ const JobListPage = () => {
     const section = useMemo(() => parseJobListSection(searchParams), [searchParams]);
     const sectionMeta = section ? JOB_LIST_SECTION_META[section] : null;
     const isAiSection = section === JOB_LIST_SECTIONS.AI;
+    const isInteractionSection = section === JOB_LIST_SECTIONS.INTERACTIONS;
+    const interactionType = useMemo(
+        () => (isInteractionSection ? parseInteractionType(searchParams) : null),
+        [isInteractionSection, searchParams]
+    );
+    const interactionTab = useMemo(
+        () => INTERACTION_TABS.find((tab) => tab.value === interactionType) || null,
+        [interactionType]
+    );
     const { summary: scheduleSummary, loading: scheduleSummaryLoading } = useScheduleSummary({
         enabled: isCandidate && isAiSection,
     });
@@ -52,6 +84,9 @@ const JobListPage = () => {
     const showSearch = !section || isSearchableJobListSection(section);
 
     const urlQuery = useMemo(() => {
+        if (section === JOB_LIST_SECTIONS.INTERACTIONS) {
+            return { actionType: parseInteractionType(searchParams) };
+        }
         if (section && !isSearchableJobListSection(section)) return null;
         const parsed = parseJobListSearchParams(searchParams);
         return applyCandidateScheduleAccess(parsed, isCandidate);
@@ -102,7 +137,9 @@ const JobListPage = () => {
             const listSection = parseJobListSection(searchParams);
             try {
                 const parsedQuery =
-                    listSection && !isSearchableJobListSection(listSection)
+                    listSection === JOB_LIST_SECTIONS.INTERACTIONS
+                        ? { actionType: parseInteractionType(searchParams) }
+                        : listSection && !isSearchableJobListSection(listSection)
                         ? null
                         : applyCandidateScheduleAccess(
                               parseJobListSearchParams(searchParams),
@@ -166,6 +203,23 @@ const JobListPage = () => {
         }
     };
 
+    const handleInteractionTabChange = (nextType) => {
+        if (nextType === interactionType || loading) return;
+        setSearchParams({
+            section: JOB_LIST_SECTIONS.INTERACTIONS,
+            actionType: nextType,
+        });
+    };
+
+    const handleSavedChange = (jobId, saved) => {
+        if (!isInteractionSection || interactionType !== INTERACTION_TYPES.SAVED || saved) {
+            return;
+        }
+        setJobs((current) => current.filter((job) => Number(job.id) !== Number(jobId)));
+        const targetPage = jobs.length === 1 && page > 0 ? page - 1 : page;
+        loadPage(targetPage, activeQuery, section);
+    };
+
     const searching = showSearch && isSearchQuery(activeQuery);
     const isFirstPage = page <= 0;
     const isLastPage = totalPages > 0 && page >= totalPages - 1;
@@ -184,6 +238,33 @@ const JobListPage = () => {
                     {sectionMeta?.title || 'Việc làm nổi bật'}
                 </h1>
             </header>
+
+            {isInteractionSection && (
+                <div
+                    className="job-list-page__interaction-tabs"
+                    role="tablist"
+                    aria-label="Loại lịch sử tương tác"
+                >
+                    {INTERACTION_TABS.map((tab) => {
+                        const active = tab.value === interactionType;
+                        return (
+                            <button
+                                key={tab.value}
+                                type="button"
+                                role="tab"
+                                aria-selected={active}
+                                className={`job-list-page__interaction-tab${
+                                    active ? ' job-list-page__interaction-tab--active' : ''
+                                }`}
+                                onClick={() => handleInteractionTabChange(tab.value)}
+                                disabled={loading}
+                            >
+                                {tab.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
 
             {showSearch && (
                 <JobListSearch
@@ -215,12 +296,18 @@ const JobListPage = () => {
                             ? `${totalElements} việc làm`
                             : searching
                               ? 'Không có việc làm phù hợp'
+                              : isInteractionSection
+                                ? interactionTab?.empty
                               : section
                                 ? sectionMeta?.empty
                                 : 'Tìm việc part-time phù hợp với bạn'}
                     </p>
-                    {section && sectionMeta?.subtitle && totalElements > 0 && !searching && (
-                        <p className="job-list-page__search-hint">{sectionMeta.subtitle}</p>
+                    {section && totalElements > 0 && !searching && (
+                        <p className="job-list-page__search-hint">
+                            {isInteractionSection
+                                ? interactionTab?.subtitle
+                                : sectionMeta?.subtitle}
+                        </p>
                     )}
                 </div>
                 {searching && (
@@ -253,6 +340,8 @@ const JobListPage = () => {
                         <p>
                             {searching
                                 ? 'Chưa có việc làm phù hợp. Hãy thử bộ lọc khác.'
+                                : isInteractionSection
+                                  ? interactionTab?.empty
                                 : sectionMeta?.empty ||
                                   'Chưa có việc làm phù hợp. Hãy thử bộ lọc khác.'}
                         </p>
@@ -279,6 +368,7 @@ const JobListPage = () => {
                                 key={`${job.id}-${job.interactionType || ''}-${index}`}
                                 job={job}
                                 nearMe={Boolean(urlQuery?.nearMe) || section === 'ai'}
+                                onSavedChange={handleSavedChange}
                             />
                         ))}
                     </div>

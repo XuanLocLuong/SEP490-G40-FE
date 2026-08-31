@@ -1,7 +1,11 @@
 import { fetchHomepageJobs, searchJobs, fetchNearbyJobs, fetchUrgentJobs } from '../apis/JobApi.jsx';
 import { fetchRecommendedJobs } from '../apis/RecommendationApi.jsx';
 import { getMyInteractions } from '../apis/ApplicationApi.jsx';
-import { mapRecommendationToJob, mapInteractionsToJobs } from './formatters.js';
+import {
+    mapInteractionToJob,
+    mapRecommendationToJob,
+    mapInteractionsToJobs,
+} from './formatters.js';
 
 export const LANDING_PREVIEW_SIZE = 8;
 export const JOB_LIST_PAGE_SIZE = 10;
@@ -11,6 +15,21 @@ export const JOB_LIST_SECTIONS = {
     URGENT: 'urgent',
     AI: 'ai',
     INTERACTIONS: 'interactions',
+};
+
+export const INTERACTION_TYPES = {
+    SAVED: 'SAVE',
+    VIEWED: 'VIEW',
+    APPLIED: 'APPLY',
+};
+
+export const DEFAULT_INTERACTION_TYPE = INTERACTION_TYPES.SAVED;
+
+export const parseInteractionType = (searchParams) => {
+    const value = searchParams.get('actionType')?.trim().toUpperCase() || '';
+    return Object.values(INTERACTION_TYPES).includes(value)
+        ? value
+        : DEFAULT_INTERACTION_TYPE;
 };
 
 export const JOB_LIST_SECTION_META = {
@@ -273,14 +292,18 @@ const unwrapPage = (res) => res.data?.data ?? res.data;
 /** BE max size = 50 — tải hết raw interactions rồi dedupe để totalElements khớp số job. */
 const INTERACTION_API_PAGE_SIZE = 50;
 
-const fetchAllInteractionRows = async () => {
+const fetchAllInteractionRows = async (actionType = null) => {
     const rows = [];
     let page = 0;
     let totalElements = null;
 
     while (true) {
         const data = unwrapPage(
-            await getMyInteractions({ page, size: INTERACTION_API_PAGE_SIZE })
+            await getMyInteractions({
+                page,
+                size: INTERACTION_API_PAGE_SIZE,
+                ...(actionType ? { actionType } : {}),
+            })
         );
         const chunk = data?.content || [];
         if (totalElements == null) {
@@ -293,6 +316,30 @@ const fetchAllInteractionRows = async () => {
     }
 
     return rows;
+};
+
+/** Một tab interaction, phân trang tại BE; VIEW/APPLY vẫn nhận đúng trạng thái saved hiện tại. */
+export const fetchInteractionPage = async (
+    page = 0,
+    size = JOB_LIST_PAGE_SIZE,
+    actionType = DEFAULT_INTERACTION_TYPE
+) => {
+    const normalizedType = Object.values(INTERACTION_TYPES).includes(actionType)
+        ? actionType
+        : DEFAULT_INTERACTION_TYPE;
+    const [data, savedRows] = await Promise.all([
+        getMyInteractions({ page, size, actionType: normalizedType }).then(unwrapPage),
+        normalizedType === INTERACTION_TYPES.SAVED
+            ? Promise.resolve([])
+            : fetchAllInteractionRows(INTERACTION_TYPES.SAVED),
+    ]);
+    const savedJobIds = new Set(savedRows.map((row) => Number(row.jobId)));
+    return {
+        ...data,
+        content: (data?.content || [])
+            .map((row) => mapInteractionToJob(row, savedJobIds))
+            .filter(Boolean),
+    };
 };
 
 /** Mỗi job 1 dòng (APPLY > SAVE > VIEW), totalElements = số job sau gộp. */
@@ -327,7 +374,7 @@ export const fetchJobListPage = async (page, size, query, section = null) => {
         };
     }
     if (section === JOB_LIST_SECTIONS.INTERACTIONS) {
-        return fetchDedupedInteractionPage(page, size);
+        return fetchInteractionPage(page, size, query?.actionType);
     }
 
     if (hasNearMeCoords(query)) {

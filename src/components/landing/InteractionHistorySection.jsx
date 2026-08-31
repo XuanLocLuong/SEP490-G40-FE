@@ -4,6 +4,7 @@ import JobCard from '../job/JobCard.jsx';
 import { ClockIcon } from '../common/icons.jsx';
 import { fetchDedupedInteractionPage, JOB_LIST_SECTIONS } from '../../utils/jobQuery.js';
 import { ROUTES } from '../../routes/path.js';
+import { JOB_BOOKMARK_CHANGED_EVENT } from '../../utils/jobBookmarkEvents.js';
 
 const PREVIEW_SIZE = 4;
 const DETAIL_SEARCH = `?section=${JOB_LIST_SECTIONS.INTERACTIONS}`;
@@ -16,7 +17,7 @@ const InteractionHistorySection = () => {
     useEffect(() => {
         let cancelled = false;
 
-        (async () => {
+        const load = async () => {
             setLoading(true);
             setError('');
             try {
@@ -32,10 +33,15 @@ const InteractionHistorySection = () => {
             } finally {
                 if (!cancelled) setLoading(false);
             }
-        })();
+        };
+
+        load();
+        const handleBookmarkChanged = () => load();
+        window.addEventListener(JOB_BOOKMARK_CHANGED_EVENT, handleBookmarkChanged);
 
         return () => {
             cancelled = true;
+            window.removeEventListener(JOB_BOOKMARK_CHANGED_EVENT, handleBookmarkChanged);
         };
     }, []);
 
