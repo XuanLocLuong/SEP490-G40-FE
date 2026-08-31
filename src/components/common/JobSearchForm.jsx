@@ -30,6 +30,11 @@ const toTimeInputValue = (value) => {
 };
 
 const SALARY_RANGE_ERROR = 'Lương tối thiểu không được lớn hơn lương tối đa.';
+const SCHEDULE_DAY_REQUIRED_ERROR =
+    'Vui lòng chọn ít nhất một ngày làm việc khi nhập khung giờ.';
+const SCHEDULE_TIME_REQUIRED_ERROR =
+    'Vui lòng nhập đầy đủ "Từ giờ" và "Đến giờ" khi chọn lịch làm việc.';
+const SCHEDULE_TIME_RANGE_ERROR = '"Từ giờ" phải sớm hơn "Đến giờ".';
 
 const resolveInitialLocationIds = (initialCity, initialWard) => {
     const province = findProvinceByName(initialCity);
@@ -92,6 +97,7 @@ const JobSearchForm = ({
     const [scheduleEnd, setScheduleEnd] = useState(
         toTimeInputValue(initialSchedules?.[0]?.endTime) || ''
     );
+    const [scheduleError, setScheduleError] = useState('');
     const [skillsCatalog, setSkillsCatalog] = useState([]);
     const jobTypeOptions = useJobTypeOptions();
     const [keywordFocused, setKeywordFocused] = useState(false);
@@ -135,6 +141,7 @@ const JobSearchForm = ({
         setScheduleDays(schedulesNext.map((item) => String(item.dayOfWeek)));
         setScheduleStart(toTimeInputValue(schedulesNext[0]?.startTime) || '');
         setScheduleEnd(toTimeInputValue(schedulesNext[0]?.endTime) || '');
+        setScheduleError('');
         setAdvancedOpen(
             hasAdvancedFilters({
                 jobType: initialJobType,
@@ -193,6 +200,21 @@ const JobSearchForm = ({
             startTime: `${scheduleStart}:00`,
             endTime: `${scheduleEnd}:00`,
         }));
+    };
+
+    const getScheduleValidationError = () => {
+        if (!isCandidate) return '';
+
+        const hasDays = scheduleDays.length > 0;
+        const hasStart = Boolean(scheduleStart);
+        const hasEnd = Boolean(scheduleEnd);
+        const hasAnyScheduleInput = hasDays || hasStart || hasEnd;
+
+        if (!hasAnyScheduleInput) return '';
+        if (!hasDays) return SCHEDULE_DAY_REQUIRED_ERROR;
+        if (!hasStart || !hasEnd) return SCHEDULE_TIME_REQUIRED_ERROR;
+        if (scheduleStart >= scheduleEnd) return SCHEDULE_TIME_RANGE_ERROR;
+        return '';
     };
 
     const buildBasePayload = () => {
@@ -263,6 +285,7 @@ const JobSearchForm = ({
     };
 
     const toggleScheduleDay = (day) => {
+        setScheduleError('');
         setScheduleDays((prev) =>
             prev.includes(day) ? prev.filter((item) => item !== day) : [...prev, day]
         );
@@ -318,16 +341,18 @@ const JobSearchForm = ({
         e.preventDefault();
         setKeywordFocused(false);
         const base = buildBasePayload();
-
-        if (
+        const nextScheduleError = getScheduleValidationError();
+        const hasInvalidSalaryRange =
             base.salaryMin != null &&
             base.salaryMax != null &&
-            base.salaryMin > base.salaryMax
-        ) {
-            setSalaryRangeError(SALARY_RANGE_ERROR);
+            base.salaryMin > base.salaryMax;
+
+        setScheduleError(nextScheduleError);
+        setSalaryRangeError(hasInvalidSalaryRange ? SALARY_RANGE_ERROR : '');
+
+        if (nextScheduleError || hasInvalidSalaryRange) {
             return;
         }
-        setSalaryRangeError('');
 
         if (!base.nearMe) {
             onSearch(base);
@@ -522,7 +547,10 @@ const JobSearchForm = ({
                         </fieldset>
 
                         {isCandidate && (
-                            <fieldset className="job-search-form__fieldset">
+                            <fieldset
+                                className="job-search-form__fieldset"
+                                aria-invalid={Boolean(scheduleError)}
+                            >
                                 <legend>Lịch làm việc</legend>
                                 <div className="job-search-form__chips">
                                     {SCHEDULE_DAY_OPTIONS.map((day) => {
@@ -548,7 +576,11 @@ const JobSearchForm = ({
                                         <input
                                             type="time"
                                             value={scheduleStart}
-                                            onChange={(e) => setScheduleStart(e.target.value)}
+                                            onChange={(e) => {
+                                                setScheduleStart(e.target.value);
+                                                setScheduleError('');
+                                            }}
+                                            aria-invalid={Boolean(scheduleError)}
                                         />
                                     </label>
                                     <label className="job-search-form__select-field">
@@ -556,10 +588,19 @@ const JobSearchForm = ({
                                         <input
                                             type="time"
                                             value={scheduleEnd}
-                                            onChange={(e) => setScheduleEnd(e.target.value)}
+                                            onChange={(e) => {
+                                                setScheduleEnd(e.target.value);
+                                                setScheduleError('');
+                                            }}
+                                            aria-invalid={Boolean(scheduleError)}
                                         />
                                     </label>
                                 </div>
+                                {scheduleError ? (
+                                    <p className="job-search-form__field-error" role="alert">
+                                        {scheduleError}
+                                    </p>
+                                ) : null}
                                 <p className="job-search-form__hint">
                                     Chọn ngày và khung giờ trùng với ít nhất một ca của tin tuyển
                                     dụng.
