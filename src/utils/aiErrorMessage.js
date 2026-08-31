@@ -1,4 +1,6 @@
 export const AI_GENERIC_ERROR_MESSAGE = 'Có lỗi đến từ AI, vui lòng thử lại sau.';
+export const RECOMMENDATION_LOAD_ERROR_MESSAGE =
+    'Không thể tải gợi ý việc làm. Vui lòng thử lại sau.';
 
 const AI_ENDPOINT_HINTS = [
     '/ai/',

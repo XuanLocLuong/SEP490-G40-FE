@@ -4,7 +4,7 @@ import JobCard from '../job/JobCard.jsx';
 import ScheduleSoftWarningBanner from '../candidate/ScheduleSoftWarningBanner.jsx';
 import { SparklesIcon } from '../common/icons.jsx';
 import { fetchRecommendedJobs } from '../../apis/RecommendationApi.jsx';
-import { AI_GENERIC_ERROR_MESSAGE } from '../../utils/aiErrorMessage.js';
+import { RECOMMENDATION_LOAD_ERROR_MESSAGE } from '../../utils/aiErrorMessage.js';
 import { useScheduleSummary } from '../../hooks/useScheduleSummary.js';
 import { ROUTES } from '../../routes/path.js';
 import { mapRecommendationToJob } from '../../utils/formatters.js';
@@ -39,7 +39,7 @@ const AiRecommendationsSection = () => {
                 }
             } catch {
                 if (!cancelled) {
-                    setError(AI_GENERIC_ERROR_MESSAGE);
+                    setError(RECOMMENDATION_LOAD_ERROR_MESSAGE);
                     setJobs([]);
                 }
             } finally {
