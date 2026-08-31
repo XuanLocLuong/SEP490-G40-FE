@@ -92,7 +92,7 @@ export const getNotificationTargetPath = (notification, role) => {
                 return getRecruiterMyJobsPath({ tab: 'rejected', jobId: refId });
             }
             if (type === 'JOB_BLOCKED') {
-                return getRecruiterMyJobsPath({ tab: 'closed', jobId: refId });
+                return getRecruiterMyJobsPath({ tab: 'blocked', jobId: refId });
             }
             // JOB_APPROVED: danh sách tin của tôi, tab Đang tuyển.
             return getRecruiterMyJobsPath({ tab: 'open', jobId: refId });

@@ -814,7 +814,7 @@ const RecruiterVerificationPage = () => {
                             </dl>
                         </div>
                     ) : null}
-                    <p>Vui lòng chuẩn bị lại giấy tờ rõ nét rồi nộp lại bằng API retry.</p>
+                    <p>Vui lòng chuẩn bị lại giấy tờ rõ nét rồi nộp lại.</p>
                     <div className="rv-card__actions rv-card__actions--center">
                         <button type="button" className="rv-btn rv-btn--primary" onClick={handleRetry}>
                             Thử lại

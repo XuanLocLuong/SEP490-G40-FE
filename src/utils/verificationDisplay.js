@@ -86,6 +86,11 @@ export const resolveRequiresBusinessLicense = ({
         }
     }
 
+    // Fallback: Cá nhân (INDIVIDUAL) không yêu cầu Giấy phép kinh doanh
+    if (code === 'INDIVIDUAL' || code === 'CA_NHAN') {
+        return false;
+    }
+
     return true;
 };
 

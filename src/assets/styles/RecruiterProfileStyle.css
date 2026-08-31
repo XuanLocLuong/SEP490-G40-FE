@@ -71,13 +71,21 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 12px;
     margin-bottom: 10px;
 }
 
 .recruiter-profile__hero-heading {
     flex: 1;
     min-width: 0;
+}
+
+.recruiter-profile__hero-title-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .recruiter-profile__hero-title-row h1,
@@ -151,7 +159,7 @@
     align-items: flex-end;
     gap: 6px;
     flex-shrink: 0;
-    max-width: min(100%, 320px);
+    margin-left: auto;
 }
 
 .recruiter-profile__verify-cluster-row {
@@ -850,6 +858,7 @@
     }
 
     .recruiter-profile__hero-title-row,
+    .recruiter-profile__hero-title-group,
     .recruiter-profile__hero-meta,
     .recruiter-profile__hero-stats,
     .recruiter-profile__completion-row {

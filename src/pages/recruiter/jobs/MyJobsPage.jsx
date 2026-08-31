@@ -28,6 +28,7 @@ const STATUS_TABS = [
     { id: 'pending', label: 'Chờ duyệt', dotClass: 'my-jobs-page__tab-dot--pending' },
     { id: 'revision', label: 'Yêu cầu chỉnh sửa', dotClass: 'my-jobs-page__tab-dot--revision' },
     { id: 'rejected', label: 'Từ chối', dotClass: 'my-jobs-page__tab-dot--rejected' },
+    { id: 'blocked', label: 'Bị khóa', dotClass: 'my-jobs-page__tab-dot--blocked' },
     { id: 'closed', label: 'Đã đóng', dotClass: 'my-jobs-page__tab-dot--closed' },
 ];
 
@@ -41,6 +42,7 @@ const TAB_API_STATUS = {
     pending: 'PENDING_REVIEW',
     revision: 'REVISION_REQUESTED',
     rejected: 'REJECTED',
+    blocked: 'BLOCKED',
     closed: 'CLOSED',
 };
 
@@ -73,6 +75,7 @@ const tabCountsFromApi = (counts = {}) => ({
     pending: Number(counts.PENDING_REVIEW) || 0,
     revision: Number(counts.REVISION_REQUESTED) || 0,
     rejected: Number(counts.REJECTED) || 0,
+    blocked: Number(counts.BLOCKED) || 0,
     closed: Number(counts.CLOSED) || 0,
 });
 
@@ -504,6 +507,11 @@ const MyJobsPage = () => {
                         {' · '}
                         Tạo {formatDate(job.createdAt)}
                     </p>
+                    {job.status === 'BLOCKED' && String(job.reviewNote || '').trim() && (
+                        <p className="my-jobs-page__notice my-jobs-page__notice--rejected">
+                            Lý do khóa: {job.reviewNote}
+                        </p>
+                    )}
                     <div className="my-jobs-page__metrics">
                         <div className="my-jobs-page__metric">
                             <span className="my-jobs-page__metric-value">

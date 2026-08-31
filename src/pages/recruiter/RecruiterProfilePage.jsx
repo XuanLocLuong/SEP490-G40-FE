@@ -1209,24 +1209,28 @@ const RecruiterProfilePage = () => {
                         <div className="recruiter-profile__hero-main">
                             <div className="recruiter-profile__hero-title-row">
                                 <div className="recruiter-profile__hero-heading">
-                                    <h1>{heroTitle}</h1>
+                                    <div className="recruiter-profile__hero-title-group">
+                                        <h1>{heroTitle}</h1>
+                                        {profile.businessType && (
+                                            <span className="recruiter-profile__badge recruiter-profile__badge--muted">
+                                                {formatBusinessTypeLabel(
+                                                    profile.businessType,
+                                                    businessTypeOptions
+                                                )}
+                                            </span>
+                                        )}
+                                    </div>
                                     {heroSubtitle && (
                                         <p className="recruiter-profile__hero-subtitle">{heroSubtitle}</p>
                                     )}
                                 </div>
-                                {profile.businessType && (
-                                    <span className="recruiter-profile__badge recruiter-profile__badge--muted">
-                                        {formatBusinessTypeLabel(
-                                            profile.businessType,
-                                            businessTypeOptions
-                                        )}
-                                    </span>
-                                )}
                                 {showVerifiedBadge ? (
-                                    <span className="recruiter-profile__badge recruiter-profile__badge--verified">
-                                        <CheckCircleIcon width={14} height={14} />
-                                        Đã xác thực
-                                    </span>
+                                    <div className="recruiter-profile__verify-cluster">
+                                        <span className="recruiter-profile__badge recruiter-profile__badge--verified">
+                                            <CheckCircleIcon width={14} height={14} />
+                                            Đã xác thực
+                                        </span>
+                                    </div>
                                 ) : (
                                     <div className="recruiter-profile__verify-cluster">
                                         <div className="recruiter-profile__verify-cluster-row">

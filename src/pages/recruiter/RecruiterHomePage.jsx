@@ -26,6 +26,7 @@ import {
     needsBusinessLicenseTopUp,
     resolveRequiresBusinessLicense,
 } from '../../utils/verificationDisplay.js';
+import { mapBusinessTypeOptions } from '../../utils/businessTypeDisplay.js';
 import '../../assets/styles/RecruiterDashboardStyle.css';
 
 const withOverviewFrom = (path) => {
@@ -128,6 +129,7 @@ const RecruiterHomePage = () => {
     const [verificationStatus, setVerificationStatus] = useState(null);
     const [businessType, setBusinessType] = useState(null);
     const [requiresBusinessLicense, setRequiresBusinessLicense] = useState(undefined);
+    const [businessTypeOptions, setBusinessTypeOptions] = useState([]);
 
     useEffect(() => {
         let cancelled = false;
@@ -136,9 +138,10 @@ const RecruiterHomePage = () => {
             setLoading(true);
             setError('');
             try {
-                const [data, profile] = await Promise.all([
+                const [data, profile, rawBusinessTypes] = await Promise.all([
                     loadRecruiterAnalyticsDashboard({ includeHistorical: false }),
                     recruiterProfileApi.getProfile().catch(() => null),
+                    recruiterProfileApi.getBusinessTypes().catch(() => []),
                 ]);
                 if (cancelled) return;
                 setSummary(data?.summary ?? null);
@@ -152,6 +155,7 @@ const RecruiterHomePage = () => {
                         ? profile.requiresBusinessLicense
                         : undefined
                 );
+                setBusinessTypeOptions(mapBusinessTypeOptions(rawBusinessTypes));
             } catch (err) {
                 if (cancelled) return;
                 const message = getRecruitmentAnalyticsApiErrorMessage(
@@ -166,6 +170,7 @@ const RecruiterHomePage = () => {
                 setVerificationStatus(null);
                 setBusinessType(null);
                 setRequiresBusinessLicense(undefined);
+                setBusinessTypeOptions([]);
                 toast.error(message);
             } finally {
                 if (!cancelled) setLoading(false);
@@ -180,6 +185,7 @@ const RecruiterHomePage = () => {
 
     const needsLicense = resolveRequiresBusinessLicense({
         businessType,
+        typeOptions: businessTypeOptions,
         profileRequiresBusinessLicense: requiresBusinessLicense,
     });
     const isVerified = isFullyBusinessVerified({
