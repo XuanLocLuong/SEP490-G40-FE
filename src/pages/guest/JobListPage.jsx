@@ -24,10 +24,7 @@ import {
     parseJobListSection,
 } from '../../utils/jobQuery.js';
 import { resolveJobListBack, buildHomeScrollState } from '../../utils/jobNavReturn.js';
-import {
-    AI_GENERIC_ERROR_MESSAGE,
-    resolveAiUserErrorMessage,
-} from '../../utils/aiErrorMessage.js';
+import { RECOMMENDATION_LOAD_ERROR_MESSAGE } from '../../utils/aiErrorMessage.js';
 import '../../assets/styles/JobListPageStyle.css';
 
 const JobListPage = () => {
@@ -83,11 +80,7 @@ const JobListPage = () => {
             } catch (err) {
                 setError(
                     isAiSection
-                        ? resolveAiUserErrorMessage(
-                              err,
-                              sectionMeta?.error ||
-                                  AI_GENERIC_ERROR_MESSAGE
-                          )
+                        ? RECOMMENDATION_LOAD_ERROR_MESSAGE
                         : err.message ||
                           sectionMeta?.error ||
                           'Không thể tải danh sách việc làm. Vui lòng thử lại sau.'
@@ -106,8 +99,8 @@ const JobListPage = () => {
         (async () => {
             setLoading(true);
             setError('');
+            const listSection = parseJobListSection(searchParams);
             try {
-                const listSection = parseJobListSection(searchParams);
                 const parsedQuery =
                     listSection && !isSearchableJobListSection(listSection)
                         ? null
@@ -128,10 +121,7 @@ const JobListPage = () => {
                 if (!cancelled) {
                     setError(
                         listSection === JOB_LIST_SECTIONS.AI
-                            ? resolveAiUserErrorMessage(
-                                  err,
-                                  sectionMeta?.error || AI_GENERIC_ERROR_MESSAGE
-                              )
+                            ? RECOMMENDATION_LOAD_ERROR_MESSAGE
                             : err.message ||
                               sectionMeta?.error ||
                               'Không thể tải danh sách việc làm. Vui lòng thử lại sau.'
