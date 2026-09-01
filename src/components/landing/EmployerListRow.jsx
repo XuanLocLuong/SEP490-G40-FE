@@ -40,19 +40,17 @@ const EmployerListRow = ({ employer }) => {
                         <h2 className="employer-list-row__name">
                             {employer.businessName || 'Doanh nghiệp'}
                         </h2>
-                        <span
-                            className="employer-list-row__verified-slot"
-                            aria-hidden={!employer.verified}
-                        >
-                            {employer.verified ? (
+                        {employer.verified ? (
+                            <span className="employer-list-row__verified-tag">
                                 <CheckCircleIcon
-                                    width={16}
-                                    height={16}
+                                    width={14}
+                                    height={14}
                                     className="employer-list-row__verified"
-                                    aria-label="Đã xác minh"
+                                    aria-hidden="true"
                                 />
-                            ) : null}
-                        </span>
+                                Đã xác minh
+                            </span>
+                        ) : null}
                     </div>
                     <ul className="employer-list-row__meta-list">
                         {metaLines.map((line, index) => (
