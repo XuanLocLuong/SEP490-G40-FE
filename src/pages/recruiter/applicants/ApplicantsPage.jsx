@@ -60,7 +60,8 @@ const EMPTY_MATCH_DATA = {
     applications: [],
 };
 
-const canManageApplications = (job) => job?.status === 'OPEN';
+const canManageApplications = (job) =>
+    job?.status === 'OPEN' || job?.status === 'CLOSED';
 
 const ApplicantsPage = () => {
     const navigate = useNavigate();
@@ -570,7 +571,8 @@ const ApplicantsPage = () => {
     const jobNotFound =
         Boolean(jobIdParam) && !pageLoading && !hasSelectedJob && (focusJobError || !focusJobLoading);
     const emptyNoJobs = !pageLoading && !jobIdParam && !hasOpenJobs;
-    const showManageDropdown = hasSelectedJob && !readOnly && hasOpenJobs;
+    const showManageDropdown =
+        hasSelectedJob && selectedJob?.status === 'OPEN' && hasOpenJobs;
 
     const activeMatchBucket = useMemo(
         () => MATCH_BUCKETS.find((bucket) => bucket.key === activeMatchTab) ?? MATCH_BUCKETS[0],
@@ -769,7 +771,7 @@ const ApplicantsPage = () => {
                     {!listLoading && !listError && (
                         <>
                             {matchData.statusCounts?.PENDING === 0 &&
-                                !readOnly &&
+                                selectedJob?.status === 'OPEN' &&
                                 statusFilter === 'PENDING' && (
                                     <p className="applicants-page__suggest-hint">
                                         Chưa có ứng viên chờ duyệt.{' '}
