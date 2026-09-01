@@ -240,7 +240,10 @@ export const SCHEDULE_BANNER_DISMISS_KEY = 'joblink.scheduleSoftBanner.v2.dismis
 /** Soft banner — chỉ cảnh báo dữ liệu đang thực sự được áp dụng vào lịch rảnh. */
 export const shouldShowScheduleSoftBanner = (summary) => {
     if (!summary) return false;
-    return summary.appliedJobCount > 0 || summary.isTimetableExpired;
+    return (
+        summary.appliedJobCount > 0 ||
+        (summary.isTimetableApplied && summary.isTimetableExpired)
+    );
 };
 
 /** Dọn dismiss cũ; banner “Để sau” chỉ dùng React state. */
