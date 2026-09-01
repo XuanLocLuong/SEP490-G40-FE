@@ -15,12 +15,6 @@ const buildMessage = (summary) => {
             ? 'Đã có 1 công việc đang chiếm lịch rảnh của bạn. Nếu đã nghỉ, hãy gỡ lịch để JobLink gợi ý việc mới chính xác hơn.'
             : `Đã có ${n} công việc đang chiếm lịch rảnh của bạn. Nếu đã nghỉ, hãy gỡ lịch để JobLink gợi ý việc mới chính xác hơn.`;
     }
-    if (summary?.totalHiredJobCount > 0) {
-        const n = summary.totalHiredJobCount;
-        return n === 1
-            ? 'Bạn có 1 việc đã nhận trong lịch rảnh. Kiểm tra và gỡ nếu không còn làm nữa.'
-            : `Bạn có ${n} việc đã nhận trong lịch rảnh. Kiểm tra và gỡ nếu không còn làm nữa.`;
-    }
     if (summary?.isTimetableExpired) {
         return 'Lịch bận đang hết hạn nên lịch rảnh có thể không còn đúng. Hãy cập nhật lại để gợi ý chính xác hơn.';
     }
@@ -28,7 +22,7 @@ const buildMessage = (summary) => {
 };
 
 /**
- * Soft warning — chỉ hiện khi job/TKB có thể đang chiếm / làm lệch lịch rảnh.
+ * Soft warning — chỉ hiện khi job đang được áp dụng hoặc TKB có thể làm lệch lịch rảnh.
  * “Để sau” chỉ ẩn tạm đến khi reload / remount.
  */
 const ScheduleSoftWarningBanner = ({ summary, loading = false, className = '' }) => {
