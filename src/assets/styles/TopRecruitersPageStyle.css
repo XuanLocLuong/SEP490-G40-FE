@@ -132,7 +132,7 @@
 
 .employer-list-row__title-row {
     display: grid;
-    grid-template-columns: 1fr 16px;
+    grid-template-columns: minmax(0, 1fr) auto;
     column-gap: 8px;
     align-items: start;
     margin-bottom: 8px;
@@ -150,15 +150,23 @@
     overflow: hidden;
 }
 
-.employer-list-row__verified-slot {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 2px;
+.employer-list-row__verified-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border: 1px solid color-mix(in srgb, var(--color-success) 28%, transparent);
+    border-radius: 999px;
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .employer-list-row__verified {
-    color: var(--color-primary);
+    color: currentColor;
     flex-shrink: 0;
 }
 

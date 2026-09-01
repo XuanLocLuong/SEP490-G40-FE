@@ -33,7 +33,7 @@ export const CANDIDATE_HOME_NAV_ITEMS = [
     },
     {
         id: HOME_SECTION_IDS.TOP_EMPLOYERS,
-        label: 'Top 10 Nhà Tuyển Dụng',
+        label: 'Top Nhà Tuyển Dụng',
         listPath: ROUTES.TOP_RECRUITERS,
     },
 ];

@@ -56,13 +56,17 @@ const EmployerCard = ({
                     <span
                         className="employer-card__verified-slot"
                         aria-hidden={!employer.verified}
+                        aria-label={employer.verified ? 'Đã xác minh' : undefined}
+                        data-tooltip={employer.verified ? 'Đã xác minh' : undefined}
+                        role={employer.verified ? 'img' : undefined}
+                        tabIndex={employer.verified ? 0 : undefined}
                     >
                         {employer.verified ? (
                             <CheckCircleIcon
                                 width={16}
                                 height={16}
                                 className="employer-card__verified"
-                                aria-label="Đã xác minh"
+                                aria-hidden="true"
                             />
                         ) : null}
                     </span>

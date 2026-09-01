@@ -485,11 +485,45 @@
     align-items: flex-start;
     justify-content: center;
     padding-top: 2px;
+    position: relative;
+    cursor: help;
 }
 
 .employer-card__verified {
-    color: var(--color-primary);
+    color: var(--color-success);
     flex-shrink: 0;
+}
+
+.employer-card__verified-slot[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 7px);
+    z-index: 10;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--color-text);
+    color: var(--color-surface);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.employer-card__verified-slot[data-tooltip]:hover::after,
+.employer-card__verified-slot[data-tooltip]:focus-visible::after {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.employer-card__verified-slot:focus-visible {
+    border-radius: 50%;
+    outline: 2px solid var(--color-success);
+    outline-offset: 3px;
 }
 
 .employer-card__meta-list {
