@@ -61,7 +61,7 @@ const TopEmployersSection = ({ compact = false }) => {
                 <div>
                     <h2 className="landing-section__title candidate-home-section__title">
                         <BuildingIcon width={22} height={22} aria-hidden="true" />
-                        Top 10 Nhà Tuyển Dụng Uy Tín
+                        Top Nhà Tuyển Dụng Uy Tín
                     </h2>
                     <p className="landing-section__desc">
                         Đánh giá dựa trên Trust Score — chỉ số uy tín từ phản hồi ứng viên và lịch sử tuyển dụng.
