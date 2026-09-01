@@ -65,7 +65,7 @@ const TopRecruitersPage = () => {
                 <header className="top-recruiters-page__header">
                     <h1 className="top-recruiters-page__title">
                         <BuildingIcon width={24} height={24} aria-hidden="true" />
-                        Top 10 Nhà Tuyển Dụng Uy Tín
+                        Top Nhà Tuyển Dụng Uy Tín
                     </h1>
                     <p className="top-recruiters-page__desc">
                         Danh sách do JobLink xếp hạng theo Trust Score, đánh giá ứng viên và lịch sử tuyển dụng.
