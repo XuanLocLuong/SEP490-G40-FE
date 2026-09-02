@@ -8,6 +8,7 @@ import {
 export { getJobReportApiErrorMessage };
 
 export const MAX_REPORT_EVIDENCE = 3;
+export const MAX_REPORT_EVIDENCE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export const REPORT_STATUS_LABELS = {
     PENDING: 'Đang chờ xử lý',
@@ -91,6 +92,9 @@ export const validateJobReportForm = ({ reportReasonCodes, description, evidence
     }
     if (Array.isArray(evidenceFiles) && evidenceFiles.length > MAX_REPORT_EVIDENCE) {
         return `Chỉ được tải lên tối đa ${MAX_REPORT_EVIDENCE} ảnh minh chứng.`;
+    }
+    if (Array.isArray(evidenceFiles) && evidenceFiles.some((f) => f?.size > MAX_REPORT_EVIDENCE_SIZE)) {
+        return 'Mỗi ảnh minh chứng không được vượt quá 10MB.';
     }
     return null;
 };

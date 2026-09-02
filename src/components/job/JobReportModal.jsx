@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import {
     MAX_REPORT_EVIDENCE,
+    MAX_REPORT_EVIDENCE_SIZE,
     getJobReportApiErrorMessage,
     getReportReasonDisplay,
     loadReportReasons,
@@ -12,7 +13,7 @@ import '../../assets/styles/JobReportStyle.css';
 
 /**
  * Modal ứng viên báo cáo tin tuyển dụng.
- * Bắt buộc: lý do (>=1), mô tả. Tuỳ chọn: tối đa 3 ảnh.
+ * Bắt buộc: lý do (>=1), mô tả. Tuỳ chọn: tối đa 3 ảnh, mỗi ảnh ≤ 10MB.
  */
 const JobReportModal = ({ open, jobId, jobTitle, onClose, onSubmitted }) => {
     const [reasons, setReasons] = useState([]);
@@ -76,12 +77,20 @@ const JobReportModal = ({ open, jobId, jobTitle, onClose, onSubmitted }) => {
     };
 
     const handleFilesChange = (e) => {
-        const picked = Array.from(e.target.files || []).filter((f) => f.type?.startsWith('image/'));
+        const raw = Array.from(e.target.files || []);
         e.target.value = '';
-        if (!picked.length) {
+
+        const images = raw.filter((f) => f.type?.startsWith('image/'));
+        if (!images.length) {
             toast.error('Vui lòng chọn file hình ảnh.');
             return;
         }
+
+        const picked = images.filter((f) => f.size <= MAX_REPORT_EVIDENCE_SIZE);
+        if (picked.length < images.length) {
+            toast.error('Mỗi ảnh minh chứng không được vượt quá 10MB.');
+        }
+        if (!picked.length) return;
 
         setEvidenceItems((prev) => {
             const room = MAX_REPORT_EVIDENCE - prev.length;
@@ -231,7 +240,7 @@ const JobReportModal = ({ open, jobId, jobTitle, onClose, onSubmitted }) => {
                     <div className="job-report-modal__field">
                         <span className="job-report-modal__label">
                             Ảnh minh chứng{' '}
-                            <span className="job-report-modal__optional">(tuỳ chọn, tối đa 3)</span>
+                            <span className="job-report-modal__optional">(tuỳ chọn, tối đa 3, mỗi ảnh ≤ 10MB)</span>
                         </span>
                         <input
                             ref={fileInputRef}

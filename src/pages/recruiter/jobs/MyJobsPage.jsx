@@ -53,7 +53,7 @@ const formatDate = (value) => {
     return date.toLocaleDateString('vi-VN');
 };
 
-/** Chỉ dùng cho nút Mở lại tin — BE chưa validate deadline khi CLOSED → OPEN. */
+/** Chỉ dùng cho nút Mở lại tin. */
 const isPastDeadline = (job) => {
     if (!job.applicationDeadline) return false;
     const end = new Date(job.applicationDeadline);
@@ -144,7 +144,12 @@ const canEdit = (status) => status === 'DRAFT' || status === 'REVISION_REQUESTED
 const hasRecruitingMetricsCard = (job) =>
     job.status === 'OPEN' || job.status === 'CLOSED' || job.status === 'BLOCKED';
 
-const canReopenJob = (job) => job.status === 'CLOSED' && !isPastDeadline(job);
+/** CLOSED còn hạn và còn chỗ tuyển — ẩn khi đã đủ HIRED (mở lại cũng không có ý nghĩa). */
+const canReopenJob = (job) => {
+    if (job.status !== 'CLOSED' || isPastDeadline(job)) return false;
+    const { hiredCount, requiredCandidates } = getJobMetrics(job);
+    return hiredCount < requiredCandidates;
+};
 
 const hasRevisionNote = (job) =>
     job?.status === 'REVISION_REQUESTED' && Boolean(String(job.reviewNote || '').trim());
