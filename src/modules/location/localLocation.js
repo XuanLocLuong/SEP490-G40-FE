@@ -69,12 +69,14 @@ export const matchProvinceAndWardFromNominatim = (address = {}, displayName = ''
         address.town,
         address.municipality,
         address['ISO3166-2-lvl4'],
+        ...(address.allAdminNames || []),
     ].filter(Boolean);
 
     const provinces = getProvinces();
     let province =
         provinces.find((item) => provinceCandidates.some((name) => namesMatch(item.ten, name))) ||
-        provinces.find((item) => displayName.includes(item.ten)) ||
+        provinces.find((item) => displayName && namesMatch(item.ten, displayName)) ||
+        provinces.find((item) => displayName && displayName.includes(item.ten)) ||
         null;
 
     if (!province) {
@@ -82,6 +84,8 @@ export const matchProvinceAndWardFromNominatim = (address = {}, displayName = ''
     }
 
     const wardCandidates = [
+        address.ward,
+        address.district,
         address.suburb,
         address.neighbourhood,
         address.quarter,
@@ -90,13 +94,22 @@ export const matchProvinceAndWardFromNominatim = (address = {}, displayName = ''
         address.borough,
         address.municipality,
         address.town,
+        address.county,
+        ...(address.allAdminNames || []),
     ].filter(Boolean);
 
     const wards = getWardsByProvince(province.id);
-    const ward =
+    let ward =
         wards.find((item) => wardCandidates.some((name) => namesMatch(item.ten, name))) ||
-        wards.find((item) => displayName.includes(item.ten)) ||
         null;
+
+    if (!ward && displayName) {
+        ward =
+            wards.find((item) => {
+                const norm = normalizeVnPlaceName(item.ten);
+                return norm && displayName.toLowerCase().includes(norm);
+            }) || null;
+    }
 
     return {
         provinceId: province.id,

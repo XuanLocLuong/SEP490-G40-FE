@@ -57,28 +57,52 @@ const coordsNearlyEqual = (a, b) =>
     Math.abs(Number(a.latitude) - Number(b.latitude)) < 1e-7 &&
     Math.abs(Number(a.longitude) - Number(b.longitude)) < 1e-7;
 
-/** Gọi Nominatim (OpenStreetMap) để đổi text địa chỉ → tọa độ. */
+/** Đổi text địa chỉ → tọa độ (Photon + Nominatim fallback). */
 const geocodeAddress = async (query) => {
-    const res = await fetch(
-        `${NOMINATIM_URL}?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=1`,
-        { headers: { 'Accept-Language': 'vi' } }
-    );
+    const trimmed = String(query || '').trim();
+    if (!trimmed) return null;
 
-    if (!res.ok) {
-        throw new Error('Geocode request failed');
+    // Tier 1: Photon by Komoot (OSM Mirror)
+    try {
+        const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&limit=1`;
+        const res = await fetch(photonUrl);
+        if (res.ok) {
+            const data = await res.json();
+            const coords = data.features?.[0]?.geometry?.coordinates;
+            if (coords && coords.length >= 2) {
+                return createManualPosition({
+                    latitude: coords[1],
+                    longitude: coords[0],
+                    source: 'address',
+                });
+            }
+        }
+    } catch {
+        // fallback
     }
 
-    const results = await res.json();
-    if (!results.length) {
-        return null;
+    // Tier 2: Nominatim (OpenStreetMap)
+    try {
+        const res = await fetch(
+            `${NOMINATIM_URL}?q=${encodeURIComponent(trimmed)}&format=json&limit=1&addressdetails=1`,
+            { headers: { 'Accept-Language': 'vi' } }
+        );
+        if (res.ok) {
+            const results = await res.json();
+            if (results && results.length > 0) {
+                const { lat, lon } = results[0];
+                return createManualPosition({
+                    latitude: parseFloat(lat),
+                    longitude: parseFloat(lon),
+                    source: 'address',
+                });
+            }
+        }
+    } catch {
+        // fallback
     }
 
-    const { lat, lon } = results[0];
-    return createManualPosition({
-        latitude: parseFloat(lat),
-        longitude: parseFloat(lon),
-        source: 'address',
-    });
+    return null;
 };
 
 const markerIcon = L.divIcon({
@@ -207,9 +231,10 @@ const LocationPicker = ({
             DEFAULT_ZOOM
         );
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19,
+        L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google Maps',
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            maxZoom: 20,
         }).addTo(map);
 
         map.on('click', (event) => {

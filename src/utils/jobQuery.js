@@ -99,6 +99,8 @@ export const SCHEDULE_DAY_OPTIONS = [
     { value: '8', label: 'CN' },
 ];
 
+import { reverseGeocodeCoordinates } from '../modules/location/reverseGeocodeAdmin.js';
+
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
 
@@ -125,54 +127,70 @@ export const getCurrentPosition = () =>
         );
     });
 
-/** Geocode text địa chỉ → lat/lng (Nominatim / OpenStreetMap). */
+/** Geocode text địa chỉ → lat/lng (Photon + Nominatim fallback). */
 export const geocodeAddress = async (query) => {
     const trimmed = String(query || '').trim();
     if (!trimmed) {
         throw new Error('Vui lòng nhập địa chỉ để tìm việc gần bạn.');
     }
 
-    const res = await fetch(
-        `${NOMINATIM_URL}?q=${encodeURIComponent(trimmed)}&format=json&limit=1&countrycodes=vn`,
-        { headers: { 'Accept-Language': 'vi' } }
-    );
-
-    if (!res.ok) {
-        throw new Error('Không thể tra cứu địa chỉ. Vui lòng thử lại.');
+    // Tier 1: Photon
+    try {
+        const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&limit=1`;
+        const res = await fetch(photonUrl);
+        if (res.ok) {
+            const data = await res.json();
+            const coords = data.features?.[0]?.geometry?.coordinates;
+            if (coords && coords.length >= 2) {
+                return {
+                    latitude: Number.parseFloat(coords[1]),
+                    longitude: Number.parseFloat(coords[0]),
+                    displayName: trimmed,
+                };
+            }
+        }
+    } catch {
+        // fallback
     }
 
-    const results = await res.json();
-    if (!Array.isArray(results) || results.length === 0) {
-        throw new Error('Không tìm thấy địa chỉ. Hãy thử mô tả cụ thể hơn.');
+    // Tier 2: Nominatim
+    try {
+        const res = await fetch(
+            `${NOMINATIM_URL}?q=${encodeURIComponent(trimmed)}&format=json&limit=1&countrycodes=vn`,
+            { headers: { 'Accept-Language': 'vi' } }
+        );
+        if (res.ok) {
+            const results = await res.json();
+            if (Array.isArray(results) && results.length > 0) {
+                return {
+                    latitude: Number.parseFloat(results[0].lat),
+                    longitude: Number.parseFloat(results[0].lon),
+                    displayName: results[0].display_name || trimmed,
+                };
+            }
+        }
+    } catch {
+        // fallback
     }
 
-    return {
-        latitude: Number.parseFloat(results[0].lat),
-        longitude: Number.parseFloat(results[0].lon),
-        displayName: results[0].display_name || trimmed,
-    };
+    throw new Error('Không tìm thấy địa chỉ. Hãy thử mô tả cụ thể hơn.');
 };
 
-/** Reverse geocode lat/lng → địa chỉ + object address Nominatim. */
+/** Reverse geocode lat/lng → địa chỉ + object address. */
 export const reverseGeocodeCoords = async (latitude, longitude) => {
-    const res = await fetch(
-        `${NOMINATIM_REVERSE_URL}?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
-        { headers: { 'Accept-Language': 'vi' } }
-    );
-
-    if (!res.ok) {
+    try {
+        const data = await reverseGeocodeCoordinates(latitude, longitude);
+        const displayName = data?.display_name?.trim() || '';
+        if (!displayName) {
+            throw new Error('Không tìm thấy địa chỉ quanh vị trí hiện tại.');
+        }
+        return {
+            displayName,
+            address: data.address || {},
+        };
+    } catch {
         throw new Error('Không thể lấy địa chỉ từ vị trí hiện tại.');
     }
-
-    const data = await res.json();
-    const displayName = data?.display_name?.trim() || '';
-    if (!displayName) {
-        throw new Error('Không tìm thấy địa chỉ quanh vị trí hiện tại.');
-    }
-    return {
-        displayName,
-        address: data.address || {},
-    };
 };
 
 /**

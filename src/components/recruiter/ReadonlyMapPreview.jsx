@@ -43,9 +43,10 @@ const ReadonlyMapPreview = ({ latitude, longitude, className = '' }) => {
             attributionControl: true,
         }).setView([lat, lng], PREVIEW_ZOOM);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap',
-            maxZoom: 19,
+        L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google Maps',
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            maxZoom: 20,
         }).addTo(map);
 
         markerRef.current = L.marker([lat, lng], {

@@ -10,6 +10,7 @@ import {
 import {
     reverseGeocodeCoordinates,
     getGeolocationErrorMessage,
+    isBlacklistedDetail,
 } from '../../modules/location/reverseGeocodeAdmin.js';
 import '../../assets/styles/RecruiterAddressModal.css';
 
@@ -27,7 +28,7 @@ const extractDetailFromNominatim = (address = {}) => {
     const parts = [
         address.house_number,
         address.road || address.street || address.pedestrian,
-    ].filter(Boolean);
+    ].filter((p) => p && !isBlacklistedDetail(p));
     return parts.join(' ').trim();
 };
 
@@ -43,7 +44,7 @@ const extractDetailFromDisplayName = (displayName, wardName, provinceName) => {
     const parts = String(displayName || '')
         .split(',')
         .map((s) => s.trim())
-        .filter(Boolean);
+        .filter((s) => s && !isBlacklistedDetail(s));
     if (!parts.length) return '';
 
     const adminNames = [wardName, provinceName]
@@ -53,7 +54,8 @@ const extractDetailFromDisplayName = (displayName, wardName, provinceName) => {
     const isAdminOrTail = (part) => {
         const p = normalizeLoosePlaceName(part);
         if (!p) return true;
-        if (/^(việt nam|vietnam)$/i.test(part.trim())) return true;
+        if (isBlacklistedDetail(p)) return true;
+        if (/^(việt nam|vietnam|asia|châu á|đông nam á)$/i.test(part.trim())) return true;
         if (/^\d{4,6}$/.test(part.trim())) return true;
         if (/^(phường|xã|quận|huyện|thị xã|thị trấn|thành phố|tỉnh|tp\.?)\s+/i.test(part.trim()))
             return true;
@@ -62,22 +64,54 @@ const extractDetailFromDisplayName = (displayName, wardName, provinceName) => {
 
     const stop = parts.findIndex(isAdminOrTail);
     const detailParts = stop === -1 ? parts.slice(0, 2) : parts.slice(0, stop);
-    return detailParts.join(', ').trim();
+    const result = detailParts.join(', ').trim();
+    return isBlacklistedDetail(result) ? '' : result;
 };
 
 const geocodeAddressQuery = async (query) => {
-    const res = await fetch(
-        `${NOMINATIM_SEARCH}?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=1`,
-        { headers: { 'Accept-Language': 'vi' } }
-    );
-    if (!res.ok) throw new Error('Geocode request failed');
-    const results = await res.json();
-    if (!results.length) return null;
-    return {
-        latitude: parseFloat(results[0].lat),
-        longitude: parseFloat(results[0].lon),
-        source: 'address',
-    };
+    const trimmed = String(query || '').trim();
+    if (!trimmed) return null;
+
+    // Tier 1: Photon by Komoot (OSM Mirror)
+    try {
+        const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&limit=1`;
+        const res = await fetch(photonUrl);
+        if (res.ok) {
+            const data = await res.json();
+            const coords = data.features?.[0]?.geometry?.coordinates;
+            if (coords && coords.length >= 2) {
+                return {
+                    latitude: coords[1],
+                    longitude: coords[0],
+                    source: 'address',
+                };
+            }
+        }
+    } catch {
+        // fallback
+    }
+
+    // Tier 2: Nominatim
+    try {
+        const res = await fetch(
+            `${NOMINATIM_SEARCH}?q=${encodeURIComponent(trimmed)}&format=json&limit=1&addressdetails=1`,
+            { headers: { 'Accept-Language': 'vi' } }
+        );
+        if (res.ok) {
+            const results = await res.json();
+            if (results && results.length > 0) {
+                return {
+                    latitude: parseFloat(results[0].lat),
+                    longitude: parseFloat(results[0].lon),
+                    source: 'address',
+                };
+            }
+        }
+    } catch {
+        // fallback
+    }
+
+    return null;
 };
 
 /**
@@ -174,11 +208,11 @@ const RecruiterAddressModal = ({
                 );
 
             const next = {
-                provinceId: matched.provinceId || '',
-                wardId: matched.wardId || '',
-                provinceName: matched.cityName || '',
-                wardName: matched.wardName || '',
-                detailAddress,
+                provinceId: matched.provinceId || addressData.provinceId || '',
+                wardId: matched.wardId || addressData.wardId || '',
+                provinceName: matched.cityName || addressData.provinceName || '',
+                wardName: matched.wardName || addressData.wardName || '',
+                detailAddress: detailAddress || addressData.detailAddress || '',
             };
 
             setAddressInitial(next);
@@ -190,17 +224,17 @@ const RecruiterAddressModal = ({
             });
 
             if (!matched.provinceId) {
-                toast.warning('Không khớp Tỉnh/Phường trong danh mục. Vui lòng chọn thủ công.');
+                toast.info('Đã ghim vị trí. Vui lòng chọn Tỉnh/Phường thủ công.');
                 setStatusMessage('Vui lòng chọn Tỉnh/Phường thủ công.');
             } else if (!detailAddress) {
-                setStatusMessage('Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường).');
+                setStatusMessage('Đã nhận diện Tỉnh/Phường. Vui lòng nhập thêm số nhà, tên đường.');
             } else {
-                setStatusMessage('Đã lấy vị trí. Có thể sửa số nhà rồi bấm Xác nhận.');
+                setStatusMessage('Đã có vị trí. Có thể sửa số nhà rồi bấm Xác nhận.');
             }
         } catch {
-            toast.error('Không thể xác định địa chỉ từ vị trí trên bản đồ.');
+            setStatusMessage('Đã ghim vị trí trên bản đồ. Vui lòng chọn Tỉnh/Phường thủ công.');
         }
-    }, []);
+    }, [addressData.provinceId, addressData.wardId, addressData.provinceName, addressData.wardName, addressData.detailAddress]);
 
     const handleAddressChange = useCallback(
         (data) => {
