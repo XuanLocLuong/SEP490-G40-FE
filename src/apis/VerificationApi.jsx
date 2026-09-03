@@ -26,6 +26,22 @@ export const isVerificationRetryWithoutRequestError = (error) => {
     );
 };
 
+/** BE: /submit khi đã có request trong DB → báo dùng /retry. */
+export const isVerificationSubmitInsteadOfRetryError = (error) => {
+    const msg = String(
+        error?.response?.data?.message || error?.response?.data?.error || error?.message || ''
+    ).toLowerCase();
+    return (
+        msg.includes('/retry') ||
+        msg.includes('thay vì /submit') ||
+        msg.includes('thay vi /submit') ||
+        msg.includes('đã có yêu cầu') ||
+        msg.includes('da co yeu cau') ||
+        msg.includes('đã tồn tại') ||
+        msg.includes('da ton tai')
+    );
+};
+
 const appendIfPresent = (formData, key, value) => {
     if (value == null || value === '') return;
     formData.append(key, value);

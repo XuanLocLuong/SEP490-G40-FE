@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import {
     getVerificationApiErrorMessage,
     isVerificationRetryWithoutRequestError,
+    isVerificationSubmitInsteadOfRetryError,
     submitBusinessLicense,
     submitVerification,
 } from '../../apis/VerificationApi.jsx';
@@ -451,6 +452,9 @@ const RecruiterVerificationPage = () => {
                     if (usedRetry && isVerificationRetryWithoutRequestError(firstErr)) {
                         usedRetry = false;
                         data = await submitBusinessLicense(licensePayload, { retry: false });
+                    } else if (!usedRetry && isVerificationSubmitInsteadOfRetryError(firstErr)) {
+                        usedRetry = true;
+                        data = await submitBusinessLicense(licensePayload, { retry: true });
                     } else {
                         throw firstErr;
                     }
@@ -469,6 +473,9 @@ const RecruiterVerificationPage = () => {
                     if (usedRetry && isVerificationRetryWithoutRequestError(firstErr)) {
                         usedRetry = false;
                         data = await submitVerification(payload, { retry: false });
+                    } else if (!usedRetry && isVerificationSubmitInsteadOfRetryError(firstErr)) {
+                        usedRetry = true;
+                        data = await submitVerification(payload, { retry: true });
                     } else {
                         throw firstErr;
                     }
