@@ -286,14 +286,21 @@
     color: #059669;
 }
 
-.ci-badge--status {
-    background: #f1f5f9;
-    color: #475569;
-}
-
 .ci-badge--remain {
     background: #fff7ed;
     color: #c2410c;
+}
+
+.ci-badge--closed {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.ci-badge--filled {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fef3c7;
 }
 
 .ci-card__company {

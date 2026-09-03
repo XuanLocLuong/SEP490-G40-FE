@@ -366,6 +366,9 @@ const CandidateInvitationsPage = () => {
 
                 {items.map((item) => {
                     const isSent = item.status === 'SENT';
+                    const isClosed = item.isJobOpen === false || item.jobStatus === 'CLOSED';
+                    const isFilled = item.hasVacancy === false;
+                    const canRespond = isSent && !isClosed && !isFilled;
                     const matchLabel = formatMatchScore(item.matchScore);
                     const remaining = isSent ? getInvitationRemainingLabel(item.sentAt) : null;
                     const sentLabel = formatInvitationSentAt(item.sentAt);
@@ -411,6 +414,16 @@ const CandidateInvitationsPage = () => {
                                                 {matchLabel}
                                             </span>
                                         )}
+                                        {isClosed && (
+                                            <span className="ci-badge ci-badge--closed" title="Tin tuyển dụng này đã đóng">
+                                                Tin đã đóng
+                                            </span>
+                                        )}
+                                        {!isClosed && isFilled && (
+                                            <span className="ci-badge ci-badge--filled" title="Vị trí này đã tuyển đủ số lượng">
+                                                Đã tuyển đủ
+                                            </span>
+                                        )}
                                     </div>
 
                                     <p className="ci-card__company">{item.businessName || '—'}</p>
@@ -427,7 +440,7 @@ const CandidateInvitationsPage = () => {
                                 </div>
                             </button>
 
-                            {((item.jobId && item.recruiterId) || isSent) && (
+                            {((item.jobId && item.recruiterId) || canRespond) && (
                             <div className="ci-card__actions">
                                 {item.jobId && item.recruiterId ? (
                                     <button
@@ -445,7 +458,7 @@ const CandidateInvitationsPage = () => {
                                         Chat
                                     </button>
                                 ) : null}
-                                {isSent ? (
+                                {canRespond ? (
                                     <>
                                         <button
                                             type="button"

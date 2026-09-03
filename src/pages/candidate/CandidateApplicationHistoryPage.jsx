@@ -60,7 +60,7 @@ const unwrapApplicationPage = (res) => {
     };
 };
 
-const getStatusUi = (status, rejectReason = null) => {
+const getStatusUi = (status, rejectReason = null, item = null) => {
     switch (status) {
         case 'PENDING':
             return { label: 'Chờ phản hồi', tone: 'pending' };
@@ -75,6 +75,12 @@ const getStatusUi = (status, rejectReason = null) => {
             }
             if (rejectReason === 'OFFER_EXPIRED') {
                 return { label: 'Lời mời hết hạn', tone: 'rejected' };
+            }
+            if (rejectReason === 'POSITION_FILLED' || (item && item.hasVacancy === false)) {
+                return { label: 'Đã tuyển đủ người', tone: 'rejected' };
+            }
+            if (rejectReason === 'JOB_CLOSED' || (item && (item.isJobOpen === false || item.jobStatus === 'CLOSED'))) {
+                return { label: 'Tin đã đóng', tone: 'rejected' };
             }
             return { label: 'Bị NTD từ chối', tone: 'rejected' };
         case 'HIRED':
@@ -364,11 +370,12 @@ const CandidateApplicationHistoryPage = () => {
         setActionLoadingId(applicationId);
         try {
             await confirmOffer(applicationId);
-            toast.success('Đã xác nhận offer.');
+            toast.success('Đã xác nhận nhận việc.');
             await loadPage(0, activeStatus);
             await loadCounts();
         } catch (err) {
-            toast.error(err?.message || 'Không thể xác nhận offer.');
+            const message = err?.response?.data?.message || err?.message || 'Không thể xác nhận offer.';
+            toast.error(message);
         } finally {
             setActionLoadingId(null);
         }
@@ -383,7 +390,8 @@ const CandidateApplicationHistoryPage = () => {
             await loadPage(0, activeStatus);
             await loadCounts();
         } catch (err) {
-            toast.error(err?.message || 'Không thể từ chối offer.');
+            const message = err?.response?.data?.message || err?.message || 'Không thể từ chối offer.';
+            toast.error(message);
         } finally {
             setActionLoadingId(null);
         }
@@ -478,12 +486,15 @@ const CandidateApplicationHistoryPage = () => {
                 )}
 
                 {applications.map((item) => {
-                    const ui = getStatusUi(item.status, item.rejectReason);
+                    const ui = getStatusUi(item.status, item.rejectReason, item);
                     const isPending = item.status === 'PENDING';
                     const isAccepted = item.status === 'ACCEPTED';
                     const isRejected = item.status === 'REJECTED';
                     const isCancelled = item.status === 'CANCELLED';
                     const isHired = item.status === 'HIRED';
+                    const isClosed = item.isJobOpen === false || item.jobStatus === 'CLOSED';
+                    const isFilled = item.hasVacancy === false;
+                    const canRespondOffer = isAccepted && !isClosed && !isFilled;
                     const appKey = item.applicationId != null ? String(item.applicationId) : '';
                     const hasReviewed = Boolean(appKey && reviewedIds.has(appKey));
                     const shiftsLabel = formatJobShiftsLabel(item.shifts);
@@ -519,6 +530,16 @@ const CandidateApplicationHistoryPage = () => {
                                         <span className={`cah-badge cah-badge--${ui.tone}`}>
                                             {ui.label}
                                         </span>
+                                        {isClosed && (
+                                            <span className="cah-badge cah-badge--neutral" title="Tin tuyển dụng này đã đóng">
+                                                Tin đã đóng
+                                            </span>
+                                        )}
+                                        {!isClosed && isFilled && (
+                                            <span className="cah-badge cah-badge--warning" title="Vị trí này đã tuyển đủ số lượng">
+                                                Đã tuyển đủ
+                                            </span>
+                                        )}
                                         {appliedLabel && (
                                             <span className="cah-item__meta-chip">
                                                 <CalendarIcon width={14} height={14} />
@@ -590,7 +611,7 @@ const CandidateApplicationHistoryPage = () => {
                                         Xem chi tiết job
                                     </button>
                                 ) : null}
-                                {isCancelled && item.jobId ? (
+                                {isCancelled && item.jobId && !isClosed && !isFilled ? (
                                     <button
                                         type="button"
                                         className="cah-btn cah-btn--primary"
@@ -612,7 +633,7 @@ const CandidateApplicationHistoryPage = () => {
                                             : 'Hủy đơn'}
                                     </button>
                                 ) : null}
-                                {isAccepted ? (
+                                {canRespondOffer ? (
                                     <div className="cah-action-row">
                                         <button
                                             type="button"

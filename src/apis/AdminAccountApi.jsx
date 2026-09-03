@@ -5,10 +5,10 @@ const BASE = `${API_PREFIX}/admin/accounts`;
 const unwrap = (res) => res?.data?.data ?? res?.data ?? null;
 
 export const getAdminAccountApiErrorMessage = (error, fallback = 'Có lỗi xảy ra') => {
-    const code =
-        error?.response?.data?.code ||
-        error?.response?.data?.message ||
-        error?.response?.data?.error;
+    const rawMessage = error?.response?.data?.message;
+    const rawCode = error?.response?.data?.code;
+    const rawError = error?.response?.data?.error;
+
     const map = {
         ACCOUNT_NOT_FOUND: 'Không tìm thấy tài khoản.',
         CANNOT_RESTRICT_SELF: 'Không thể khóa / hạn chế chính tài khoản của bạn.',
@@ -20,21 +20,26 @@ export const getAdminAccountApiErrorMessage = (error, fallback = 'Có lỗi xả
         PUBLIC_ROLE_CHANGE_NOT_ALLOWED:
             'Không được đổi role của tài khoản Candidate / Recruiter. Chỉ đổi được giữa các role nội bộ.',
     };
-    if (typeof code === 'string' && map[code]) return map[code];
 
-    const rawMessage = error?.response?.data?.message;
-    if (
-        typeof rawMessage === 'string' &&
-        rawMessage.includes('AccountStatus') &&
-        rawMessage.includes('SUSPENDED')
-    ) {
-        return 'Trạng thái không hợp lệ. Tạm khóa phải dùng mã INACTIVE.';
+    if (typeof rawMessage === 'string' && rawMessage.trim()) {
+        const key = rawMessage.trim();
+        if (map[key]) return map[key];
+        if (!key.startsWith('{') && Number.isNaN(Number(key))) return key;
     }
 
-    if (typeof code === 'string' && code.trim() && !code.startsWith('{') && Number.isNaN(Number(code))) {
-        return code;
+    if (typeof rawCode === 'string' && rawCode.trim()) {
+        const key = rawCode.trim();
+        if (map[key]) return map[key];
+        if (!key.startsWith('{') && Number.isNaN(Number(key))) return key;
     }
-    return error?.message || fallback;
+
+    if (typeof rawError === 'string' && rawError.trim()) {
+        const key = rawError.trim();
+        if (map[key]) return map[key];
+        if (!key.startsWith('{')) return key;
+    }
+
+    return fallback;
 };
 
 /** GET /admin/accounts — search / filter / page */

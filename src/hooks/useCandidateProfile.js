@@ -132,6 +132,34 @@ export const useCandidateProfile = () => {
         }
     }, []);
 
+    const toggleOpenToWork = useCallback(async (nextOpenToWork) => {
+        setSaving(true);
+        try {
+            await service.updateOpenToWork(nextOpenToWork);
+            setProfile((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          openToWork: nextOpenToWork,
+                          status: nextOpenToWork ? 'SEEKING' : 'NOT_SEEKING',
+                      }
+                    : prev
+            );
+            toast.success(
+                nextOpenToWork
+                    ? 'Đã bật trạng thái đang tìm việc.'
+                    : 'Đã tạm tắt trạng thái tìm việc.'
+            );
+            return true;
+        } catch (err) {
+            const msg = err?.response?.data?.message;
+            toast.error(msg || 'Không thể cập nhật trạng thái tìm việc. Vui lòng thử lại.');
+            return false;
+        } finally {
+            setSaving(false);
+        }
+    }, []);
+
     // Fetch dữ liệu khi mount — đây là use case hợp lệ của effect (đồng bộ với
     // hệ thống ngoài/backend). setState nằm trong callback async của loadProfile.
     useEffect(() => {
@@ -150,6 +178,7 @@ export const useCandidateProfile = () => {
         loadProfile,
         loadSkills,
         updateProfile,
+        toggleOpenToWork,
         uploadAvatar,
         uploadCv,
         deleteCv,

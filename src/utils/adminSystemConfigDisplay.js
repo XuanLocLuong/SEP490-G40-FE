@@ -358,12 +358,14 @@ export const validateSystemConfigConstraints = (drafts = {}, items = []) => {
     const groupStatuses = {};
 
     const getVal = (key, fallback = 0) => {
-        if (drafts[key] !== undefined && drafts[key] !== '' && drafts[key] !== null) {
+        if (drafts[key] !== undefined && drafts[key] !== null) {
+            if (drafts[key] === '') return 0;
             const n = Number(drafts[key]);
             return Number.isNaN(n) ? fallback : n;
         }
         const item = items.find((i) => i.configKey === key);
-        if (item && item.currentValue !== undefined && item.currentValue !== '' && item.currentValue !== null) {
+        if (item && item.currentValue !== undefined && item.currentValue !== null) {
+            if (item.currentValue === '') return fallback;
             const n = Number(item.currentValue);
             return Number.isNaN(n) ? fallback : n;
         }
@@ -386,7 +388,7 @@ export const validateSystemConfigConstraints = (drafts = {}, items = []) => {
     if (!matchingValid) {
         errors.push({
             subGroupId: 'MATCHING_WEIGHTS',
-            message: `Tổng trọng số Khớp lệnh Đề xuất (Matching) phải bằng đúng 100% (Hiện tại: ${matchingSum}% · ${matchingSum > 100 ? `Đang dư +${groupStatuses.MATCHING_WEIGHTS.diff}%` : `Đang thiếu ${groupStatuses.MATCHING_WEIGHTS.diff}%`}).`,
+            message: `Tổng trọng số Khớp lệnh Đề xuất (Matching) phải bằng đúng 100% (Hiện tại: ${matchingSum}% · ${matchingSum > 100 ? `Đang dư +${groupStatuses.MATCHING_WEIGHTS.diff}%` : `Đang thiếu ${Math.abs(groupStatuses.MATCHING_WEIGHTS.diff)}%`}).`,
         });
     }
 
@@ -401,7 +403,7 @@ export const validateSystemConfigConstraints = (drafts = {}, items = []) => {
     if (!coldStartValid) {
         errors.push({
             subGroupId: 'COLD_START_WEIGHTS',
-            message: `Tổng trọng số Người dùng mới (Cold Start) phải bằng đúng 100% (Hiện tại: ${coldStartSum}% · ${coldStartSum > 100 ? `Đang dư +${groupStatuses.COLD_START_WEIGHTS.diff}%` : `Đang thiếu ${groupStatuses.COLD_START_WEIGHTS.diff}%`}).`,
+            message: `Tổng trọng số Người dùng mới (Cold Start) phải bằng đúng 100% (Hiện tại: ${coldStartSum}% · ${coldStartSum > 100 ? `Đang dư +${groupStatuses.COLD_START_WEIGHTS.diff}%` : `Đang thiếu ${Math.abs(groupStatuses.COLD_START_WEIGHTS.diff)}%`}).`,
         });
     }
 
@@ -416,7 +418,7 @@ export const validateSystemConfigConstraints = (drafts = {}, items = []) => {
     if (!topRecruiterValid) {
         errors.push({
             subGroupId: 'TOP_RECRUITER_WEIGHTS',
-            message: `Tổng 7 trọng số Bảng xếp hạng NTD hàng đầu phải bằng đúng 100% (Hiện tại: ${topRecruiterSum}% · ${topRecruiterSum > 100 ? `Đang dư +${groupStatuses.TOP_RECRUITER_WEIGHTS.diff}%` : `Đang thiếu ${groupStatuses.TOP_RECRUITER_WEIGHTS.diff}%`}).`,
+            message: `Tổng 7 trọng số Bảng xếp hạng NTD hàng đầu phải bằng đúng 100% (Hiện tại: ${topRecruiterSum}% · ${topRecruiterSum > 100 ? `Đang dư +${groupStatuses.TOP_RECRUITER_WEIGHTS.diff}%` : `Đang thiếu ${Math.abs(groupStatuses.TOP_RECRUITER_WEIGHTS.diff)}%`}).`,
         });
     }
 

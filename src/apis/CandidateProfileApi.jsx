@@ -12,6 +12,10 @@ export const getProfile = () => axiosClient.get(PROFILE_BASE);
 // UpdateCandidateProfileRequestDTO — xem candidateProfileService.js.
 export const updateProfile = (data) => axiosClient.put(PROFILE_BASE, data);
 
+// PATCH /api/v1/candidate/profile/open-to-work — cập nhật nhanh trạng thái tìm việc
+export const patchOpenToWork = (openToWork) =>
+    axiosClient.patch(`${PROFILE_BASE}/open-to-work`, { openToWork });
+
 // POST /api/v1/candidate/profile/avatar — multipart/form-data.
 export const uploadAvatar = (file) => {
     const formData = new FormData();

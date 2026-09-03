@@ -70,7 +70,8 @@ export const normalizeProfile = (raw) => {
         cvLink: data.cvLink || '',
         bio: data.bio || '',
         trustScore: data.trustScore ?? null,
-        status: data.openToWork ? 'SEEKING' : 'NOT_SEEKING',
+        openToWork: data.openToWork != null ? Boolean(data.openToWork) : true,
+        status: (data.openToWork != null ? data.openToWork : true) ? 'SEEKING' : 'NOT_SEEKING',
         completionPercent: data.completionRate ?? 0,
 
         // Backend đã tính sẵn — trước đây FE không đọc field nào trong 4 dòng này cả.
@@ -199,4 +200,9 @@ export const deleteCv = async () => {
 export const fetchSkills = async () => {
     const data = unwrap(await api.getSkills());
     return toArray(data).map(normalizeSkill).filter(Boolean);
+};
+
+export const updateOpenToWork = async (openToWork) => {
+    const res = await api.patchOpenToWork(openToWork);
+    return unwrap(res);
 };

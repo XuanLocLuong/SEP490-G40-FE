@@ -30,24 +30,58 @@ export const AUDIT_ACTION_LABELS = {
     CREATE_INTERNAL_STAFF: 'Tạo staff nội bộ',
     CHANGE_PRIMARY_ROLE: 'Đổi role',
     UPDATE_SYSTEM_CONFIGURATION: 'Cập nhật cấu hình hệ thống',
+    CREATE_SKILL: 'Tạo kỹ năng',
+    UPDATE_SKILL: 'Cập nhật kỹ năng',
+    TOGGLE_SKILL_STATUS: 'Bật / Tắt kỹ năng',
+    ADD_BANNED_LIST_ITEM: 'Thêm mục từ khóa cấm',
+    UPDATE_BANNED_LIST_ITEM: 'Cập nhật mục từ khóa cấm',
+    DELETE_BANNED_LIST_ITEM: 'Xóa mục từ khóa cấm',
+    CREATE_TRUST_SCORE_RULE: 'Tạo quy tắc điểm uy tín',
+    UPDATE_TRUST_SCORE_RULE: 'Cập nhật quy tắc điểm uy tín',
+    VERIFY_WORK_HISTORY: 'Xác thực lịch sử làm việc',
 };
 
 export const AUDIT_ACTION_OPTIONS = [
     { value: '', label: 'Tất cả hành động' },
-    { value: 'CHANGE_ACCOUNT_STATUS', label: AUDIT_ACTION_LABELS.CHANGE_ACCOUNT_STATUS },
-    { value: 'REVOKE_SESSIONS', label: AUDIT_ACTION_LABELS.REVOKE_SESSIONS },
-    { value: 'CREATE_INTERNAL_STAFF', label: AUDIT_ACTION_LABELS.CREATE_INTERNAL_STAFF },
-    { value: 'CHANGE_PRIMARY_ROLE', label: AUDIT_ACTION_LABELS.CHANGE_PRIMARY_ROLE },
-    { value: 'UPDATE_SYSTEM_CONFIGURATION', label: AUDIT_ACTION_LABELS.UPDATE_SYSTEM_CONFIGURATION },
+    ...Object.entries(AUDIT_ACTION_LABELS).map(([value, label]) => ({ value, label })),
 ];
+
+export const AUDIT_TARGET_TYPE_LABELS = {
+    USER: 'Tài khoản',
+    User: 'Tài khoản',
+    SKILL: 'Kỹ năng',
+    Skill: 'Kỹ năng',
+    SYSTEM_CONFIG: 'Cấu hình hệ thống',
+    TRUST_SCORE_RULE: 'Quy tắc điểm uy tín',
+    TrustScoreRule: 'Quy tắc điểm uy tín',
+    BANNED_LIST: 'Danh sách cấm',
+    BannedList: 'Danh sách cấm',
+    JOB: 'Tin tuyển dụng',
+    Job: 'Tin tuyển dụng',
+    REPORT: 'Báo cáo vi phạm',
+    Report: 'Báo cáo vi phạm',
+    WORK_HISTORY: 'Lịch sử làm việc',
+    WorkHistory: 'Lịch sử làm việc',
+};
 
 export const AUDIT_TARGET_TYPE_OPTIONS = [
     { value: '', label: 'Tất cả đối tượng' },
-    { value: 'User', label: 'User' },
-    { value: 'SYSTEM_CONFIG', label: 'System config' },
+    { value: 'USER', label: 'Tài khoản' },
+    { value: 'SKILL', label: 'Kỹ năng' },
+    { value: 'SYSTEM_CONFIG', label: 'Cấu hình hệ thống' },
+    { value: 'TRUST_SCORE_RULE', label: 'Quy tắc điểm uy tín' },
+    { value: 'BANNED_LIST', label: 'Danh sách cấm' },
+    { value: 'JOB', label: 'Tin tuyển dụng' },
+    { value: 'REPORT', label: 'Báo cáo vi phạm' },
+    { value: 'WORK_HISTORY', label: 'Lịch sử làm việc' },
 ];
 
 export const getAuditActionLabel = (action) => AUDIT_ACTION_LABELS[action] || action || '—';
+
+export const getAuditTargetTypeLabel = (targetType) => {
+    if (!targetType) return '—';
+    return AUDIT_TARGET_TYPE_LABELS[targetType] || targetType;
+};
 
 export const getAuditResultLabel = (result) => AUDIT_RESULT_LABELS[result] || result || '—';
 

@@ -171,9 +171,15 @@
 
 .cah-badge--cancelled,
 .cah-badge--completed,
-.cah-badge--unknown {
+.cah-badge--unknown,
+.cah-badge--neutral {
     background: rgba(148, 163, 184, 0.15);
     color: #64748b;
+}
+
+.cah-badge--warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
 }
 
 .cah-item__text {

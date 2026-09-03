@@ -161,7 +161,8 @@
     flex-wrap: wrap;
 }
 
-.cp-header__status {
+.cp-header__status,
+.cp-header__status-wrapper {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -180,11 +181,92 @@
     font-weight: 600;
 }
 
+.cp-status-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    background: #f1f5f9;
+    color: #64748b;
+    outline: none;
+}
+
+.cp-status-toggle:hover:not(:disabled) {
+    opacity: 0.95;
+    transform: translateY(-1px);
+}
+
+.cp-status-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.cp-status-toggle--active {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+.cp-status-toggle--active .cp-status-dot {
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.cp-status-toggle--inactive {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #e5e7eb;
+}
+
+.cp-status-toggle--inactive .cp-status-dot {
+    background: #9ca3af;
+}
+
 .cp-status-dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--color-success);
+    flex-shrink: 0;
+}
+
+.cp-status-switch {
+    position: relative;
+    width: 28px;
+    height: 16px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    transition: background-color 0.2s ease;
+    display: inline-block;
+    flex-shrink: 0;
+    margin-left: 2px;
+}
+
+.cp-status-toggle--active .cp-status-switch {
+    background: #10b981;
+}
+
+.cp-status-switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.cp-status-toggle--active .cp-status-switch-knob {
+    transform: translateX(12px);
 }
 
 .cp-completion {

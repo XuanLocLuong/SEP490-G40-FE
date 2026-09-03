@@ -89,6 +89,7 @@ const CandidateProfilePage = () => {
         loadProfile,
         loadSkills,
         updateProfile,
+        toggleOpenToWork,
         uploadAvatar,
         uploadCv,
         deleteCv,
@@ -397,6 +398,21 @@ const CandidateProfilePage = () => {
     };
 
     const handleAvatar = (file) => uploadAvatar(file);
+    const handleToggleOpenToWork = async (nextOpenToWork) => {
+        const ok = await toggleOpenToWork(nextOpenToWork);
+        if (ok) {
+            setDraft((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          openToWork: nextOpenToWork,
+                          status: nextOpenToWork ? 'SEEKING' : 'NOT_SEEKING',
+                      }
+                    : prev
+            );
+        }
+        return ok;
+    };
     const handleCv = (file) => uploadCv(file);
     const handleDeleteCv = async () => {
         const ok = await deleteCv();
@@ -437,6 +453,7 @@ const CandidateProfilePage = () => {
             <ProfileHeader
                 profile={draft}
                 onUploadAvatar={handleAvatar}
+                onToggleOpenToWork={handleToggleOpenToWork}
                 saving={saving}
             />
 

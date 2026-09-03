@@ -1,24 +1,22 @@
 import { USER_ROLES } from './Constants.jsx';
 
-/** Khớp BE AccountStatus: ACTIVE | INACTIVE | BANNED (không có SUSPENDED). */
+/** Khớp BE AccountStatus: ACTIVE | BANNED */
 export const ACCOUNT_STATUS = {
     ACTIVE: 'ACTIVE',
-    INACTIVE: 'INACTIVE',
     BANNED: 'BANNED',
 };
 
 export const ACCOUNT_STATUS_LABELS = {
     ACTIVE: 'Đang hoạt động',
-    INACTIVE: 'Tạm khóa',
-    BANNED: 'Cấm vĩnh viễn',
-    // Alias cũ — chỉ để hiển thị nếu còn data/cache; không gửi lên API.
-    SUSPENDED: 'Tạm khóa',
+    BANNED: 'Đã khóa',
+    // Alias cũ — chỉ để hiển thị an toàn nếu còn data cũ
+    INACTIVE: 'Đã khóa',
+    SUSPENDED: 'Đã khóa',
 };
 
 export const ACCOUNT_STATUS_OPTIONS = [
     { value: '', label: 'Tất cả trạng thái' },
     { value: ACCOUNT_STATUS.ACTIVE, label: ACCOUNT_STATUS_LABELS.ACTIVE },
-    { value: ACCOUNT_STATUS.INACTIVE, label: ACCOUNT_STATUS_LABELS.INACTIVE },
     { value: ACCOUNT_STATUS.BANNED, label: ACCOUNT_STATUS_LABELS.BANNED },
 ];
 
@@ -85,10 +83,9 @@ export const getAccountStatusTone = (status) => {
         case ACCOUNT_STATUS.ACTIVE:
             return 'active';
         case ACCOUNT_STATUS.BANNED:
-            return 'banned';
-        case ACCOUNT_STATUS.INACTIVE:
+        case 'INACTIVE':
         case 'SUSPENDED': // legacy
-            return 'suspended';
+            return 'banned';
         default:
             return 'unknown';
     }
@@ -101,23 +98,18 @@ export const formatAccountDateTime = (value) => {
     return date.toLocaleString('vi-VN');
 };
 
-/** Actions status khả dụng theo status hiện tại (chỉ enum BE). */
+/** Actions status khả dụng theo status hiện tại (chỉ enum BE: ACTIVE <-> BANNED). */
 export const getStatusActionsForAccount = (status) => {
     switch (status) {
         case ACCOUNT_STATUS.ACTIVE:
             return [
-                { status: ACCOUNT_STATUS.INACTIVE, label: 'Tạm khóa', variant: 'warning' },
-                { status: ACCOUNT_STATUS.BANNED, label: 'Cấm vĩnh viễn', variant: 'danger' },
-            ];
-        case ACCOUNT_STATUS.INACTIVE:
-        case 'SUSPENDED': // legacy
-            return [
-                { status: ACCOUNT_STATUS.ACTIVE, label: 'Mở khóa (Restore)', variant: 'primary' },
-                { status: ACCOUNT_STATUS.BANNED, label: 'Cấm vĩnh viễn', variant: 'danger' },
+                { status: ACCOUNT_STATUS.BANNED, label: 'Khóa tài khoản', variant: 'danger' },
             ];
         case ACCOUNT_STATUS.BANNED:
+        case 'INACTIVE':
+        case 'SUSPENDED': // legacy
             return [
-                { status: ACCOUNT_STATUS.ACTIVE, label: 'Gỡ cấm (Unban)', variant: 'primary' },
+                { status: ACCOUNT_STATUS.ACTIVE, label: 'Mở khóa tài khoản', variant: 'primary' },
             ];
         default:
             return [];

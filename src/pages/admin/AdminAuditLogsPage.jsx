@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     getAdminAuditLogApiErrorMessage,
     getAdminAuditLogDetail,
+    getAdminAuditLogFilterOptions,
     searchAdminAuditLogs,
 } from '../../apis/AdminAuditLogApi.jsx';
 import { ROUTES } from '../../routes/path.js';
@@ -16,6 +17,7 @@ import {
     getAuditActorInitials,
     getAuditResultLabel,
     getAuditResultTone,
+    getAuditTargetTypeLabel,
     getAuditValueEntries,
     toAuditInstantFromDate,
 } from '../../utils/adminAuditLogDisplay.js';
@@ -39,6 +41,12 @@ const AdminAuditLogsPage = () => {
         toDate: '',
     });
 
+    const [filterOptions, setFilterOptions] = useState({
+        actions: [],
+        targetTypes: [],
+        results: [],
+    });
+
     const [items, setItems] = useState([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -52,6 +60,66 @@ const AdminAuditLogsPage = () => {
     const [detailError, setDetailError] = useState('');
 
     const showDetail = selectedId != null;
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const data = await getAdminAuditLogFilterOptions();
+                if (!cancelled && data) {
+                    setFilterOptions({
+                        actions: Array.isArray(data.actions) ? data.actions : [],
+                        targetTypes: Array.isArray(data.targetTypes) ? data.targetTypes : [],
+                        results: Array.isArray(data.results) ? data.results : [],
+                    });
+                }
+            } catch {
+                // Giữ fallback static options nếu API lỗi
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const actionOptions = useMemo(() => {
+        if (filterOptions.actions.length > 0) {
+            return [
+                { value: '', label: 'Tất cả hành động' },
+                ...filterOptions.actions.map((act) => ({
+                    value: act,
+                    label: getAuditActionLabel(act),
+                })),
+            ];
+        }
+        return AUDIT_ACTION_OPTIONS;
+    }, [filterOptions.actions]);
+
+    const targetTypeOptions = useMemo(() => {
+        if (filterOptions.targetTypes.length > 0) {
+            return [
+                { value: '', label: 'Tất cả đối tượng' },
+                ...filterOptions.targetTypes.map((type) => ({
+                    value: type,
+                    label: getAuditTargetTypeLabel(type),
+                })),
+            ];
+        }
+        return AUDIT_TARGET_TYPE_OPTIONS;
+    }, [filterOptions.targetTypes]);
+
+    const resultOptions = useMemo(() => {
+        if (filterOptions.results.length > 0) {
+            return [
+                { value: '', label: 'Tất cả kết quả' },
+                ...filterOptions.results.map((res) => ({
+                    value: res,
+                    label: getAuditResultLabel(res),
+                })),
+            ];
+        }
+        return AUDIT_RESULT_OPTIONS;
+    }, [filterOptions.results]);
 
     const loadList = useCallback(async (pageNum = 0, filters = appliedFilters) => {
         setListLoading(true);
@@ -204,17 +272,17 @@ const AdminAuditLogsPage = () => {
                         aria-label="Tìm người thực hiện"
                     />
                     <select value={action} onChange={(e) => setAction(e.target.value)} aria-label="Hành động">
-                        {AUDIT_ACTION_OPTIONS.map((opt) => (
+                        {actionOptions.map((opt) => (
                             <option key={opt.value || 'all-action'} value={opt.value}>{opt.label}</option>
                         ))}
                     </select>
                     <select value={targetType} onChange={(e) => setTargetType(e.target.value)} aria-label="Đối tượng">
-                        {AUDIT_TARGET_TYPE_OPTIONS.map((opt) => (
+                        {targetTypeOptions.map((opt) => (
                             <option key={opt.value || 'all-target'} value={opt.value}>{opt.label}</option>
                         ))}
                     </select>
                     <select value={result} onChange={(e) => setResult(e.target.value)} aria-label="Kết quả">
-                        {AUDIT_RESULT_OPTIONS.map((opt) => (
+                        {resultOptions.map((opt) => (
                             <option key={opt.value || 'all-result'} value={opt.value}>{opt.label}</option>
                         ))}
                     </select>
@@ -300,7 +368,17 @@ const AdminAuditLogsPage = () => {
                                                 <td>{getAuditActionLabel(log.action)}</td>
                                                 <td>{renderResultBadge(log.result)}</td>
                                                 <td className="admin-audit-table__detail">
-                                                    {log.reason || `${log.targetType || '—'} #${log.targetId ?? '—'}`}
+                                                    {log.targetName ? (
+                                                        <div>
+                                                            <strong>{log.targetName}</strong>
+                                                            <small style={{ display: 'block', color: 'var(--color-text-muted)', fontSize: '12px', marginTop: '2px' }}>
+                                                                {getAuditTargetTypeLabel(log.targetType)} #{log.targetId ?? '—'}
+                                                                {log.reason ? ` · ${log.reason}` : ''}
+                                                            </small>
+                                                        </div>
+                                                    ) : (
+                                                        log.reason || `${getAuditTargetTypeLabel(log.targetType)} #${log.targetId ?? '—'}`
+                                                    )}
                                                 </td>
                                             </tr>
                                         );
@@ -350,6 +428,11 @@ const AdminAuditLogsPage = () => {
                         <>
                             <header className="admin-audit-detail__header">
                                 <div>
+                                    {detail.category && (
+                                        <span className="admin-accounts-badge admin-accounts-badge--active" style={{ marginBottom: '6px', display: 'inline-block' }}>
+                                            {detail.category}
+                                        </span>
+                                    )}
                                     <h2>{getAuditActionLabel(detail.action)}</h2>
                                     <p>{formatAuditDateTime(detail.createdAt)}</p>
                                 </div>
@@ -381,14 +464,31 @@ const AdminAuditLogsPage = () => {
                                 <div>
                                     <dt>Đối tượng</dt>
                                     <dd>
-                                        {detail.targetType || '—'}
-                                        {detail.targetId != null ? ` #${detail.targetId}` : ''}
-                                        {isUserTarget && detail.targetId != null ? (
+                                        {detail.targetName ? (
+                                            <div>
+                                                <strong>{detail.targetName}</strong>
+                                                <div style={{ color: 'var(--color-text-muted)', fontSize: '13px', marginTop: '2px' }}>
+                                                    {getAuditTargetTypeLabel(detail.targetType)} · ID: #{detail.targetId}
+                                                    {isUserTarget && detail.targetId != null ? (
+                                                        <>
+                                                            {' · '}
+                                                            <Link to={ROUTES.ADMIN_ACCOUNTS}>Mở quản lý tài khoản</Link>
+                                                        </>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                        ) : (
                                             <>
-                                                {' · '}
-                                                <Link to={ROUTES.ADMIN_ACCOUNTS}>Mở quản lý tài khoản</Link>
+                                                {getAuditTargetTypeLabel(detail.targetType) || '—'}
+                                                {detail.targetId != null ? ` #${detail.targetId}` : ''}
+                                                {isUserTarget && detail.targetId != null ? (
+                                                    <>
+                                                        {' · '}
+                                                        <Link to={ROUTES.ADMIN_ACCOUNTS}>Mở quản lý tài khoản</Link>
+                                                    </>
+                                                ) : null}
                                             </>
-                                        ) : null}
+                                        )}
                                     </dd>
                                 </div>
                                 <div>
@@ -400,6 +500,12 @@ const AdminAuditLogsPage = () => {
                                         ) : null}
                                     </dd>
                                 </div>
+                                {detail.description ? (
+                                    <div className="admin-audit-detail__span">
+                                        <dt>Mô tả</dt>
+                                        <dd>{detail.description}</dd>
+                                    </div>
+                                ) : null}
                                 <div className="admin-audit-detail__span">
                                     <dt>Lý do</dt>
                                     <dd>{detail.reason?.trim() ? detail.reason : '—'}</dd>

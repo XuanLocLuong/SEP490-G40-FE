@@ -18,3 +18,7 @@ export const searchAdminAuditLogs = (params = {}) =>
 /** GET /admin/audit-logs/{id} */
 export const getAdminAuditLogDetail = (id) =>
     axiosClient.get(`${BASE}/${id}`).then(unwrap);
+
+/** GET /admin/audit-logs/filter-options */
+export const getAdminAuditLogFilterOptions = () =>
+    axiosClient.get(`${BASE}/filter-options`).then(unwrap);

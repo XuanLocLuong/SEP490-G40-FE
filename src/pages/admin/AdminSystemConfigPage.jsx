@@ -583,7 +583,7 @@ const AdminSystemConfigPage = () => {
                                                                             : `⚠️ Tổng: ${status.sum}% / 100% (${
                                                                                 status.diff > 0
                                                                                     ? `Dư +${status.diff}%`
-                                                                                    : `Thiếu ${status.diff}%`
+                                                                                    : `Thiếu ${Math.abs(status.diff)}%`
                                                                             })`}
                                                                     </span>
                                                                 </div>

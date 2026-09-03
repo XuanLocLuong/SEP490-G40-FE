@@ -105,6 +105,9 @@ const InvitationDetailModal = ({
     if (!open) return null;
 
     const isSent = detail?.status === 'SENT';
+    const isClosed = detail ? (detail.isJobOpen === false || detail.jobStatus === 'CLOSED') : false;
+    const isFilled = detail ? detail.hasVacancy === false : false;
+    const canRespond = isSent && !isClosed && !isFilled;
     const remaining = isSent ? getInvitationRemainingLabel(detail.sentAt) : null;
     const matchLabel = formatMatchScore(detail?.matchScore);
 
@@ -192,6 +195,16 @@ const InvitationDetailModal = ({
                                                     {matchLabel}
                                                 </span>
                                             )}
+                                            {isClosed && (
+                                                <span className="ci-badge ci-badge--closed" title="Tin tuyển dụng này đã đóng">
+                                                    Tin đã đóng
+                                                </span>
+                                            )}
+                                            {!isClosed && isFilled && (
+                                                <span className="ci-badge ci-badge--filled" title="Vị trí này đã tuyển đủ số lượng">
+                                                    Đã tuyển đủ
+                                                </span>
+                                            )}
                                             <span className="ci-badge ci-badge--status">
                                                 {getInvitationStatusLabel(detail.status)}
                                             </span>
@@ -257,7 +270,7 @@ const InvitationDetailModal = ({
 
                     {!loading &&
                         detail &&
-                        ((detail.jobId && detail.recruiterId) || isSent) && (
+                        ((detail.jobId && detail.recruiterId) || canRespond) && (
                         <div className="ci-detail-modal__footer">
                             {detail.jobId && detail.recruiterId ? (
                                 <button
@@ -275,7 +288,7 @@ const InvitationDetailModal = ({
                                     Chat
                                 </button>
                             ) : null}
-                            {isSent ? (
+                            {canRespond ? (
                                 <>
                                     <button
                                         type="button"

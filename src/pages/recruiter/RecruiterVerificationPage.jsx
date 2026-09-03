@@ -783,7 +783,7 @@ const RecruiterVerificationPage = () => {
                         </button>
                     </div>
                     <p className="rv-info-bar">
-                        Bạn sẽ nhận được thông báo trên app JobLink ngay khi hoàn tất.
+                        Bạn sẽ nhận được thông báo trên JobLink ngay khi hoàn tất.
                     </p>
                 </section>
             )}

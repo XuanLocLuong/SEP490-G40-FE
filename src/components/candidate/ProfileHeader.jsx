@@ -16,9 +16,9 @@ const getStatusLabel = (status) => {
 };
 
 // SECTION 1 — Header Card: avatar, tên, trust score, bio, status, completion %.
-const ProfileHeader = ({ profile, onUploadAvatar, saving }) => {
+const ProfileHeader = ({ profile, onUploadAvatar, onToggleOpenToWork, saving }) => {
     const percent = clampPercent(profile.completionPercent);
-    const statusLabel = getStatusLabel(profile.status);
+    const isOpenToWork = profile.openToWork ?? (profile.status !== 'NOT_SEEKING');
 
     return (
         <section className="cp-card cp-header">
@@ -50,15 +50,25 @@ const ProfileHeader = ({ profile, onUploadAvatar, saving }) => {
                 {profile.bio && <p className="cp-header__bio">{profile.bio}</p>}
 
                 <div className="cp-header__meta">
-                    {statusLabel && (
-                        <span className="cp-header__status">
-                            Trạng thái:
-                            <span className="cp-status-pill">
-                                <span className="cp-status-dot" />
-                                {statusLabel}
+                    <div className="cp-header__status-wrapper">
+                        <span className="cp-header__status-label">Trạng thái:</span>
+                        <button
+                            type="button"
+                            className={`cp-status-toggle ${isOpenToWork ? 'cp-status-toggle--active' : 'cp-status-toggle--inactive'}`}
+                            onClick={() => onToggleOpenToWork?.(!isOpenToWork)}
+                            disabled={saving}
+                            title={isOpenToWork ? 'Bấm để tạm tắt trạng thái tìm việc' : 'Bấm để bật trạng thái tìm việc'}
+                            aria-label={`Trạng thái: ${isOpenToWork ? 'Đang tìm việc' : 'Tạm tắt tìm việc'}. Bấm để thay đổi.`}
+                        >
+                            <span className="cp-status-dot" />
+                            <span className="cp-status-text">
+                                {isOpenToWork ? 'Đang tìm việc' : 'Tạm tắt tìm việc'}
                             </span>
-                        </span>
-                    )}
+                            <span className="cp-status-switch" aria-hidden="true">
+                                <span className="cp-status-switch-knob" />
+                            </span>
+                        </button>
+                    </div>
 
                     <div className="cp-completion">
                         <span className="cp-completion__label">{percent}% Hoàn thiện hồ sơ</span>

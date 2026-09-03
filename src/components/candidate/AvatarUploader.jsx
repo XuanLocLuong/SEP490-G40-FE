@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { CameraIcon } from './profileIcons.jsx';
 import { getInitials, isValidAvatarUrl } from '../../utils/profileFormat.js';
 
-const MAX_AVATAR_MB = 5;
+const MAX_AVATAR_MB = 10;
 // Backend (CandidateProfileService.ALLOWED_IMAGE_MIME_TYPES) chỉ nhận jpeg/jpg/png.
 const ACCEPTED = ['image/jpeg', 'image/png'];
 
