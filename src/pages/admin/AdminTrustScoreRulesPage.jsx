@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import {
     activateTrustScoreRule,
-    createTrustScoreRule,
     deactivateTrustScoreRule,
     getTrustScoreRuleApiErrorMessage,
     getTrustScoreRuleDetail,
@@ -49,7 +48,6 @@ const AdminTrustScoreRulesPage = () => {
     const [error, setError] = useState('');
 
     const [formOpen, setFormOpen] = useState(false);
-    const [formMode, setFormMode] = useState('create');
     const [editingRule, setEditingRule] = useState(null);
     const [formSaving, setFormSaving] = useState(false);
 
@@ -121,18 +119,11 @@ const AdminTrustScoreRulesPage = () => {
         if (page > totalPages - 1) setPage(totalPages - 1);
     }, [page, totalPages]);
 
-    const openCreate = () => {
-        setFormMode('create');
-        setEditingRule(null);
-        setFormOpen(true);
-    };
-
     const openEdit = (rule) => {
         if (isSystemRuleType(rule?.ruleType)) {
             toast.info('Quy tắc hệ thống chỉ xem, không chỉnh sửa từ màn này.');
             return;
         }
-        setFormMode('edit');
         setEditingRule(rule);
         setFormOpen(true);
         setDetailOpen(false);
@@ -165,24 +156,22 @@ const AdminTrustScoreRulesPage = () => {
     };
 
     const handleFormSubmit = async (payload) => {
+        if (!editingRule?.id) {
+            toast.error('Không xác định được quy tắc cần cập nhật.');
+            return;
+        }
         setFormSaving(true);
         try {
-            if (formMode === 'edit' && editingRule?.id) {
-                await updateTrustScoreRule(editingRule.id, payload);
-                toast.success('Đã cập nhật quy tắc điểm uy tín.');
-            } else {
-                await createTrustScoreRule(payload);
-                toast.success('Đã tạo quy tắc điểm uy tín.');
-            }
+            await updateTrustScoreRule(editingRule.id, payload);
+            toast.success('Đã cập nhật quy tắc điểm uy tín.');
             setFormOpen(false);
             setEditingRule(null);
-            if (formMode === 'create') setPage(0);
             await loadRules();
         } catch (err) {
             const status = err?.response?.status;
             const message = getTrustScoreRuleApiErrorMessage(err, 'Không thể lưu quy tắc.');
             toast.error(message);
-            if (status === 409 && formMode === 'edit' && editingRule?.id) {
+            if (status === 409 && editingRule?.id) {
                 try {
                     const data = await getTrustScoreRuleDetail(editingRule.id);
                     setEditingRule(data?.rule || editingRule);
@@ -243,13 +232,6 @@ const AdminTrustScoreRulesPage = () => {
                         cảnh báo và phục hồi uy tín. Thay đổi chỉ áp dụng cho sự kiện mới.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    className="admin-skills-btn admin-skills-btn--primary"
-                    onClick={openCreate}
-                >
-                    + Tạo quy tắc
-                </button>
             </header>
 
             <form className="admin-skills-filters" onSubmit={applySearch}>
@@ -447,7 +429,7 @@ const AdminTrustScoreRulesPage = () => {
 
             <TrustScoreRuleFormModal
                 open={formOpen}
-                mode={formMode}
+                mode="edit"
                 initialRule={editingRule}
                 loading={formSaving}
                 onSubmit={handleFormSubmit}
