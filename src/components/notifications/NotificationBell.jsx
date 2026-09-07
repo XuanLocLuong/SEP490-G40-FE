@@ -4,7 +4,6 @@ import { BellIcon } from '../common/icons.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useNotifications } from '../../hooks/useNotifications.js';
 import { getNotificationTargetPath } from '../../utils/notificationNavigation.js';
-import { tryOpenChatFromNotification } from '../../utils/notificationChat.js';
 import { elevateOverlay, OVERLAY_CSS } from '../../utils/overlayLayer.js';
 import { invitationsNavigateOptions } from '../../utils/invitationNavReturn.js';
 import { ROUTES } from '../../routes/path.js';
@@ -70,7 +69,6 @@ const NotificationBell = () => {
 
     const handleSelect = async (notification) => {
         await markOneRead(notification.id);
-        await tryOpenChatFromNotification(notification, auth?.role);
         const path = getNotificationTargetPath(notification, auth?.role);
         setOpen(false);
         if (path) {

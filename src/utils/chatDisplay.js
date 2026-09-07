@@ -38,13 +38,103 @@ export const isNotifyAction = (actionName) =>
 const NOTIFY_PREVIEW_LABELS = {
     NOTIFY_APPLIED: 'Thông báo: Ứng viên đã ứng tuyển',
     NOTIFY_ACCEPTED_INVITE: 'Thông báo: Đã chấp nhận lời mời',
+    NOTIFY_REJECTED_INVITE: 'Thông báo: Ứng viên đã từ chối lời mời',
     NOTIFY_APPLICATION_ACCEPTED: 'Thông báo: Đơn đã được chấp nhận',
     NOTIFY_ACCEPTED_WORK: 'Thông báo: Đã xác nhận nhận việc',
+    NOTIFY_JOB_CLOSED: 'Thông báo: Tin tuyển dụng đã đóng',
+    NOTIFY_JOB_REOPENED: 'Thông báo: Tin tuyển dụng đã được mở lại',
+};
+
+const DECISION_PREVIEW_LABELS = {
+    REJECT_WORK: 'Ứng viên đã từ chối nhận việc',
+    REJECT_APPLICATION: 'Đơn ứng tuyển đã bị từ chối',
 };
 
 export const getNotifyPreviewLabel = (actionName) => {
     if (!isNotifyAction(actionName)) return null;
     return NOTIFY_PREVIEW_LABELS[actionName] || 'Thông báo hệ thống';
+};
+
+/**
+ * Resolve the final display of an INVITE/CONFIRM_WORK history card from later
+ * ACTION messages in the same conversation. The successful outcome wins over
+ * a Job-closed message because confirming the final vacancy also closes a Job.
+ */
+export const getHistoricalActionDisplay = (message, messages = []) => {
+    const actionName = normalizeChatAction(message?.actionName);
+    if (actionName !== 'INVITE' && actionName !== 'CONFIRM_WORK') return null;
+
+    const currentIndex = (Array.isArray(messages) ? messages : []).findIndex(
+        (item) => String(item?.id) === String(message?.id)
+    );
+    const laterMessages = currentIndex >= 0 ? messages.slice(currentIndex + 1) : [];
+    const laterActions = new Set(
+        laterMessages
+            .filter((item) => item?.messageType === 'ACTION' && item?.actionName)
+            .map((item) => normalizeChatAction(item.actionName))
+    );
+
+    if (actionName === 'CONFIRM_WORK') {
+        if (laterActions.has('NOTIFY_ACCEPTED_WORK')) {
+            return {
+                title: 'Xác nhận nhận việc',
+                body: 'Bạn đã xác nhận nhận việc.',
+                disabled: true,
+            };
+        }
+        if (laterActions.has('REJECT_WORK')) {
+            return {
+                title: 'Xác nhận nhận việc',
+                body: 'Bạn đã từ chối nhận việc.',
+                disabled: true,
+            };
+        }
+        if (laterActions.has('REJECT_APPLICATION')) {
+            return {
+                title: 'Lời mời nhận việc',
+                body: 'Lời mời nhận việc không còn khả dụng.',
+                disabled: true,
+            };
+        }
+        if (laterActions.has('NOTIFY_JOB_CLOSED')) {
+            return {
+                title: 'Lời mời nhận việc',
+                body: 'Không thể phản hồi vì tin tuyển dụng đã đóng hoặc đã tuyển đủ người.',
+                disabled: true,
+            };
+        }
+        if (message?.actionDisabled) {
+            return {
+                title: 'Lời mời nhận việc',
+                body: 'Lời mời nhận việc đã được xử lý hoặc không còn khả dụng.',
+                disabled: true,
+            };
+        }
+        return null;
+    }
+
+    if (laterActions.has('NOTIFY_ACCEPTED_INVITE')) {
+        return {
+            title: 'Lời mời ứng tuyển',
+            body: 'Bạn đã chấp nhận lời mời ứng tuyển.',
+            disabled: true,
+        };
+    }
+    if (laterActions.has('NOTIFY_REJECTED_INVITE')) {
+        return {
+            title: 'Lời mời ứng tuyển',
+            body: 'Bạn đã từ chối lời mời ứng tuyển.',
+            disabled: true,
+        };
+    }
+    if (message?.actionDisabled) {
+        return {
+            title: 'Lời mời ứng tuyển',
+            body: 'Lời mời ứng tuyển không còn hiệu lực.',
+            disabled: true,
+        };
+    }
+    return null;
 };
 
 export const normalizeChatAction = (actionName) => {
@@ -331,6 +421,8 @@ export const conversationHasMessages = (conv) => {
 export const previewLastMessage = (conv) => {
     if (!conv) return 'Chưa có tin nhắn';
     if (conv.lastMessageType === 'ACTION' && conv.lastMessageActionName) {
+        const decisionLabel = DECISION_PREVIEW_LABELS[conv.lastMessageActionName];
+        if (decisionLabel) return decisionLabel;
         const notifyLabel = getNotifyPreviewLabel(conv.lastMessageActionName);
         if (notifyLabel) return notifyLabel;
         const copy = getActionCardCopy(conv.lastMessageActionName);

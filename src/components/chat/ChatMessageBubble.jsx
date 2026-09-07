@@ -159,6 +159,7 @@ const MessageMoreMenu = ({
 
 const ChatMessageBubble = ({
     message,
+    actionDisplay = null,
     onEdit,
     onRecall,
     mutating = false,
@@ -255,9 +256,10 @@ const ChatMessageBubble = ({
                     {menu}
                     <ChatActionCard
                         actionName={actionName}
-                        body={message.content || ''}
+                        title={actionDisplay?.title}
+                        body={actionDisplay?.body ?? message.content ?? ''}
                         hideActions
-                        disabled={Boolean(message.actionDisabled)}
+                        disabled={Boolean(actionDisplay?.disabled || message.actionDisabled)}
                     />
                 </div>
                 <span className="chat-msg__meta">{formatMessageTime(message.createdAt)}</span>
