@@ -4,7 +4,6 @@ import NotificationItem from '../../components/notifications/NotificationItem.js
 import { useAuth } from '../../contexts/authContext.js';
 import { useNotifications } from '../../hooks/useNotifications.js';
 import { getNotificationTargetPath } from '../../utils/notificationNavigation.js';
-import { tryOpenChatFromNotification } from '../../utils/notificationChat.js';
 import { invitationsNavigateOptions } from '../../utils/invitationNavReturn.js';
 import '../../assets/styles/NotificationDropdownStyle.css';
 import '../../assets/styles/CandidateNotificationsPageStyle.css';
@@ -45,7 +44,6 @@ const CandidateNotificationsPage = () => {
 
     const handleSelect = async (notification) => {
         await markOneRead(notification.id);
-        await tryOpenChatFromNotification(notification, auth?.role);
         const path = getNotificationTargetPath(notification, auth?.role);
         if (path) {
             navigate(path, invitationsNavigateOptions(path, location));

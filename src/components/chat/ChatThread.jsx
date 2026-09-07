@@ -38,6 +38,7 @@ import {
     getActionApplicationId,
     getActionCandidateProfileId,
     getActionInvitationId,
+    getHistoricalActionDisplay,
     getInitials,
     isValidAvatarUrl,
     groupStickyActions,
@@ -854,6 +855,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                     <ChatMessageBubble
                         key={msg.id}
                         message={msg}
+                        actionDisplay={getHistoricalActionDisplay(msg, messages)}
                         mutating={mutatingMessageId === msg.id}
                         onEdit={handleEditMessage}
                         onRecall={requestRecallMessage}
