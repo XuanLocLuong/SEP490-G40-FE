@@ -111,35 +111,49 @@ const CandidateInvitationsPage = () => {
     }, [searchParams]);
 
     const loadCounts = useCallback(async () => {
-        const [sent, accepted, rejected, ...inactivePages] = await Promise.all([
-            getMyInvitations({ page: 0, size: 1, status: 'SENT' }),
-            getMyInvitations({ page: 0, size: 1, status: 'ACCEPTED' }),
-            getMyInvitations({ page: 0, size: 1, status: 'REJECTED' }),
-            ...INACTIVE_STATUSES.map((status) =>
-                getMyInvitations({ page: 0, size: 1, status })
-            ),
-        ]);
+        const [sentRes, acceptedRes, rejectedRes, ...inactiveResults] =
+            await Promise.allSettled([
+                getMyInvitations({ page: 0, size: 1, status: 'SENT' }),
+                getMyInvitations({ page: 0, size: 1, status: 'ACCEPTED' }),
+                getMyInvitations({ page: 0, size: 1, status: 'REJECTED' }),
+                ...INACTIVE_STATUSES.map((status) =>
+                    getMyInvitations({ page: 0, size: 1, status })
+                ),
+            ]);
 
-        const inactiveTotal = inactivePages.reduce(
-            (sum, res) => sum + (unwrapPage(res).totalElements || 0),
-            0
-        );
+        const inactiveTotal = inactiveResults.reduce((sum, result) => {
+            if (result.status === 'fulfilled') {
+                return sum + (unwrapPage(result.value).totalElements || 0);
+            }
+            return sum;
+        }, 0);
 
-        setCounts({
-            SENT: unwrapPage(sent).totalElements,
-            ACCEPTED: unwrapPage(accepted).totalElements,
-            REJECTED: unwrapPage(rejected).totalElements,
+        setCounts((prev) => ({
+            SENT:
+                sentRes.status === 'fulfilled'
+                    ? unwrapPage(sentRes.value).totalElements
+                    : prev.SENT,
+            ACCEPTED:
+                acceptedRes.status === 'fulfilled'
+                    ? unwrapPage(acceptedRes.value).totalElements
+                    : prev.ACCEPTED,
+            REJECTED:
+                rejectedRes.status === 'fulfilled'
+                    ? unwrapPage(rejectedRes.value).totalElements
+                    : prev.REJECTED,
             INACTIVE: inactiveTotal,
-        });
+        }));
     }, []);
 
     const loadInactiveMerged = useCallback(async () => {
-        const pages = await Promise.all(
+        const results = await Promise.allSettled(
             INACTIVE_STATUSES.map((status) =>
                 getMyInvitations({ page: 0, size: 50, status })
             )
         );
-        const merged = pages.flatMap((res) => unwrapPage(res).content);
+        const merged = results
+            .filter((r) => r.status === 'fulfilled')
+            .flatMap((r) => unwrapPage(r.value).content);
         merged.sort((a, b) => new Date(b.sentAt || 0) - new Date(a.sentAt || 0));
         return merged;
     }, []);
@@ -154,6 +168,7 @@ const CandidateInvitationsPage = () => {
                     setItems(merged);
                     setTotalPages(1);
                     setPage(0);
+                    setCounts((prev) => ({ ...prev, INACTIVE: merged.length }));
                     return;
                 }
 
@@ -166,6 +181,7 @@ const CandidateInvitationsPage = () => {
                 setItems(pageData.content);
                 setTotalPages(pageData.totalPages);
                 setPage(pageData.currentPage ?? pageNum);
+                setCounts((prev) => ({ ...prev, [tabId]: pageData.totalElements }));
             } catch (err) {
                 setListError(
                     getInvitationApiErrorMessage(err, 'Không thể tải danh sách lời mời.')
