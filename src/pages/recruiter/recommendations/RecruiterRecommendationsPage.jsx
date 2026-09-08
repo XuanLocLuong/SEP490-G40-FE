@@ -95,6 +95,7 @@ const RecruiterRecommendationsPage = () => {
             setTotalPages(pageData?.totalPages ?? 0);
             setTotalElements(pageData?.totalElements ?? content.length);
             setSelectedCandidateIds(new Set());
+            setSentCandidateIds(new Set());
         } catch (error) {
             setCandidates([]);
             setCurrentPage(0);
