@@ -650,6 +650,39 @@
     text-decoration: underline;
 }
 
+/* ---- Apply tip banner ---- */
+.cp-apply-tip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 13px 18px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    color: var(--color-text, #0f172a);
+}
+
+.cp-apply-tip__content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.cp-apply-tip__content strong {
+    font-size: 0.95rem;
+    color: #1d4ed8;
+}
+
+.cp-apply-tip__content span {
+    color: #334155;
+}
+
 /* ---- Section title (Hồ sơ công việc) ---- */
 .cp-section-title {
     margin-top: 0;
@@ -666,6 +699,14 @@
     margin: 4px 0 0;
     font-size: 14px;
     color: var(--color-text-muted);
+}
+
+.cp-section-title__note {
+    margin-top: 5px !important;
+    font-size: 13px !important;
+    color: #dc2626 !important;
+    font-weight: 500;
+    font-style: italic;
 }
 
 /* ---- Skill picker (button + modal chips) ---- */
@@ -698,6 +739,65 @@
     font-size: 13px;
     line-height: 1.45;
     color: var(--color-text-muted);
+}
+
+.cp-skill-picker__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.cp-skill-picker__search-icon {
+    position: absolute;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted, #94a3b8);
+    pointer-events: none;
+}
+
+.cp-skill-picker__search-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 36px 0 36px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border, #e2e8f0);
+    background: var(--color-surface, #ffffff);
+    color: var(--color-text, #1e293b);
+    font-size: 13.5px;
+    font-family: var(--font-sans);
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cp-skill-picker__search-input:focus {
+    border-color: var(--color-primary, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.cp-skill-picker__search-clear {
+    position: absolute;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted, #94a3b8);
+    cursor: pointer;
+    border-radius: 50%;
+    padding: 0;
+    transition: color 0.12s ease, background-color 0.12s ease;
+}
+
+.cp-skill-picker__search-clear:hover {
+    color: var(--color-text, #1e293b);
+    background-color: var(--color-bg-subtle, #f1f5f9);
 }
 
 .cp-skill-picker {

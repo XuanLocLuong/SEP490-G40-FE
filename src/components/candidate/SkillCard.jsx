@@ -9,11 +9,19 @@ import {
 
 const skillKey = (skill) => String(skill?.id ?? skill?.name ?? '');
 
+const normalizeSearchText = (text) =>
+    String(text || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
 // SECTION 6 — Skill: tag đã chọn + nút mở popup chọn từ catalog GET /skills.
 // Chỉ cập nhật draft; lưu thật ở FooterAction "Lưu hồ sơ".
 const SkillCard = ({ skills, catalog, catalogReady = true, onChange }) => {
     const [open, setOpen] = useState(false);
     const [draftSkills, setDraftSkills] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const draftIds = useMemo(() => new Set(draftSkills.map(skillKey)), [draftSkills]);
     const inactiveIds = useMemo(() => {
@@ -34,14 +42,24 @@ const SkillCard = ({ skills, catalog, catalogReady = true, onChange }) => {
 
     const skillsMissing = skills.length === 0;
 
+    const filteredCatalog = useMemo(() => {
+        const query = normalizeSearchText(searchQuery);
+        if (!query) return catalog;
+        return catalog.filter((skill) =>
+            normalizeSearchText(skill.name).includes(query)
+        );
+    }, [catalog, searchQuery]);
+
     const handleOpen = () => {
         setDraftSkills(skills.filter((s) => !inactiveIdSet.has(String(s.id))));
+        setSearchQuery('');
         setOpen(true);
     };
 
     const handleClose = () => {
         setOpen(false);
         setDraftSkills([]);
+        setSearchQuery('');
     };
 
     const toggleDraftSkill = (skill) => {
@@ -143,11 +161,48 @@ const SkillCard = ({ skills, catalog, catalogReady = true, onChange }) => {
                     bằng Lưu hồ sơ.
                 </p>
 
+                <div className="cp-skill-picker__search">
+                    <span className="cp-skill-picker__search-icon" aria-hidden="true">
+                        <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </span>
+                    <input
+                        type="text"
+                        className="cp-skill-picker__search-input"
+                        placeholder="Tìm kiếm kỹ năng..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            className="cp-skill-picker__search-clear"
+                            onClick={() => setSearchQuery('')}
+                            aria-label="Xóa tìm kiếm"
+                        >
+                            <CloseIcon width={12} height={12} />
+                        </button>
+                    )}
+                </div>
+
                 {catalog.length === 0 ? (
                     <p className="cp-empty-text">Không tải được danh mục kỹ năng.</p>
+                ) : filteredCatalog.length === 0 ? (
+                    <p className="cp-empty-text">Không tìm thấy kỹ năng phù hợp với "{searchQuery}".</p>
                 ) : (
                     <div className="cp-skill-picker" role="listbox" aria-multiselectable="true">
-                        {catalog.map((skill) => {
+                        {filteredCatalog.map((skill) => {
                             const key = skillKey(skill);
                             const selected = draftIds.has(key);
                             return (

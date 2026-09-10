@@ -32,6 +32,7 @@ const EducationCard = ({ education, onSave, saving }) => {
                 <h2 className="cp-card__title">
                     <FallbackCap className="cp-card__title-icon" width={18} height={18} />
                     Học vấn
+                    <RequiredMark />
                 </h2>
                 <button type="button" className="cp-icon-btn" onClick={handleOpen} aria-label="Sửa học vấn">
                     <PencilIcon />

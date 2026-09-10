@@ -379,7 +379,7 @@ const ManualVerificationQueuePage = () => {
                                                 rows={3}
                                                 value={customReason}
                                                 onChange={(e) => setCustomReason(e.target.value)}
-                                                placeholder="Bắt buộc khi từ chối…"
+                                                placeholder="Nhập thêm lí do từ chối (nếu có)…"
                                                 disabled={submitting}
                                             />
                                         </label>

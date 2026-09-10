@@ -28,7 +28,10 @@ import {
     peekUnsavedCandidateProfileDraft,
     setUnsavedCandidateProfileDraft,
 } from '../../../utils/candidateProfileDraftStorage.js';
-import { isCandidateDraftReadyToApply } from '../../../utils/applyProfileFields.js';
+import {
+    getCandidateMissingApplyFields,
+    isCandidateDraftReadyToApply,
+} from '../../../utils/applyProfileFields.js';
 import {
     buildInactiveJobTypesRemovedMessage,
     fetchJobTypeOptions,
@@ -285,6 +288,11 @@ const CandidateProfilePage = () => {
         [draft?.skills, baseline?.skills],
     );
 
+    const missingApplyFields = useMemo(
+        () => getCandidateMissingApplyFields(draft),
+        [draft]
+    );
+
     useEffect(() => {
         if (!draft || !baseline) return;
         if (skillsDirty) {
@@ -450,6 +458,18 @@ const CandidateProfilePage = () => {
 
     return (
         <div className="cp-page">
+            {!loading && missingApplyFields.length > 0 && (
+                <div className="cp-apply-tip" role="status">
+                    <div className="cp-apply-tip__content">
+                        <strong>Gợi ý ứng tuyển</strong>
+                        <span>
+                            Để ứng tuyển việc làm, còn thiếu:{' '}
+                            {missingApplyFields.join(', ')}.
+                        </span>
+                    </div>
+                </div>
+            )}
+
             <ProfileHeader
                 profile={draft}
                 onUploadAvatar={handleAvatar}
@@ -460,6 +480,9 @@ const CandidateProfilePage = () => {
             <div className="cp-section-title">
                 <h2>Hồ sơ cá nhân</h2>
                 <p>Thông tin cơ bản để nhà tuyển dụng liên hệ với bạn</p>
+                <p className="cp-section-title__note">
+                    * Các mục đánh dấu hoa thị đỏ là thông tin bắt buộc để có thể ứng tuyển việc làm.
+                </p>
             </div>
 
             <div className="cp-grid">

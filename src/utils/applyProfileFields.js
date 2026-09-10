@@ -38,26 +38,28 @@ export const getProfileIncompleteMessage = (missingFields) => {
 const hasText = (value) => Boolean(String(value ?? '').trim());
 
 /**
- * Draft hồ sơ (shape FE nested) đã đủ field bắt buộc để apply.
- * Dùng để chỉ hiện popup "Quay lại tin tuyển dụng" khi đủ điều kiện.
+ * Trả về danh sách các trường tiếng Việt còn thiếu để Candidate đủ điều kiện apply.
  */
-export const isCandidateDraftReadyToApply = (draft) => {
-    if (!draft) return false;
-
+export const getCandidateMissingApplyFields = (draft) => {
+    if (!draft) return [];
+    const missing = [];
     const personal = draft.personalInfo || {};
     const pref = draft.jobPreference || {};
     const edu = draft.education || {};
 
-    if (!hasText(draft.fullName)) return false;
-    if (!hasText(draft.email)) return false;
-    if (!hasText(personal.phone)) return false;
-    if (!personal.birthday) return false;
-    if (!hasText(personal.gender)) return false;
-    if (!hasText(personal.address)) return false;
-    if (!hasText(edu.educationLevel)) return false;
-    if (!Array.isArray(draft.skills) || draft.skills.length === 0) return false;
-    if (!Array.isArray(pref.jobTypes) || pref.jobTypes.length === 0) return false;
-    if (pref.latitude == null || pref.longitude == null) return false;
+    if (!hasText(draft.fullName)) missing.push('họ tên');
+    if (!hasText(personal.phone)) missing.push('số điện thoại');
+    if (!personal.birthday) missing.push('ngày sinh');
+    if (!hasText(personal.gender)) missing.push('giới tính');
+    if (!hasText(personal.address)) missing.push('địa chỉ');
+    if (!hasText(edu.educationLevel)) missing.push('trình độ học vấn');
+    if (!Array.isArray(pref.jobTypes) || pref.jobTypes.length === 0) missing.push('lĩnh vực mong muốn');
+    if (pref.latitude == null || pref.longitude == null) missing.push('địa điểm tìm việc');
+    if (!Array.isArray(draft.skills) || draft.skills.length === 0) missing.push('kỹ năng');
 
-    return true;
+    return missing;
 };
+
+export const isCandidateDraftReadyToApply = (draft) =>
+    getCandidateMissingApplyFields(draft).length === 0;
+
