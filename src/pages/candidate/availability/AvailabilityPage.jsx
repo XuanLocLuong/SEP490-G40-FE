@@ -388,18 +388,17 @@ const AvailabilityPage = () => {
             }
 
             if (parsed.slots.length === 0) {
-                toast.info('Không trích xuất được khung giờ rảnh từ ảnh.');
+                toast.info('Không trích xuất được khung giờ từ ảnh.');
                 return;
             }
 
-            setOcrSlots(parsed.slots.map(normalizeSlot));
-            setOcrStartDate(
-                parsed.startDate || availabilityStartDate || timetableStartDate || '',
-            );
-            setOcrEndDate(parsed.endDate || availabilityEndDate || timetableEndDate || '');
-            switchTab(TABS.AVAILABILITY);
+            setTimetableSlots(parsed.slots.map(normalizeSlot));
+            setTimetableStartDate(parsed.startDate || '');
+            setTimetableEndDate(parsed.endDate || '');
+            clearOcrPreview();
+            switchTab(TABS.TIMETABLE);
             toast.info(
-                'AI gợi ý khung giờ đi làm từ lịch bận. Bạn có thể kiểm tra và lưu lại.',
+                'AI đã đọc được các khung giờ từ ảnh. Vui lòng chọn ngày bắt đầu - kết thúc và bấm "Lưu lịch bận".',
             );
         } catch (error) {
             toast.error(getScheduleApiErrorMessage(error, 'Quét lịch bận thất bại.'));
