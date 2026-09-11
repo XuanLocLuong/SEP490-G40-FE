@@ -255,6 +255,8 @@ const AvailabilityPage = () => {
         setOcrRangeError('');
         setOcrStartDate('');
         setOcrEndDate('');
+        setTimetableRangeError('');
+        setTimetableSlotErrors({});
     };
 
     const handleFileChange = (nextFile) => {
@@ -358,6 +360,10 @@ const AvailabilityPage = () => {
         setOcrRangeError('');
         setOcrStartDate('');
         setOcrEndDate('');
+        setTimetableRangeError('');
+        setTimetableSlotErrors({});
+        setRangeError('');
+        setSlotErrors({});
 
         try {
             const res = await uploadTimetable(file);
@@ -395,6 +401,8 @@ const AvailabilityPage = () => {
             setTimetableSlots(parsed.slots.map(normalizeSlot));
             setTimetableStartDate(parsed.startDate || '');
             setTimetableEndDate(parsed.endDate || '');
+            setTimetableRangeError('');
+            setTimetableSlotErrors({});
             clearOcrPreview();
             switchTab(TABS.TIMETABLE);
             toast.info(

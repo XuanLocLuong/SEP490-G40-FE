@@ -468,6 +468,16 @@
     border: 1px solid rgba(185, 28, 28, 0.28);
 }
 
+.pm-review-detail__badge--urgent {
+    background: rgba(239, 68, 68, 0.14);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
 .pm-review-detail__hard-fail {
     margin: 16px 20px 0;
     padding: 12px 14px;
@@ -588,8 +598,58 @@
     grid-column: 1 / -1;
 }
 
+.pm-review-detail__deadline {
+    margin: 0 0 14px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+.pm-review-detail__deadline b {
+    color: var(--color-text);
+}
+
+.pm-review-detail__skills-section,
+.pm-review-detail__description-section {
+    margin-top: 16px;
+}
+
+.pm-review-detail__skills-section h4,
+.pm-review-detail__description-section h4 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 750;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.pm-review-detail__skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pm-review-detail__skill-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--color-border) 35%, transparent);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.pm-review-detail__skill-tag--primary {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    border-color: rgba(37, 99, 235, 0.3);
+    font-weight: 700;
+}
+
 .pm-review-detail__description {
-    margin: 12px 0 0;
+    margin: 0;
     padding: 12px 14px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);

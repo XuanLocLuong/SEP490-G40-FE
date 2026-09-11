@@ -1,7 +1,15 @@
 import RichTextContent from '../common/RichTextContent.jsx';
 import BusinessProfileLink from '../common/BusinessProfileLink.jsx';
-import { formatSalary } from '../../utils/formatters.js';
+import {
+    formatSalary,
+    formatApplicationDeadline,
+    groupShiftsForDisplay,
+    formatScheduleSummary,
+    isPrimarySkill,
+} from '../../utils/formatters.js';
 import { formatJobTypeLabels } from '../../utils/jobTypeDisplay.js';
+import { getEducationLevelLabel, getGenderLabel } from '../../utils/profileFormat.js';
+import { JOB_POST_MIN_AGE } from '../../constants/jobPost.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import {
     getAutoScoreTone,
@@ -13,6 +21,24 @@ import {
     getRuleScoreTone,
     parseRuleEngineResult,
 } from '../../utils/jobReviewDisplay.js';
+
+const formatAgeRequirement = (detail) => {
+    const hasMinAge = detail.minAge != null && detail.minAge !== '';
+    const hasMaxAge = detail.maxAge != null && detail.maxAge !== '';
+    const minAge = Number(detail.minAge);
+    const maxAge = Number(detail.maxAge);
+
+    if (hasMinAge && hasMaxAge && Number.isFinite(minAge) && Number.isFinite(maxAge)) {
+        return `${minAge}–${maxAge} tuổi`;
+    }
+    if (hasMinAge && Number.isFinite(minAge)) {
+        return `Từ ${minAge} tuổi`;
+    }
+    if (hasMaxAge && Number.isFinite(maxAge)) {
+        return `Đến ${maxAge} tuổi`;
+    }
+    return `Từ ${JOB_POST_MIN_AGE || 18} tuổi`;
+};
 
 const JobReviewDetailPanel = ({
     detail,
@@ -69,6 +95,18 @@ const JobReviewDetailPanel = ({
               : null;
     const autoScoreTone = getAutoScoreTone(autoScore);
 
+    const educationRequirement = detail.minEducationLevel
+        ? getEducationLevelLabel(detail.minEducationLevel)
+        : 'Không yêu cầu';
+    const genderRequirement =
+        detail.genderRequirement && !['ANY', 'ALL'].includes(detail.genderRequirement)
+            ? getGenderLabel(detail.genderRequirement)
+            : 'Không yêu cầu';
+    const ageRequirement = formatAgeRequirement(detail);
+    const shiftGroups = groupShiftsForDisplay(detail.shifts);
+    const scheduleSummary = formatScheduleSummary(shiftGroups);
+    const deadlineLabel = formatApplicationDeadline(detail.applicationDeadline);
+
     return (
         <section className="pm-review-detail">
             <header className="pm-review-detail__header">
@@ -99,6 +137,9 @@ const JobReviewDetailPanel = ({
                 </div>
                 <div className="pm-review-detail__badges">
                     <span className="pm-review-detail__status">Đang chờ duyệt</span>
+                    {detail.urgent && (
+                        <span className="pm-review-detail__badge--urgent">Tuyển gấp</span>
+                    )}
                     <span className={`pm-review-detail__risk pm-review-detail__risk--${risk.tone}`}>
                         {risk.label}
                     </span>
@@ -157,10 +198,17 @@ const JobReviewDetailPanel = ({
 
             <div className="pm-review-detail__preview">
                 <h3>Nội dung tin đăng (xem trước)</h3>
+
+                {deadlineLabel && (
+                    <p className="pm-review-detail__deadline">
+                        <b>Hạn nộp hồ sơ:</b> {deadlineLabel}
+                    </p>
+                )}
+
                 <dl className="pm-review-detail__meta-grid">
                     <div>
                         <dt>Loại việc</dt>
-                        <dd>{formatJobTypeLabels(detail.jobType, jobTypeOptions) || '—'}</dd>
+                        <dd>{detail.jobTypeLabels || formatJobTypeLabels(detail.jobType, jobTypeOptions) || '—'}</dd>
                     </div>
                     <div>
                         <dt>Mức lương</dt>
@@ -178,6 +226,22 @@ const JobReviewDetailPanel = ({
                             {autoScore != null ? `${autoScore}/100` : '—'}
                         </dd>
                     </div>
+                    <div>
+                        <dt>Học vấn tối thiểu</dt>
+                        <dd>{educationRequirement}</dd>
+                    </div>
+                    <div>
+                        <dt>Giới tính</dt>
+                        <dd>{genderRequirement}</dd>
+                    </div>
+                    <div>
+                        <dt>Độ tuổi</dt>
+                        <dd>{ageRequirement}</dd>
+                    </div>
+                    <div>
+                        <dt>Thời gian làm việc</dt>
+                        <dd>{scheduleSummary || 'Chưa thiết lập ca'}</dd>
+                    </div>
                     {locationParts.length > 0 && (
                         <div className="pm-review-detail__meta-wide">
                             <dt>Địa điểm</dt>
@@ -185,11 +249,36 @@ const JobReviewDetailPanel = ({
                         </div>
                     )}
                 </dl>
+
+                {detail.requiredSkills?.length > 0 && (
+                    <div className="pm-review-detail__skills-section">
+                        <h4>Yêu cầu kỹ năng</h4>
+                        <div className="pm-review-detail__skill-tags">
+                            {detail.requiredSkills.map((skill) => (
+                                <span
+                                    key={skill.id || skill.name}
+                                    className={`pm-review-detail__skill-tag${
+                                        isPrimarySkill(skill.weight)
+                                            ? ' pm-review-detail__skill-tag--primary'
+                                            : ''
+                                    }`}
+                                >
+                                    {skill.name}
+                                    {isPrimarySkill(skill.weight) ? ' (Chính)' : ''}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {detail.jobDescription && (
-                    <RichTextContent
-                        content={detail.jobDescription}
-                        className="pm-review-detail__description"
-                    />
+                    <div className="pm-review-detail__description-section">
+                        <h4>Mô tả công việc</h4>
+                        <RichTextContent
+                            content={detail.jobDescription}
+                            className="pm-review-detail__description"
+                        />
+                    </div>
                 )}
             </div>
 
