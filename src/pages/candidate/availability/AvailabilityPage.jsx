@@ -108,6 +108,7 @@ const AvailabilityPage = () => {
     const [timetableSlots, setTimetableSlots] = useState([]);
     const [timetableStartDate, setTimetableStartDate] = useState('');
     const [timetableEndDate, setTimetableEndDate] = useState('');
+    const [hasUnsavedScan, setHasUnsavedScan] = useState(false);
 
     const [hiredJobs, setHiredJobs] = useState([]);
 
@@ -224,6 +225,7 @@ const AvailabilityPage = () => {
             setTimetableSlots(timetableData.slots);
             setTimetableStartDate(timetableData.startDate || '');
             setTimetableEndDate(timetableData.endDate || '');
+            setHasUnsavedScan(false);
             setIsTimetableExpired(
                 Boolean(summaryData?.isTimetableExpired) ||
                     isTimetableEndDateExpired(timetableData.endDate),
@@ -298,6 +300,12 @@ const AvailabilityPage = () => {
                 }
             }
             toast.success('Đã lưu lịch bận.');
+            setHasUnsavedScan(false);
+            setFile(null);
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+                setPreviewUrl('');
+            }
             await loadAll();
             if (fromOcr) {
                 setOcrSlots(null);
@@ -376,6 +384,7 @@ const AvailabilityPage = () => {
             }
 
             if (parsed.isAutoSaved) {
+                setHasUnsavedScan(false);
                 const stillManual = resolveScheduleMode(scheduleMode) === SCHEDULE_MODES.MANUAL;
                 clearOcrPreview();
                 await loadAll();
@@ -398,6 +407,7 @@ const AvailabilityPage = () => {
                 return;
             }
 
+            setHasUnsavedScan(true);
             setTimetableSlots(parsed.slots.map(normalizeSlot));
             setTimetableStartDate(parsed.startDate || '');
             setTimetableEndDate(parsed.endDate || '');
@@ -406,13 +416,28 @@ const AvailabilityPage = () => {
             clearOcrPreview();
             switchTab(TABS.TIMETABLE);
             toast.info(
-                'AI đã đọc được các khung giờ từ ảnh. Vui lòng chọn ngày bắt đầu - kết thúc và bấm "Lưu lịch bận".',
+                'AI đã đọc được các khung giờ từ ảnh. Vui lòng chọn ngày bắt đầu - kết thúc và bấm "Lưu & áp dụng lịch bận mới".',
             );
         } catch (error) {
             toast.error(getScheduleApiErrorMessage(error, 'Quét lịch bận thất bại.'));
         } finally {
             setUploading(false);
         }
+    };
+
+    const handleDiscardScanDraft = () => {
+        setHasUnsavedScan(false);
+        setTimetableSlots(timetable.slots || []);
+        setTimetableStartDate(timetable.startDate || '');
+        setTimetableEndDate(timetable.endDate || '');
+        setTimetableRangeError('');
+        setTimetableSlotErrors({});
+        setFile(null);
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl('');
+        }
+        toast.info('Đã hủy bản nháp vừa quét và khôi phục lịch bận hiện tại.');
     };
 
     const handleApplyOcr = async () => {
@@ -758,6 +783,8 @@ const AvailabilityPage = () => {
                     onSave={handleSaveTimetable}
                     onApply={handleApplyTimetable}
                     onUnapply={handleUnapplyTimetable}
+                    hasUnsavedScan={hasUnsavedScan}
+                    onDiscardScan={handleDiscardScanDraft}
                     file={file}
                     previewUrl={previewUrl}
                     uploading={uploading}

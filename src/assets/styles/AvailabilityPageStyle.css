@@ -867,10 +867,59 @@
     color: #15803d;
 }
 
+.timetable-section__badge--draft {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.timetable-section__draft-alert {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    border-radius: var(--radius-md);
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.timetable-section__draft-alert-content strong {
+    display: block;
+    color: #78350f;
+    font-weight: 750;
+    margin-bottom: 2px;
+}
+
+.timetable-section__draft-alert-content p {
+    margin: 0;
+    color: #92400e;
+    font-size: 13.5px;
+}
+
+.timetable-section__draft-discard-btn {
+    flex-shrink: 0;
+    border-color: #d97706;
+    color: #92400e;
+    background: #fff;
+    min-height: 36px;
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+.timetable-section__draft-discard-btn:hover {
+    background: #fef3c7;
+}
+
 .timetable-section__footer {
     margin-top: 18px;
     display: flex;
     justify-content: flex-end;
+    gap: 12px;
 }
 
 .hired-jobs-schedule__empty {
