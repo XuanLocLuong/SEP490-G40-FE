@@ -264,7 +264,6 @@ const JobReviewDetailPanel = ({
                                     }`}
                                 >
                                     {skill.name}
-                                    {isPrimarySkill(skill.weight) ? ' (Chính)' : ''}
                                 </span>
                             ))}
                         </div>
