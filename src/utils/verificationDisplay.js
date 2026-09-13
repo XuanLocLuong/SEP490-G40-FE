@@ -366,8 +366,16 @@ export const toLabelValueEntries = (data) => {
                     return { label: `Mục ${index + 1}`, value: item };
                 }
                 if (item && typeof item === 'object') {
-                    const label = item.label ?? item.key ?? item.name ?? `Mục ${index + 1}`;
-                    const value = unwrapOcrField(item.value ?? item.text ?? item);
+                    const rawKey = item.key ?? item.name ?? '';
+                    const label =
+                        item.label ??
+                        (rawKey
+                            ? OCR_FIELD_LABELS_VN[rawKey] ||
+                              OCR_FIELD_LABELS_VN[rawKey.toLowerCase()]
+                            : null) ??
+                        `Mục ${index + 1}`;
+                    const rawValue = unwrapOcrField(item.value ?? item.text ?? item);
+                    const value = formatOcrFieldValue(rawKey || label, rawValue);
                     return value ? { label: String(label), value } : null;
                 }
                 return null;
@@ -376,8 +384,13 @@ export const toLabelValueEntries = (data) => {
     }
     if (typeof data === 'object') {
         return Object.entries(data)
-            .map(([label, raw]) => {
-                const value = unwrapOcrField(raw);
+            .map(([rawKey, raw]) => {
+                const label =
+                    OCR_FIELD_LABELS_VN[rawKey] ||
+                    OCR_FIELD_LABELS_VN[rawKey.toLowerCase()] ||
+                    rawKey;
+                const rawValue = unwrapOcrField(raw);
+                const value = formatOcrFieldValue(rawKey, rawValue);
                 return value ? { label: String(label), value } : null;
             })
             .filter(Boolean);
@@ -386,7 +399,7 @@ export const toLabelValueEntries = (data) => {
 };
 
 /** Label field OCR trong code kiểu MISSING_IMPORTANT_FIELDS:idNumber,fullName */
-const OCR_FIELD_LABELS_VN = {
+export const OCR_FIELD_LABELS_VN = {
     idNumber: 'Số CCCD',
     cccd: 'Số CCCD',
     citizenId: 'Số CCCD',
@@ -405,27 +418,126 @@ const OCR_FIELD_LABELS_VN = {
     ngayHetHan: 'Ngày hết hạn',
     issueDate: 'Ngày cấp',
     ngayCap: 'Ngày cấp',
+    issuingAuthority: 'Nơi cấp',
+    noiCap: 'Nơi cấp',
+    personalId: 'Đặc điểm nhận dạng',
+    dacDiemNhanDang: 'Đặc điểm nhận dạng',
     nationality: 'Quốc tịch',
+    quocTich: 'Quốc tịch',
     sex: 'Giới tính',
     gender: 'Giới tính',
+    gioiTinh: 'Giới tính',
     placeOfOrigin: 'Quê quán',
+    queQuan: 'Quê quán',
     placeOfResidence: 'Nơi thường trú',
+    noiThuongTru: 'Nơi thường trú',
     taxCode: 'Mã số thuế',
+    registrationNumberOrTaxCode: 'Mã số thuế / Số ĐKKD',
     businessName: 'Tên doanh nghiệp',
     companyName: 'Tên doanh nghiệp',
+    representativeName: 'Người đại diện pháp luật',
+    businessAddress: 'Địa chỉ trụ sở',
+    businessField: 'Ngành nghề kinh doanh',
 };
 
-/** Code DecisionEngine → tiếng Việt (Manual + fallback recruiter). */
-const FAILED_CRITERIA_LABELS_VN = {
-    MISSING_FRONT_OR_BACK: 'Thiếu ảnh mặt trước hoặc mặt sau CCCD',
-    NOT_VIETNAM_CITIZEN_ID: 'Không phải CCCD/CMND Việt Nam',
-    AGE_UNDER_MINIMUM: 'Tuổi dưới mức tối thiểu cho phép',
-    CCCD_EXPIRED: 'CCCD đã hết hạn',
-    EXPIRY_DATE_UNREADABLE: 'Không đọc được ngày hết hạn CCCD',
-    HIGH_TAMPERING_RISK: 'Nguy cơ chỉnh sửa / giả mạo ảnh cao',
-    LOW_IMAGE_QUALITY: 'Chất lượng ảnh thấp (mờ, tối, chói…)',
-    LOW_OVERALL_SCORE: 'Điểm kiểm tra tổng thể thấp',
-    DOCUMENT_NOT_DETECTED: 'Không nhận diện được giấy phép / giấy tờ DN',
+/** Chuẩn hoá giá trị trường OCR (Giới tính, Ngày hết hạn...) */
+export const formatOcrFieldValue = (key, rawValue) => {
+    if (rawValue == null || rawValue === '') return '';
+    const val = String(rawValue).trim();
+    if (!val) return '';
+    const keyLower = String(key || '').trim().toLowerCase();
+
+    // Giới tính
+    if (
+        keyLower === 'sex' ||
+        keyLower === 'gender' ||
+        keyLower === 'giới tính' ||
+        keyLower === 'gioitinh'
+    ) {
+        const valUpper = val.toUpperCase();
+        if (valUpper === 'MALE' || valUpper === 'NAM') return 'Nam';
+        if (valUpper === 'FEMALE' || valUpper === 'NU' || valUpper === 'NỮ') return 'Nữ';
+        if (
+            valUpper === 'UNKNOWN' ||
+            valUpper === 'KHONG_XAC_DINH' ||
+            valUpper === 'KHONG_RO'
+        ) {
+            return 'Không rõ';
+        }
+    }
+
+    // Ngày hết hạn
+    if (
+        keyLower === 'dateofexpiry' ||
+        keyLower === 'expirydate' ||
+        keyLower === 'ngayhethan' ||
+        keyLower === 'ngày hết hạn'
+    ) {
+        const valUpper = val.toUpperCase();
+        if (valUpper === 'LIFETIME' || valUpper === 'VO_THOI_HAN') return 'Vô thời hạn';
+    }
+
+    // Quốc tịch
+    if (
+        keyLower === 'nationality' ||
+        keyLower === 'quoctich' ||
+        keyLower === 'quốc tịch'
+    ) {
+        const valUpper = val.toUpperCase();
+        if (valUpper === 'VIETNAM' || valUpper === 'VN' || valUpper === 'VNM') {
+            return 'Việt Nam';
+        }
+    }
+
+    return val;
+};
+
+/** Code DecisionEngine / eKYC → tiếng Việt (Manual + Recruiter feedback). */
+export const FAILED_CRITERIA_LABELS_VN = {
+    // CCCD / eKYC
+    MISSING_FRONT_OR_BACK: 'Vui lòng tải lên đầy đủ cả mặt trước và mặt sau CCCD.',
+    NOT_VIETNAM_CITIZEN_ID: 'Hình ảnh không phải là Căn cước công dân Việt Nam hợp lệ.',
+    FRONT_SIDE_DETECTED: 'Không nhận diện được mặt trước của CCCD.',
+    BACK_SIDE_DETECTED: 'Không nhận diện được mặt sau của CCCD.',
+    NATIONAL_EMBLEM: 'Không nhận diện được Quốc huy trên thẻ CCCD.',
+    PORTRAIT_PHOTO: 'Không nhận diện được ảnh chân dung trên mặt trước CCCD.',
+    OBSCURED_OR_MISSING_PORTRAIT: 'Ảnh chân dung trên CCCD bị che mờ, chói sáng hoặc che khuất.',
+    CHIP_ON_BACK: 'Không nhận diện được chip điện tử ở mặt sau CCCD.',
+    OBSCURED_OR_MISSING_CHIP: 'Chip điện tử ở mặt sau bị che khuất, dán đè hoặc có dấu hiệu bất thường.',
+    FRONT_BACK_MRZ_ID_MISMATCH: 'Số CCCD mặt trước không trùng khớp với mã vạch MRZ ở mặt sau.',
+    AGE_UNDER_MINIMUM: 'Người dùng chưa đủ độ tuổi quy định tối thiểu (15/18 tuổi).',
+    AGE_VALID: 'Độ tuổi trên giấy tờ không hợp lệ.',
+    CCCD_EXPIRED: 'Thẻ Căn cước công dân đã hết hạn sử dụng.',
+    EXPIRY_VALID: 'Thẻ Căn cước công dân đã hết hạn sử dụng.',
+    EXPIRY_DATE_UNREADABLE: 'Không thể đọc được ngày hết hạn trên CCCD (ảnh mờ/chói).',
+    HIGH_TAMPERING_RISK: 'Phát hiện dấu hiệu chỉnh sửa ảnh, ghép ảnh hoặc che giấu thông tin.',
+    LOW_IMAGE_QUALITY: 'Chất lượng hình ảnh quá mờ, độ phân giải thấp hoặc bị lóa sáng.',
+    IMAGE_QUALITY: 'Chất lượng hình ảnh quá mờ, độ phân giải thấp hoặc bị lóa sáng.',
+    REQUIRED_FIELDS: 'Không thể trích xuất các thông tin cơ bản bắt buộc trên CCCD.',
+    LOW_OVERALL_SCORE: 'Điểm đánh giá độ tin cậy của giấy tờ không đạt tiêu chuẩn duyệt tự động.',
+    CORNER_CROPPED: 'Hình ảnh CCCD bị chụp mất góc, thiếu viền hoặc bị khuất cạnh.',
+    IMAGE_CROPPED: 'Hình ảnh CCCD bị chụp mất góc, thiếu viền hoặc bị khuất cạnh.',
+    FACE_MATCHING: 'Khuôn mặt chụp trực tiếp không khớp với ảnh chân dung trên CCCD.',
+    FACE_MISMATCH: 'Khuôn mặt chụp trực tiếp không khớp với ảnh chân dung trên CCCD.',
+    FAKE_CARD: 'Phát hiện dấu hiệu phôi thẻ giả hoặc can thiệp vật lý.',
+    MRZ_UNREADABLE: 'Không đọc được mã MRZ ở mặt sau CCCD.',
+    MRZ_NOT_FOUND: 'Không tìm thấy mã MRZ ở mặt sau CCCD.',
+    MRZ_CHECKSUM_FAILED: 'Mã MRZ không hợp lệ hoặc sai số kiểm tra.',
+    FRONT_BACK_MISMATCH: 'Thông tin mặt trước và mặt sau không trùng khớp.',
+    SCREEN_CAPTURE_DETECTED: 'Phát hiện ảnh chụp lại từ màn hình.',
+    PHOTOCOPY_DETECTED: 'Phát hiện ảnh photocopy hoặc ảnh đen trắng.',
+
+    // GPKD / Doanh nghiệp
+    DOCUMENT_NOT_DETECTED: 'Không nhận diện được Giấy phép kinh doanh / Giấy ĐKKD trong ảnh.',
+    DOCUMENT_DETECTED: 'Không nhận diện được Giấy phép kinh doanh / Giấy ĐKKD trong ảnh.',
+    BUSINESS_REQUIRED_FIELDS: 'Không thể đọc được các thông tin quan trọng của DN (Tên, Mã số thuế, Người đại diện).',
+    COMPANY_TYPE_SUPPORTED: 'Loại hình doanh nghiệp không thuộc danh mục hệ thống hỗ trợ.',
+    TAX_CODE_MISMATCH: 'Mã số thuế trên giấy phép không khớp với thông tin đã khai báo.',
+    REPRESENTATIVE_MISMATCH: 'Người đại diện pháp luật trên GPKD không khớp với thông tin CCCD/tài khoản.',
+    STORE_IMAGES_MISSING: 'Chưa có ảnh chụp thực tế biển hiệu / cơ sở kinh doanh để đối soát.',
+    INVALID_TAX_CODE: 'Mã số thuế không hợp lệ hoặc không tồn tại.',
+    BUSINESS_NAME_MISMATCH: 'Tên doanh nghiệp không khớp với thông tin đăng ký kinh doanh.',
+    EXPIRED_BUSINESS_LICENSE: 'Giấy phép kinh doanh đã hết hạn sử dụng.',
 };
 
 const translateOcrFieldList = (fieldsCsv) => {
@@ -456,7 +568,7 @@ export const formatFailedReasonCode = (raw) => {
     if (missingMatch) {
         const fields = translateOcrFieldList(missingMatch[1]);
         return fields
-            ? `Thiếu trường quan trọng: ${fields}`
+            ? `Thiếu các thông tin quan trọng: ${fields}`
             : 'Thiếu trường quan trọng trên giấy tờ';
     }
 
@@ -464,7 +576,7 @@ export const formatFailedReasonCode = (raw) => {
     if (lowConfMatch) {
         const fields = translateOcrFieldList(lowConfMatch[1]);
         return fields
-            ? `Độ tin cậy thấp ở trường: ${fields}`
+            ? `Thông tin bị mờ, không rõ ràng: ${fields}`
             : 'Độ tin cậy thấp ở các trường quan trọng';
     }
 
@@ -569,9 +681,36 @@ export const pickCccdExtractedFields = (response) => {
 
 export const formatVerificationType = (type) => {
     const key = String(type || '').toUpperCase();
-    if (key.includes('CCCD')) return 'CCCD';
-    if (key.includes('BUSINESS') || key.includes('HOUSEHOLD')) return 'Giấy tờ KD';
+    if (key.includes('CITIZEN') || key.includes('CCCD')) return 'CCCD';
+    if (key.includes('BUSINESS') || key.includes('HOUSEHOLD') || key.includes('RECRUITER')) return 'Doanh nghiệp';
     return type || '—';
+};
+
+export const formatDocumentType = (type) => {
+    if (!type) return '—';
+    const key = String(type).trim().toUpperCase();
+    if (key === 'CITIZEN_ID') return 'Căn cước công dân';
+    if (key === 'ENTERPRISE_REGISTRATION') return 'Đăng ký doanh nghiệp';
+    if (key === 'HOUSEHOLD_BUSINESS_REGISTRATION') return 'Đăng ký hộ kinh doanh';
+    if (key === 'BUSINESS_LICENSE') return 'Giấy phép kinh doanh';
+    if (key === 'UNKNOWN') return 'Không xác định';
+    return type;
+};
+
+export const formatVerificationStatus = (status) => {
+    if (!status) return '—';
+    const key = String(status).trim().toUpperCase();
+    const STATUS_MAP = {
+        CCCD_PASSED: 'Đã xác thực CCCD',
+        BUSINESS_PASSED: 'Đã xác thực Doanh nghiệp',
+        CCCD_MANUALLY: 'Chờ duyệt CCCD',
+        BUSINESS_MANUALLY: 'Chờ duyệt Doanh nghiệp',
+        CCCD_REJECTED: 'Từ chối CCCD',
+        BUSINESS_REJECTED: 'Từ chối Doanh nghiệp',
+        CANCELLED_BY_RETRY: 'Đã huỷ do gửi lại',
+        EXPIRED: 'Đã hết hạn',
+    };
+    return STATUS_MAP[key] || status;
 };
 
 export const formatAiRiskLevel = (level) => {
@@ -581,6 +720,7 @@ export const formatAiRiskLevel = (level) => {
     if (key === 'HIGH' || key === 'CAO') return 'Cao';
     if (key === 'MEDIUM' || key === 'TRUNG_BINH' || key === 'TRUNG BINH') return 'Trung bình';
     if (key === 'LOW' || key === 'THAP' || key === 'THẤP') return 'Thấp';
+    if (key === 'UNKNOWN' || key === 'KHONG_XAC_DINH') return 'Không xác định';
     // BE đã format sẵn (tiếng Việt / câu dài) → hiện nguyên.
     return raw;
 };
@@ -588,7 +728,10 @@ export const formatAiRiskLevel = (level) => {
 const MEDIA_FILE_TYPE_LABELS = {
     CCCD_FRONT: 'CCCD mặt trước',
     CCCD_BACK: 'CCCD mặt sau',
-    BUSINESS_LICENSE: 'Giấy phép / GPKD',
+    SELFIE: 'Ảnh chân dung',
+    FACE_CAPTURE: 'Ảnh chân dung',
+    BUSINESS_LICENSE: 'GPKD / Đăng ký DN',
+    BUSINESS_LOCATION: 'Ảnh cơ sở / biển hiệu',
     TAX_DOCUMENT: 'Giấy tờ thuế',
 };
 

@@ -9,6 +9,8 @@ import {
 } from '../../apis/ManualVerificationApi.jsx';
 import {
     formatAiRiskLevel,
+    formatDocumentType,
+    formatVerificationStatus,
     formatVerificationType,
     mediaFilesToEntries,
     toLabelValueEntries,
@@ -210,7 +212,7 @@ const ManualVerificationQueuePage = () => {
                                     <strong>{item.businessName || item.userFullName || `Hồ sơ #${item.id}`}</strong>
                                     <span>{formatVerificationType(item.verificationType)}</span>
                                     <small>
-                                        {item.status || '—'}
+                                        {formatVerificationStatus(item.status)}
                                         {item.createdAt
                                             ? ` · ${new Date(item.createdAt).toLocaleString('vi-VN')}`
                                             : ''}
@@ -249,10 +251,10 @@ const ManualVerificationQueuePage = () => {
                                     <h2>{detail.businessName || detail.userFullName || `Hồ sơ #${detail.id}`}</h2>
                                     <p>
                                         {formatVerificationType(detail.verificationType)}
-                                        {detail.documentType ? ` · ${detail.documentType}` : ''}
+                                        {detail.documentType ? ` · ${formatDocumentType(detail.documentType)}` : ''}
                                     </p>
                                 </div>
-                                <span className="mv-badge">{detail.status || '—'}</span>
+                                <span className="mv-badge">{formatVerificationStatus(detail.status)}</span>
                             </header>
 
                             <dl className="mv-detail__grid">
