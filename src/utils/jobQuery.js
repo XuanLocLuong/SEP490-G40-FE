@@ -100,9 +100,8 @@ export const getRecommendationDistanceDisplay = (distanceKm, preferredRadiusKm) 
         preferredRadiusKm != null && Number.isFinite(radius) && radius >= 0;
 
     if (hasPreferredRadius && distance > radius) {
-        const radiusLabel = Number.isInteger(radius) ? radius.toFixed(0) : radius.toFixed(1);
         return {
-            label: `Cách ${distance.toFixed(1)} km · Ngoài bán kính mong muốn ${radiusLabel} km`,
+            label: `Cách ${distance.toFixed(1)} km`,
             variant: 'outside',
         };
     }
