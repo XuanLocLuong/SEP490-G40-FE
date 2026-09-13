@@ -98,6 +98,7 @@ const AiRecommendationsSection = () => {
                                 job={job}
                                 compact
                                 showDistance
+                                recommendationDistance
                                 detailSearch={DETAIL_SEARCH}
                                 homeSectionId={HOME_SECTION_IDS.SUGGESTIONS}
                             />

@@ -10,7 +10,10 @@ import {
     hasInvitedToJob,
 } from '../../utils/formatters.js';
 import { formatJobSalary } from '../../utils/jobSalaryDisplay.js';
-import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
+import {
+    getJobDistanceDisplay,
+    getRecommendationDistanceDisplay,
+} from '../../utils/jobQuery.js';
 import { formatJobTypeLabels } from '../../utils/jobTypeDisplay.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import {
@@ -96,6 +99,7 @@ const JobCard = ({
     nearMe = false,
     compact = false,
     showDistance = false,
+    recommendationDistance = false,
     variant = 'default',
     /** e.g. `?section=urgent` — preserves list context on job detail sidebar */
     detailSearch,
@@ -109,7 +113,9 @@ const JobCard = ({
     const businessName = job.business?.name || 'Công ty';
     const businessLogoUrl = job.business?.logoUrl || null;
     const tagLabel = formatJobTypeLabels(job.jobType, jobTypeOptions);
-    const distance = getJobDistanceDisplay(job.distanceKm, nearMe || showDistance);
+    const distance = recommendationDistance
+        ? getRecommendationDistanceDisplay(job.distanceKm, job.preferredRadiusKm)
+        : getJobDistanceDisplay(job.distanceKm, nearMe || showDistance);
     const hired = hasHiredJob(job);
     const applied = hasAppliedToJob(job);
     const invited = hasInvitedToJob(job);

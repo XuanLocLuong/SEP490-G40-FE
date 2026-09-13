@@ -65,9 +65,6 @@ export const isSearchableJobListSection = (section) =>
 /** Jobs loaded per request in /jobs/:id sidebar (append via Load more). BE max size = 50. */
 export const JOB_DETAIL_SIDEBAR_PAGE_SIZE = 10;
 
-/** Khớp seed BE `MAX_SEARCH_RADIUS_KM` — job ngoài bán kính near-me có distanceKm = null. */
-export const MAX_NEAR_ME_RADIUS_KM = 10;
-
 /**
  * Label khoảng cách cho UI near-me.
  * @returns {{ label: string, variant: 'nearby' | 'outside' } | null}
@@ -81,11 +78,39 @@ export const getJobDistanceDisplay = (distanceKm, nearMe = false) => {
     }
     if (nearMe) {
         return {
-            label: `> ${MAX_NEAR_ME_RADIUS_KM} km`,
+            label: 'Gợi ý mở rộng',
             variant: 'outside',
         };
     }
     return null;
+};
+
+/** Label khoảng cách dành riêng cho JobLink gợi ý. */
+export const getRecommendationDistanceDisplay = (distanceKm, preferredRadiusKm) => {
+    if (distanceKm == null || !Number.isFinite(Number(distanceKm))) {
+        return {
+            label: 'Chưa xác định khoảng cách',
+            variant: 'unknown',
+        };
+    }
+
+    const distance = Number(distanceKm);
+    const radius = Number(preferredRadiusKm);
+    const hasPreferredRadius =
+        preferredRadiusKm != null && Number.isFinite(radius) && radius >= 0;
+
+    if (hasPreferredRadius && distance > radius) {
+        const radiusLabel = Number.isInteger(radius) ? radius.toFixed(0) : radius.toFixed(1);
+        return {
+            label: `Cách ${distance.toFixed(1)} km · Ngoài bán kính mong muốn ${radiusLabel} km`,
+            variant: 'outside',
+        };
+    }
+
+    return {
+        label: `Cách ${distance.toFixed(1)} km`,
+        variant: 'nearby',
+    };
 };
 
 /** BE schedule dayOfWeek: 2=Mon … 8=Sun */
