@@ -368,6 +368,7 @@ const JobListPage = () => {
                                 key={`${job.id}-${job.interactionType || ''}-${index}`}
                                 job={job}
                                 nearMe={Boolean(urlQuery?.nearMe) || section === 'ai'}
+                                recommendationDistance={section === JOB_LIST_SECTIONS.AI}
                                 onSavedChange={handleSavedChange}
                             />
                         ))}

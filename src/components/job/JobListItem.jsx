@@ -9,7 +9,10 @@ import {
     hasInvitedToJob,
 } from '../../utils/formatters.js';
 import { formatJobSalary } from '../../utils/jobSalaryDisplay.js';
-import { getJobDistanceDisplay } from '../../utils/jobQuery.js';
+import {
+    getJobDistanceDisplay,
+    getRecommendationDistanceDisplay,
+} from '../../utils/jobQuery.js';
 import { getJobTypeLabels } from '../../utils/jobTypeDisplay.js';
 import { useJobTypeOptions } from '../../hooks/useJobTypeOptions.js';
 import {
@@ -25,11 +28,18 @@ import JobPrimaryCta from './JobPrimaryCta.jsx';
 import JobDetailLink from './JobDetailLink.jsx';
 import '../../assets/styles/JobListItemStyle.css';
 
-const JobListItem = ({ job, nearMe = false, onSavedChange }) => {
+const JobListItem = ({
+    job,
+    nearMe = false,
+    recommendationDistance = false,
+    onSavedChange,
+}) => {
     const jobTypeOptions = useJobTypeOptions();
     const businessName = job.business?.name || 'Công ty';
     const jobTypeLabels = getJobTypeLabels(job.jobType, jobTypeOptions);
-    const distance = getJobDistanceDisplay(job.distanceKm, nearMe);
+    const distance = recommendationDistance
+        ? getRecommendationDistanceDisplay(job.distanceKm, job.preferredRadiusKm)
+        : getJobDistanceDisplay(job.distanceKm, nearMe);
     const hired = hasHiredJob(job);
     const applied = hasAppliedToJob(job);
     const invited = hasInvitedToJob(job);

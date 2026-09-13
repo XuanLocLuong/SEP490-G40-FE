@@ -123,6 +123,7 @@ export const mapRecommendationToJob = (rec) => {
         saved: Boolean(rec.saved),
         location: rec.location,
         distanceKm: rec.distanceKm,
+        preferredRadiusKm: rec.preferredRadiusKm ?? null,
         business: {
             name: rec.businessName,
             logoUrl: rec.businessLogoUrl || rec.logoUrl || rec.business?.logoUrl || null,

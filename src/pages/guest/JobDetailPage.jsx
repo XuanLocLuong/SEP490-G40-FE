@@ -340,6 +340,9 @@ const JobDetailPage = () => {
                                             Boolean(urlQuery?.nearMe) ||
                                             section === JOB_LIST_SECTIONS.AI
                                         }
+                                        recommendationDistance={
+                                            section === JOB_LIST_SECTIONS.AI
+                                        }
                                     />
                                 ))}
                             </div>
