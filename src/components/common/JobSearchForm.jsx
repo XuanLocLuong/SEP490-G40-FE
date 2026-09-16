@@ -101,11 +101,23 @@ const JobSearchForm = ({
     const [skillsCatalog, setSkillsCatalog] = useState([]);
     const [skillQuery, setSkillQuery] = useState('');
     const [skillPickerOpen, setSkillPickerOpen] = useState(false);
+    const skillPickerRef = useRef(null);
     const skillPickerId = useId();
     const normalizeSkillName = (name) => String(name).normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
     const matchingSkills = skillsCatalog.filter((skill) =>
         normalizeSkillName(skill.name).includes(normalizeSkillName(skillQuery)));
+
+    useEffect(() => {
+        if (!skillPickerOpen) return;
+        const handleOutsidePointer = (event) => {
+            if (!skillPickerRef.current?.contains(event.target)) {
+                setSkillPickerOpen(false);
+            }
+        };
+        document.addEventListener('pointerdown', handleOutsidePointer);
+        return () => document.removeEventListener('pointerdown', handleOutsidePointer);
+    }, [skillPickerOpen]);
     const jobTypeOptions = useJobTypeOptions();
     const [keywordFocused, setKeywordFocused] = useState(false);
     const keywordInputRef = useRef(null);
@@ -536,9 +548,10 @@ const JobSearchForm = ({
                         <fieldset className="job-search-form__fieldset">
                             <legend>Kỹ năng</legend>
                             <div
+                                ref={skillPickerRef}
                                 className="job-search-form__skill-picker"
                                 onBlur={(event) => {
-                                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                                    if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) {
                                         setSkillPickerOpen(false);
                                     }
                                 }}
