@@ -5,6 +5,7 @@ import { ROUTES, getHomePathByRole } from './path.js';
 
 import ProtectedRoute from './ProtectedRoute.jsx';
 import GuestOnlyRoute from './GuestOnlyRoute.jsx';
+import NotificationRefreshBoundary from '../components/notifications/NotificationRefreshBoundary.jsx';
 
 import GuestLayout from '../layouts/GuestLayout.jsx';
 import JobDiscoveryLayout from '../layouts/JobDiscoveryLayout.jsx';
@@ -58,6 +59,10 @@ import AdminBlacklistKeywordsPage from '../pages/admin/AdminBlacklistKeywordsPag
 import CandidatePublicProfilePage from '../pages/shared/CandidatePublicProfilePage.jsx';
 import RoleBasedShellLayout from '../layouts/RoleBasedShellLayout.jsx';
 
+const refreshOnNotification = (page) => (
+    <NotificationRefreshBoundary>{page}</NotificationRefreshBoundary>
+);
+
 // Cấu trúc route đi theo nhóm role (khớp bảng Screen Authorization trong SRS +
 // đúng 5 role thật của backend). Mỗi nhóm bọc 1 Layout dùng chung qua
 // <Route element={...}> lồng nhau, page con chỉ còn lo nội dung, không tự
@@ -74,9 +79,9 @@ const AppRouter = () => {
 
             {/* Public job URLs; candidate login dùng Sidebar, guest dùng Header. */}
             <Route element={<JobDiscoveryLayout />}>
-                <Route path={ROUTES.JOB_LIST} element={<JobListPage />} />
-                <Route path={ROUTES.JOB_DETAIL} element={<JobDetailPage />} />
-                <Route path={ROUTES.BUSINESS_PROFILE} element={<PublicBusinessProfilePage />} />
+                <Route path={ROUTES.JOB_LIST} element={refreshOnNotification(<JobListPage />)} />
+                <Route path={ROUTES.JOB_DETAIL} element={refreshOnNotification(<JobDetailPage />)} />
+                <Route path={ROUTES.BUSINESS_PROFILE} element={refreshOnNotification(<PublicBusinessProfilePage />)} />
                 <Route path={ROUTES.TOP_RECRUITERS} element={<TopRecruitersPage />} />
             </Route>
 
@@ -108,7 +113,7 @@ const AppRouter = () => {
             >
                 <Route
                     path={ROUTES.CANDIDATE_PUBLIC_PROFILE}
-                    element={<CandidatePublicProfilePage />}
+                    element={refreshOnNotification(<CandidatePublicProfilePage />)}
                 />
             </Route>
 
@@ -122,23 +127,23 @@ const AppRouter = () => {
             >
                 <Route path={ROUTES.CANDIDATE_HOME} element={<CandidateHomePage />} />
                 <Route path={ROUTES.CANDIDATE_SETTINGS} element={<CandidateSettingsPage />} />
-                <Route path={ROUTES.CANDIDATE_PROFILE} element={<CandidateProfilePage />} />
-                <Route path={ROUTES.CANDIDATE_AVAILABILITY} element={<AvailabilityPage />} />
+                <Route path={ROUTES.CANDIDATE_PROFILE} element={refreshOnNotification(<CandidateProfilePage />)} />
+                <Route path={ROUTES.CANDIDATE_AVAILABILITY} element={refreshOnNotification(<AvailabilityPage />)} />
                 <Route
                     path={ROUTES.CANDIDATE_INVITATIONS}
-                    element={<CandidateInvitationsPage />}
+                    element={refreshOnNotification(<CandidateInvitationsPage />)}
                 />
                 <Route
                     path={ROUTES.CANDIDATE_APPLICATION_HISTORY}
-                    element={<CandidateApplicationHistoryPage />}
+                    element={refreshOnNotification(<CandidateApplicationHistoryPage />)}
                 />
                 <Route
                     path={ROUTES.CANDIDATE_TRUST_SCORE}
-                    element={<TrustScoreHistoryPage />}
+                    element={refreshOnNotification(<TrustScoreHistoryPage />)}
                 />
                 <Route
                     path={ROUTES.CANDIDATE_REVIEWS}
-                    element={<CandidateReceivedReviewsPage />}
+                    element={refreshOnNotification(<CandidateReceivedReviewsPage />)}
                 />
                 <Route
                     path={ROUTES.CANDIDATE_NOTIFICATIONS}
@@ -156,13 +161,13 @@ const AppRouter = () => {
             >
                 <Route path={ROUTES.RECRUITER_HOME} element={<RecruiterHomePage />} />
                 <Route path={ROUTES.RECRUITER_SETTINGS} element={<CandidateSettingsPage />} />
-                <Route path={ROUTES.RECRUITER_PROFILE} element={<RecruiterProfilePage />} />
-                <Route path={ROUTES.RECRUITER_VERIFICATION} element={<RecruiterVerificationPage />} />
+                <Route path={ROUTES.RECRUITER_PROFILE} element={refreshOnNotification(<RecruiterProfilePage />)} />
+                <Route path={ROUTES.RECRUITER_VERIFICATION} element={refreshOnNotification(<RecruiterVerificationPage />)} />
                 <Route path={ROUTES.RECRUITER_CREATE_JOB} element={<CreateJobPage />} />
-                <Route path={ROUTES.RECRUITER_EDIT_JOB} element={<CreateJobPage />} />
-                <Route path={ROUTES.RECRUITER_MY_JOBS} element={<MyJobsPage />} />
-                <Route path={ROUTES.RECRUITER_APPLICANTS} element={<ApplicantsPage />} />
-                <Route path={ROUTES.RECRUITER_INVITATIONS} element={<RecruiterInvitationsPage />} />
+                <Route path={ROUTES.RECRUITER_EDIT_JOB} element={refreshOnNotification(<CreateJobPage />)} />
+                <Route path={ROUTES.RECRUITER_MY_JOBS} element={refreshOnNotification(<MyJobsPage />)} />
+                <Route path={ROUTES.RECRUITER_APPLICANTS} element={refreshOnNotification(<ApplicantsPage />)} />
+                <Route path={ROUTES.RECRUITER_INVITATIONS} element={refreshOnNotification(<RecruiterInvitationsPage />)} />
                 <Route
                     path={ROUTES.RECRUITER_JOBLINK_SUGGESTIONS}
                     element={<RecruiterRecommendationsPage />}
@@ -174,7 +179,7 @@ const AppRouter = () => {
                 />
                 <Route
                     path={ROUTES.RECRUITER_TRUST_SCORE}
-                    element={<TrustScoreHistoryPage />}
+                    element={refreshOnNotification(<TrustScoreHistoryPage />)}
                 />
                 <Route
                     path={ROUTES.RECRUITER_NOTIFICATIONS}

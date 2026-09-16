@@ -3,8 +3,7 @@ import { useState } from 'react';
 import NotificationItem from '../../components/notifications/NotificationItem.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useNotifications } from '../../hooks/useNotifications.js';
-import { getNotificationTargetPath } from '../../utils/notificationNavigation.js';
-import { invitationsNavigateOptions } from '../../utils/invitationNavReturn.js';
+import { navigateToNotification } from '../../utils/notificationRefresh.js';
 import '../../assets/styles/NotificationDropdownStyle.css';
 import '../../assets/styles/CandidateNotificationsPageStyle.css';
 
@@ -44,10 +43,7 @@ const CandidateNotificationsPage = () => {
 
     const handleSelect = async (notification) => {
         await markOneRead(notification.id);
-        const path = getNotificationTargetPath(notification, auth?.role);
-        if (path) {
-            navigate(path, invitationsNavigateOptions(path, location));
-        }
+        navigateToNotification(navigate, notification, auth?.role, location);
     };
 
     const emptyMessage =
