@@ -8,9 +8,6 @@ const AI_ENDPOINT_HINTS = [
     'generate-description',
     '/schedule/scan',
     '/recommendation',
-    '/verifications/submit',
-    '/verifications/retry',
-    '/verifications/business-license',
 ];
 
 const AI_TECHNICAL_PATTERNS = [

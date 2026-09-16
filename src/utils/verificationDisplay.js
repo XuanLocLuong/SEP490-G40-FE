@@ -1,3 +1,5 @@
+import { formatTaxCode } from './taxCode.js';
+
 export const VERIFICATION_STATUS = {
     BUSINESS_PASSED: 'BUSINESS_PASSED',
     BUSINESS_MANUALLY: 'BUSINESS_MANUALLY',
@@ -10,9 +12,17 @@ export const VERIFICATION_STATUS = {
     EXPIRED: 'EXPIRED',
 };
 
-/** Đủ verify đầy đủ (DN cần GPKD). CCCD_PASSED chỉ pass khi loại không cần GPKD + badge. */
-export const isVerificationPassed = (status) =>
-    status === VERIFICATION_STATUS.BUSINESS_PASSED;
+/** Chỉ trạng thái PASSED sau quyết định của Manual Team mới là xác thực thành công. */
+export const isVerificationPassed = (status, { needsLicense } = {}) => {
+    const normalized = String(status || '').toUpperCase();
+    if (needsLicense === true) {
+        return normalized === VERIFICATION_STATUS.BUSINESS_PASSED;
+    }
+    return (
+        normalized === VERIFICATION_STATUS.CCCD_PASSED ||
+        normalized === VERIFICATION_STATUS.BUSINESS_PASSED
+    );
+};
 
 export const isVerificationPendingManual = (status) =>
     status === VERIFICATION_STATUS.BUSINESS_MANUALLY ||
@@ -28,22 +38,16 @@ export const isUnverifiedBadge = (badge) =>
     !badge || badge === 'UNVERIFIED';
 
 /**
- * Đủ để hiện “Đã xác thực” trên UI.
- * Defensive: loại cần GPKD mà mới CCCD_PASSED → chưa đủ dù BE vẫn trả BUSINESS_VERIFIED.
+ * Đủ để hiện “Đã xác thực” trên UI. Badge chỉ là dữ liệu trình bày, không phải
+ * nguồn quyết định vì có thể chưa kịp được gỡ khi hồ sơ chuyển về chờ duyệt.
  */
 export const isFullyBusinessVerified = ({
-    badge,
     verificationStatus,
     needsLicense,
 } = {}) => {
-    if (!isBusinessVerifiedBadge(badge)) return false;
-    if (
-        needsLicense &&
-        String(verificationStatus || '').toUpperCase() === VERIFICATION_STATUS.CCCD_PASSED
-    ) {
-        return false;
-    }
-    return true;
+    if (isVerificationPendingManual(verificationStatus)) return false;
+    if (isVerificationRejected(verificationStatus)) return false;
+    return isVerificationPassed(verificationStatus, { needsLicense });
 };
 
 /**
@@ -214,14 +218,14 @@ export const getBusinessTypeChangeVerifyFeedback = ({
  * Outcome từ response submit/retry (+ optional profile sau refresh).
  * @returns {'success'|'pending'|'rejected'|'unknown'}
  */
-export const getVerificationOutcome = (response, { profile = null } = {}) => {
-    if (isBusinessVerifiedBadge(profile?.badge)) return 'success';
-
+export const getVerificationOutcome = (
+    response,
+    { profile = null, needsLicense = profile?.requiresBusinessLicense } = {}
+) => {
     if (!response && profile) {
         if (isVerificationPendingManual(profile.verificationStatus)) return 'pending';
         if (isVerificationRejected(profile.verificationStatus)) return 'rejected';
-        if (isBusinessVerifiedBadge(profile.badge)) return 'success';
-        if (profile.verificationStatus === VERIFICATION_STATUS.BUSINESS_PASSED) return 'success';
+        if (isVerificationPassed(profile.verificationStatus, { needsLicense })) return 'success';
         return 'unknown';
     }
 
@@ -249,19 +253,7 @@ export const getVerificationOutcome = (response, { profile = null } = {}) => {
     if (isVerificationPendingManual(status)) return 'pending';
     if (isVerificationRejected(status)) return 'rejected';
 
-    if (isBusinessVerifiedBadge(response.badge) || isBusinessVerifiedBadge(profile?.badge)) {
-        return 'success';
-    }
-
-    if (
-        decision === 'APPROVE' ||
-        decision === 'APPROVED' ||
-        decision === 'PASSED' ||
-        status === VERIFICATION_STATUS.BUSINESS_PASSED ||
-        // Cá nhân / loại không cần GPKD: CCCD_PASSED + badge đã map ở trên; body có thể chỉ trả status.
-        (status === VERIFICATION_STATUS.CCCD_PASSED &&
-            isBusinessVerifiedBadge(response.badge || profile?.badge))
-    ) {
+    if (isVerificationPassed(status, { needsLicense })) {
         return 'success';
     }
 
@@ -271,7 +263,13 @@ export const getVerificationOutcome = (response, { profile = null } = {}) => {
 /** BE OCR field có thể là string hoặc { value, normalizedValue, confidence, ... }. */
 const unwrapOcrField = (field) => {
     if (field == null || field === '') return '';
-    if (typeof field === 'string' || typeof field === 'number') return String(field);
+    if (
+        typeof field === 'string' ||
+        typeof field === 'number' ||
+        typeof field === 'boolean'
+    ) {
+        return String(field);
+    }
     if (typeof field === 'object') {
         const raw =
             field.normalizedValue ??
@@ -321,7 +319,7 @@ export const getVerificationRejectionReason = (response) => {
             const text = formatFailedReasonCode(unwrapOcrField(msg));
             if (text) parts.push(label ? `${label}: ${text}` : text);
         };
-        Object.entries(failed).forEach(([group, value]) => {
+        Object.entries(failed).forEach(([, value]) => {
             if (!value) return;
             if (typeof value === 'string') {
                 // value thường là code DecisionEngine — dịch, không cần prefix group EN.
@@ -438,6 +436,9 @@ export const OCR_FIELD_LABELS_VN = {
     representativeName: 'Người đại diện pháp luật',
     businessAddress: 'Địa chỉ trụ sở',
     businessField: 'Ngành nghề kinh doanh',
+    profileBusinessName: 'Tên doanh nghiệp trong hồ sơ',
+    taxApiBusinessName: 'Tên doanh nghiệp từ mã số thuế thuế',
+    businessNameMatched: 'Kết quả đối chiếu tên doanh nghiệp',
 };
 
 /** Chuẩn hoá giá trị trường OCR (Giới tính, Ngày hết hạn...) */
@@ -446,6 +447,24 @@ export const formatOcrFieldValue = (key, rawValue) => {
     const val = String(rawValue).trim();
     if (!val) return '';
     const keyLower = String(key || '').trim().toLowerCase();
+
+    if (
+        keyLower === 'taxcode' ||
+        keyLower === 'registrationnumberortaxcode' ||
+        keyLower === 'mã số thuế' ||
+        keyLower === 'mã số thuế / đkkd' ||
+        keyLower === 'mã số thuế / số đkkd'
+    ) {
+        return formatTaxCode(val);
+    }
+
+    if (
+        keyLower === 'businessnamematched' ||
+        keyLower === 'kết quả đối chiếu tên doanh nghiệp'
+    ) {
+        if (val.toLowerCase() === 'true') return 'Khớp';
+        if (val.toLowerCase() === 'false') return 'Không khớp';
+    }
 
     // Giới tính
     if (
