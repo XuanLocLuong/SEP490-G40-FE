@@ -9,7 +9,6 @@ import DashboardKpiGrid from '../../components/admin/monitoring/DashboardKpiGrid
 import GovernanceQueuesCard from '../../components/admin/monitoring/GovernanceQueuesCard.jsx';
 import JobsOverviewCard from '../../components/admin/monitoring/JobsOverviewCard.jsx';
 import OperationalAlertsCard from '../../components/admin/monitoring/OperationalAlertsCard.jsx';
-import PlatformOpsHealthCard from '../../components/admin/monitoring/PlatformOpsHealthCard.jsx';
 import PlatformTrendCard from '../../components/admin/monitoring/PlatformTrendCard.jsx';
 import RecommendationEffectivenessCard from '../../components/admin/monitoring/RecommendationEffectivenessCard.jsx';
 import UsersOverviewCard from '../../components/admin/monitoring/UsersOverviewCard.jsx';
@@ -138,7 +137,6 @@ const AdminDashboard = () => {
 
     const applications = data?.applications;
     const jobs = data?.jobs;
-    const communications = data?.communications;
     const trends = data?.trends;
     const warnings = Array.isArray(data?.warnings) ? data.warnings : [];
     const trendRows = isSectionAvailable(trends) ? trends.data?.daily || [] : [];
@@ -254,7 +252,7 @@ const AdminDashboard = () => {
 
                     <div className="admin-monitor-row admin-monitor-row--trend-alerts">
                         <PlatformTrendCard trends={trends} trendRows={trendRows} />
-                        <OperationalAlertsCard warnings={warnings} />
+                        <OperationalAlertsCard warnings={warnings} moderation={data?.moderation} />
                     </div>
 
                     <div className="admin-monitor-row admin-monitor-row--2">
@@ -273,7 +271,6 @@ const AdminDashboard = () => {
                         <AiModerationEffectivenessCard aiModeration={data?.aiModeration} />
                     </div>
 
-                    <PlatformOpsHealthCard communications={communications} />
                 </>
             ) : null}
 

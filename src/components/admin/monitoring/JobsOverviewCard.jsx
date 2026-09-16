@@ -1,4 +1,4 @@
-import { MonitorBar, MonitorDonut, mapToChartData } from './MonitorCharts.jsx';
+import { MonitorDonut, mapToChartData } from './MonitorCharts.jsx';
 import {
     formatCount,
     isSectionAvailable,
@@ -11,13 +11,6 @@ const JobsOverviewCard = ({ jobs }) => {
     const byStatus = d
         ? mapToChartData(d.byStatus, { labelMap: LABEL_MAPS.jobStatus })
         : [];
-    const spotlight = d
-        ? [
-              { name: 'Công khai', value: Number(d.publicJobs) || 0 },
-              { name: 'Tuyển gấp', value: Number(d.urgentJobs) || 0 },
-              { name: 'Đã xóa', value: Number(d.deletedJobs) || 0 },
-          ]
-        : [];
 
     return (
         <section className="admin-monitor-card">
@@ -25,7 +18,7 @@ const JobsOverviewCard = ({ jobs }) => {
                 <div>
                     <h2>Tin tuyển</h2>
                     <p className="admin-monitor-hint">
-                        Tin tạo trong kỳ và phân bố trạng thái / đặc điểm nổi bật.
+                        Trạng thái hiện tại của các tin được tạo trong kỳ.
                     </p>
                 </div>
                 <span
@@ -52,20 +45,12 @@ const JobsOverviewCard = ({ jobs }) => {
                             <span>Tuyển gấp</span>
                             <strong>{formatCount(d.urgentJobs)}</strong>
                         </div>
-                        <div>
-                            <span>Đã xóa trong kỳ</span>
-                            <strong>{formatCount(d.deletedJobs)}</strong>
-                        </div>
                     </div>
 
-                    <div className="admin-monitor-split">
+                    <div>
                         <div>
                             <p className="admin-monitor-chart-caption">Theo trạng thái</p>
                             <MonitorDonut data={byStatus} height={170} />
-                        </div>
-                        <div>
-                            <p className="admin-monitor-chart-caption">Đặc điểm nổi bật</p>
-                            <MonitorBar data={spotlight} height={170} layout="vertical" />
                         </div>
                     </div>
                 </div>

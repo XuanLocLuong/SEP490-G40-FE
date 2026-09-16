@@ -176,6 +176,12 @@ export const AI_RISK_LEGEND = [
 ];
 
 export const WARNING_META = {
+    PENDING_JOB_MODERATION: {
+        title: 'Tin tuyển chờ kiểm duyệt',
+    },
+    PENDING_REVIEW_MODERATION: {
+        title: 'Đánh giá chờ kiểm duyệt',
+    },
     USER_INACTIVITY_SIGNAL: {
         title: 'Tài khoản ít hoạt động',
         detail: 'Chỉ mang tính phân tích — hệ thống chưa đổi trạng thái tài khoản.',

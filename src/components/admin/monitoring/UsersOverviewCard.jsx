@@ -22,7 +22,7 @@ const UsersOverviewCard = ({ users }) => {
                 <div>
                     <h2>Người dùng</h2>
                     <p className="admin-monitor-hint">
-                        Tài khoản tạo trong kỳ và phân bố trạng thái / vai trò.
+                        Trạng thái và vai trò hiện tại của các tài khoản được tạo trong kỳ.
                     </p>
                 </div>
                 <span
@@ -40,19 +40,6 @@ const UsersOverviewCard = ({ users }) => {
                         <div>
                             <span>Tài khoản mới</span>
                             <strong>{formatCount(d.createdUsers)}</strong>
-                        </div>
-                        <div>
-                            <span>Đã xóa trong kỳ</span>
-                            <strong>{formatCount(d.deletedUsers)}</strong>
-                        </div>
-                        <div
-                            title={
-                                d.inactivityDefinition ||
-                                'Chỉ là tín hiệu phân tích — không tự đổi trạng thái tài khoản.'
-                            }
-                        >
-                            <span>Tín hiệu ít hoạt động</span>
-                            <strong>{formatCount(d.inactivitySignalCount)}</strong>
                         </div>
                     </div>
 
