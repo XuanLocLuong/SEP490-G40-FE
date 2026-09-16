@@ -6,7 +6,7 @@ import {
 const KPI_ITEMS = [
     { key: 'users', label: 'Người dùng mới', unit: 'tài khoản', tooltip: 'Số tài khoản được tạo trong kỳ báo cáo.' },
     { key: 'jobs', label: 'Tin tuyển mới', unit: 'tin', tooltip: 'Số tin tuyển được tạo trong kỳ.' },
-    { key: 'applications', label: 'Đơn ứng tuyển', unit: 'đơn', tooltip: 'Số đơn ứng tuyển nộp trong kỳ.' },
+    { key: 'applications', label: 'Hồ sơ tuyển dụng mới', unit: 'hồ sơ', tooltip: 'Số hồ sơ được tạo trong kỳ, gồm đơn ứng tuyển và hồ sơ phát sinh khi ứng viên chấp nhận lời mời.' },
     { key: 'hires', label: 'Tuyển thành công', unit: 'lượt', tooltip: 'Số lần đơn chuyển sang HIRED trong kỳ (theo log trạng thái).' },
     {
         key: 'hireRate',
