@@ -458,6 +458,72 @@
     white-space: nowrap;
 }
 
+.recruiter-analytics__chart--recharts {
+    min-height: 300px;
+}
+
+.recruiter-analytics__chart--recharts .recharts-legend-item-text {
+    color: #64748b !important;
+    font-weight: 600;
+}
+
+.recruiter-analytics__chart--recharts .recharts-bar-rectangle {
+    filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.06));
+}
+
+.recruiter-analytics__chart-bar-label {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.recruiter-analytics__chart-tooltip {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    min-width: 160px;
+}
+
+.recruiter-analytics__chart-tooltip-title {
+    margin: 0 0 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.recruiter-analytics__chart-tooltip-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.recruiter-analytics__chart-tooltip-list li {
+    display: grid;
+    grid-template-columns: 10px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #475569;
+}
+
+.recruiter-analytics__chart-tooltip-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.recruiter-analytics__chart-tooltip-label {
+    font-weight: 500;
+}
+
+.recruiter-analytics__chart-tooltip-list strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+
 .recruiter-analytics__table-wrap {
     overflow-x: auto;
 }
@@ -480,6 +546,15 @@
     color: #64748b;
     font-weight: 600;
     background: #f8fafc;
+}
+
+.recruiter-analytics__table-stt {
+    width: 48px;
+    min-width: 48px;
+    text-align: center;
+    color: #94a3b8;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
 
 .recruiter-analytics__empty-row {

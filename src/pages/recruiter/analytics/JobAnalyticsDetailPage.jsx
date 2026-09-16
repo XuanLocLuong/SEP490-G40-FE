@@ -1,21 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
-import RecruitmentTrendsChart, {
-    buildChartPoints,
-} from '../../../components/recruiter/analytics/RecruitmentTrendsChart.jsx';
-import recruiterJobApi, {
-    getRecruiterJobApiErrorMessage,
-} from '../../../apis/RecruiterJobApi.jsx';
+import RecruitmentTrendsChart from '../../../components/recruiter/analytics/RecruitmentTrendsChart.jsx';
 import {
     formatCount,
-    formatRate,
     getRecruitmentAnalyticsApiErrorMessage,
+    getTrendPoints,
     lastNDays,
     loadJobRecruitmentAnalytics,
 } from '../../../services/recruitmentAnalyticsService.js';
-import { formatLocation, formatSalaryRange } from '../../../utils/formatters.js';
+import { formatSalaryRange } from '../../../utils/formatters.js';
 import {
     ROUTES,
     getRecruiterApplicantsPath,
@@ -63,20 +58,7 @@ const getDaysLeftLabel = (deadline) => {
     return `Còn ${diff} ngày`;
 };
 
-const getWorkLocationLabel = (detail) => {
-    if (!detail?.location) return '—';
-    const loc = detail.location;
-    const parts = [loc.address || loc.name, loc.ward || loc.district, loc.city].filter(
-        Boolean
-    );
-    if (parts.length) return [...new Set(parts)].join(', ');
-    return formatLocation(loc);
-};
-
-/**
- * AF-1 — thống kê chi tiết một tin.
- * Analytics API + (cách A) getJobDetail để lấy lương / khu vực.
- */
+/** AF-1 — thống kê chi tiết một tin (1 API: jobMeta + summary + trend). */
 const JobAnalyticsDetailPage = () => {
     const { jobId } = useParams();
     const location = useLocation();
@@ -85,43 +67,13 @@ const JobAnalyticsDetailPage = () => {
         : ROUTES.RECRUITER_ANALYTICS;
     const [periodDays, setPeriodDays] = useState(30);
     const [loading, setLoading] = useState(true);
-    const [detailLoading, setDetailLoading] = useState(true);
     const [error, setError] = useState('');
     const [summary, setSummary] = useState(null);
-    const [trends, setTrends] = useState([]);
-    const [job, setJob] = useState(null);
-    const [jobDetail, setJobDetail] = useState(null);
+    const [trendPoints, setTrendPoints] = useState([]);
+    const [jobMeta, setJobMeta] = useState(null);
     const [periodStart, setPeriodStart] = useState(null);
     const [periodEnd, setPeriodEnd] = useState(null);
     const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
-
-    useEffect(() => {
-        if (!jobId) return undefined;
-        let cancelled = false;
-        setDetailLoading(true);
-        recruiterJobApi
-            .getJobDetail(jobId)
-            .then((detail) => {
-                if (!cancelled) setJobDetail(detail || null);
-            })
-            .catch((err) => {
-                if (!cancelled) {
-                    setJobDetail(null);
-                    toast.error(
-                        getRecruiterJobApiErrorMessage(
-                            err,
-                            'Không tải được thông tin chi tiết tin.'
-                        )
-                    );
-                }
-            })
-            .finally(() => {
-                if (!cancelled) setDetailLoading(false);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [jobId]);
 
     const loadAnalytics = useCallback(async () => {
         if (!jobId) return;
@@ -130,14 +82,13 @@ const JobAnalyticsDetailPage = () => {
         try {
             const period = lastNDays(periodDays);
             const data = await loadJobRecruitmentAnalytics(jobId, period);
-            const nextJob = Array.isArray(data?.jobs) ? data.jobs[0] : null;
+            setJobMeta(data?.jobMeta ?? null);
             setSummary(data?.summary ?? null);
-            setTrends(Array.isArray(data?.trends) ? data.trends : []);
-            setJob(nextJob);
+            setTrendPoints(getTrendPoints(data));
             setPeriodStart(data?.periodStart ?? null);
             setPeriodEnd(data?.periodEnd ?? null);
             setLastUpdatedAt(data?.lastUpdatedAt ?? null);
-            if (!nextJob) {
+            if (!data?.jobMeta) {
                 setError('Không tìm thấy tin tuyển dụng hoặc bạn không có quyền xem.');
             }
         } catch (err) {
@@ -146,9 +97,9 @@ const JobAnalyticsDetailPage = () => {
                 'Không tải được thống kê chi tiết tin.'
             );
             setError(message);
+            setJobMeta(null);
             setSummary(null);
-            setTrends([]);
-            setJob(null);
+            setTrendPoints([]);
             toast.error(message);
         } finally {
             setLoading(false);
@@ -159,20 +110,12 @@ const JobAnalyticsDetailPage = () => {
         loadAnalytics();
     }, [loadAnalytics]);
 
-    const { points } = useMemo(
-        () => buildChartPoints(trends, periodDays),
-        [trends, periodDays]
-    );
-
-    const hireRate = formatRate(summary?.applicationToHireRatePercent);
-    const applyRate = formatRate(summary?.viewToApplicationRatePercent);
-    const createdAt = jobDetail?.createdAt || job?.createdAt;
-    const deadline = jobDetail?.applicationDeadline || job?.applicationDeadline;
+    const deadline = jobMeta?.applicationDeadline;
     const daysLeft = getDaysLeftLabel(deadline);
-    const displayTitle = jobDetail?.title || job?.title || 'Thống kê chi tiết';
-    const displayStatus = jobDetail?.status || job?.jobStatus;
-    const displayUrgent = Boolean(jobDetail?.urgent ?? job?.urgent);
-    const salaryLabel = formatSalaryRange(jobDetail?.salaryMin, jobDetail?.salaryMax);
+    const displayTitle = jobMeta?.title || 'Thống kê chi tiết';
+    const displayStatus = jobMeta?.status;
+    const displayUrgent = Boolean(jobMeta?.urgent);
+    const salaryLabel = formatSalaryRange(jobMeta?.salaryMin, jobMeta?.salaryMax);
 
     return (
         <div className="recruiter-analytics recruiter-analytics--detail">
@@ -182,7 +125,7 @@ const JobAnalyticsDetailPage = () => {
 
             <header className="recruiter-analytics__detail-header">
                 <div className="recruiter-analytics__detail-heading">
-                    <h1>{loading && !job && !jobDetail ? 'Đang tải…' : displayTitle}</h1>
+                    <h1>{loading && !jobMeta ? 'Đang tải…' : displayTitle}</h1>
                     <div className="recruiter-analytics__detail-badges">
                         {displayStatus ? <JobStatusBadge status={displayStatus} /> : null}
                         {displayUrgent ? (
@@ -224,37 +167,27 @@ const JobAnalyticsDetailPage = () => {
 
             <section className="recruiter-analytics__cards recruiter-analytics__cards--4" aria-label="KPI tin">
                 <article className="recruiter-analytics__card">
-                    <h2>Lượt xem tin</h2>
+                    <h2>Chỉ tiêu</h2>
                     <p className="recruiter-analytics__card-value">
-                        {loading ? '—' : formatCount(summary?.uniqueCandidateViews)}
+                        {loading ? '—' : formatCount(summary?.requiredHeadcount)}
                     </p>
                 </article>
                 <article className="recruiter-analytics__card">
-                    <h2>Lượt ứng tuyển</h2>
+                    <h2>Đã tuyển</h2>
                     <p className="recruiter-analytics__card-value">
-                        {loading ? '—' : formatCount(summary?.applicationCount)}
-                    </p>
-                    <p className="recruiter-analytics__card-sub">
-                        Tỷ lệ ứng tuyển: {loading ? '—' : applyRate}
+                        {loading ? '—' : formatCount(summary?.hiredCount)}
                     </p>
                 </article>
                 <article className="recruiter-analytics__card">
-                    <h2>Lời mời đã gửi</h2>
+                    <h2>Còn thiếu</h2>
                     <p className="recruiter-analytics__card-value">
-                        {loading ? '—' : formatCount(summary?.invitationSentCount)}
-                    </p>
-                    <p className="recruiter-analytics__card-sub">
-                        Nhận: {loading ? '—' : formatCount(summary?.acceptedInvitationCount)}
-                        {' · '}
-                        Từ chối: {loading ? '—' : formatCount(summary?.rejectedInvitationCount)}
-                        {' · '}
-                        Hết hạn: {loading ? '—' : formatCount(summary?.expiredInvitationCount)}
+                        {loading ? '—' : formatCount(summary?.remainingHeadcount)}
                     </p>
                 </article>
                 <article className="recruiter-analytics__card">
-                    <h2>Tỷ lệ tuyển thành công</h2>
+                    <h2>Hồ sơ chờ xử lý</h2>
                     <p className="recruiter-analytics__card-value">
-                        {loading ? '—' : hireRate}
+                        {loading ? '—' : formatCount(summary?.pendingApplicationCount)}
                     </p>
                 </article>
             </section>
@@ -281,7 +214,7 @@ const JobAnalyticsDetailPage = () => {
                     {loading ? (
                         <div className="recruiter-analytics__chart-empty">Đang tải biểu đồ…</div>
                     ) : (
-                        <RecruitmentTrendsChart points={points} />
+                        <RecruitmentTrendsChart points={trendPoints} />
                     )}
                 </section>
 
@@ -290,7 +223,7 @@ const JobAnalyticsDetailPage = () => {
                     <dl className="recruiter-analytics__meta-list">
                         <div>
                             <dt>Ngày tạo</dt>
-                            <dd>{formatDateOnly(createdAt)}</dd>
+                            <dd>{formatDateOnly(jobMeta?.createdAt)}</dd>
                         </div>
                         <div>
                             <dt>Hạn nộp hồ sơ</dt>
@@ -301,11 +234,11 @@ const JobAnalyticsDetailPage = () => {
                         </div>
                         <div>
                             <dt>Khu vực làm việc</dt>
-                            <dd>{detailLoading ? '…' : getWorkLocationLabel(jobDetail)}</dd>
+                            <dd>{loading ? '…' : jobMeta?.locationLabel || '—'}</dd>
                         </div>
                         <div>
                             <dt>Mức lương</dt>
-                            <dd>{detailLoading ? '…' : salaryLabel || '—'}</dd>
+                            <dd>{loading ? '…' : salaryLabel || '—'}</dd>
                         </div>
                     </dl>
                 </aside>

@@ -9,7 +9,6 @@ import {
     EyeIcon,
     MailIcon,
     PlusSquareIcon,
-    TrendingIcon,
     UserPlusIcon,
     UsersIcon,
 } from '../../components/common/icons.jsx';
@@ -17,7 +16,7 @@ import { useAuth } from '../../contexts/authContext.js';
 import { ROUTES, getRecruiterMyJobsPath } from '../../routes/path.js';
 import {
     formatCount,
-    formatRate,
+    getJobsList,
     getRecruitmentAnalyticsApiErrorMessage,
     loadRecruiterAnalyticsDashboard,
 } from '../../services/recruitmentAnalyticsService.js';
@@ -70,19 +69,6 @@ const isRejectedVerification = (status) =>
 
 const JOBS_PREVIEW_LIMIT = 5;
 
-const formatUpdatedAt = (iso) => {
-    if (!iso) return '—';
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return '—';
-    return date.toLocaleString('vi-VN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-};
-
 const getDeadlineMs = (job) => {
     if (!job?.applicationDeadline) return Number.POSITIVE_INFINITY;
     const ms = new Date(job.applicationDeadline).getTime();
@@ -124,7 +110,6 @@ const RecruiterHomePage = () => {
     const [error, setError] = useState('');
     const [summary, setSummary] = useState(null);
     const [jobs, setJobs] = useState([]);
-    const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
     const [badge, setBadge] = useState(null);
     const [verificationStatus, setVerificationStatus] = useState(null);
     const [businessType, setBusinessType] = useState(null);
@@ -145,8 +130,7 @@ const RecruiterHomePage = () => {
                 ]);
                 if (cancelled) return;
                 setSummary(data?.summary ?? null);
-                setJobs(Array.isArray(data?.jobs) ? data.jobs : []);
-                setLastUpdatedAt(data?.lastUpdatedAt ?? null);
+                setJobs(getJobsList(data));
                 setBadge(profile?.badge ?? null);
                 setVerificationStatus(profile?.verificationStatus ?? null);
                 setBusinessType(profile?.businessType ?? null);
@@ -165,7 +149,6 @@ const RecruiterHomePage = () => {
                 setError(message);
                 setSummary(null);
                 setJobs([]);
-                setLastUpdatedAt(null);
                 setBadge(null);
                 setVerificationStatus(null);
                 setBusinessType(null);
@@ -204,42 +187,28 @@ const RecruiterHomePage = () => {
         {
             key: 'jobs',
             label: 'Số tin đang tuyển',
-            value: loading ? '—' : formatCount(jobs.length),
+            value: loading ? '—' : formatCount(summary?.activeJobCount),
             Icon: BriefcaseIcon,
             tone: 'blue',
         },
         {
-            key: 'apps',
-            label: 'Ứng viên mới',
-            value: loading ? '—' : formatCount(summary?.applicationCount),
+            key: 'remaining',
+            label: 'Còn thiếu',
+            value: loading ? '—' : formatCount(summary?.remainingHeadcount),
             Icon: UserPlusIcon,
             tone: 'green',
         },
         {
-            key: 'views',
-            label: 'Lượt xem tin',
-            value: loading ? '—' : formatCount(summary?.uniqueCandidateViews),
+            key: 'pending',
+            label: 'Hồ sơ chờ xử lý',
+            value: loading ? '—' : formatCount(summary?.pendingApplicationCount),
             Icon: EyeIcon,
             tone: 'blue',
         },
         {
-            key: 'invites',
-            label: 'Lời mời đã gửi',
-            value: loading ? '—' : formatCount(summary?.invitationSentCount),
-            Icon: MailIcon,
-            tone: 'blue',
-        },
-        {
-            key: 'acceptRate',
-            label: 'Tỷ lệ nhận lời mời',
-            value: loading ? '—' : formatRate(summary?.invitationAcceptanceRatePercent, 0),
-            Icon: TrendingIcon,
-            tone: 'green',
-        },
-        {
             key: 'hires',
-            label: 'Tuyển thành công',
-            value: loading ? '—' : formatCount(summary?.successfulHireCount),
+            label: 'Đã tuyển (30 ngày)',
+            value: loading ? '—' : formatCount(summary?.hiredInPeriodCount),
             Icon: CheckCircleIcon,
             tone: 'gold',
         },
@@ -276,10 +245,6 @@ const RecruiterHomePage = () => {
                     )}
                 </h1>
                 <p className="recruiter-dashboard__meta">Tổng quan tuyển dụng</p>
-                <p className="recruiter-dashboard__period">
-                    30 ngày gần nhất · Cập nhật {formatUpdatedAt(lastUpdatedAt)}
-                    {loading ? ' · Đang tải…' : ''}
-                </p>
             </header>
 
             {error ? (
@@ -368,9 +333,9 @@ const RecruiterHomePage = () => {
                     <div className="recruiter-dashboard__section-head">
                         <div className="recruiter-dashboard__section-title">
                             <h2>Tin đang tuyển</h2>
-                            {!loading && jobs.length > 0 ? (
+                            {!loading && summary?.activeJobCount > 0 ? (
                                 <span className="recruiter-dashboard__count-chip">
-                                    {formatCount(jobs.length)} Active
+                                    {formatCount(summary.activeJobCount)} Active
                                 </span>
                             ) : null}
                         </div>
@@ -404,14 +369,12 @@ const RecruiterHomePage = () => {
                                                 </span>
                                             </div>
                                             <div className="recruiter-dashboard__job-chips">
-                                                <span className="recruiter-dashboard__job-chip recruiter-dashboard__job-chip--blue">
-                                                    {formatCount(job.uniqueCandidateViews)} lượt xem
-                                                </span>
                                                 <span className="recruiter-dashboard__job-chip recruiter-dashboard__job-chip--green">
-                                                    {formatCount(job.applicationCount)} ứng viên
+                                                    {formatCount(job.pendingApplicationCount)} chờ xử lý
                                                 </span>
-                                                <span className="recruiter-dashboard__job-chip recruiter-dashboard__job-chip--violet">
-                                                    {formatCount(job.invitationSentCount)} lời mời
+                                                <span className="recruiter-dashboard__job-chip recruiter-dashboard__job-chip--blue">
+                                                    {formatCount(job.hiredCount)}/
+                                                    {formatCount(job.requiredHeadcount)} đã tuyển
                                                 </span>
                                                 {daysLeft ? (
                                                     <span className="recruiter-dashboard__job-chip recruiter-dashboard__job-chip--amber">

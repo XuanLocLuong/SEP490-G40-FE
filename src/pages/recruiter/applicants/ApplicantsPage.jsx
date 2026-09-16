@@ -60,8 +60,7 @@ const EMPTY_MATCH_DATA = {
     applications: [],
 };
 
-const canManageApplications = (job) =>
-    job?.status === 'OPEN' || job?.status === 'CLOSED';
+const canManageApplications = (job) => job?.status === 'OPEN';
 
 const ApplicantsPage = () => {
     const navigate = useNavigate();
@@ -723,8 +722,7 @@ const ApplicantsPage = () => {
 
                         {readOnly && (
                             <p className="applicants-page__readonly-hint">
-                                Tin này không còn đang tuyển — bạn chỉ có thể xem hồ sơ ứng viên,
-                                không chấp nhận hoặc từ chối.
+                                Tin này không còn đang tuyển — bạn chỉ có thể xem hồ sơ ứng viên.
                             </p>
                         )}
 

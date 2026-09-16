@@ -436,6 +436,12 @@ const RecruiterInvitationsPage = () => {
                             )}
                         </div>
 
+                        {readOnly && (
+                            <p className="applicants-page__readonly-hint">
+                                Tin này không còn đang tuyển — bạn chỉ có thể xem lời mời đã gửi.
+                            </p>
+                        )}
+
                         <div className="applicants-page__filters-row">
                             <div className="applicants-page__filters">
                                 <label>Trạng thái</label>

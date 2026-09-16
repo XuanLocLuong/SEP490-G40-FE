@@ -102,8 +102,9 @@
 
 .recruiter-dashboard__kpi-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
 }
 
 /* Icon trái | số + mô tả phải */
@@ -450,7 +451,7 @@
 
 @media (max-width: 1100px) {
     .recruiter-dashboard__kpi-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .recruiter-dashboard__split {

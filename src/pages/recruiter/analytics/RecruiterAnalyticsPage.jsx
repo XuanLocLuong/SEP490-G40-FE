@@ -1,20 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import RecruitmentTrendsChart, {
-    buildChartPoints,
-} from '../../../components/recruiter/analytics/RecruitmentTrendsChart.jsx';
+import RecruitmentTrendsChart from '../../../components/recruiter/analytics/RecruitmentTrendsChart.jsx';
+import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
+import RecruitmentPagination from '../../../components/recruiter/RecruitmentPagination.jsx';
 import {
     ROUTES,
     getRecruiterJobAnalyticsPath,
 } from '../../../routes/path.js';
 import {
     formatCount,
-    formatRate,
+    getJobsList,
     getRecruitmentAnalyticsApiErrorMessage,
+    getTrendPoints,
     lastNDays,
     loadRecruiterAnalyticsDashboard,
 } from '../../../services/recruitmentAnalyticsService.js';
+import { RECRUITMENT_PAGE_SIZE } from '../../../utils/recruitmentPagination.js';
 import '../../../assets/styles/RecruiterAnalyticsStyle.css';
 
 const PERIOD_CHIPS = [
@@ -47,19 +49,27 @@ const formatPeriodDay = (iso) => {
     });
 };
 
+const formatProgress = (hired, required) => {
+    const h = formatCount(hired);
+    const r = formatCount(required);
+    if (r === 0) return `${h}/—`;
+    return `${h}/${r}`;
+};
+
 const RecruiterAnalyticsPage = () => {
     const [searchParams] = useSearchParams();
-    /** Chỉ hiện khi vào từ Tổng quan (?from=overview). */
     const showBackToOverview = searchParams.get('from') === 'overview';
 
     const [periodDays, setPeriodDays] = useState(30);
     const [includeHistorical, setIncludeHistorical] = useState(false);
+    const [page, setPage] = useState(0);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [summary, setSummary] = useState(null);
-    const [trends, setTrends] = useState([]);
+    const [trendPoints, setTrendPoints] = useState([]);
     const [jobs, setJobs] = useState([]);
+    const [totalPages, setTotalPages] = useState(0);
     const [periodStart, setPeriodStart] = useState(null);
     const [periodEnd, setPeriodEnd] = useState(null);
     const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
@@ -72,10 +82,12 @@ const RecruiterAnalyticsPage = () => {
             const data = await loadRecruiterAnalyticsDashboard({
                 ...period,
                 includeHistorical,
+                page,
             });
             setSummary(data?.summary ?? null);
-            setTrends(Array.isArray(data?.trends) ? data.trends : []);
-            setJobs(Array.isArray(data?.jobs) ? data.jobs : []);
+            setTrendPoints(getTrendPoints(data));
+            setJobs(getJobsList(data));
+            setTotalPages(formatCount(data?.jobs?.totalPages));
             setPeriodStart(data?.periodStart ?? null);
             setPeriodEnd(data?.periodEnd ?? null);
             setLastUpdatedAt(data?.lastUpdatedAt ?? null);
@@ -86,8 +98,9 @@ const RecruiterAnalyticsPage = () => {
             );
             setError(message);
             setSummary(null);
-            setTrends([]);
+            setTrendPoints([]);
             setJobs([]);
+            setTotalPages(0);
             setPeriodStart(null);
             setPeriodEnd(null);
             setLastUpdatedAt(null);
@@ -95,19 +108,19 @@ const RecruiterAnalyticsPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [periodDays, includeHistorical]);
+    }, [periodDays, includeHistorical, page]);
 
     useEffect(() => {
         load();
     }, [load]);
 
-    const { points } = useMemo(
-        () => buildChartPoints(trends, periodDays),
-        [trends, periodDays]
-    );
+    useEffect(() => {
+        setPage(0);
+    }, [periodDays, includeHistorical]);
 
-    const hireRate = formatRate(summary?.applicationToHireRatePercent);
-    const applyRate = formatRate(summary?.viewToApplicationRatePercent);
+    const handlePageChange = (nextPage) => {
+        setPage(nextPage);
+    };
 
     return (
         <div className="recruiter-analytics">
@@ -164,40 +177,31 @@ const RecruiterAnalyticsPage = () => {
                 aria-label="Tóm tắt"
             >
                 <article className="recruiter-analytics__card">
-                    <h2>Lượt xem tin</h2>
+                    <h2>Tin đang tuyển</h2>
                     <p className="recruiter-analytics__card-value">
-                        {loading ? '—' : formatCount(summary?.uniqueCandidateViews)}
+                        {loading ? '—' : formatCount(summary?.activeJobCount)}
                     </p>
                 </article>
 
                 <article className="recruiter-analytics__card">
-                    <h2>Lượt ứng tuyển</h2>
+                    <h2>Còn tuyển thêm</h2>
                     <p className="recruiter-analytics__card-value">
-                        {loading ? '—' : formatCount(summary?.applicationCount)}
+                        {loading ? '—' : formatCount(summary?.remainingHeadcount)}
                     </p>
-                    <p className="recruiter-analytics__card-sub">
-                        Tỷ lệ ứng tuyển: {loading ? '—' : applyRate}
+                    <p className="recruiter-analytics__card-sub">người (tin đang tuyển)</p>
+                </article>
+
+                <article className="recruiter-analytics__card">
+                    <h2>Hồ sơ chờ xử lý</h2>
+                    <p className="recruiter-analytics__card-value">
+                        {loading ? '—' : formatCount(summary?.pendingApplicationCount)}
                     </p>
                 </article>
 
                 <article className="recruiter-analytics__card">
-                    <h2>Lời mời đã gửi</h2>
+                    <h2>Đã tuyển trong kỳ</h2>
                     <p className="recruiter-analytics__card-value">
-                        {loading ? '—' : formatCount(summary?.invitationSentCount)}
-                    </p>
-                    <p className="recruiter-analytics__card-sub">
-                        Nhận: {loading ? '—' : formatCount(summary?.acceptedInvitationCount)}
-                        {' · '}
-                        Từ chối: {loading ? '—' : formatCount(summary?.rejectedInvitationCount)}
-                        {' · '}
-                        Hết hạn: {loading ? '—' : formatCount(summary?.expiredInvitationCount)}
-                    </p>
-                </article>
-
-                <article className="recruiter-analytics__card">
-                    <h2>Tỷ lệ tuyển thành công</h2>
-                    <p className="recruiter-analytics__card-value">
-                        {loading ? '—' : hireRate}
+                        {loading ? '—' : formatCount(summary?.hiredInPeriodCount)}
                     </p>
                 </article>
             </section>
@@ -207,7 +211,7 @@ const RecruiterAnalyticsPage = () => {
                 {loading ? (
                     <div className="recruiter-analytics__chart-empty">Đang tải biểu đồ…</div>
                 ) : (
-                    <RecruitmentTrendsChart points={points} />
+                    <RecruitmentTrendsChart points={trendPoints} />
                 )}
             </section>
 
@@ -220,45 +224,49 @@ const RecruiterAnalyticsPage = () => {
                     <table className="recruiter-analytics__table">
                         <thead>
                             <tr>
+                                <th className="recruiter-analytics__table-stt">STT</th>
                                 <th>Tin tuyển dụng</th>
-                                <th>Lượt xem</th>
-                                <th>Ứng tuyển</th>
-                                <th>Đã tuyển</th>
-                                <th>Tỷ lệ tuyển thành công</th>
+                                <th>Chờ xử lý</th>
+                                <th>Hồ sơ mới (kỳ)</th>
+                                <th>Đã tuyển (kỳ)</th>
+                                <th>Tiến độ</th>
                                 <th>Chi tiết</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="recruiter-analytics__empty-row">
+                                    <td colSpan={7} className="recruiter-analytics__empty-row">
                                         Đang tải…
                                     </td>
                                 </tr>
                             ) : jobs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="recruiter-analytics__empty-row">
+                                    <td colSpan={7} className="recruiter-analytics__empty-row">
                                         Không có tin phù hợp bộ lọc.
                                     </td>
                                 </tr>
                             ) : (
-                                jobs.map((job) => (
+                                jobs.map((job, index) => (
                                     <tr key={job.jobId}>
+                                        <td className="recruiter-analytics__table-stt">
+                                            {page * RECRUITMENT_PAGE_SIZE + index + 1}
+                                        </td>
                                         <td>
                                             <div className="recruiter-analytics__job-title">
                                                 {job.title || '—'}
                                             </div>
                                             {job.jobStatus ? (
                                                 <div className="recruiter-analytics__job-status">
-                                                    {job.jobStatus}
+                                                    <JobStatusBadge status={job.jobStatus} />
                                                 </div>
                                             ) : null}
                                         </td>
-                                        <td>{formatCount(job.uniqueCandidateViews)}</td>
-                                        <td>{formatCount(job.applicationCount)}</td>
-                                        <td>{formatCount(job.successfulHireCount)}</td>
+                                        <td>{formatCount(job.pendingApplicationCount)}</td>
+                                        <td>{formatCount(job.newApplicationInPeriod)}</td>
+                                        <td>{formatCount(job.hiredInPeriod)}</td>
                                         <td>
-                                            {formatRate(job.applicationToHireRatePercent)}
+                                            {formatProgress(job.hiredCount, job.requiredHeadcount)}
                                         </td>
                                         <td>
                                             <Link
@@ -279,6 +287,14 @@ const RecruiterAnalyticsPage = () => {
                         </tbody>
                     </table>
                 </div>
+
+                <RecruitmentPagination
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    loading={loading}
+                    ariaLabel="Phân trang thống kê tin tuyển dụng"
+                />
             </section>
         </div>
     );
