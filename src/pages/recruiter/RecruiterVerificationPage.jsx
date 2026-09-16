@@ -11,6 +11,12 @@ import {
 import recruiterProfileApi from '../../apis/RecruiterProfileApi.jsx';
 import { ROUTES } from '../../routes/path.js';
 import { mapBusinessTypeOptions } from '../../utils/businessTypeDisplay.js';
+import {
+    formatTaxCode,
+    formatTaxCodeInput,
+    isValidTaxCode,
+    normalizeTaxCode,
+} from '../../utils/taxCode.js';
 import RequiredMark from '../../components/common/RequiredMark.jsx';
 import {
     VERIFICATION_STATUS,
@@ -19,7 +25,6 @@ import {
     getVerificationOutcome,
     getVerificationRejectionReason,
     isBusinessLicenseOnlyFlow,
-    isBusinessVerifiedBadge,
     isFullyBusinessVerified,
     isUnverifiedBadge,
     isVerificationExpired,
@@ -37,7 +42,7 @@ const STEPS = [
 const FileDropzone = ({
     label,
     hint,
-    accept = 'image/*,application/pdf',
+    accept = 'image/*',
     file,
     onFileChange,
     disabled = false,
@@ -80,9 +85,6 @@ const FileDropzone = ({
                 {file ? file.name : hint}
                 {file && previewUrl ? (
                     <em className="rv-dropzone__preview-hint">Kiểm tra ảnh trước khi nộp</em>
-                ) : null}
-                {file && !previewUrl ? (
-                    <em className="rv-dropzone__preview-hint">PDF — không xem trước được</em>
                 ) : null}
             </span>
             {file ? (
@@ -140,7 +142,7 @@ const CertificateImagesField = ({
                 <input
                     id={inputId}
                     type="file"
-                    accept="image/*,application/pdf"
+                    accept="image/*"
                     multiple
                     hidden
                     disabled={disabled}
@@ -153,7 +155,7 @@ const CertificateImagesField = ({
                 <span className="rv-dropzone__meta">
                     {files.length > 0
                         ? `${files.length} trang đã chọn — click để thêm`
-                        : 'Chọn nhiều ảnh/PDF các trang giấy phép'}
+                        : 'Chọn nhiều ảnh các trang giấy phép'}
                 </span>
             </label>
 
@@ -163,9 +165,7 @@ const CertificateImagesField = ({
                         <li key={`${item.name}-${index}`} className="rv-multi-upload__item">
                             {item.isImage && item.url ? (
                                 <img src={item.url} alt={`Xem trước ${item.name}`} />
-                            ) : (
-                                <span className="rv-multi-upload__pdf">PDF</span>
-                            )}
+                            ) : null}
                             <span className="rv-multi-upload__name" title={item.name}>
                                 {item.name}
                             </span>
@@ -253,7 +253,7 @@ const RecruiterVerificationPage = () => {
     const applyUiFromProfile = useCallback((data, typeOptions = []) => {
         setProfile(data);
         if (data?.taxCode) {
-            setTaxCode((prev) => prev || String(data.taxCode));
+            setTaxCode((prev) => prev || formatTaxCode(data.taxCode));
             setLicenseProofMode('tax');
         }
 
@@ -284,7 +284,10 @@ const RecruiterVerificationPage = () => {
             return;
         }
 
-        const outcome = getVerificationOutcome(null, { profile: data });
+        const outcome = getVerificationOutcome(null, {
+            profile: data,
+            needsLicense: needsGpkd,
+        });
 
         if (outcome === 'success') {
             setResultKind('success');
@@ -408,11 +411,17 @@ const RecruiterVerificationPage = () => {
             return;
         }
 
-        const trimmedTax = taxCode.trim();
+        const normalizedTax = normalizeTaxCode(taxCode);
         if (needsLicense || licenseOnlyFlow) {
             if (licenseProofMode === 'tax') {
-                if (!trimmedTax) {
+                if (!normalizedTax) {
                     toast.error('Vui lòng nhập mã số thuế.');
+                    return;
+                }
+                if (!isValidTaxCode(taxCode)) {
+                    toast.error(
+                        'Mã số thuế phải gồm 10 số hoặc 13 số theo định dạng XXXXXXXXXX-XXX'
+                    );
                     return;
                 }
             } else if (certificateImages.length === 0) {
@@ -421,14 +430,34 @@ const RecruiterVerificationPage = () => {
             }
         }
 
+        if (normalizedTax && certificateImages.length > 0) {
+            toast.error(
+                'Chỉ được chọn một phương thức xác thực: mã số thuế hoặc giấy phép kinh doanh'
+            );
+            return;
+        }
+
         if (!licenseOnlyFlow && (!frontImage || !backImage)) {
-            toast.error('Vui lòng tải đủ mặt trước và mặt sau CCCD.');
+            toast.error('Vui lòng tải lên đầy đủ mặt trước và mặt sau CCCD');
+            return;
+        }
+
+        if (
+            (!licenseOnlyFlow &&
+                [frontImage, backImage].some(
+                    (file) => !String(file?.type || '').startsWith('image/')
+                )) ||
+            certificateImages.some(
+                (file) => !String(file?.type || '').startsWith('image/')
+            )
+        ) {
+            toast.error('Vui lòng chỉ tải lên tệp hình ảnh.');
             return;
         }
 
         const licenseTax =
             (needsLicense || licenseOnlyFlow) && licenseProofMode === 'tax'
-                ? trimmedTax
+                ? formatTaxCode(taxCode)
                 : undefined;
         const licenseCertificates =
             (needsLicense || licenseOnlyFlow) && licenseProofMode === 'certificate'
@@ -487,12 +516,14 @@ const RecruiterVerificationPage = () => {
             const refreshed = await recruiterProfileApi.getProfile().catch(() => null);
             if (refreshed) setProfile(refreshed);
 
-            const outcome = getVerificationOutcome(data, { profile: refreshed || profile });
-
             const refreshedNeedsLicense = resolveRequiresBusinessLicense({
                 businessType: refreshed?.businessType || profile?.businessType,
                 typeOptions: businessTypeOptions,
                 profileRequiresBusinessLicense: refreshed?.requiresBusinessLicense,
+            });
+            const outcome = getVerificationOutcome(data, {
+                profile: refreshed || profile,
+                needsLicense: refreshedNeedsLicense,
             });
             const fullyVerified = isFullyBusinessVerified({
                 badge: refreshed?.badge,
@@ -507,7 +538,10 @@ const RecruiterVerificationPage = () => {
             } else if (outcome === 'rejected') {
                 showResult('rejected', data);
             } else {
-                const fromProfile = getVerificationOutcome(null, { profile: refreshed || profile });
+                const fromProfile = getVerificationOutcome(null, {
+                    profile: refreshed || profile,
+                    needsLicense: refreshedNeedsLicense,
+                });
                 if (fromProfile === 'success' && fullyVerified) showResult('success', data);
                 else if (fromProfile === 'pending') showResult('pending', data);
                 else if (fromProfile === 'rejected') showResult('rejected', data);
@@ -699,13 +733,17 @@ const RecruiterVerificationPage = () => {
                                     </span>
                                     <input
                                         type="text"
+                                        inputMode="numeric"
+                                        maxLength={14}
                                         value={taxCode}
-                                        onChange={(e) => setTaxCode(e.target.value)}
-                                        placeholder="Mã số thuế 10 hoặc 13 số"
+                                        onChange={(e) =>
+                                            setTaxCode(formatTaxCodeInput(e.target.value))
+                                        }
+                                        placeholder="10 số hoặc XXXXXXXXXX-XXX"
                                         disabled={submitting}
                                     />
                                     <small className="rv-field__hint">
-                                        Hệ thống sẽ tra cứu thuế theo MST.
+                                        MST 13 số sẽ được định dạng với dấu gạch trước 3 số cuối.
                                     </small>
                                 </label>
                             ) : (

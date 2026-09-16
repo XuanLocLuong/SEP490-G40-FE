@@ -1,5 +1,6 @@
 import axiosClient, { API_PREFIX } from './AxiosClient.jsx';
 import { resolveAiUserErrorMessage } from '../utils/aiErrorMessage.js';
+import { formatTaxCode, normalizeTaxCode } from '../utils/taxCode.js';
 
 const BASE = `${API_PREFIX}/verifications`;
 
@@ -47,6 +48,16 @@ const appendIfPresent = (formData, key, value) => {
     formData.append(key, value);
 };
 
+const assertSingleBusinessProof = (taxCode, certificateImages) => {
+    const hasTaxCode = Boolean(normalizeTaxCode(taxCode));
+    const hasCertificate = (certificateImages || []).some(Boolean);
+    if (hasTaxCode && hasCertificate) {
+        throw new Error(
+            'Chỉ được chọn một phương thức xác thực: mã số thuế hoặc giấy phép kinh doanh'
+        );
+    }
+};
+
 /**
  * Nộp xác minh gộp CCCD + MST/GPKD (lần đầu / retry kèm CCCD).
  * POST /verifications/submit | /retry
@@ -70,13 +81,13 @@ export const submitVerification = (
     },
     { retry = false } = {}
 ) => {
+    assertSingleBusinessProof(taxCode, certificateImages);
     const formData = new FormData();
     appendIfPresent(formData, 'businessId', businessId);
     if (frontImage) formData.append('frontImage', frontImage);
     if (backImage) formData.append('backImage', backImage);
 
-    const trimmedTax = typeof taxCode === 'string' ? taxCode.trim() : taxCode;
-    appendIfPresent(formData, 'taxCode', trimmedTax);
+    appendIfPresent(formData, 'taxCode', formatTaxCode(taxCode));
 
     (certificateImages || []).forEach((file) => {
         if (file) formData.append('certificateImages', file);
@@ -103,11 +114,11 @@ export const submitBusinessLicense = (
     { businessId, taxCode, certificateImages = [] },
     { retry = false } = {}
 ) => {
+    assertSingleBusinessProof(taxCode, certificateImages);
     const formData = new FormData();
     appendIfPresent(formData, 'businessId', businessId);
 
-    const trimmedTax = typeof taxCode === 'string' ? taxCode.trim() : taxCode;
-    appendIfPresent(formData, 'taxCode', trimmedTax);
+    appendIfPresent(formData, 'taxCode', formatTaxCode(taxCode));
 
     (certificateImages || []).forEach((file) => {
         if (file) formData.append('certificateImages', file);

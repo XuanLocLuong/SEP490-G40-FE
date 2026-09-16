@@ -91,6 +91,20 @@ export const SYSTEM_CONFIG_UI_MAP = {
         unit: '',
         isJson: false,
     },
+    RECOMMENDATION_COLD_START_WEIGHT_SCHEDULE: {
+        group: 'Khám phá và Xu hướng',
+        label: 'Cold-start · Trọng số lịch làm việc',
+        icon: 'Sparkles',
+        unit: '',
+        isJson: false,
+    },
+    RECOMMENDATION_COLD_START_WEIGHT_SKILL: {
+        group: 'Khám phá và Xu hướng',
+        label: 'Cold-start · Trọng số kỹ năng',
+        icon: 'Sparkles',
+        unit: '',
+        isJson: false,
+    },
 
     // ---- 3. Bán kính tìm kiếm (Search Radius) ----
     RECOMMENDATION_MAX_RADIUS_KM: {
@@ -464,6 +478,8 @@ export const SYSTEM_CONFIG_SUB_GROUPS = {
             'RECOMMENDATION_COLD_START_WEIGHT_SALARY',
             'RECOMMENDATION_COLD_START_WEIGHT_TRUST',
             'RECOMMENDATION_COLD_START_WEIGHT_TRENDING',
+            'RECOMMENDATION_COLD_START_WEIGHT_SCHEDULE',
+            'RECOMMENDATION_COLD_START_WEIGHT_SKILL',
         ],
     },
     TOP_RECRUITER_WEIGHTS: {
