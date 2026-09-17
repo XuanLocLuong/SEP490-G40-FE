@@ -371,7 +371,7 @@ const RecruiterVerificationPage = () => {
         setResultKind(kind);
         setResultPayload(payload);
         if (kind === 'pending') {
-            toast.info('Hồ sơ đang chờ Manual Team duyệt. Bạn sẽ nhận thông báo trên app JobLink.');
+            toast.info('Hồ sơ đang chờ Manual Team duyệt. Bạn sẽ nhận thông báo trên web.');
         } else if (kind === 'success') {
             toast.success('Xác minh thành công.');
         } else if (kind === 'rejected') {
