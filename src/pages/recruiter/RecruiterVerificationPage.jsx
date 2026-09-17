@@ -784,7 +784,7 @@ const RecruiterVerificationPage = () => {
                                 : useRetryApi || useLicenseRetryApi
                                   ? 'Nộp lại hồ sơ'
                                   : licenseOnlyFlow
-                                    ? 'Gửi xác thực Giấy phép kinh doanh'
+                                    ? 'Gửi xác thực'
                                     : 'Gửi hồ sơ xác minh'}
                         </button>
                     </div>
