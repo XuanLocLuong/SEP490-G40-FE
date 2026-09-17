@@ -137,9 +137,6 @@ const RecruiterAnalyticsPage = () => {
                 <h1>Thống kê tuyển dụng</h1>
                 <p className="recruiter-analytics__meta">
                     Kỳ {formatPeriodDay(periodStart)} – {formatPeriodDay(periodEnd)}
-                    {' · '}
-                    Cập nhật {formatDateTime(lastUpdatedAt)}
-                    {loading ? ' · Đang tải…' : ''}
                 </p>
             </header>
 
@@ -187,11 +184,11 @@ const RecruiterAnalyticsPage = () => {
                 </article>
 
                 <article className="recruiter-analytics__card">
-                    <h2>Còn tuyển thêm</h2>
+                    <h2>Cần tuyển thêm</h2>
                     <p className="recruiter-analytics__card-value">
                         {loading ? '—' : formatCount(summary?.remainingHeadcount)}
                     </p>
-                    <p className="recruiter-analytics__card-sub">người (tin đang tuyển)</p>
+                    <p className="recruiter-analytics__card-sub">người (dựa trên các tin đang tuyển)</p>
                 </article>
 
                 <article className="recruiter-analytics__card">
