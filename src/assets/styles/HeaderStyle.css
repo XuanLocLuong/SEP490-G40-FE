@@ -1,4 +1,5 @@
 .site-header {
+    --site-header-height: 72px;
     position: sticky;
     top: 0;
     z-index: var(--overlay-z-header, 100);

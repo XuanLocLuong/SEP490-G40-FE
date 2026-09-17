@@ -31,20 +31,6 @@
     text-decoration: underline;
 }
 
-.recruiter-analytics__back {
-    display: inline-flex;
-    align-items: center;
-    margin-bottom: 14px;
-    color: #2563eb;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.recruiter-analytics__back:hover {
-    text-decoration: underline;
-}
-
 .recruiter-analytics__detail-header {
     display: flex;
     flex-wrap: wrap;

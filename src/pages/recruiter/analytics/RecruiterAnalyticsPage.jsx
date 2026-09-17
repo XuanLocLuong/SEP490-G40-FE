@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import RecruiterBackLink from '../../../components/recruiter/RecruiterBackLink.jsx';
 import RecruitmentTrendsChart from '../../../components/recruiter/analytics/RecruitmentTrendsChart.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
 import RecruitmentPagination from '../../../components/recruiter/RecruitmentPagination.jsx';
@@ -17,6 +18,7 @@ import {
     loadRecruiterAnalyticsDashboard,
 } from '../../../services/recruitmentAnalyticsService.js';
 import { RECRUITMENT_PAGE_SIZE } from '../../../utils/recruitmentPagination.js';
+import { RECRUITER_BACK_LABELS } from '../../../utils/recruiterBackNav.js';
 import '../../../assets/styles/RecruiterAnalyticsStyle.css';
 
 const PERIOD_CHIPS = [
@@ -125,9 +127,10 @@ const RecruiterAnalyticsPage = () => {
     return (
         <div className="recruiter-analytics">
             {showBackToOverview ? (
-                <Link to={ROUTES.RECRUITER_HOME} className="recruiter-back-overview">
-                    ← Quay lại tổng quan
-                </Link>
+                <RecruiterBackLink
+                    to={ROUTES.RECRUITER_HOME}
+                    label={RECRUITER_BACK_LABELS.overview}
+                />
             ) : null}
 
             <header className="recruiter-analytics__header">

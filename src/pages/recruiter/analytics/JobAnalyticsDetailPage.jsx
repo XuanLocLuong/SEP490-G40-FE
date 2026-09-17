@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import RecruiterBackLink from '../../../components/recruiter/RecruiterBackLink.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
 import RecruitmentTrendsChart from '../../../components/recruiter/analytics/RecruitmentTrendsChart.jsx';
 import {
@@ -11,11 +12,13 @@ import {
     loadJobRecruitmentAnalytics,
 } from '../../../services/recruitmentAnalyticsService.js';
 import { formatSalaryRange } from '../../../utils/formatters.js';
+import { getDeadlineCountdownLabel } from '../../../utils/jobDeadlineDisplay.js';
 import {
     ROUTES,
     getRecruiterApplicantsPath,
     getRecruiterInvitationsPath,
 } from '../../../routes/path.js';
+import { RECRUITER_BACK_LABELS } from '../../../utils/recruiterBackNav.js';
 import '../../../assets/styles/RecruiterAnalyticsStyle.css';
 import '../../../assets/styles/JobPostStyle.css';
 
@@ -46,16 +49,6 @@ const formatDateOnly = (iso) => {
         month: '2-digit',
         year: 'numeric',
     });
-};
-
-const getDaysLeftLabel = (deadline) => {
-    if (!deadline) return null;
-    const end = new Date(deadline);
-    if (Number.isNaN(end.getTime())) return null;
-    const diff = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    if (diff < 0) return 'Đã hết hạn';
-    if (diff === 0) return 'Hết hạn hôm nay';
-    return `Còn ${diff} ngày`;
 };
 
 /** AF-1 — thống kê chi tiết một tin (1 API: jobMeta + summary + trend). */
@@ -111,7 +104,7 @@ const JobAnalyticsDetailPage = () => {
     }, [loadAnalytics]);
 
     const deadline = jobMeta?.applicationDeadline;
-    const daysLeft = getDaysLeftLabel(deadline);
+    const daysLeft = getDeadlineCountdownLabel(deadline);
     const displayTitle = jobMeta?.title || 'Thống kê chi tiết';
     const displayStatus = jobMeta?.status;
     const displayUrgent = Boolean(jobMeta?.urgent);
@@ -119,9 +112,10 @@ const JobAnalyticsDetailPage = () => {
 
     return (
         <div className="recruiter-analytics recruiter-analytics--detail">
-            <Link to={analyticsBackPath} className="recruiter-analytics__back">
-                ← Quay lại thống kê
-            </Link>
+            <RecruiterBackLink
+                to={analyticsBackPath}
+                label={RECRUITER_BACK_LABELS.analytics}
+            />
 
             <header className="recruiter-analytics__detail-header">
                 <div className="recruiter-analytics__detail-heading">

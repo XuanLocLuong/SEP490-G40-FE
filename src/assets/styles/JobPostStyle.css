@@ -503,6 +503,176 @@
     width: 100%;
 }
 
+.job-post-form__chips--skills {
+    margin-bottom: 12px;
+}
+
+.job-post-form__skill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px 8px 14px;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.job-post-form__skill-tag--active {
+    background: #dbeafe;
+    border: 1px solid #2563eb;
+    color: #1d4ed8;
+}
+
+.job-post-form__skill-tag-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.job-post-form__skill-tag-remove:hover {
+    background: rgba(37, 99, 235, 0.12);
+}
+
+.job-post-form__skill-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.job-post-form__skill-add-btn:hover:not(:disabled) {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.job-post-form__skill-add-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Skill picker modal body */
+.job-post-skill-picker__hint {
+    margin: 0 0 14px;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: #64748b;
+}
+
+.job-post-skill-picker__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.job-post-skill-picker__search-icon {
+    position: absolute;
+    left: 12px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.job-post-skill-picker__search-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.job-post-skill-picker__search-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.job-post-skill-picker__search-clear {
+    position: absolute;
+    right: 10px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.job-post-skill-picker__search-clear:hover {
+    color: #475569;
+}
+
+.job-post-skill-picker__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: min(52vh, 320px);
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.job-post-skill-picker__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #0f172a;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.job-post-skill-picker__chip:hover:not(:disabled) {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.job-post-skill-picker__chip--selected {
+    border-color: #2563eb;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+.job-post-skill-picker__empty {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.job-post-skill-picker__count {
+    margin: 14px 0 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
 .job-post-form__chips {
     display: flex;
     flex-wrap: wrap;

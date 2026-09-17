@@ -197,3 +197,19 @@ export const fetchActiveSkillsCatalog = async ({ force = false } = {}) => {
 
     return skillsCatalogRequest;
 };
+
+/** Bỏ dấu tiếng Việt + lowercase — dùng chung cho ô tìm skill. */
+export const normalizeSkillSearchText = (text) =>
+    String(text || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+/** Lọc catalog theo tên (contains, không phân biệt dấu). Query rỗng → trả nguyên list. */
+export const filterSkillsByName = (catalog, query) => {
+    const list = Array.isArray(catalog) ? catalog : [];
+    const q = normalizeSkillSearchText(query);
+    if (!q) return list;
+    return list.filter((skill) => normalizeSkillSearchText(skill?.name).includes(q));
+};

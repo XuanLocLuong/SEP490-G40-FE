@@ -10,6 +10,7 @@ import {
     getRecruiterRecommendationErrorMessage,
     sendCandidateInvitation,
 } from '../../../apis/RecruiterRecommendationApi.jsx';
+import RecruiterBackLink from '../../../components/recruiter/RecruiterBackLink.jsx';
 import CandidateRecommendationCard from '../../../components/recruiter/recommendations/CandidateRecommendationCard.jsx';
 import SendInvitationModal from '../../../components/recruiter/recommendations/SendInvitationModal.jsx';
 import JobPickerCombobox from '../../../components/recruiter/applicants/JobPickerCombobox.jsx';
@@ -22,6 +23,7 @@ import {
     ROUTES,
 } from '../../../routes/path.js';
 import { openChatPanel, RECRUITMENT_CHANGED_EVENT } from '../../../utils/chatEvents.js';
+import { RECRUITER_BACK_LABELS } from '../../../utils/recruiterBackNav.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 import '../../../assets/styles/RecruiterRecommendationsStyle.css';
 
@@ -226,12 +228,12 @@ const RecruiterRecommendationsPage = () => {
 
     const backLink = useMemo(() => {
         if (showBackToOverview) {
-            return { to: ROUTES.RECRUITER_HOME, label: '← Quay lại tổng quan' };
+            return { to: ROUTES.RECRUITER_HOME, label: RECRUITER_BACK_LABELS.overview };
         }
         if (fromSource === 'applicants' && jobIdParam) {
             return {
                 to: getRecruiterApplicantsPath(jobIdParam, { from: 'my-jobs' }),
-                label: '← Quay lại ứng viên',
+                label: 'Quay lại ứng viên',
             };
         }
         return {
@@ -239,19 +241,19 @@ const RecruiterRecommendationsPage = () => {
                 tab: getMyJobsTabForStatus(selectedJob?.status),
                 jobId: jobIdParam || undefined,
             }),
-            label: '← Quay lại Tin của tôi',
+            label: RECRUITER_BACK_LABELS.myJobs,
         };
     }, [showBackToOverview, fromSource, jobIdParam, selectedJob?.status]);
 
     const profileBackTo = useMemo(() => {
         if (!selectedJobId) {
-            return { path: ROUTES.RECRUITER_MY_JOBS, label: 'Quay lại Tin của tôi' };
+            return { path: ROUTES.RECRUITER_MY_JOBS, label: RECRUITER_BACK_LABELS.myJobs };
         }
         return {
             path: getRecruiterJobSuggestionsPath(selectedJobId, {
                 from: fromSource || 'my-jobs',
             }),
-            label: 'Quay lại gợi ý ứng viên',
+            label: RECRUITER_BACK_LABELS.recommendations,
         };
     }, [selectedJobId, fromSource]);
 
@@ -420,9 +422,7 @@ const RecruiterRecommendationsPage = () => {
 
     return (
         <div className="recruiter-recommendations-page">
-            <Link to={backLink.to} className="recruiter-back-overview">
-                {backLink.label}
-            </Link>
+            <RecruiterBackLink to={backLink.to} label={backLink.label} />
             <h1 className="recruiter-recommendations__sr-only">Gợi ý ứng viên phù hợp</h1>
             <p className="recruiter-recommendations__intro">
                 Những ứng viên phù hợp nhất với tin tuyển dụng của bạn.
@@ -455,7 +455,7 @@ const RecruiterRecommendationsPage = () => {
                         ) : (
                             <div className="recruiter-recommendations__message">
                                 <span>Không tìm thấy tin tuyển dụng.</span>
-                                <Link to={ROUTES.RECRUITER_MY_JOBS}>Quay lại Tin của tôi</Link>
+                                <Link to={ROUTES.RECRUITER_MY_JOBS}>{RECRUITER_BACK_LABELS.myJobs}</Link>
                             </div>
                         )}
                         {selectedJob && !jobsError ? (

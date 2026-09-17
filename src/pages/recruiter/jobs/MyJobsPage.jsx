@@ -10,12 +10,20 @@ import {
 } from '../../../routes/path.js';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import { formatSalaryRange } from '../../../utils/formatters.js';
+import {
+    getClosedJobSubBadge,
+    getDeadlineCountdownLabel,
+    isDeadlineUrgent,
+    isPastApplicationDeadline,
+} from '../../../utils/jobDeadlineDisplay.js';
+import RecruiterBackLink from '../../../components/recruiter/RecruiterBackLink.jsx';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
 import RecruitmentPagination from '../../../components/recruiter/RecruitmentPagination.jsx';
 import RecruiterJobDetailModal from '../../../components/recruiter/jobs/RecruiterJobDetailModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
 import { RECRUITMENT_PAGE_SIZE } from '../../../utils/recruitmentPagination.js';
 import { SearchIcon } from '../../../components/common/icons.jsx';
+import { RECRUITER_BACK_LABELS } from '../../../utils/recruiterBackNav.js';
 import '../../../assets/styles/JobPostStyle.css';
 import '../../../assets/styles/MyJobsStyle.css';
 
@@ -52,13 +60,6 @@ const formatDate = (value) => {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '—';
     return date.toLocaleDateString('vi-VN');
-};
-
-/** Chỉ dùng cho nút Mở lại tin. */
-const isPastDeadline = (job) => {
-    if (!job.applicationDeadline) return false;
-    const end = new Date(job.applicationDeadline);
-    return !Number.isNaN(end.getTime()) && end.getTime() < Date.now();
 };
 
 const fetchMyJobsPage = async (tabId, pageNum, size = RECRUITMENT_PAGE_SIZE, keyword = '') => {
@@ -111,16 +112,6 @@ const getJobMetrics = (job) => {
 const getProgressPercent = (hired, required) =>
     required > 0 ? Math.min(100, Math.round((hired / required) * 100)) : 0;
 
-const getDaysLeftLabel = (deadline) => {
-    if (!deadline) return null;
-    const end = new Date(deadline);
-    if (Number.isNaN(end.getTime())) return null;
-    const diff = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    if (diff < 0) return 'Hết hạn';
-    if (diff === 0) return 'Hết hạn hôm nay';
-    return `Còn ${diff} ngày`;
-};
-
 const CONFIRM_DIALOG = {
     delete: {
         title: 'Xóa tin nháp',
@@ -147,7 +138,9 @@ const hasRecruitingMetricsCard = (job) =>
 
 /** CLOSED còn hạn và còn chỗ tuyển — ẩn khi đã đủ HIRED (mở lại cũng không có ý nghĩa). */
 const canReopenJob = (job) => {
-    if (job.status !== 'CLOSED' || isPastDeadline(job)) return false;
+    if (job.status !== 'CLOSED' || isPastApplicationDeadline(job.applicationDeadline)) {
+        return false;
+    }
     const { hiredCount, requiredCandidates } = getJobMetrics(job);
     return hiredCount < requiredCandidates;
 };
@@ -450,8 +443,10 @@ const MyJobsPage = () => {
     const renderMetricsCard = (job) => {
         const metrics = getJobMetrics(job);
         const progress = getProgressPercent(metrics.hiredCount, metrics.requiredCandidates);
-        const daysLeft =
-            job.status === 'OPEN' ? getDaysLeftLabel(job.applicationDeadline) : null;
+        const countdownLabel =
+            job.status === 'OPEN' ? getDeadlineCountdownLabel(job.applicationDeadline) : null;
+        const closedSubBadge =
+            job.status === 'CLOSED' ? getClosedJobSubBadge(job, metrics) : null;
         const businessName = job.business?.name;
         const locationLabel = job.location?.name || job.location?.city;
         const statusModifier =
@@ -474,8 +469,23 @@ const MyJobsPage = () => {
                         {job.urgent && (
                             <span className="my-jobs-page__badge--urgent">Tin tuyển gấp</span>
                         )}
-                        {daysLeft && (
-                            <span className="my-jobs-page__deadline">{daysLeft}</span>
+                        {closedSubBadge && (
+                            <span
+                                className={`my-jobs-page__badge--close-reason my-jobs-page__badge--close-reason--${closedSubBadge.tone}`}
+                            >
+                                {closedSubBadge.label}
+                            </span>
+                        )}
+                        {countdownLabel && (
+                            <span
+                                className={`my-jobs-page__deadline${
+                                    isDeadlineUrgent(countdownLabel)
+                                        ? ' my-jobs-page__deadline--urgent'
+                                        : ''
+                                }`}
+                            >
+                                {countdownLabel}
+                            </span>
                         )}
                     </div>
                     <p className="my-jobs-page__salary">
@@ -583,11 +593,12 @@ const MyJobsPage = () => {
 
     return (
         <div className="my-jobs-page">
-            {showBackToOverview && (
-                <Link to={ROUTES.RECRUITER_HOME} className="recruiter-back-overview">
-                    ← Quay lại tổng quan
-                </Link>
-            )}
+            {showBackToOverview ? (
+                <RecruiterBackLink
+                    to={ROUTES.RECRUITER_HOME}
+                    label={RECRUITER_BACK_LABELS.overview}
+                />
+            ) : null}
 
             <header className="my-jobs-page__header">
                 <div>

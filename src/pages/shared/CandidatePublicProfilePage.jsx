@@ -1,6 +1,7 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/authContext.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
+import RecruiterBackLink from '../../components/recruiter/RecruiterBackLink.jsx';
 import { useCandidatePublicProfile } from '../../hooks/useCandidatePublicProfile.js';
 import CandidateProfileHeader from '../../components/candidate/public/CandidateProfileHeader.jsx';
 import CandidatePublicResume from '../../components/candidate/public/CandidatePublicResume.jsx';
@@ -18,16 +19,19 @@ const CandidatePublicProfilePage = () => {
     const backTo = location.state?.backTo;
     const candidateUserId =
         profile?.userId ?? location.state?.candidateUserId ?? location.state?.userId ?? null;
-    const showBackToApplicants =
+    const showBackLink =
         backTo?.path && typeof backTo.label === 'string' && backTo.label.trim().length > 0;
-    const backClassName =
-        auth?.role === USER_ROLES.RECRUITER ? 'recruiter-back-overview' : 'cpp-back-link';
+    const isRecruiter = auth?.role === USER_ROLES.RECRUITER;
 
-    const backLink = showBackToApplicants ? (
-        <Link to={backTo.path} className={backClassName}>
-            ← {backTo.label}
-        </Link>
-    ) : null;
+    const backLink = showBackLink
+        ? isRecruiter ? (
+              <RecruiterBackLink to={backTo.path} label={backTo.label} />
+          ) : (
+              <Link to={backTo.path} className="cpp-back-link">
+                  ← {backTo.label}
+              </Link>
+          )
+        : null;
 
     if (loading) {
         return (

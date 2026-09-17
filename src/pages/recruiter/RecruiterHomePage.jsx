@@ -20,6 +20,7 @@ import {
     getRecruitmentAnalyticsApiErrorMessage,
     loadRecruiterAnalyticsDashboard,
 } from '../../services/recruitmentAnalyticsService.js';
+import { getDeadlineCountdownLabel } from '../../utils/jobDeadlineDisplay.js';
 import {
     isFullyBusinessVerified,
     needsBusinessLicenseTopUp,
@@ -53,7 +54,7 @@ const QUICK_ACTIONS = [
     },
     {
         to: withOverviewFrom(ROUTES.RECRUITER_INVITATIONS),
-        label: 'Lời mời',
+        label: 'Xem lời mời',
         desc: 'Theo dõi lời mời đã gửi',
         Icon: MailIcon,
         tone: 'blue',
@@ -90,17 +91,6 @@ const getPreviewJobs = (jobList) =>
             return getCreatedMs(b) - getCreatedMs(a);
         })
         .slice(0, JOBS_PREVIEW_LIMIT);
-
-const getDaysLeftLabel = (deadline) => {
-    if (!deadline) return null;
-    const end = new Date(deadline);
-    if (Number.isNaN(end.getTime())) return null;
-    const diffMs = end.getTime() - Date.now();
-    const days = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
-    if (days < 0) return 'Đã hết hạn';
-    if (days === 0) return 'Hết hạn hôm nay';
-    return `Còn ${days} ngày`;
-};
 
 const RecruiterHomePage = () => {
     const { auth } = useAuth();
@@ -356,7 +346,7 @@ const RecruiterHomePage = () => {
                             </p>
                         ) : (
                             previewJobs.map((job) => {
-                                const daysLeft = getDaysLeftLabel(job.applicationDeadline);
+                                const daysLeft = getDeadlineCountdownLabel(job.applicationDeadline);
                                 return (
                                     <article key={job.jobId} className="recruiter-dashboard__job-row">
                                         <div className="recruiter-dashboard__job-main">
