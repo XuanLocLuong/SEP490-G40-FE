@@ -3,9 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { BellIcon } from '../common/icons.jsx';
 import { useAuth } from '../../contexts/authContext.js';
 import { useNotifications } from '../../hooks/useNotifications.js';
-import { getNotificationTargetPath } from '../../utils/notificationNavigation.js';
+import { navigateToNotification } from '../../utils/notificationRefresh.js';
 import { elevateOverlay, OVERLAY_CSS } from '../../utils/overlayLayer.js';
-import { invitationsNavigateOptions } from '../../utils/invitationNavReturn.js';
 import { ROUTES } from '../../routes/path.js';
 import { USER_ROLES } from '../../utils/Constants.jsx';
 import NotificationDropdown from './NotificationDropdown.jsx';
@@ -69,11 +68,8 @@ const NotificationBell = () => {
 
     const handleSelect = async (notification) => {
         await markOneRead(notification.id);
-        const path = getNotificationTargetPath(notification, auth?.role);
         setOpen(false);
-        if (path) {
-            navigate(path, invitationsNavigateOptions(path, location));
-        }
+        navigateToNotification(navigate, notification, auth?.role, location);
     };
 
     const handleViewAll = () => {

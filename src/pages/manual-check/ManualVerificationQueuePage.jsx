@@ -16,6 +16,7 @@ import {
     toLabelValueEntries,
     toReasonList,
 } from '../../utils/verificationDisplay.js';
+import { formatTaxCode } from '../../utils/taxCode.js';
 import '../../assets/styles/ManualVerificationQueuePageStyle.css';
 
 const PAGE_SIZE = 20;
@@ -116,10 +117,32 @@ const ManualVerificationQueuePage = () => {
         [detail?.mediaFiles]
     );
 
-    const extractedEntries = useMemo(
-        () => toLabelValueEntries(detail?.extractedData),
-        [detail?.extractedData]
-    );
+    const extractedEntries = useMemo(() => {
+        const formatted = toLabelValueEntries(detail?.formattedExtractedFields);
+        if (formatted.length) return formatted;
+
+        const raw = detail?.extractedData ?? detail?.extractedFields;
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+            return toLabelValueEntries(raw);
+        }
+
+        const nested = [
+            ...toLabelValueEntries(raw.business),
+            ...toLabelValueEntries(raw.taxComparison),
+        ];
+        return nested.length ? nested : toLabelValueEntries(raw);
+    }, [detail?.extractedData, detail?.extractedFields, detail?.formattedExtractedFields]);
+
+    const taxNameMatch = useMemo(() => {
+        const value =
+            detail?.businessNameMatched ??
+            detail?.extractedData?.taxComparison?.businessNameMatched ??
+            detail?.extractedFields?.taxComparison?.businessNameMatched;
+        if (typeof value === 'boolean') return value;
+        if (String(value).toLowerCase() === 'true') return true;
+        if (String(value).toLowerCase() === 'false') return false;
+        return null;
+    }, [detail]);
 
     const failedReasonList = useMemo(
         () => toReasonList(detail?.failedReasons),
@@ -172,7 +195,7 @@ const ManualVerificationQueuePage = () => {
             <header className="mv-page__header">
                 <div>
                     <h1>Duyệt xác minh</h1>
-                    <p>Hồ sơ CCCD / GPKD được AI chuyển sang chờ duyệt thủ công (chỉ case gán cho bạn).</p>
+                    <p>Hồ sơ CCCD / GPKD đang chờ bạn kiểm tra trực tiếp (chỉ hồ sơ được gán cho bạn).</p>
                 </div>
                 <button
                     type="button"
@@ -264,28 +287,40 @@ const ManualVerificationQueuePage = () => {
                                 </div>
                                 <div>
                                     <dt>MST / định danh</dt>
-                                    <dd>{detail.taxCode || detail.submittedIdentifier || '—'}</dd>
-                                </div>
-                                <div>
-                                    <dt>AI risk</dt>
-                                    <dd>{formatAiRiskLevel(detail.aiRiskLevel)}</dd>
-                                </div>
-                                <div>
-                                    <dt>Document score</dt>
-                                    <dd>{detail.documentCheckScore ?? '—'}</dd>
+                                    <dd>
+                                        {formatTaxCode(
+                                            detail.taxCode || detail.submittedIdentifier
+                                        ) || '—'}
+                                    </dd>
                                 </div>
                             </dl>
 
                             {detail.aiNotes ? (
-                                <div className="mv-block">
-                                    <h3>AI notes</h3>
-                                    <p>{detail.aiNotes}</p>
-                                </div>
+                                <>
+                                    <dl className="mv-detail__grid mv-detail__grid--legacy-ai">
+                                        {detail.aiRiskLevel != null ? (
+                                            <div>
+                                                <dt>Mức rủi ro AI</dt>
+                                                <dd>{formatAiRiskLevel(detail.aiRiskLevel)}</dd>
+                                            </div>
+                                        ) : null}
+                                        {detail.documentCheckScore != null ? (
+                                            <div>
+                                                <dt>Điểm kiểm tra giấy tờ</dt>
+                                                <dd>{detail.documentCheckScore}</dd>
+                                            </div>
+                                        ) : null}
+                                    </dl>
+                                    <div className="mv-block">
+                                        <h3>Phân tích AI của hồ sơ cũ</h3>
+                                        <p>{detail.aiNotes}</p>
+                                    </div>
+                                </>
                             ) : null}
 
                             {failedReasonList.length > 0 ? (
                                 <div className="mv-block">
-                                    <h3>Lý do AI / failed</h3>
+                                    <h3>Lý do cần kiểm tra</h3>
                                     <ul className="mv-reason-list">
                                         {failedReasonList.map((reason) => (
                                             <li key={reason}>{reason}</li>
@@ -296,14 +331,25 @@ const ManualVerificationQueuePage = () => {
 
                             {extractedEntries.length > 0 ? (
                                 <div className="mv-block">
-                                    <h3>OCR / extracted</h3>
+                                    <h3>Thông tin tra cứu mã số thuế</h3>
                                     <dl className="mv-detail__grid mv-detail__grid--ocr">
-                                        {extractedEntries.map((item) => (
-                                            <div key={item.label}>
-                                                <dt>{item.label}</dt>
-                                                <dd>{item.value}</dd>
-                                            </div>
-                                        ))}
+                                        {extractedEntries.map((item) => {
+                                            const isMatchResult =
+                                                item.label === 'Kết quả đối chiếu tên doanh nghiệp';
+                                            const matchClass = isMatchResult
+                                                ? taxNameMatch === true || item.value === 'Khớp'
+                                                    ? 'mv-tax-match--yes'
+                                                    : taxNameMatch === false || item.value === 'Không khớp'
+                                                      ? 'mv-tax-match--no'
+                                                      : ''
+                                                : '';
+                                            return (
+                                                <div key={item.label} className={matchClass}>
+                                                    <dt>{item.label}</dt>
+                                                    <dd>{item.value}</dd>
+                                                </div>
+                                            );
+                                        })}
                                     </dl>
                                 </div>
                             ) : null}

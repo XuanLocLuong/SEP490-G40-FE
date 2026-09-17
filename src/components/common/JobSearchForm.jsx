@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SearchIcon, MapPinIcon } from './icons.jsx';
 import LocationSearchSelects from './LocationSearchSelects.jsx';
@@ -99,6 +99,25 @@ const JobSearchForm = ({
     );
     const [scheduleError, setScheduleError] = useState('');
     const [skillsCatalog, setSkillsCatalog] = useState([]);
+    const [skillQuery, setSkillQuery] = useState('');
+    const [skillPickerOpen, setSkillPickerOpen] = useState(false);
+    const skillPickerRef = useRef(null);
+    const skillPickerId = useId();
+    const normalizeSkillName = (name) => String(name).normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
+    const matchingSkills = skillsCatalog.filter((skill) =>
+        normalizeSkillName(skill.name).includes(normalizeSkillName(skillQuery)));
+
+    useEffect(() => {
+        if (!skillPickerOpen) return;
+        const handleOutsidePointer = (event) => {
+            if (!skillPickerRef.current?.contains(event.target)) {
+                setSkillPickerOpen(false);
+            }
+        };
+        document.addEventListener('pointerdown', handleOutsidePointer);
+        return () => document.removeEventListener('pointerdown', handleOutsidePointer);
+    }, [skillPickerOpen]);
     const jobTypeOptions = useJobTypeOptions();
     const [keywordFocused, setKeywordFocused] = useState(false);
     const keywordInputRef = useRef(null);
@@ -138,6 +157,8 @@ const JobSearchForm = ({
         setSalaryMax(initialSalaryMax != null ? String(initialSalaryMax) : '');
         setSalaryRangeError('');
         setSkillIds(skillIdsNext);
+        setSkillQuery('');
+        setSkillPickerOpen(false);
         setScheduleDays(schedulesNext.map((item) => String(item.dayOfWeek)));
         setScheduleStart(toTimeInputValue(schedulesNext[0]?.startTime) || '');
         setScheduleEnd(toTimeInputValue(schedulesNext[0]?.endTime) || '');
@@ -526,24 +547,80 @@ const JobSearchForm = ({
 
                         <fieldset className="job-search-form__fieldset">
                             <legend>Kỹ năng</legend>
-                            <div className="job-search-form__chips">
-                                {skillsCatalog.map((skill) => {
-                                    const active = skillIds.includes(skill.id);
-                                    return (
-                                        <button
-                                            key={skill.id}
-                                            type="button"
-                                            className={`job-search-form__chip${
-                                                active ? ' job-search-form__chip--active' : ''
-                                            }`}
-                                            onClick={() => toggleSkill(skill.id)}
-                                            aria-pressed={active}
-                                        >
-                                            {skill.name}
-                                        </button>
-                                    );
-                                })}
+                            <div
+                                ref={skillPickerRef}
+                                className="job-search-form__skill-picker"
+                                onBlur={(event) => {
+                                    if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) {
+                                        setSkillPickerOpen(false);
+                                    }
+                                }}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Escape') {
+                                        event.stopPropagation();
+                                        setSkillPickerOpen(false);
+                                    }
+                                }}
+                            >
+                                <input
+                                    type="search"
+                                    className="job-search-form__skill-input"
+                                    placeholder="Tìm và chọn kỹ năng"
+                                    aria-label="Tìm và chọn kỹ năng"
+                                    aria-expanded={skillPickerOpen}
+                                    aria-controls={skillPickerOpen ? skillPickerId : undefined}
+                                    value={skillQuery}
+                                    onFocus={() => setSkillPickerOpen(true)}
+                                    onClick={() => setSkillPickerOpen(true)}
+                                    onChange={(event) => {
+                                        setSkillQuery(event.target.value);
+                                        setSkillPickerOpen(true);
+                                    }}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter') {
+                                            event.preventDefault();
+                                            setSkillPickerOpen(true);
+                                        }
+                                    }}
+                                />
+                                {skillPickerOpen && (
+                                    <div id={skillPickerId} className="job-search-form__skill-dropdown">
+                                        {matchingSkills.slice(0, 50).map((skill) => (
+                                            <label key={skill.id} className="job-search-form__skill-option">
+                                                <input type="checkbox" checked={skillIds.includes(skill.id)}
+                                                    onChange={() => toggleSkill(skill.id)} />
+                                                <span>{skill.name}</span>
+                                            </label>
+                                        ))}
+                                        {matchingSkills.length === 0 && (
+                                            <p className="job-search-form__skill-note">Không tìm thấy kỹ năng phù hợp.</p>
+                                        )}
+                                        {matchingSkills.length > 50 && (
+                                            <p className="job-search-form__skill-note">Hiển thị 50 kết quả đầu. Nhập tên để tìm kỹ năng cụ thể.</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
+                            {skillIds.length > 0 && (
+                                <>
+                                    <div className="job-search-form__chips job-search-form__selected-skills">
+                                        {skillIds.map((id) => {
+                                            const name = skillsCatalog.find((skill) => skill.id === id)?.name || `Kỹ năng #${id}`;
+                                            return (
+                                                <button key={id} type="button"
+                                                    className="job-search-form__chip job-search-form__chip--active"
+                                                    aria-label={`Bỏ kỹ năng ${name}`} onClick={() => toggleSkill(id)}>
+                                                    {name} <span aria-hidden="true">×</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="job-search-form__skill-summary">
+                                        <span>Đã chọn {skillIds.length} kỹ năng</span>
+                                        <button type="button" onClick={() => setSkillIds([])}>Xóa lựa chọn</button>
+                                    </div>
+                                </>
+                            )}
                         </fieldset>
 
                         {isCandidate && (

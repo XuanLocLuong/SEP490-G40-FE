@@ -76,6 +76,9 @@ const getStatusUi = (status, rejectReason = null, item = null) => {
             if (rejectReason === 'OFFER_EXPIRED') {
                 return { label: 'Lời mời hết hạn', tone: 'rejected' };
             }
+            if (rejectReason === 'JOB_EXPIRED') {
+                return { label: 'Hết hạn ứng tuyển', tone: 'rejected' };
+            }
             if (rejectReason === 'POSITION_FILLED' || (item && item.hasVacancy === false)) {
                 return { label: 'Đã tuyển đủ người', tone: 'rejected' };
             }
@@ -530,7 +533,7 @@ const CandidateApplicationHistoryPage = () => {
                                         <span className={`cah-badge cah-badge--${ui.tone}`}>
                                             {ui.label}
                                         </span>
-                                        {isClosed && (
+                                        {isClosed && ui.label !== 'Tin đã đóng' && (
                                             <span className="cah-badge cah-badge--neutral" title="Tin tuyển dụng này đã đóng">
                                                 Tin đã đóng
                                             </span>

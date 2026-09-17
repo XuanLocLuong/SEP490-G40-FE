@@ -214,6 +214,14 @@
     margin-top: 0;
 }
 
+.mv-tax-match--yes dd {
+    color: #15803d;
+}
+
+.mv-tax-match--no dd {
+    color: #dc2626;
+}
+
 .mv-gallery {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
