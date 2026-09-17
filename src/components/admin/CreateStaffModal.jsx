@@ -8,7 +8,7 @@ const CreateStaffModal = ({
     onConfirm,
     onCancel,
     roleOptions = INTERNAL_STAFF_ROLE_OPTIONS,
-    hint = 'Chỉ tạo được Post Manager, Manual Check hoặc Admin. Password tạm do BE sinh (email kích hoạt có thể chưa gửi).',
+    hint = 'Chỉ tạo được Post Manager, Manual Check hoặc Admin. Password mặc định luôn là 123456',
 }) => {
     const options = useMemo(
         () => (Array.isArray(roleOptions) && roleOptions.length ? roleOptions : INTERNAL_STAFF_ROLE_OPTIONS),
