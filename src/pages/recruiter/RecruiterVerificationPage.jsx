@@ -219,6 +219,7 @@ const RecruiterVerificationPage = () => {
         verificationStatus: profile?.verificationStatus,
         needsLicense,
         badge: profile?.badge,
+        cccdPassed: profile?.cccdPassed,
     });
 
     // ?retry=1 chỉ mở form khi đang chờ duyệt — KHÔNG tự chọn API.
@@ -268,6 +269,7 @@ const RecruiterVerificationPage = () => {
             verificationStatus: data?.verificationStatus,
             needsLicense: needsGpkd,
             badge: data?.badge,
+            cccdPassed: data?.cccdPassed,
         });
 
         // Đã CCCD_PASSED nhưng loại cần GPKD → mở form bổ sung (kể cả BE còn badge).

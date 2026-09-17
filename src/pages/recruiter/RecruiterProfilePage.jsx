@@ -128,6 +128,10 @@ const mapProfileFromApi = (data) => ({
     verificationStatus: data?.verificationStatus || null,
     badge: data?.badge || null,
     taxCode: data?.taxCode || '',
+    cccdPassed:
+        typeof data?.cccdPassed === 'boolean'
+            ? data.cccdPassed
+            : undefined,
     totalActiveJobs: data?.totalActiveJobs ?? 0,
     requiresBusinessLicense:
         typeof data?.requiresBusinessLicense === 'boolean'
@@ -1268,7 +1272,7 @@ const RecruiterProfilePage = () => {
                                                     className="recruiter-profile__badge recruiter-profile__badge--verify-cta"
                                                 >
                                                     {isPendingManualVerification(profile.verificationStatus)
-                                                        ? 'Xem / nộp lại'
+                                                        ? 'Nộp lại'
                                                         : isRejectedVerification(profile.verificationStatus)
                                                             ? 'Thử lại ngay'
                                                             : profile.verificationStatus ===

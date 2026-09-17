@@ -214,22 +214,32 @@ const RecruiterHomePage = () => {
                             <CheckCircleIcon width={14} height={14} aria-hidden="true" />
                             Đã xác thực
                         </span>
+                    ) : isPendingManualVerification(verificationStatus) ? (
+                        <span className="recruiter-dashboard__badge recruiter-dashboard__badge--muted">
+                            Đang chờ duyệt
+                        </span>
                     ) : (
                         <>
                             <span className="recruiter-dashboard__badge recruiter-dashboard__badge--muted">
-                                {isPendingManualVerification(verificationStatus)
-                                    ? 'Đang chờ duyệt'
-                                    : isRejectedVerification(verificationStatus)
-                                      ? 'Xác minh chưa đạt'
-                                      : needsLicenseTopUp
-                                        ? 'Cần xác thực GPKD'
-                                        : 'Chưa xác thực'}
+                                {isRejectedVerification(verificationStatus)
+                                    ? 'Xác minh chưa đạt'
+                                    : needsLicenseTopUp
+                                      ? 'Cần xác thực GPKD'
+                                      : 'Chưa xác thực'}
                             </span>
                             <Link
-                                to={ROUTES.RECRUITER_VERIFICATION}
+                                to={
+                                    isRejectedVerification(verificationStatus)
+                                        ? `${ROUTES.RECRUITER_VERIFICATION}?retry=1`
+                                        : ROUTES.RECRUITER_VERIFICATION
+                                }
                                 className="recruiter-dashboard__badge recruiter-dashboard__badge--verify-cta"
                             >
-                                {needsLicenseTopUp ? 'Xác thực Giấy phép kinh doanh' : 'Đề xuất: Xác minh ngay'}
+                                {isRejectedVerification(verificationStatus)
+                                    ? 'Thử lại ngay'
+                                    : needsLicenseTopUp
+                                      ? 'Xác thực Giấy phép kinh doanh'
+                                      : 'Đề xuất: Xác minh ngay'}
                             </Link>
                         </>
                     )}
