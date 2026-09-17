@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
     EDUCATION_REQUIREMENT_MODES,
     GENDER_REQUIREMENT_OPTIONS,
@@ -25,6 +26,7 @@ import {
 import RequiredMark from '../../common/RequiredMark.jsx';
 import RichTextEditor from '../../common/RichTextEditor.jsx';
 import JobShiftFields from './JobShiftFields.jsx';
+import JobSkillPickerModal from './JobSkillPickerModal.jsx';
 
 const JobPostForm = ({
     form,
@@ -49,6 +51,12 @@ const JobPostForm = ({
     const inactiveLabels = formatRemovedJobTypeLabels(inactiveSelected, jobTypeOptions);
     const inactiveSkillIds = getInactiveSelectedSkillIds(form.skillIds, skillsCatalog);
     const inactiveSkillLabels = formatRemovedSkillLabels(inactiveSkillIds, skillsCatalog);
+    const [skillPickerOpen, setSkillPickerOpen] = useState(false);
+
+    const selectedSkillTags = useMemo(() => {
+        const ids = form.skillIds || [];
+        return skillsCatalog.filter((skill) => ids.some((id) => sameSkillId(id, skill.id)));
+    }, [skillsCatalog, form.skillIds]);
 
     const setField = (field, value) => {
         onChange({ ...form, [field]: value });
@@ -60,13 +68,11 @@ const JobPostForm = ({
         setField(field, parseSalaryInput(e.target.value));
     };
 
-    const toggleSkill = (skillId) => {
-        const ids = form.skillIds || [];
-        const exists = ids.some((id) => sameSkillId(id, skillId));
-        const next = exists
-            ? ids.filter((id) => !sameSkillId(id, skillId))
-            : [...ids, skillId];
-        setField('skillIds', next);
+    const removeSkill = (skillId) => {
+        setField(
+            'skillIds',
+            (form.skillIds || []).filter((id) => !sameSkillId(id, skillId)),
+        );
     };
 
     const removeInactiveSkill = (skillId) => {
@@ -399,37 +405,59 @@ const JobPostForm = ({
                         Chưa có kỹ năng nào trong hệ thống. Liên hệ admin để bổ sung.
                     </p>
                 ) : (
-                    <div className="job-post-form__chips">
-                        {skillsCatalog.map((skill) => {
-                            const active = (form.skillIds || []).some((id) =>
-                                sameSkillId(id, skill.id)
-                            );
-                            return (
-                                <button
-                                    key={skill.id}
-                                    type="button"
-                                    disabled={disabled}
-                                    className={`job-post-form__chip${active ? ' job-post-form__chip--active' : ''
-                                        }`}
-                                    onClick={() => toggleSkill(skill.id)}
-                                >
-                                    {skill.name}
-                                </button>
-                            );
-                        })}
-                        {inactiveSkillIds.map((skillId, index) => (
-                            <button
-                                key={`inactive-skill-${skillId}`}
-                                type="button"
-                                disabled={disabled}
-                                className="job-post-form__chip job-post-form__chip--inactive"
-                                title="Kỹ năng đã bị vô hiệu hóa"
-                                onClick={() => removeInactiveSkill(skillId)}
-                            >
-                                {inactiveSkillLabels[index] || skillId} (đã vô hiệu)
-                            </button>
-                        ))}
-                    </div>
+                    <>
+                        {(selectedSkillTags.length > 0 || inactiveSkillIds.length > 0) && (
+                            <div className="job-post-form__chips job-post-form__chips--skills">
+                                {selectedSkillTags.map((skill) => (
+                                    <span
+                                        key={skill.id}
+                                        className="job-post-form__skill-tag job-post-form__skill-tag--active"
+                                    >
+                                        {skill.name}
+                                        <button
+                                            type="button"
+                                            className="job-post-form__skill-tag-remove"
+                                            disabled={disabled}
+                                            onClick={() => removeSkill(skill.id)}
+                                            aria-label={`Xóa ${skill.name}`}
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                ))}
+                                {inactiveSkillIds.map((skillId, index) => (
+                                    <button
+                                        key={`inactive-skill-${skillId}`}
+                                        type="button"
+                                        disabled={disabled}
+                                        className="job-post-form__chip job-post-form__chip--inactive"
+                                        title="Kỹ năng đã bị vô hiệu hóa"
+                                        onClick={() => removeInactiveSkill(skillId)}
+                                    >
+                                        {inactiveSkillLabels[index] || skillId} (đã vô hiệu)
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <button
+                            type="button"
+                            className="job-post-form__skill-add-btn"
+                            disabled={disabled}
+                            onClick={() => setSkillPickerOpen(true)}
+                        >
+                            + Thêm kỹ năng
+                        </button>
+
+                        <JobSkillPickerModal
+                            open={skillPickerOpen}
+                            catalog={skillsCatalog}
+                            selectedIds={form.skillIds || []}
+                            disabled={disabled}
+                            onClose={() => setSkillPickerOpen(false)}
+                            onApply={(ids) => setField('skillIds', ids)}
+                        />
+                    </>
                 )}
                 {inactiveSkillIds.length > 0 && (
                     <p className="job-post-form__hint job-post-form__hint--warn">

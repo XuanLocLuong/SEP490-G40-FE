@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
+import RecruiterBackLink from '../../../components/recruiter/RecruiterBackLink.jsx';
 import ApplicationCard from '../../../components/recruiter/applicants/ApplicationCard.jsx';
 import JobPickerCombobox from '../../../components/recruiter/applicants/JobPickerCombobox.jsx';
 import ApplicationRejectModal from '../../../components/recruiter/applicants/ApplicationRejectModal.jsx';
@@ -41,6 +42,7 @@ import {
     openChatPanel,
     RECRUITMENT_CHANGED_EVENT,
 } from '../../../utils/chatEvents.js';
+import { RECRUITER_BACK_LABELS } from '../../../utils/recruiterBackNav.js';
 import '../../../assets/styles/ApplicantsPageStyle.css';
 
 const DEFAULT_STATUS_MANAGE = 'PENDING';
@@ -60,8 +62,7 @@ const EMPTY_MATCH_DATA = {
     applications: [],
 };
 
-const canManageApplications = (job) =>
-    job?.status === 'OPEN' || job?.status === 'CLOSED';
+const canManageApplications = (job) => job?.status === 'OPEN';
 
 const ApplicantsPage = () => {
     const navigate = useNavigate();
@@ -122,14 +123,14 @@ const ApplicantsPage = () => {
         if (fromParam === 'overview') {
             return {
                 to: ROUTES.RECRUITER_HOME,
-                label: 'Quay lại tổng quan',
+                label: RECRUITER_BACK_LABELS.overview,
                 state: undefined,
             };
         }
         if (fromParam === 'analytics' && jobIdParam) {
             return {
                 to: getRecruiterJobAnalyticsPath(jobIdParam),
-                label: 'Quay lại thống kê',
+                label: RECRUITER_BACK_LABELS.analytics,
                 state: location.state,
             };
         }
@@ -139,7 +140,7 @@ const ApplicantsPage = () => {
                     tab: getMyJobsTabForStatus(selectedJob?.status),
                     jobId: jobIdParam || undefined,
                 }),
-                label: 'Quay lại Tin của tôi',
+                label: RECRUITER_BACK_LABELS.myJobs,
                 state: undefined,
             };
         }
@@ -485,7 +486,7 @@ const ApplicantsPage = () => {
                 applicationCvLink: application?.cvLink ?? null,
                 backTo: {
                     path: `${ROUTES.RECRUITER_APPLICANTS}${backQuery}`,
-                    label: 'Quay lại danh sách ứng viên',
+                    label: RECRUITER_BACK_LABELS.applicants,
                 },
             },
         });
@@ -651,15 +652,13 @@ const ApplicantsPage = () => {
 
     return (
         <div className="applicants-page">
-            {showBackLink && backNav && (
-                <Link
+            {showBackLink && backNav ? (
+                <RecruiterBackLink
                     to={backNav.to}
                     state={backNav.state}
-                    className="recruiter-back-overview"
-                >
-                    ← {backNav.label}
-                </Link>
-            )}
+                    label={backNav.label}
+                />
+            ) : null}
 
             <h1 className="applicants-page__title">Ứng viên</h1>
 
@@ -686,7 +685,7 @@ const ApplicantsPage = () => {
                     <p>Không tìm thấy tin tuyển dụng này.</p>
                     <div className="applicants-page__empty-actions">
                         <Link to={ROUTES.RECRUITER_MY_JOBS} className="btn btn--secondary">
-                            Quay lại tin của tôi
+                            {RECRUITER_BACK_LABELS.myJobs}
                         </Link>
                     </div>
                 </div>
@@ -723,8 +722,7 @@ const ApplicantsPage = () => {
 
                         {readOnly && (
                             <p className="applicants-page__readonly-hint">
-                                Tin này không còn đang tuyển — bạn chỉ có thể xem hồ sơ ứng viên,
-                                không chấp nhận hoặc từ chối.
+                                Tin này không còn đang tuyển — bạn chỉ có thể xem hồ sơ ứng viên.
                             </p>
                         )}
 

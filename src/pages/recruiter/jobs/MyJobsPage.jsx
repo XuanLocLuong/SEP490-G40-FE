@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
@@ -10,14 +10,23 @@ import {
 } from '../../../routes/path.js';
 import recruiterJobApi, { getRecruiterJobApiErrorMessage } from '../../../apis/RecruiterJobApi.jsx';
 import { formatSalaryRange } from '../../../utils/formatters.js';
+import {
+    getClosedJobSubBadge,
+    getDeadlineCountdownLabel,
+    isDeadlineUrgent,
+    isPastApplicationDeadline,
+} from '../../../utils/jobDeadlineDisplay.js';
+import RecruiterBackLink from '../../../components/recruiter/RecruiterBackLink.jsx';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
+import RecruitmentPagination from '../../../components/recruiter/RecruitmentPagination.jsx';
 import RecruiterJobDetailModal from '../../../components/recruiter/jobs/RecruiterJobDetailModal.jsx';
 import JobStatusBadge from '../../../components/recruiter/jobs/JobStatusBadge.jsx';
+import { RECRUITMENT_PAGE_SIZE } from '../../../utils/recruitmentPagination.js';
 import { SearchIcon } from '../../../components/common/icons.jsx';
+import { RECRUITER_BACK_LABELS } from '../../../utils/recruiterBackNav.js';
 import '../../../assets/styles/JobPostStyle.css';
 import '../../../assets/styles/MyJobsStyle.css';
 
-const PAGE_SIZE = 10;
 /** Spring Pageable: property,direction — tin mới nhất trước. */
 const MY_JOBS_SORT = 'createdAt,desc';
 
@@ -53,14 +62,7 @@ const formatDate = (value) => {
     return date.toLocaleDateString('vi-VN');
 };
 
-/** Chỉ dùng cho nút Mở lại tin. */
-const isPastDeadline = (job) => {
-    if (!job.applicationDeadline) return false;
-    const end = new Date(job.applicationDeadline);
-    return !Number.isNaN(end.getTime()) && end.getTime() < Date.now();
-};
-
-const fetchMyJobsPage = async (tabId, pageNum, size = PAGE_SIZE, keyword = '') => {
+const fetchMyJobsPage = async (tabId, pageNum, size = RECRUITMENT_PAGE_SIZE, keyword = '') => {
     const status = TAB_API_STATUS[tabId];
     const params = { page: pageNum, size, sort: MY_JOBS_SORT };
     if (status) params.status = status;
@@ -110,16 +112,6 @@ const getJobMetrics = (job) => {
 const getProgressPercent = (hired, required) =>
     required > 0 ? Math.min(100, Math.round((hired / required) * 100)) : 0;
 
-const getDaysLeftLabel = (deadline) => {
-    if (!deadline) return null;
-    const end = new Date(deadline);
-    if (Number.isNaN(end.getTime())) return null;
-    const diff = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    if (diff < 0) return 'Hết hạn';
-    if (diff === 0) return 'Hết hạn hôm nay';
-    return `Còn ${diff} ngày`;
-};
-
 const CONFIRM_DIALOG = {
     delete: {
         title: 'Xóa tin nháp',
@@ -146,7 +138,9 @@ const hasRecruitingMetricsCard = (job) =>
 
 /** CLOSED còn hạn và còn chỗ tuyển — ẩn khi đã đủ HIRED (mở lại cũng không có ý nghĩa). */
 const canReopenJob = (job) => {
-    if (job.status !== 'CLOSED' || isPastDeadline(job)) return false;
+    if (job.status !== 'CLOSED' || isPastApplicationDeadline(job.applicationDeadline)) {
+        return false;
+    }
     const { hiredCount, requiredCandidates } = getJobMetrics(job);
     return hiredCount < requiredCandidates;
 };
@@ -193,7 +187,7 @@ const MyJobsPage = () => {
         const seq = ++loadSeqRef.current;
         setLoading(true);
         try {
-            const pageData = await fetchMyJobsPage(tabId, pageNum, PAGE_SIZE, keyword);
+            const pageData = await fetchMyJobsPage(tabId, pageNum, RECRUITMENT_PAGE_SIZE, keyword);
             if (seq !== loadSeqRef.current) return;
             const content = Array.isArray(pageData?.content) ? pageData.content : [];
             setJobs(content);
@@ -249,31 +243,6 @@ const MyJobsPage = () => {
         // không xóa `from`
         setSearchParams(next, { replace: true });
     }, [searchParams, setSearchParams]);
-
-    const canGoPrev = page > 0;
-    const canGoNext = totalPages > 1 && page + 1 < totalPages;
-
-    /** Dải số trang để click trực tiếp (vd. 1 … 4 5 6 … 12). */
-    const pageItems = useMemo(() => {
-        if (totalPages <= 1) return [];
-        if (totalPages <= 4) {
-            return Array.from({ length: totalPages }, (_, i) => i);
-        }
-
-        const current = page;
-        const last = totalPages - 1;
-        const set = new Set([0, last, current, current - 1, current + 1, current - 2, current + 2]);
-        const sorted = [...set].filter((p) => p >= 0 && p <= last).sort((a, b) => a - b);
-
-        const items = [];
-        let prev = null;
-        sorted.forEach((p) => {
-            if (prev != null && p - prev > 1) items.push('ellipsis');
-            items.push(p);
-            prev = p;
-        });
-        return items;
-    }, [page, totalPages]);
 
     const handlePageChange = (nextPage) => {
         if (loading) return;
@@ -474,8 +443,10 @@ const MyJobsPage = () => {
     const renderMetricsCard = (job) => {
         const metrics = getJobMetrics(job);
         const progress = getProgressPercent(metrics.hiredCount, metrics.requiredCandidates);
-        const daysLeft =
-            job.status === 'OPEN' ? getDaysLeftLabel(job.applicationDeadline) : null;
+        const countdownLabel =
+            job.status === 'OPEN' ? getDeadlineCountdownLabel(job.applicationDeadline) : null;
+        const closedSubBadge =
+            job.status === 'CLOSED' ? getClosedJobSubBadge(job, metrics) : null;
         const businessName = job.business?.name;
         const locationLabel = job.location?.name || job.location?.city;
         const statusModifier =
@@ -498,8 +469,23 @@ const MyJobsPage = () => {
                         {job.urgent && (
                             <span className="my-jobs-page__badge--urgent">Tin tuyển gấp</span>
                         )}
-                        {daysLeft && (
-                            <span className="my-jobs-page__deadline">{daysLeft}</span>
+                        {closedSubBadge && (
+                            <span
+                                className={`my-jobs-page__badge--close-reason my-jobs-page__badge--close-reason--${closedSubBadge.tone}`}
+                            >
+                                {closedSubBadge.label}
+                            </span>
+                        )}
+                        {countdownLabel && (
+                            <span
+                                className={`my-jobs-page__deadline${
+                                    isDeadlineUrgent(countdownLabel)
+                                        ? ' my-jobs-page__deadline--urgent'
+                                        : ''
+                                }`}
+                            >
+                                {countdownLabel}
+                            </span>
                         )}
                     </div>
                     <p className="my-jobs-page__salary">
@@ -607,11 +593,12 @@ const MyJobsPage = () => {
 
     return (
         <div className="my-jobs-page">
-            {showBackToOverview && (
-                <Link to={ROUTES.RECRUITER_HOME} className="recruiter-back-overview">
-                    ← Quay lại tổng quan
-                </Link>
-            )}
+            {showBackToOverview ? (
+                <RecruiterBackLink
+                    to={ROUTES.RECRUITER_HOME}
+                    label={RECRUITER_BACK_LABELS.overview}
+                />
+            ) : null}
 
             <header className="my-jobs-page__header">
                 <div>
@@ -674,53 +661,13 @@ const MyJobsPage = () => {
                                 : renderDefaultCard(job)
                         )}
                     </div>
-                    {totalPages > 1 ? (
-                        <nav className="my-jobs-page__pagination" aria-label="Phân trang tin tuyển dụng">
-                            <button
-                                type="button"
-                                className="my-jobs-page__page-btn my-jobs-page__page-btn--nav"
-                                disabled={!canGoPrev || loading}
-                                onClick={() => handlePageChange(page - 1)}
-                                aria-label="Trang trước"
-                            >
-                                ‹
-                            </button>
-                            {pageItems.map((item, index) =>
-                                item === 'ellipsis' ? (
-                                    <span
-                                        key={`e-${index}`}
-                                        className="my-jobs-page__page-ellipsis"
-                                        aria-hidden="true"
-                                    >
-                                        …
-                                    </span>
-                                ) : (
-                                    <button
-                                        key={item}
-                                        type="button"
-                                        className={`my-jobs-page__page-btn${
-                                            item === page ? ' is-active' : ''
-                                        }`}
-                                        disabled={loading}
-                                        aria-current={item === page ? 'page' : undefined}
-                                        aria-label={`Trang ${item + 1}`}
-                                        onClick={() => handlePageChange(item)}
-                                    >
-                                        {item + 1}
-                                    </button>
-                                )
-                            )}
-                            <button
-                                type="button"
-                                className="my-jobs-page__page-btn my-jobs-page__page-btn--nav"
-                                disabled={!canGoNext || loading}
-                                onClick={() => handlePageChange(page + 1)}
-                                aria-label="Trang sau"
-                            >
-                                ›
-                            </button>
-                        </nav>
-                    ) : null}
+                    <RecruitmentPagination
+                        page={page}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                        loading={loading}
+                        ariaLabel="Phân trang tin tuyển dụng"
+                    />
                 </>
             )}
 

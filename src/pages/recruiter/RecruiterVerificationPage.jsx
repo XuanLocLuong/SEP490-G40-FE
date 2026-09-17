@@ -9,7 +9,9 @@ import {
     submitVerification,
 } from '../../apis/VerificationApi.jsx';
 import recruiterProfileApi from '../../apis/RecruiterProfileApi.jsx';
+import RecruiterBackLink from '../../components/recruiter/RecruiterBackLink.jsx';
 import { ROUTES } from '../../routes/path.js';
+import { RECRUITER_BACK_LABELS } from '../../utils/recruiterBackNav.js';
 import { mapBusinessTypeOptions } from '../../utils/businessTypeDisplay.js';
 import {
     formatTaxCode,
@@ -593,10 +595,11 @@ const RecruiterVerificationPage = () => {
 
     return (
         <div className="rv-page">
+            <RecruiterBackLink
+                to={ROUTES.RECRUITER_PROFILE}
+                label={RECRUITER_BACK_LABELS.profile}
+            />
             <header className="rv-page__top">
-                <Link to={ROUTES.RECRUITER_PROFILE} className="rv-back">
-                    ← Hồ sơ nhà tuyển dụng
-                </Link>
                 <h1>Xác minh doanh nghiệp</h1>
                 <p>
                     {licenseOnlyFlow

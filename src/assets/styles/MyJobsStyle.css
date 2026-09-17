@@ -262,6 +262,31 @@
     color: #475569;
 }
 
+.my-jobs-page__deadline--urgent {
+    background: #fef3c7;
+    color: #b45309;
+    font-weight: 600;
+}
+
+.my-jobs-page__badge--close-reason {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.my-jobs-page__badge--close-reason--expired {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.my-jobs-page__badge--close-reason--filled {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
 .my-jobs-page__salary {
     margin: 0 0 4px;
     color: #2563eb;

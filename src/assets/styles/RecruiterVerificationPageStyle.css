@@ -21,13 +21,6 @@
     font-size: 14px;
 }
 
-.rv-back {
-    font-size: 13px;
-    font-weight: 650;
-    color: var(--color-primary, #2563eb);
-    text-decoration: none;
-}
-
 .rv-page__empty {
     text-align: center;
     color: var(--color-text-muted);

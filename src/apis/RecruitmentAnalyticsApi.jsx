@@ -18,7 +18,7 @@ export const getRecruitmentAnalyticsApiErrorMessage = (error, fallback = 'CÃ³ lá
 
 /**
  * GET /api/v1/recruiter/recruitment-analytics
- * @param {{ fromDate?: string, toDate?: string, jobId?: number, jobStatus?: string, includeHistorical?: boolean }} params
+ * @param {{ fromDate?: string, toDate?: string, jobId?: number, scope?: 'ACTIVE'|'HISTORY', includeHistorical?: boolean, page?: number, size?: number }} params
  */
 export const fetchRecruitmentAnalytics = (params = {}) =>
     axiosClient.get(ANALYTICS_BASE, { params });
@@ -26,7 +26,7 @@ export const fetchRecruitmentAnalytics = (params = {}) =>
 /**
  * GET /api/v1/recruiter/recruitment-analytics/jobs/{jobId}
  * @param {number|string} jobId
- * @param {{ fromDate?: string, toDate?: string, jobStatus?: string }} params
+ * @param {{ fromDate?: string, toDate?: string }} params
  */
 export const fetchJobRecruitmentAnalytics = (jobId, params = {}) =>
     axiosClient.get(`${ANALYTICS_BASE}/jobs/${jobId}`, { params });

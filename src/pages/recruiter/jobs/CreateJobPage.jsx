@@ -28,9 +28,11 @@ import {
     rememberSkillLabels,
 } from '../../../utils/skillDisplay.js';
 import { EDITABLE_JOB_STATUSES, JOB_POST_ACTION, JOB_STATUS_LABELS } from '../../../constants/jobPost.js';
+import RecruiterBackLink from '../../../components/recruiter/RecruiterBackLink.jsx';
 import JobPostForm from '../../../components/recruiter/jobs/JobPostForm.jsx';
 import JobPreviewPanel from '../../../components/recruiter/jobs/JobPreviewPanel.jsx';
 import AiJobDescModal from '../../../components/recruiter/jobs/AiJobDescModal.jsx';
+import { RECRUITER_BACK_LABELS } from '../../../utils/recruiterBackNav.js';
 import '../../../assets/styles/JobPostStyle.css';
 
 const notifyJobSaveResult = (action, savedJob, { isEdit }) => {
@@ -342,13 +344,15 @@ const CreateJobPage = () => {
                 </div>
             )}
 
+            {showBackToOverview ? (
+                <RecruiterBackLink
+                    to={ROUTES.RECRUITER_HOME}
+                    label={RECRUITER_BACK_LABELS.overview}
+                />
+            ) : null}
+
             <header className="job-post-page__header">
                 <div>
-                    {showBackToOverview ? (
-                        <Link to={ROUTES.RECRUITER_HOME} className="recruiter-back-overview">
-                            ← Quay lại tổng quan
-                        </Link>
-                    ) : null}
                     <h1>{isEdit ? 'Chỉnh sửa tin tuyển dụng' : 'Đăng tin tuyển dụng'}</h1>
                     {isEdit && jobStatus && (
                         <p className="job-post-page__subtitle">

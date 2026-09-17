@@ -1,75 +1,89 @@
 import { useMemo } from 'react';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    LabelList,
+    Legend,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import { formatCount } from '../../../services/recruitmentAnalyticsService.js';
 
-export const formatTrendLabel = (dateStr) => {
-    if (!dateStr) return '';
-    const parts = String(dateStr).split('-');
-    if (parts.length !== 3) return dateStr;
-    return `${parts[2]}/${parts[1]}`;
+const SERIES = [
+    { dataKey: 'newApps', name: 'Hồ sơ mới', color: '#2563eb' },
+    { dataKey: 'hires', name: 'Đã tuyển', color: '#334155' },
+];
+
+const toDdMm = (iso) => {
+    const parts = String(iso).trim().split('-');
+    if (parts.length !== 3) return iso;
+    const [, month, day] = parts;
+    return `${day}/${month}`;
 };
 
-const startOfWeekMonday = (dateStr) => {
-    const date = new Date(`${dateStr}T00:00:00`);
-    if (Number.isNaN(date.getTime())) return dateStr;
-    const day = date.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    date.setDate(date.getDate() + diff);
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-};
-
-export const aggregateTrendsByWeek = (trends) => {
-    const buckets = new Map();
-    (Array.isArray(trends) ? trends : []).forEach((row) => {
-        const key = startOfWeekMonday(row.date);
-        const prev = buckets.get(key) || {
-            date: key,
-            label: `Tuần ${formatTrendLabel(key)}`,
-            uniqueCandidateViews: 0,
-            applicationCount: 0,
-            successfulHireCount: 0,
-        };
-        prev.uniqueCandidateViews += formatCount(row.uniqueCandidateViews);
-        prev.applicationCount += formatCount(row.applicationCount);
-        prev.successfulHireCount += formatCount(row.successfulHireCount);
-        buckets.set(key, prev);
-    });
-    return Array.from(buckets.values()).sort((a, b) => a.date.localeCompare(b.date));
-};
-
-export const buildChartPoints = (trends, periodDays) => {
-    const granularity = periodDays >= 30 ? 'week' : 'day';
-    if (granularity === 'week') {
-        return { granularity, points: aggregateTrendsByWeek(trends) };
+/** BE trả ISO (ngày hoặc tuần); FE format dd/MM cho trục X. */
+export const formatTrendLabel = (label) => {
+    if (!label) return '';
+    const text = String(label);
+    const dashIndex = text.indexOf('–');
+    if (dashIndex === -1) {
+        return toDdMm(text);
     }
-    return {
-        granularity,
-        points: (Array.isArray(trends) ? trends : []).map((row) => ({
-            ...row,
-            label: formatTrendLabel(row.date),
-        })),
-    };
+    const from = text.slice(0, dashIndex).trim();
+    const to = text.slice(dashIndex + 1).trim();
+    return `${toDdMm(from)}–${toDdMm(to)}`;
 };
 
-/** Luôn hiện 3 series: xem / ứng tuyển / tuyển được. */
-const RecruitmentTrendsChart = ({ points }) => {
-    const rows = Array.isArray(points) ? points : [];
-    const maxValue = useMemo(() => {
-        let max = 0;
-        rows.forEach((row) => {
-            max = Math.max(
-                max,
-                formatCount(row.uniqueCandidateViews),
-                formatCount(row.applicationCount),
-                formatCount(row.successfulHireCount)
-            );
-        });
-        return Math.max(max, 1);
-    }, [rows]);
+const formatBarLabel = (value) => {
+    const count = formatCount(value);
+    return count > 0 ? String(count) : '';
+};
 
-    if (rows.length === 0) {
+const TrendTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
+    const row = payload[0]?.payload;
+    if (!row) return null;
+
+    return (
+        <div className="recruiter-analytics__chart-tooltip">
+            <p className="recruiter-analytics__chart-tooltip-title">{row.name}</p>
+            <ul className="recruiter-analytics__chart-tooltip-list">
+                {SERIES.map((series) => (
+                    <li key={series.dataKey}>
+                        <span
+                            className="recruiter-analytics__chart-tooltip-swatch"
+                            style={{ background: series.color }}
+                        />
+                        <span className="recruiter-analytics__chart-tooltip-label">
+                            {series.name}
+                        </span>
+                        <strong>{formatCount(row[series.dataKey])}</strong>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
+/** Biểu đồ 2 series: hồ sơ mới + đã tuyển (BE đã bucket). */
+const RecruitmentTrendsChart = ({ points }) => {
+    const chartData = useMemo(
+        () =>
+            (Array.isArray(points) ? points : []).map((point, index) => ({
+                name: formatTrendLabel(point.label) || `Kỳ ${index + 1}`,
+                newApps: formatCount(point.newApplicationCount),
+                hires: formatCount(point.hiredCount),
+            })),
+        [points]
+    );
+
+    const hasValue = chartData.some((row) => row.newApps > 0 || row.hires > 0);
+    const labelInterval = chartData.length <= 8 ? 0 : Math.ceil(chartData.length / 8) - 1;
+
+    if (chartData.length === 0) {
         return (
             <div className="recruiter-analytics__chart-empty">
                 Không có dữ liệu xu hướng trong kỳ đã chọn.
@@ -77,59 +91,71 @@ const RecruitmentTrendsChart = ({ points }) => {
         );
     }
 
-    const showEvery = Math.max(1, Math.ceil(rows.length / 8));
+    if (!hasValue) {
+        return (
+            <div className="recruiter-analytics__chart-empty">
+                Không có hoạt động tuyển dụng trong kỳ đã chọn.
+            </div>
+        );
+    }
 
     return (
-        <div className="recruiter-analytics__chart">
-            <div className="recruiter-analytics__chart-legend">
-                <span className="recruiter-analytics__legend-item recruiter-analytics__legend-item--views">
-                    Lượt xem
-                </span>
-                <span className="recruiter-analytics__legend-item recruiter-analytics__legend-item--apps">
-                    Ứng tuyển
-                </span>
-                <span className="recruiter-analytics__legend-item recruiter-analytics__legend-item--hires">
-                    Tuyển được
-                </span>
-            </div>
-            <div className="recruiter-analytics__chart-plot" role="img" aria-label="Biểu đồ xu hướng">
-                {rows.map((row) => {
-                    const views = formatCount(row.uniqueCandidateViews);
-                    const apps = formatCount(row.applicationCount);
-                    const hires = formatCount(row.successfulHireCount);
-                    return (
-                        <div
-                            key={row.date}
-                            className="recruiter-analytics__chart-col"
-                            title={row.label || row.date}
+        <div
+            className="recruiter-analytics__chart recruiter-analytics__chart--recharts"
+            role="img"
+            aria-label="Biểu đồ xu hướng hồ sơ mới và đã tuyển"
+        >
+            <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                    data={chartData}
+                    margin={{ top: 22, right: 8, left: 0, bottom: 4 }}
+                    barCategoryGap="28%"
+                    barGap={4}
+                >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 11, fill: '#64748b' }}
+                        axisLine={{ stroke: '#e2e8f0' }}
+                        tickLine={false}
+                        interval={labelInterval}
+                    />
+                    <YAxis
+                        allowDecimals={false}
+                        tick={{ fontSize: 11, fill: '#64748b' }}
+                        axisLine={false}
+                        tickLine={false}
+                        width={32}
+                    />
+                    <Tooltip
+                        content={<TrendTooltip />}
+                        cursor={{ fill: 'rgba(37, 99, 235, 0.04)' }}
+                    />
+                    <Legend
+                        iconType="circle"
+                        iconSize={8}
+                        wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                    />
+                    {SERIES.map((series) => (
+                        <Bar
+                            key={series.dataKey}
+                            dataKey={series.dataKey}
+                            name={series.name}
+                            fill={series.color}
+                            radius={[3, 3, 0, 0]}
+                            maxBarSize={14}
                         >
-                            <div className="recruiter-analytics__chart-bars">
-                                <span
-                                    className="recruiter-analytics__bar recruiter-analytics__bar--views"
-                                    style={{ height: `${(views / maxValue) * 100}%` }}
-                                />
-                                <span
-                                    className="recruiter-analytics__bar recruiter-analytics__bar--apps"
-                                    style={{ height: `${(apps / maxValue) * 100}%` }}
-                                />
-                                <span
-                                    className="recruiter-analytics__bar recruiter-analytics__bar--hires"
-                                    style={{ height: `${(hires / maxValue) * 100}%` }}
-                                />
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-            <div className="recruiter-analytics__chart-axis">
-                {rows.map((row, index) => (
-                    <span key={row.date} className="recruiter-analytics__chart-tick">
-                        {index % showEvery === 0 || index === rows.length - 1
-                            ? row.label || formatTrendLabel(row.date)
-                            : ''}
-                    </span>
-                ))}
-            </div>
+                            <LabelList
+                                dataKey={series.dataKey}
+                                position="top"
+                                formatter={formatBarLabel}
+                                className="recruiter-analytics__chart-bar-label"
+                                fill={series.color}
+                            />
+                        </Bar>
+                    ))}
+                </BarChart>
+            </ResponsiveContainer>
         </div>
     );
 };

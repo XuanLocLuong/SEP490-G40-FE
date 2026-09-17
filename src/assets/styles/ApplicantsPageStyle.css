@@ -4,20 +4,6 @@
     padding: 24px 20px 48px;
 }
 
-.applicants-page__back {
-    display: inline-flex;
-    align-items: center;
-    margin-bottom: 12px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #64748b;
-    text-decoration: none;
-}
-
-.applicants-page__back:hover {
-    color: #2563eb;
-}
-
 .applicants-page__title {
     margin: 0 0 20px;
     font-size: 1.75rem;

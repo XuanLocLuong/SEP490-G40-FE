@@ -1,3 +1,6 @@
+/** Cùng page size với My Jobs và các màn recruiter có phân trang. */
+export const RECRUITMENT_PAGE_SIZE = 10;
+
 /** @returns {(number|'ellipsis')[]} */
 export const buildRecruitmentPageItems = (page, totalPages) => {
     if (totalPages <= 1) return [];
