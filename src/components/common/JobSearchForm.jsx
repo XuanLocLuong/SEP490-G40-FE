@@ -348,9 +348,9 @@ const JobSearchForm = ({
         return locateNearMe();
     };
 
-    const applySuggestedKeyword = (value) => {
+    const applySuggestedKeyword = (completedQuery) => {
         skipSuggestOpenRef.current = true;
-        setKeyword(value);
+        setKeyword(completedQuery);
         setKeywordFocused(false);
         window.requestAnimationFrame(() => {
             keywordInputRef.current?.focus();
