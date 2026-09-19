@@ -447,8 +447,6 @@ const MyJobsPage = () => {
             job.status === 'OPEN' ? getDeadlineCountdownLabel(job.applicationDeadline) : null;
         const closedSubBadge =
             job.status === 'CLOSED' ? getClosedJobSubBadge(job, metrics) : null;
-        const businessName = job.business?.name;
-        const locationLabel = job.location?.name || job.location?.city;
         const statusModifier =
             job.status === 'CLOSED'
                 ? 'my-jobs-page__card--closed'
@@ -492,11 +490,8 @@ const MyJobsPage = () => {
                         {formatSalaryRange(job.salaryMin, job.salaryMax)}
                     </p>
                     <p className="my-jobs-page__meta">
-                        {[businessName, locationLabel].filter(Boolean).join(' · ') ||
-                            locationLabel ||
-                            '—'}
-                        {' · '}
-                        Tạo {formatDate(job.createdAt)}
+                        {job.business?.name || job.location?.name || job.location?.city || '—'}{' '}
+                        · Tạo {formatDate(job.createdAt)}
                     </p>
                     {job.status === 'BLOCKED' && String(job.reviewNote || '').trim() && (
                         <p className="my-jobs-page__notice my-jobs-page__notice--rejected">
