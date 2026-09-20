@@ -13,6 +13,7 @@ export const ROUTES = {
     BUSINESS_PROFILE: '/business/:businessId',
     CANDIDATE_PUBLIC_PROFILE: '/candidates/:candidateId',
     TOP_RECRUITERS: '/top-recruiters',
+    PRIVACY: '/privacy',
 
     CANDIDATE_HOME: '/candidate',
     RECRUITER_HOME: '/recruiter',

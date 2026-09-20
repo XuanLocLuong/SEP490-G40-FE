@@ -549,3 +549,42 @@
         width: 100%;
     }
 }
+
+.rv-consent-wrap {
+    margin: 20px 0 12px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-md, 10px);
+}
+
+.rv-consent-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #334155;
+    cursor: pointer;
+    user-select: none;
+}
+
+.rv-consent-label input[type="checkbox"] {
+    margin-top: 3px;
+    width: 17px;
+    height: 17px;
+    accent-color: var(--color-primary, #2563eb);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.rv-consent-label a {
+    color: var(--color-primary, #2563eb);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.rv-consent-label a:hover {
+    color: var(--color-primary-dark, #1d4ed8);
+}

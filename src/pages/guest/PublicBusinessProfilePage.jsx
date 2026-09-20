@@ -5,6 +5,7 @@ import RichTextContent from '../../components/common/RichTextContent.jsx';
 import GalleryLightbox from '../../components/common/GalleryLightbox.jsx';
 import ReadonlyMapPreview from '../../components/recruiter/ReadonlyMapPreview.jsx';
 import {
+    BuildingIcon,
     CheckCircleIcon,
     GlobeIcon,
     MailIcon,
@@ -344,16 +345,29 @@ const trustWarningMessage =
     }
 
     if (profileError || !profile) {
+        const isNotFound =
+            profileError === 'PUBLIC_BUSINESS_NOT_FOUND' ||
+            String(profileError).toLowerCase().includes('not found') ||
+            !profile;
+
         return (
-            <div className="public-business-page">
-                <div className="public-business__error">
-                    <p>{profileError || 'Không tìm thấy doanh nghiệp.'}</p>
+            <div className="public-business-page public-business-not-found">
+                <div className="public-business-not-found__card">
+                    <span className="public-business-not-found__icon" aria-hidden="true">
+                        <BuildingIcon width={36} height={36} />
+                    </span>
+                    <h1 className="public-business-not-found__title">Không tìm thấy doanh nghiệp</h1>
+                    <p className="public-business-not-found__text">
+                        {isNotFound
+                            ? 'Hồ sơ doanh nghiệp không tồn tại hoặc đã ngừng hiển thị trên JobLink.'
+                            : profileError}
+                    </p>
                     <Link
                         to={profileBack.path}
                         state={profileBackState}
-                        className="btn btn--secondary"
+                        className="btn btn--primary"
                     >
-                        ← {profileBack.label}
+                        {profileBack.label ? `← ${profileBack.label}` : 'Quay lại'}
                     </Link>
                 </div>
             </div>

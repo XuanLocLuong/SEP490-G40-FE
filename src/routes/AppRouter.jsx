@@ -57,6 +57,7 @@ import AdminAuditLogsPage from '../pages/admin/AdminAuditLogsPage.jsx';
 import AdminSystemConfigPage from '../pages/admin/AdminSystemConfigPage.jsx';
 import AdminBlacklistKeywordsPage from '../pages/admin/AdminBlacklistKeywordsPage.jsx';
 import CandidatePublicProfilePage from '../pages/shared/CandidatePublicProfilePage.jsx';
+import PrivacyPolicyPage from '../pages/shared/PrivacyPolicyPage.jsx';
 import RoleBasedShellLayout from '../layouts/RoleBasedShellLayout.jsx';
 
 const refreshOnNotification = (page) => (
@@ -77,12 +78,13 @@ const AppRouter = () => {
                 <Route path={ROUTES.LANDING} element={<LandingPage />} />
             </Route>
 
-            {/* Public job URLs; candidate login dùng Sidebar, guest dùng Header. */}
+            {/* Public job URLs; candidate login dùng CandidateHeader, recruiter dùng RecruiterHeader, guest dùng GuestHeader. */}
             <Route element={<JobDiscoveryLayout />}>
                 <Route path={ROUTES.JOB_LIST} element={refreshOnNotification(<JobListPage />)} />
                 <Route path={ROUTES.JOB_DETAIL} element={refreshOnNotification(<JobDetailPage />)} />
                 <Route path={ROUTES.BUSINESS_PROFILE} element={refreshOnNotification(<PublicBusinessProfilePage />)} />
                 <Route path={ROUTES.TOP_RECRUITERS} element={<TopRecruitersPage />} />
+                <Route path={ROUTES.PRIVACY} element={<PrivacyPolicyPage />} />
             </Route>
 
             {/* ---- Auth — đã login thì đá về homepage role ---- */}

@@ -497,6 +497,7 @@ const CandidateApplicationHistoryPage = () => {
                     const isHired = item.status === 'HIRED';
                     const isClosed = item.isJobOpen === false || item.jobStatus === 'CLOSED';
                     const isFilled = item.hasVacancy === false;
+                    const isRecruiterBanned = Boolean(item.recruiterBanned);
                     const canRespondOffer = isAccepted && !isClosed && !isFilled;
                     const appKey = item.applicationId != null ? String(item.applicationId) : '';
                     const hasReviewed = Boolean(appKey && reviewedIds.has(appKey));
@@ -533,6 +534,14 @@ const CandidateApplicationHistoryPage = () => {
                                         <span className={`cah-badge cah-badge--${ui.tone}`}>
                                             {ui.label}
                                         </span>
+                                        {isRecruiterBanned && (
+                                            <span
+                                                className="cah-badge cah-badge--danger"
+                                                title="Tài khoản nhà tuyển dụng đã bị khóa do vi phạm"
+                                            >
+                                                NTD bị khóa
+                                            </span>
+                                        )}
                                         {isClosed && ui.label !== 'Tin đã đóng' && (
                                             <span className="cah-badge cah-badge--neutral" title="Tin tuyển dụng này đã đóng">
                                                 Tin đã đóng
@@ -557,6 +566,13 @@ const CandidateApplicationHistoryPage = () => {
                                             <span>{shiftsLabel}</span>
                                         </p>
                                     )}
+
+                                    {isRecruiterBanned && (
+                                        <div className="cah-banned-alert">
+                                            <AlertCircleIcon width={16} height={16} />
+                                            <span>Nhà tuyển dụng này đã bị khóa tài khoản.</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -575,7 +591,7 @@ const CandidateApplicationHistoryPage = () => {
                                                 Xem CV
                                             </a>
                                         ) : null}
-                                        {item.jobId && item.recruiterId ? (
+                                        {item.jobId && item.recruiterId && !isRecruiterBanned ? (
                                             <button
                                                 type="button"
                                                 className="cah-btn cah-btn--ghost"
@@ -646,16 +662,18 @@ const CandidateApplicationHistoryPage = () => {
                                         >
                                             Từ chối
                                         </button>
-                                        <button
-                                            type="button"
-                                            className="cah-btn cah-btn--primary"
-                                            disabled={actionLoadingId === item.applicationId}
-                                            onClick={() => handleConfirm(item.applicationId)}
-                                        >
-                                            {actionLoadingId === item.applicationId
-                                                ? 'Đang xử lý...'
-                                                : 'Chấp nhận'}
-                                        </button>
+                                        {!isRecruiterBanned && (
+                                            <button
+                                                type="button"
+                                                className="cah-btn cah-btn--primary"
+                                                disabled={actionLoadingId === item.applicationId}
+                                                onClick={() => handleConfirm(item.applicationId)}
+                                            >
+                                                {actionLoadingId === item.applicationId
+                                                    ? 'Đang xử lý...'
+                                                    : 'Chấp nhận'}
+                                            </button>
+                                        )}
                                     </div>
                                 ) : null}
                                 {isHired && item.applicationId ? (
