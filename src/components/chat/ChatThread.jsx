@@ -170,6 +170,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
     const {
         messages,
         actions,
+        otherPartyBanned,
         loading,
         loadingMore,
         sending,
@@ -828,6 +829,22 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 </div>
             )}
 
+            {otherPartyBanned ? (
+                <div className="chat-panel__account-warning" role="status">
+                    <strong>
+                        {auth?.role === USER_ROLES.RECRUITER
+                            ? 'Tài khoản ứng viên đã bị khóa'
+                            : 'Tài khoản nhà tuyển dụng đã bị khóa'}
+                    </strong>
+                    <span>
+                        Không thể thực hiện thao tác tuyển dụng tích cực với tài khoản này.
+                        {auth?.role === USER_ROLES.RECRUITER
+                            ? ' Bạn vẫn có thể từ chối đơn để kết thúc xử lý.'
+                            : ''}
+                    </span>
+                </div>
+            ) : null}
+
             <div
                 className="chat-panel__messages"
                 ref={scrollerRef}
@@ -881,6 +898,11 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                             key={group.key}
                             kind={group.kind}
                             actions={group.actions}
+                            body={
+                                otherPartyBanned && group.kind === 'APPLICATION'
+                                    ? 'Tài khoản ứng viên đã bị khóa. Bạn chỉ có thể từ chối đơn này.'
+                                    : undefined
+                            }
                             busy={actionBusy}
                             onAction={handleAction}
                         />
