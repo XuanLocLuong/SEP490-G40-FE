@@ -21,7 +21,10 @@ const ApplicationCard = ({
     onReview,
     onViewRejectReason,
 }) => {
+    const isBanned = Boolean(application.candidateBanned);
     const canDecide = !readOnly && application.status === 'PENDING';
+    const canAccept = canDecide && !isBanned;
+    const bannedTitle = 'Tài khoản bị khóa';
     const tone = getApplicationStatusTone(application.status);
     const canChat = application.candidateUserId != null;
     const canReview = application.status === 'HIRED';
@@ -48,6 +51,9 @@ const ApplicationCard = ({
                     <span className={`application-card__status application-card__status--${tone}`}>
                         {getApplicationStatusLabel(application.status)}
                     </span>
+                    {isBanned ? (
+                        <span className="application-card__banned">{bannedTitle}</span>
+                    ) : null}
                     <p className="application-card__time">
                         {formatAppliedRelativeTime(application.appliedAt)}
                     </p>
@@ -78,34 +84,50 @@ const ApplicationCard = ({
                         >
                             Từ chối
                         </button>
-                        <button
-                            type="button"
-                            className="btn application-card__btn application-card__btn--accept"
-                            disabled={actionLoading}
-                            onClick={() => onAccept?.(application)}
-                        >
-                            Chấp nhận
-                        </button>
+                        {canAccept ? (
+                            <button
+                                type="button"
+                                className="btn application-card__btn application-card__btn--accept"
+                                disabled={actionLoading}
+                                onClick={() => onAccept?.(application)}
+                            >
+                                Chấp nhận
+                            </button>
+                        ) : null}
                     </>
                 ) : null}
                 <button
                     type="button"
                     className="btn application-card__btn application-card__btn--view"
+                    disabled={isBanned}
+                    title={isBanned ? bannedTitle : undefined}
                     onClick={() => onViewProfile?.(application)}
                 >
                     Xem hồ sơ
                 </button>
                 {application.cvLink ? (
-                    <a
-                        href={application.cvLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn application-card__btn application-card__btn--cv"
-                        title="Mở file CV đính kèm của ứng viên trong tab mới"
-                    >
-                        <FileTextIcon width={15} height={15} />
-                        <span>Xem CV</span>
-                    </a>
+                    isBanned ? (
+                        <button
+                            type="button"
+                            className="btn application-card__btn application-card__btn--cv"
+                            disabled
+                            title={bannedTitle}
+                        >
+                            <FileTextIcon width={15} height={15} />
+                            <span>Xem CV</span>
+                        </button>
+                    ) : (
+                        <a
+                            href={application.cvLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn application-card__btn application-card__btn--cv"
+                            title="Mở file CV đính kèm của ứng viên trong tab mới"
+                        >
+                            <FileTextIcon width={15} height={15} />
+                            <span>Xem CV</span>
+                        </a>
+                    )
                 ) : null}
                 {application.status === 'REJECTED' && (application.rejectReason || application.note) ? (
                     <button
@@ -132,9 +154,15 @@ const ApplicationCard = ({
                 <button
                     type="button"
                     className="btn application-card__btn application-card__btn--chat"
-                    title={canChat ? 'Nhắn tin' : 'Thiếu candidateUserId từ API'}
+                    title={
+                        isBanned
+                            ? bannedTitle
+                            : canChat
+                              ? 'Nhắn tin'
+                              : 'Thiếu candidateUserId từ API'
+                    }
                     aria-label="Nhắn tin"
-                    disabled={chatLoading || !canChat}
+                    disabled={chatLoading || !canChat || isBanned}
                     onClick={() => onChat?.(application)}
                 >
                     <ChatIcon width={18} height={18} />

@@ -99,6 +99,7 @@ export const mapApplicationItem = (item) => ({
     candidateAvatar: item?.candidateAvatar || null,
     candidateEmail: item?.candidateEmail || null,
     candidatePhone: item?.candidatePhone || null,
+    candidateBanned: Boolean(item?.candidateBanned),
     cvLink: item?.cvLink || item?.cvUrl || null,
     status: item?.status || null,
     appliedAt: item?.appliedAt || null,
