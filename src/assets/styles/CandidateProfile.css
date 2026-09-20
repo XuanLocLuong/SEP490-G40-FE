@@ -709,6 +709,33 @@
     font-style: italic;
 }
 
+.cp-section-title__public-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f0f7ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #1e40af;
+    line-height: 1.5;
+}
+
+.cp-section-title__public-hint svg {
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    color: #2563eb;
+    margin-top: 2px;
+}
+
+.cp-section-title__public-hint strong {
+    font-weight: 700;
+    color: #1e3a8a;
+}
+
 /* ---- Skill picker (button + modal chips) ---- */
 .cp-skill-add-btn {
     display: inline-flex;

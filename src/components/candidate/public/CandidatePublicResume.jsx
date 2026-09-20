@@ -56,12 +56,13 @@ const CandidatePublicResume = ({ profile }) => {
     const skills = profile.skills || [];
 
     const hasEducation = Boolean(
-        profile.university ||
+        profile?.university ||
             educationLevelLabel ||
-            profile.major ||
-            profile.academicYear ||
-            profile.gpa ||
-            profile.city,
+            profile?.studentCode ||
+            profile?.major ||
+            profile?.academicYear ||
+            profile?.gpa ||
+            profile?.city,
     );
 
     const genderText = getGenderLabel(profile?.gender);
@@ -245,6 +246,11 @@ const CandidatePublicResume = ({ profile }) => {
                                     {profile?.university && (
                                         <p className="cpp-resume-edu__school">
                                             {profile.university}
+                                        </p>
+                                    )}
+                                    {profile?.studentCode && (
+                                        <p className="cpp-resume-edu__line">
+                                            <span className="cpp-resume-edu__label">MSSV:</span> {profile.studentCode}
                                         </p>
                                     )}
                                     {profile?.major && (

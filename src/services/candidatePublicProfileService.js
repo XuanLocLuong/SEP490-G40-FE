@@ -40,6 +40,7 @@ export const mapPublicProfileFromApi = (data = {}) => ({
     headline: data.headline || '',
     about: data.about || '',
     university: data.university || '',
+    studentCode: data.studentCode || '',
     major: data.major || '',
     academicYear: data.academicYear ?? null,
     gpa: data.gpa ?? null,

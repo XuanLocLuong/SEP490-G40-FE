@@ -18,6 +18,7 @@ import AvailabilityCard from '../../../components/candidate/AvailabilityCard.jsx
 import FooterAction from '../../../components/candidate/FooterAction.jsx';
 import ProfileSkeleton from '../../../components/candidate/ProfileSkeleton.jsx';
 import ConfirmModal from '../../../components/common/ConfirmModal.jsx';
+import { EyeIcon } from '../../../components/common/icons.jsx';
 import {
     clearPendingApplyReturn,
     consumePendingApplyReturn,
@@ -483,6 +484,12 @@ const CandidateProfilePage = () => {
                 <p className="cp-section-title__note">
                     * Các mục đánh dấu hoa thị đỏ là thông tin bắt buộc để có thể ứng tuyển việc làm.
                 </p>
+                <div className="cp-section-title__public-hint">
+                    <EyeIcon />
+                    <span>
+                        Các thông tin trong mục này (<strong>SĐT</strong>, <strong>ngày sinh</strong>, <strong>giới tính</strong>, <strong>địa chỉ</strong>, <strong>nhu cầu tìm việc</strong>, <strong>học vấn</strong>, <strong>CV</strong>) sẽ hiển thị công khai khi Nhà tuyển dụng xem hồ sơ của bạn.
+                    </span>
+                </div>
             </div>
 
             <div className="cp-grid">
@@ -522,6 +529,12 @@ const CandidateProfilePage = () => {
             <div className="cp-section-title">
                 <h2>Hồ sơ công việc</h2>
                 <p>Cập nhật để tăng khả năng được gợi ý</p>
+                <div className="cp-section-title__public-hint">
+                    <EyeIcon />
+                    <span>
+                        <strong>Kỹ năng</strong> và <strong>Kinh nghiệm làm việc</strong> sẽ hiển thị công khai trên hồ sơ của bạn.
+                    </span>
+                </div>
             </div>
 
             <SkillCard
