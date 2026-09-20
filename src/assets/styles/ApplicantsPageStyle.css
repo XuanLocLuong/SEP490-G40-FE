@@ -638,6 +638,17 @@
     font-weight: 600;
 }
 
+.application-card__banned {
+    display: inline-block;
+    margin: 0 0 6px 6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #b42318;
+    background: #fef3f2;
+}
+
 .application-card__status--pending {
     color: #92400e;
     background: #fef9c3;
