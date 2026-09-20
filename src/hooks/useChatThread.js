@@ -63,6 +63,7 @@ const applySeenEvent = (prev, event) => {
 export const useChatThread = (conversationId) => {
     const [messages, setMessages] = useState([]);
     const [actions, setActions] = useState([]);
+    const [actionsLoaded, setActionsLoaded] = useState(false);
     const [otherPartyBanned, setOtherPartyBanned] = useState(false);
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -89,9 +90,11 @@ export const useChatThread = (conversationId) => {
             const list = data?.availableActions ?? data ?? [];
             setActions(filterChatUiActions(list));
             setOtherPartyBanned(Boolean(data?.otherPartyBanned));
+            setActionsLoaded(true);
         } catch {
             setActions([]);
             setOtherPartyBanned(false);
+            setActionsLoaded(false);
         }
     }, [conversationId]);
 
@@ -332,11 +335,14 @@ export const useChatThread = (conversationId) => {
         if (conversationId == null) {
             setMessages([]);
             setActions([]);
+            setActionsLoaded(false);
             setOtherPartyBanned(false);
             setPeerTyping(false);
             return undefined;
         }
 
+        setActions([]);
+        setActionsLoaded(false);
         setPeerTyping(false);
         setOtherPartyBanned(false);
         loadInitial();
@@ -434,6 +440,7 @@ export const useChatThread = (conversationId) => {
     return {
         messages,
         actions,
+        actionsLoaded,
         otherPartyBanned,
         loading,
         loadingMore,

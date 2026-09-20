@@ -156,6 +156,41 @@ const ACTION_CONFIRMATION_COPY = {
     },
 };
 
+const getStickyActionCopy = ({ group, role, otherPartyBanned }) => {
+    const onlyRejectWork =
+        group.kind === 'WORK' &&
+        group.actions.includes('REJECT_WORK') &&
+        !group.actions.includes('ACCEPT_WORK');
+    if (onlyRejectWork) {
+        return {
+            title: 'Lời mời nhận việc',
+            body:
+                otherPartyBanned && role === USER_ROLES.CANDIDATE
+                    ? 'Tài khoản nhà tuyển dụng đã bị khóa. Bạn chỉ có thể từ chối nhận việc.'
+                    : 'Bạn không thể xác nhận nhận việc trong trạng thái hiện tại. Bạn vẫn có thể từ chối lời mời này.',
+        };
+    }
+
+    const onlyRejectInvite =
+        group.kind === 'INVITE_DECISION' &&
+        group.actions.includes('REJECT_INVITE') &&
+        !group.actions.includes('ACCEPT_INVITE');
+    if (onlyRejectInvite && otherPartyBanned && role === USER_ROLES.CANDIDATE) {
+        return {
+            title: 'Lời mời ứng tuyển',
+            body: 'Tài khoản nhà tuyển dụng đã bị khóa. Bạn chỉ có thể từ chối lời mời này.',
+        };
+    }
+
+    if (otherPartyBanned && group.kind === 'APPLICATION') {
+        return {
+            body: 'Tài khoản ứng viên đã bị khóa. Bạn chỉ có thể từ chối đơn này.',
+        };
+    }
+
+    return {};
+};
+
 const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
     const { auth } = useAuth();
     const scrollerRef = useRef(null);
@@ -170,6 +205,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
     const {
         messages,
         actions,
+        actionsLoaded,
         otherPartyBanned,
         loading,
         loadingMore,
@@ -872,7 +908,12 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                     <ChatMessageBubble
                         key={msg.id}
                         message={msg}
-                        actionDisplay={getHistoricalActionDisplay(msg, messages)}
+                        actionDisplay={getHistoricalActionDisplay(msg, messages, {
+                            availableActions: actions,
+                            actionsLoaded,
+                            viewerRole: auth?.role,
+                            otherPartyBanned,
+                        })}
                         mutating={mutatingMessageId === msg.id}
                         onEdit={handleEditMessage}
                         onRecall={requestRecallMessage}
@@ -893,20 +934,25 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
 
             {stickyGroups.length > 0 && (
                 <div className="chat-panel__sticky-actions">
-                    {stickyGroups.map((group) => (
-                        <ChatActionCard
-                            key={group.key}
-                            kind={group.kind}
-                            actions={group.actions}
-                            body={
-                                otherPartyBanned && group.kind === 'APPLICATION'
-                                    ? 'Tài khoản ứng viên đã bị khóa. Bạn chỉ có thể từ chối đơn này.'
-                                    : undefined
-                            }
-                            busy={actionBusy}
-                            onAction={handleAction}
-                        />
-                    ))}
+                    {stickyGroups.map((group) => {
+                        const copy = getStickyActionCopy({
+                            group,
+                            role: auth?.role,
+                            otherPartyBanned,
+                        });
+
+                        return (
+                            <ChatActionCard
+                                key={group.key}
+                                kind={group.kind}
+                                actions={group.actions}
+                                title={copy.title}
+                                body={copy.body}
+                                busy={actionBusy}
+                                onAction={handleAction}
+                            />
+                        );
+                    })}
                 </div>
             )}
 
