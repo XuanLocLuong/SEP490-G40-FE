@@ -464,6 +464,9 @@ export const previewLastMessage = (conv) => {
     if (conv.lastMessageType === 'ACTION' && conv.lastMessageActionName) {
         const decisionLabel = DECISION_PREVIEW_LABELS[conv.lastMessageActionName];
         if (decisionLabel) return decisionLabel;
+        if (isNotifyAction(conv.lastMessageActionName) && conv.lastMessageContent) {
+            return conv.lastMessageContent;
+        }
         const notifyLabel = getNotifyPreviewLabel(conv.lastMessageActionName);
         if (notifyLabel) return notifyLabel;
         const copy = getActionCardCopy(conv.lastMessageActionName);
