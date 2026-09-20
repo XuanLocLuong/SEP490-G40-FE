@@ -60,8 +60,25 @@ export const getNotifyPreviewLabel = (actionName) => {
  * ACTION messages in the same conversation. The successful outcome wins over
  * a Job-closed message because confirming the final vacancy also closes a Job.
  */
-export const getHistoricalActionDisplay = (message, messages = []) => {
+export const getHistoricalActionDisplay = (
+    message,
+    messages = [],
+    {
+        availableActions = [],
+        actionsLoaded = false,
+        viewerRole = null,
+        otherPartyBanned = false,
+    } = {}
+) => {
     const actionName = normalizeChatAction(message?.actionName);
+    if (actionName === 'REQUEST_REVIEW') {
+        if (!message?.actionDisabled) return null;
+        return {
+            title: 'Đánh giá đã được xử lý',
+            body: 'Yêu cầu đánh giá này đã được hoàn tất hoặc không còn khả dụng.',
+            disabled: true,
+        };
+    }
     if (actionName !== 'INVITE' && actionName !== 'CONFIRM_WORK') return null;
 
     const currentIndex = (Array.isArray(messages) ? messages : []).findIndex(
@@ -109,6 +126,30 @@ export const getHistoricalActionDisplay = (message, messages = []) => {
                 body: 'Lời mời nhận việc đã được xử lý hoặc không còn khả dụng.',
                 disabled: true,
             };
+        }
+        if (viewerRole === 'CANDIDATE' && actionsLoaded) {
+            const actionNames = new Set(
+                filterChatUiActions(availableActions).map((item) => item.action)
+            );
+            const canAccept = actionNames.has('ACCEPT_WORK');
+            const canReject = actionNames.has('REJECT_WORK');
+
+            if (!canAccept && canReject) {
+                return {
+                    title: 'Lời mời nhận việc',
+                    body: otherPartyBanned
+                        ? 'Tài khoản nhà tuyển dụng đã bị khóa. Bạn chỉ có thể từ chối nhận việc.'
+                        : 'Bạn không thể xác nhận nhận việc trong trạng thái hiện tại. Bạn vẫn có thể từ chối lời mời này.',
+                    disabled: true,
+                };
+            }
+            if (!canAccept && !canReject) {
+                return {
+                    title: 'Lời mời nhận việc',
+                    body: 'Lời mời nhận việc đã được xử lý hoặc không còn khả dụng.',
+                    disabled: true,
+                };
+            }
         }
         return null;
     }
