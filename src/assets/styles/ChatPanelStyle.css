@@ -409,6 +409,23 @@
     text-decoration: none;
 }
 
+.chat-panel__account-warning {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 12px;
+    border-bottom: 1px solid #f5c2c7;
+    background: #fff3f3;
+    color: #8f1d2c;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.chat-panel__account-warning strong {
+    font-size: 12px;
+    font-weight: 700;
+}
+
 .chat-panel__messages {
     flex: 1;
     min-height: 0;
