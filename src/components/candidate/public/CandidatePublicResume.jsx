@@ -1,10 +1,22 @@
+import { useEffect, useState } from 'react';
 import {
+    formatDate,
     formatExperiencePeriod,
+    formatSalaryRange,
     getEducationLevelLabel,
+    getGenderLabel,
 } from '../../../utils/profileFormat.js';
 import { getJobTypeLabels } from '../../../utils/jobTypeDisplay.js';
+import { reverseGeocodeLatLng } from '../../../utils/reverseGeocode.js';
 import { useEducationLevelOptions } from '../../../hooks/useEducationLevelOptions.js';
 import { useJobTypeOptions } from '../../../hooks/useJobTypeOptions.js';
+import { PhoneIcon } from '../../common/icons.jsx';
+import {
+    CalendarIcon,
+    HomeAddressIcon,
+    MapPinIcon,
+    WalletIcon,
+} from '../profileIcons.jsx';
 
 /**
  * Public candidate "Hồ sơ" — CV-style view (personal + work history merged).
@@ -13,11 +25,30 @@ import { useJobTypeOptions } from '../../../hooks/useJobTypeOptions.js';
 const CandidatePublicResume = ({ profile }) => {
     const educationLevelOptions = useEducationLevelOptions();
     const jobTypeOptions = useJobTypeOptions();
-    const preferredJobLabels = getJobTypeLabels(profile.preferredJobType, jobTypeOptions);
+    const preferredJobLabels = getJobTypeLabels(profile?.preferredJobType, jobTypeOptions);
     const educationLevelLabel = getEducationLevelLabel(
-        profile.educationLevel,
+        profile?.educationLevel,
         educationLevelOptions,
     );
+
+    const [jobLocationLabel, setJobLocationLabel] = useState('');
+
+    useEffect(() => {
+        let cancelled = false;
+        const lat = profile?.latitude;
+        const lng = profile?.longitude;
+        if (lat == null || lng == null) {
+            setJobLocationLabel('');
+            return undefined;
+        }
+        (async () => {
+            const label = await reverseGeocodeLatLng(lat, lng);
+            if (!cancelled) setJobLocationLabel(label);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [profile?.latitude, profile?.longitude]);
 
     const hasAbout = Boolean(profile.about?.trim());
     const hasHeadline = Boolean(profile.headline?.trim());
@@ -32,6 +63,20 @@ const CandidatePublicResume = ({ profile }) => {
             profile.gpa ||
             profile.city,
     );
+
+    const genderText = getGenderLabel(profile?.gender);
+    const birthDateText = formatDate(profile?.dateOfBirth);
+    const salaryText = formatSalaryRange({
+        salaryMin: profile?.expectedSalaryMin,
+        salaryMax: profile?.expectedSalaryMax,
+    });
+
+    const hasJobCoords = profile?.latitude != null && profile?.longitude != null;
+    const locationDisplay =
+        jobLocationLabel ||
+        (hasJobCoords
+            ? `${Number(profile.latitude).toFixed(4)}, ${Number(profile.longitude).toFixed(4)}`
+            : '');
 
     return (
         <section className="cpp-resume" aria-label="Hồ sơ">
@@ -100,6 +145,91 @@ const CandidatePublicResume = ({ profile }) => {
 
                     <aside className="cpp-resume__side">
                         <div className="cpp-resume__block">
+                            <h3 className="cpp-resume__capsule">Thông tin cá nhân</h3>
+                            <div className="cpp-resume-info-card">
+                                <div className="cpp-resume-info__row">
+                                    <PhoneIcon className="cpp-resume-info__icon" />
+                                    <div className="cpp-resume-info__content">
+                                        <span className="cpp-resume-info__label">Số điện thoại</span>
+                                        {profile?.phone ? (
+                                            <a
+                                                href={`tel:${profile.phone}`}
+                                                className="cpp-resume-info__value cpp-resume-info__link"
+                                            >
+                                                {profile.phone}
+                                            </a>
+                                        ) : (
+                                            <span className="cpp-resume-info__value cpp-resume-info__value--empty">
+                                                Chưa cập nhật
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="cpp-resume-info__row">
+                                    <CalendarIcon className="cpp-resume-info__icon" />
+                                    <div className="cpp-resume-info__content">
+                                        <span className="cpp-resume-info__label">Ngày sinh & Giới tính</span>
+                                        <span className="cpp-resume-info__value">
+                                            {[birthDateText, genderText].filter(Boolean).join(' · ') || (
+                                                <span className="cpp-resume-info__value--empty">
+                                                    Chưa cập nhật
+                                                </span>
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="cpp-resume-info__row">
+                                    <HomeAddressIcon className="cpp-resume-info__icon" />
+                                    <div className="cpp-resume-info__content">
+                                        <span className="cpp-resume-info__label">Địa chỉ nơi ở</span>
+                                        <span className="cpp-resume-info__value">
+                                            {profile?.address || (
+                                                <span className="cpp-resume-info__value--empty">
+                                                    Chưa cập nhật
+                                                </span>
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="cpp-resume__block">
+                            <h3 className="cpp-resume__capsule">Nhu cầu tìm việc</h3>
+                            <div className="cpp-resume-info-card">
+                                <div className="cpp-resume-info__row">
+                                    <WalletIcon className="cpp-resume-info__icon" />
+                                    <div className="cpp-resume-info__content">
+                                        <span className="cpp-resume-info__label">Lương mong đợi</span>
+                                        <span className="cpp-resume-info__value">
+                                            {salaryText || (
+                                                <span className="cpp-resume-info__value--empty">
+                                                    Chưa cập nhật
+                                                </span>
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="cpp-resume-info__row">
+                                    <MapPinIcon className="cpp-resume-info__icon" />
+                                    <div className="cpp-resume-info__content">
+                                        <span className="cpp-resume-info__label">Địa điểm tìm việc</span>
+                                        <span className="cpp-resume-info__value">
+                                            {locationDisplay || (
+                                                <span className="cpp-resume-info__value--empty">
+                                                    Chưa chọn vị trí
+                                                </span>
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="cpp-resume__block">
                             <h3 className="cpp-resume__capsule">Trình độ học vấn</h3>
                             {!hasEducation ? (
                                 <p className="cpp-empty-text">Chưa cập nhật trình độ học vấn.</p>
@@ -112,27 +242,27 @@ const CandidatePublicResume = ({ profile }) => {
                                             </span>
                                         </div>
                                     ) : null}
-                                    {profile.university && (
+                                    {profile?.university && (
                                         <p className="cpp-resume-edu__school">
                                             {profile.university}
                                         </p>
                                     )}
-                                    {profile.major && (
+                                    {profile?.major && (
                                         <p className="cpp-resume-edu__line">
                                             <span className="cpp-resume-edu__label">Chuyên ngành:</span> {profile.major}
                                         </p>
                                     )}
-                                    {profile.academicYear && (
+                                    {profile?.academicYear && (
                                         <p className="cpp-resume-edu__line">
                                             <span className="cpp-resume-edu__label">Năm học:</span> {profile.academicYear}
                                         </p>
                                     )}
-                                    {profile.gpa != null && profile.gpa !== '' && (
+                                    {profile?.gpa != null && profile?.gpa !== '' && (
                                         <p className="cpp-resume-edu__line">
                                             <span className="cpp-resume-edu__label">GPA:</span> {profile.gpa}
                                         </p>
                                     )}
-                                    {profile.city && (
+                                    {profile?.city && (
                                         <p className="cpp-resume-edu__line">
                                             <span className="cpp-resume-edu__label">Khu vực:</span> {profile.city}
                                         </p>
@@ -164,7 +294,10 @@ const CandidatePublicResume = ({ profile }) => {
                                 <h3 className="cpp-resume__capsule">Loại việc mong muốn</h3>
                                 <div className="cpp-skill-tags">
                                     {preferredJobLabels.map((label) => (
-                                        <span key={label} className="cpp-skill-tag cpp-skill-tag--job-type">
+                                        <span
+                                            key={label}
+                                            className="cpp-skill-tag cpp-skill-tag--job-type"
+                                        >
                                             {label}
                                         </span>
                                     ))}
