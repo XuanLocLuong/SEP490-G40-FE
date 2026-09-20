@@ -464,7 +464,10 @@ export const previewLastMessage = (conv) => {
     if (conv.lastMessageType === 'ACTION' && conv.lastMessageActionName) {
         const decisionLabel = DECISION_PREVIEW_LABELS[conv.lastMessageActionName];
         if (decisionLabel) return decisionLabel;
-        if (isNotifyAction(conv.lastMessageActionName) && conv.lastMessageContent) {
+        if (
+            conv.lastMessageActionName === 'NOTIFY_JOB_CLOSED' &&
+            conv.lastMessageContent
+        ) {
             return conv.lastMessageContent;
         }
         const notifyLabel = getNotifyPreviewLabel(conv.lastMessageActionName);
