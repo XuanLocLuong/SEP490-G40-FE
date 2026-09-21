@@ -27,6 +27,7 @@ import {
 } from '../../utils/jobQuery.js';
 import { resolveJobListBack, buildHomeScrollState } from '../../utils/jobNavReturn.js';
 import { RECOMMENDATION_LOAD_ERROR_MESSAGE } from '../../utils/aiErrorMessage.js';
+import { ROUTES } from '../../routes/path.js';
 import '../../assets/styles/JobListPageStyle.css';
 
 const INTERACTION_TABS = [
@@ -284,7 +285,15 @@ const JobListPage = () => {
                 />
             )}
 
-            {error && <p className="job-list-page__error">{error}</p>}
+            {error &&
+                (isAiSection ? (
+                    <p className="job-list-page__recommendation-fallback">
+                        <span>{error}</span>{' '}
+                        <Link to={ROUTES.JOB_LIST}>Xem Việc làm nổi bật →</Link>
+                    </p>
+                ) : (
+                    <p className="job-list-page__error">{error}</p>
+                ))}
 
             <div className="job-list-page__results-meta">
                 <div className="job-list-page__results-text">
