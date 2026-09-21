@@ -186,9 +186,16 @@ const RecruiterAnalyticsPage = () => {
                 <article className="recruiter-analytics__card">
                     <h2>Cần tuyển thêm</h2>
                     <p className="recruiter-analytics__card-value">
-                        {loading ? '—' : formatCount(summary?.remainingHeadcount)}
+                        {loading
+                            ? '—'
+                            : formatProgress(
+                                  summary?.remainingHeadcount,
+                                  summary?.requiredHeadcount
+                              )}
                     </p>
-                    <p className="recruiter-analytics__card-sub">người (dựa trên các tin đang tuyển)</p>
+                    <p className="recruiter-analytics__card-sub">
+                        người (còn thiếu / tổng chỉ tiêu, dựa trên các tin đang tuyển)
+                    </p>
                 </article>
 
                 <article className="recruiter-analytics__card">
