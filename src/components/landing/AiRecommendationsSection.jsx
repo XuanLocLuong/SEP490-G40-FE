@@ -83,7 +83,12 @@ const AiRecommendationsSection = () => {
                 </div>
             )}
 
-            {error && <p className="landing-section__error">{error}</p>}
+            {error && (
+                <p className="landing-section__recommendation-fallback">
+                    <span>{error}</span>{' '}
+                    <Link to={ROUTES.JOB_LIST}>Xem Việc làm nổi bật →</Link>
+                </p>
+            )}
 
             {!error && !loading && jobs.length === 0 && <AiRecommendationsEmptyState />}
 

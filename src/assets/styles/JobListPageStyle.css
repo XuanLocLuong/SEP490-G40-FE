@@ -94,6 +94,19 @@
     margin: 0 0 16px;
 }
 
+.job-list-page__recommendation-fallback {
+    color: var(--color-primary);
+    font-size: 14px;
+    margin: 0 0 16px;
+}
+
+.job-list-page__recommendation-fallback a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
 .job-list-page__empty {
     text-align: center;
     padding: 48px 24px;
