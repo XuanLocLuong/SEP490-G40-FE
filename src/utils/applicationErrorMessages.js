@@ -50,6 +50,7 @@ export const APPLICATION_REJECT_REASONS = {
     INVALID_PROFILE: 'Thông tin hồ sơ chưa hợp lệ',
     OFFER_DECLINED: 'Ứng viên từ chối nhận việc',
     OFFER_EXPIRED: 'Lời mời nhận việc đã hết hạn',
+    JOB_BLOCKED: 'Tin tuyển dụng đã bị khóa do vi phạm',
     OTHER: 'Lý do khác',
 };
 

@@ -67,6 +67,9 @@ const getStatusUi = (status, rejectReason = null, item = null) => {
         case 'ACCEPTED':
             return { label: 'Chờ xác nhận nhận việc', tone: 'accepted' };
         case 'REJECTED':
+            if (rejectReason === 'JOB_BLOCKED' || (item && item.jobStatus === 'BLOCKED')) {
+                return { label: 'Tin đã bị khóa', tone: 'danger' };
+            }
             if (rejectReason === 'OFFER_DECLINED') {
                 return { label: 'Đã từ chối nhận việc', tone: 'rejected' };
             }
@@ -534,15 +537,7 @@ const CandidateApplicationHistoryPage = () => {
                                         <span className={`cah-badge cah-badge--${ui.tone}`}>
                                             {ui.label}
                                         </span>
-                                        {isRecruiterBanned && (
-                                            <span
-                                                className="cah-badge cah-badge--danger"
-                                                title="Tài khoản nhà tuyển dụng đã bị khóa do vi phạm"
-                                            >
-                                                NTD bị khóa
-                                            </span>
-                                        )}
-                                        {isClosed && ui.label !== 'Tin đã đóng' && (
+                                        {isClosed && ui.label !== 'Tin đã đóng' && ui.label !== 'Tin đã bị khóa' && (
                                             <span className="cah-badge cah-badge--neutral" title="Tin tuyển dụng này đã đóng">
                                                 Tin đã đóng
                                             </span>
@@ -591,7 +586,7 @@ const CandidateApplicationHistoryPage = () => {
                                                 Xem CV
                                             </a>
                                         ) : null}
-                                        {item.jobId && item.recruiterId && !isRecruiterBanned ? (
+                                        {item.jobId && item.recruiterId && !isRecruiterBanned && item.jobStatus !== 'BLOCKED' && item.rejectReason !== 'JOB_BLOCKED' ? (
                                             <button
                                                 type="button"
                                                 className="cah-btn cah-btn--ghost"

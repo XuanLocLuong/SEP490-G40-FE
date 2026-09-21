@@ -14,19 +14,42 @@ const ApplicationRejectReasonModal = ({ open, application, onClose }) => {
 
     if (!open || !application) return null;
 
-    const reasonLabel = getRejectReasonLabel(application.rejectReason);
-    const hasNote = Boolean(application.note?.trim());
+    const isRecruiterBanned = Boolean(application.recruiterBanned);
+    const isJobBlocked =
+        application.rejectReason === 'JOB_BLOCKED' ||
+        application.jobStatus === 'BLOCKED';
+
     const isCandidateAction =
         application.rejectReason === 'OFFER_DECLINED' ||
         application.rejectReason === 'CANDIDATE_WITHDREW';
 
-    const modalTitle = isCandidateAction
-        ? application.rejectReason === 'CANDIDATE_WITHDREW'
-            ? 'Chi tiết rút đơn ứng tuyển'
-            : 'Chi tiết từ chối nhận việc'
-        : 'Lý do từ chối ứng tuyển';
+    let modalTitle = 'Lý do từ chối ứng tuyển';
+    let reasonDisplay = getRejectReasonLabel(application.rejectReason);
+    let noteLabel = 'Ghi chú từ nhà tuyển dụng:';
+    let noteDisplay = application.note || '';
 
-    const noteLabel = isCandidateAction ? 'Ghi chú lý do:' : 'Ghi chú từ nhà tuyển dụng:';
+    if (isCandidateAction) {
+        modalTitle =
+            application.rejectReason === 'CANDIDATE_WITHDREW'
+                ? 'Chi tiết rút đơn ứng tuyển'
+                : 'Chi tiết từ chối nhận việc';
+        noteLabel = 'Ghi chú lý do:';
+    } else if (isJobBlocked || isRecruiterBanned) {
+        noteLabel = 'Ghi chú từ hệ thống:';
+        if (isRecruiterBanned) {
+            modalTitle = 'Chi tiết tin tuyển dụng bị khóa';
+            reasonDisplay = 'Tin tuyển dụng đã bị khóa do vi phạm';
+            noteDisplay =
+                'Đơn ứng tuyển được hệ thống tự động đóng do tài khoản nhà tuyển dụng bị khóa vi phạm tiêu chuẩn cộng đồng.';
+        } else {
+            modalTitle = 'Chi tiết tin tuyển dụng đã ngừng tiếp nhận';
+            reasonDisplay = 'Tin tuyển dụng đã ngừng tiếp nhận vào thời điểm ứng tuyển';
+            noteDisplay =
+                'Đơn ứng tuyển đã bị hủy do tin tuyển dụng bị gián đoạn xử lý vào thời điểm ứng tuyển. Hiện tại nhà tuyển dụng đã hoạt động bình thường, bạn có thể theo dõi và ứng tuyển các vị trí mới khác của đơn vị này.';
+        }
+    }
+
+    const hasNote = Boolean(noteDisplay && noteDisplay.trim());
     const emptyNoteText = isCandidateAction
         ? 'Không có ghi chú thêm.'
         : 'Nhà tuyển dụng không để lại ghi chú thêm.';
@@ -61,13 +84,13 @@ const ApplicationRejectReasonModal = ({ open, application, onClose }) => {
                 <div className="cah-modal-body">
                     <div className="cah-reason-card">
                         <span className="cah-reason-card__label">Lý do chính:</span>
-                        <p className="cah-reason-card__value">{reasonLabel}</p>
+                        <p className="cah-reason-card__value">{reasonDisplay}</p>
                     </div>
 
                     {hasNote ? (
                         <div className="cah-reason-card cah-reason-card--note">
                             <span className="cah-reason-card__label">{noteLabel}</span>
-                            <p className="cah-reason-card__note-text">{application.note}</p>
+                            <p className="cah-reason-card__note-text">{noteDisplay}</p>
                         </div>
                     ) : (
                         <p className="cah-reason-empty-note">{emptyNoteText}</p>
