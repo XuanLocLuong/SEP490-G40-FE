@@ -183,7 +183,7 @@ const RecruiterHomePage = () => {
         },
         {
             key: 'remaining',
-            label: 'Còn thiếu',
+            label: 'Vị trí còn trống',
             value: loading ? '—' : formatCount(summary?.remainingHeadcount),
             Icon: UserPlusIcon,
             tone: 'green',
