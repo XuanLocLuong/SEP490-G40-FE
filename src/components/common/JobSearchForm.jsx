@@ -316,6 +316,8 @@ const JobSearchForm = ({
         setNearMe(checked);
         if (!checked) {
             setCoords(null);
+            setProvinceId('');
+            setWardId('');
             return;
         }
 
