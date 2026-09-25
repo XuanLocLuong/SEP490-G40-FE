@@ -10,8 +10,8 @@ import {
 const InvitationCard = ({ invitation, onViewProfile, onChat, chatLoading = false }) => {
     const tone = getInvitationStatusTone(invitation.status);
     const score =
-        invitation.matchScore != null && !Number.isNaN(Number(invitation.matchScore))
-            ? `${Number(invitation.matchScore).toFixed(0)}%`
+        invitation.matchScore != null && Number.isFinite(Number(invitation.matchScore))
+            ? `${Math.round(Number(invitation.matchScore))}%`
             : null;
     const canChat = invitation.candidateUserId != null;
 

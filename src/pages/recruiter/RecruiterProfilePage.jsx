@@ -1372,7 +1372,7 @@ const RecruiterProfilePage = () => {
                                         title="Ngày tạo hồ sơ doanh nghiệp"
                                     >
                                         <ClockIcon width={14} height={14} />
-                                        {' Doanh nghiệp từ '}
+                                        {' Tham gia từ tháng '}
                                         <strong>{memberSinceDisplay}</strong>
                                     </span>
                                 </div>

@@ -234,7 +234,7 @@ const RecruiterAnalyticsPage = () => {
                                 <th className="recruiter-analytics__table-stt">STT</th>
                                 <th>Tin tuyển dụng</th>
                                 <th>Chờ xử lý</th>
-                                <th>Hồ sơ mới (kỳ)</th>
+                                <th>Số lượng người ứng tuyển</th>
                                 <th>Đã tuyển (kỳ)</th>
                                 <th>Tiến độ</th>
                                 <th>Chi tiết</th>

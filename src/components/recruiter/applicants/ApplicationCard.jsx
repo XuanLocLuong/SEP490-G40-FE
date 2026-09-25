@@ -58,9 +58,10 @@ const ApplicationCard = ({
                         {formatAppliedRelativeTime(application.appliedAt)}
                     </p>
                     {application.matchScore != null &&
+                    Number.isFinite(Number(application.matchScore)) &&
                     !(application.criticalMismatchReasons || []).length ? (
                         <p className="application-card__score">
-                            Khớp {Number(application.matchScore).toFixed(0)}%
+                            Khớp {Math.round(Number(application.matchScore))}%
                         </p>
                     ) : null}
                     {(application.criticalMismatchReasons || []).length > 0 ? (
