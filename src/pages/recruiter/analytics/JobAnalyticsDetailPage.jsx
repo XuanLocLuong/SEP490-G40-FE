@@ -128,8 +128,6 @@ const JobAnalyticsDetailPage = () => {
                     </div>
                     <p className="recruiter-analytics__meta">
                         Kỳ {formatDateOnly(periodStart)} – {formatDateOnly(periodEnd)}
-                        {' · '}
-                        Cập nhật {formatDateTime(lastUpdatedAt)}
                     </p>
                 </div>
 
