@@ -645,7 +645,7 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
         setInviteTarget({
             candidateId,
             fullName: conversation.otherPartyName || 'Ứng viên JobLink',
-            matchScore: 0,
+            matchScore: conversation.matchScore ?? null,
         });
     };
 
@@ -658,7 +658,9 @@ const ChatThread = ({ conversation, onThreadChanged, compact = false }) => {
                 candidateIds: [candidateId],
                 type: 'JOB_INVITATION',
                 message: message?.trim() || null,
-                matchScores: { [candidateId]: 0 },
+                matchScores: {
+                    [candidateId]: conversation.matchScore ?? 0,
+                },
             });
             const result = response?.results?.find(
                 (item) => String(item.candidateId) === String(candidateId)

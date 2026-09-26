@@ -302,10 +302,15 @@ export const ChatProvider = ({ children }) => {
 
     /**
      * Open (or create) a conversation then show a float (multi on wide screens).
-     * @param {{ jobId?: number|null, otherUserId: number }} params
+     * @param {{ jobId?: number|null, otherUserId: number, candidateProfileId?: number|null, matchScore?: number|null }} params
      */
     const openConversationWith = useCallback(
-        async ({ jobId = null, otherUserId }) => {
+        async ({
+            jobId = null,
+            otherUserId,
+            candidateProfileId = null,
+            matchScore = null,
+        }) => {
             if (!chatEnabled) return null;
             if (otherUserId == null) {
                 toast.error('Không xác định được người dùng để mở chat.');
@@ -318,7 +323,13 @@ export const ChatProvider = ({ children }) => {
                 const body = { otherUserId: Number(otherUserId) };
                 if (jobId != null) body.jobId = Number(jobId);
                 const res = await createOrGetConversation(body);
-                const conv = unwrapData(res);
+                const apiConv = unwrapData(res);
+                const conv = {
+                    ...apiConv,
+                    candidateProfileId:
+                        apiConv?.candidateProfileId ?? candidateProfileId ?? null,
+                    matchScore: matchScore ?? null,
+                };
                 if (!conv?.id) {
                     toast.error('Không mở được cuộc trò chuyện.');
                     return null;
@@ -417,6 +428,8 @@ export const ChatProvider = ({ children }) => {
                 void openConversationWith({
                     jobId: detail.jobId ?? null,
                     otherUserId: detail.otherUserId,
+                    candidateProfileId: detail.candidateProfileId ?? null,
+                    matchScore: detail.matchScore ?? null,
                 });
                 return;
             }
