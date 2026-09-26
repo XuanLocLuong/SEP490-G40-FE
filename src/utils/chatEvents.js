@@ -4,7 +4,7 @@ export const OPEN_CHAT_PANEL_EVENT = 'joblink:open-chat';
 /** Fired after chat business actions that change application / invitation status. */
 export const RECRUITMENT_CHANGED_EVENT = 'joblink:recruitment-changed';
 
-/** @param {{ conversationId?: number, jobId?: number, otherUserId?: number }} [detail] */
+/** @param {{ conversationId?: number, jobId?: number, otherUserId?: number, candidateProfileId?: number, matchScore?: number|null }} [detail] */
 export const openChatPanel = (detail = {}) => {
     window.dispatchEvent(new CustomEvent(OPEN_CHAT_PANEL_EVENT, { detail }));
 };

@@ -589,6 +589,8 @@ const RecruiterRecommendationsPage = () => {
                                 openChatPanel({
                                     jobId: selectedJobId,
                                     otherUserId: c.userId,
+                                    candidateProfileId: c.candidateId,
+                                    matchScore: c.matchScore,
                                 });
                             }}
                         />
