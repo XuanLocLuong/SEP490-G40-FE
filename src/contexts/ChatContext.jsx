@@ -23,6 +23,60 @@ const MAX_DOCK_PANELS = MAX_CHAT_FLOATS + 1;
 
 const PICKER_FRONT = 'picker';
 const floatFrontKey = (id) => `float:${id}`;
+const CHAT_MATCH_SCORE_STORAGE_KEY = 'joblink:chat-match-scores';
+
+const getMatchScoreStorageKey = (auth) => {
+    const ownerId = auth?.id ?? auth?.userId ?? auth?.user?.id;
+    return ownerId == null
+        ? CHAT_MATCH_SCORE_STORAGE_KEY
+        : `${CHAT_MATCH_SCORE_STORAGE_KEY}:${ownerId}`;
+};
+
+const readStoredChatScores = (auth) => {
+    if (typeof window === 'undefined') return {};
+    try {
+        const raw = window.localStorage.getItem(getMatchScoreStorageKey(auth));
+        const parsed = raw ? JSON.parse(raw) : {};
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+        return {};
+    }
+};
+
+const storeChatScore = (auth, conversation) => {
+    if (
+        typeof window === 'undefined' ||
+        conversation?.id == null ||
+        conversation?.matchScore == null
+    ) {
+        return;
+    }
+    try {
+        const scores = readStoredChatScores(auth);
+        scores[String(conversation.id)] = {
+            candidateProfileId: conversation.candidateProfileId ?? null,
+            matchScore: Number(conversation.matchScore),
+        };
+        window.localStorage.setItem(
+            getMatchScoreStorageKey(auth),
+            JSON.stringify(scores)
+        );
+    } catch {
+        // Storage can be unavailable; the in-memory flow still works.
+    }
+};
+
+const mergeStoredChatScore = (auth, conversation) => {
+    if (!conversation?.id) return conversation;
+    const stored = readStoredChatScores(auth)[String(conversation.id)];
+    if (!stored || conversation.matchScore != null) return conversation;
+    return {
+        ...conversation,
+        candidateProfileId:
+            conversation.candidateProfileId ?? stored.candidateProfileId ?? null,
+        matchScore: stored.matchScore ?? null,
+    };
+};
 
 const getChatCapacity = () => {
     if (typeof window === 'undefined') {
@@ -279,9 +333,9 @@ export const ChatProvider = ({ children }) => {
 
     const selectConversation = useCallback(
         (conv) => {
-            pushFloat(conv);
+            pushFloat(mergeStoredChatScore(auth, conv));
         },
-        [pushFloat]
+        [auth, pushFloat]
     );
 
     const backToList = useCallback(
@@ -334,6 +388,7 @@ export const ChatProvider = ({ children }) => {
                     toast.error('Không mở được cuộc trò chuyện.');
                     return null;
                 }
+                storeChatScore(auth, conv);
                 pushFloat(conv);
                 reloadInbox();
                 return conv;
@@ -345,7 +400,7 @@ export const ChatProvider = ({ children }) => {
                 setOpeningChat(false);
             }
         },
-        [chatEnabled, openingChat, pushFloat, reloadInbox]
+        [auth, chatEnabled, openingChat, pushFloat, reloadInbox]
     );
 
     /**
